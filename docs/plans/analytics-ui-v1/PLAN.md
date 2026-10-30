@@ -56,7 +56,7 @@
   Acceptance: CHT-2 specs green. "Compare" story matches `cmp-diff.png`.
   depends-on: T9
 
-- [ ] **T11** - story: CHT-3 (AC1–AC4). Add kinds `bar` and `stacked-bar`, with the compare total as a `--uax-compare` bar behind each current bar.
+- [x] **T11** - story: CHT-3 (AC1–AC4). Add kinds `bar` and `stacked-bar`, with the compare total as a `--uax-compare` bar behind each current bar.
   Acceptance: CHT-3 specs green. "Stacked with compare" story matches `vis-cmp.png`.
   depends-on: T10
 
