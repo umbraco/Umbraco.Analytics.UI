@@ -42,7 +42,7 @@
   Acceptance: KPI-2 specs green, axe clean in 3 themes × 2 states, `api/ui.api.md` shows `deselectable` and the events in the JSDoc.
   depends-on: T7
 
-- [ ] **T8** - story: GRP-1 (AC1–AC4). Add `uan-group-by`: a radio group (`role="radiogroup"`, arrow-key navigation) styled as the design's segmented control. `value` and `options`, raising `change`.
+- [x] **T8** - story: GRP-1 (AC1–AC4). Add `uan-group-by`: a radio group (`role="radiogroup"`, arrow-key navigation) styled as the design's segmented control. `value` and `options`, raising `change`.
   Acceptance: GRP-1 specs green, axe clean.
   depends-on: T2. parallel-group: C
 
