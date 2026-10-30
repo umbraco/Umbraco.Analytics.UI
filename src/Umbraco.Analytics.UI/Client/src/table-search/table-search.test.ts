@@ -1,19 +1,23 @@
 /// <reference types="vite/client" />
 // TBL-4 — the search box itself: how it is built and what it raises. The table side is in data-table.search.test.ts.
-import { beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { html } from "@umbraco-cms/backoffice/external/lit";
 import "@umbraco-cms/backoffice/external/uui";
 import darkCss from "@umbraco-ui/uui/themes/dark.css?inline";
 import highContrastCss from "@umbraco-ui/uui/themes/high-contrast.css?inline";
 import { render } from "vitest-browser-lit";
-import { userEvent } from "vitest/browser";
 import { axeRun } from "../internal/test/a11y.js";
 import { recordEvents, renderElement, shadow, type UaxTestElement } from "../internal/test/pending.js";
 import "./table-search.element.js";
 import type { UaxTableSearchElement } from "./table-search.element.js";
 
 const input = (el: Element) => shadow(el).querySelector("uui-input") as HTMLElement & { value: string };
-const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+/** Sets the text the way typing does: the value changes, then `input` is raised from the uui-input. */
+const type = (el: Element, text: string) => {
+    const field = input(el);
+    field.value = text;
+    field.dispatchEvent(new Event("input", { bubbles: true, composed: true }));
+};
 
 describe("Feature: table search box", () => {
     describe("Scenario: how it is built", () => {
@@ -40,11 +44,16 @@ describe("Feature: table search box", () => {
         beforeEach(async () => {
             const el = await renderElement(html`<uax-table-search></uax-table-search>`, "uax-table-search");
             events = recordEvents(el, "search");
-            input(el).focus();
-            await userEvent.keyboard("con");
-            await sleep(100);
-            await userEvent.keyboard("tact");
-            await sleep(450);
+            // Only the timers are faked, after render, so the debounce is driven by the test and not by the machine's speed.
+            vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+            type(el, "con");
+            vi.advanceTimersByTime(100);
+            type(el, "contact");
+            vi.advanceTimersByTime(450);
+        });
+
+        afterEach(() => {
+            vi.useRealTimers();
         });
 
         it("raises search once, with the whole text", () => {
