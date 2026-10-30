@@ -7,7 +7,7 @@ import darkCss from "@umbraco-ui/uui/themes/dark.css?inline";
 import highContrastCss from "@umbraco-ui/uui/themes/high-contrast.css?inline";
 import { axeRun } from "../internal/test/a11y.js";
 import { renderWithModals } from "../internal/test/modal-host.js";
-import { shadow, type UaxTestElement } from "../internal/test/dom.js";
+import { deepQuery, settle, shadow, type UaxTestElement } from "../internal/test/dom.js";
 import "./date-range.element.js";
 import "../group-by/group-by.element.js";
 
@@ -22,11 +22,11 @@ const render = async (compareValue?: object, width = "auto", dir = "ltr") => {
         </div>`,
         "uax-date-range",
     );
-    await el.parentElement!.querySelector("uax-group-by")!.updateComplete;
+    await settle(el.parentElement!.querySelector("uax-group-by")!);
     return el;
 };
 const heightOf = (el: Element | null | undefined) => el!.getBoundingClientRect().height;
-const groupByBox = (el: UaxTestElement) => shadow(el.parentElement!.querySelector("uax-group-by")!).querySelector(".group");
+const groupByBox = (el: UaxTestElement) => deepQuery(el.parentElement!.querySelector("uax-group-by")!.shadowRoot!, ".group");
 const dateButton = (el: UaxTestElement) => shadow(el).querySelector("uui-button")!;
 const line2 = (el: UaxTestElement) => shadow(el).querySelector(".compare")?.textContent?.trim();
 

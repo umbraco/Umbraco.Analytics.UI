@@ -35,7 +35,7 @@ const columns = (elementName?: string): UaxTableColumn[] => [
     { key: "name", label: "Type", elementName },
     { key: "n", label: "N", elementName: UAX_TABLE_CELL.number, align: "end" },
 ];
-const firstCell = (el: Element) => shadow(el).querySelector("uui-table-row:not([part~='header']) uui-table-cell")!.firstElementChild as TestDotCellElement;
+const firstCell = (el: Element) => shadow(el).querySelector("uui-table-row:not([part~='header']):not(.summary) uui-table-cell")!.firstElementChild as TestDotCellElement;
 const table = (el: Element) => el as UaxTestElement & { columns: UaxTableColumn[]; rows: unknown[] };
 
 describe("Feature: table cells are elements", () => {
@@ -102,7 +102,7 @@ describe("Feature: table cells are elements", () => {
     describe("Scenario: a column with a built-in cell name", () => {
         it("uses that cell element", async () => {
             const el = await renderElement(html`<uax-data-table .columns=${columns()} .rows=${rows}></uax-data-table>`, "uax-data-table");
-            const cells = [...shadow(el).querySelectorAll("uui-table-row:not([part~='header'])")[0].querySelectorAll("uui-table-cell")];
+            const cells = [...shadow(el).querySelectorAll("uui-table-row:not([part~='header']):not(.summary)")[0].querySelectorAll("uui-table-cell")];
             expect(cells.map((c) => c.firstElementChild?.tagName.toLowerCase())).toEqual(["uax-text-cell", "uax-number-cell"]);
         });
     });

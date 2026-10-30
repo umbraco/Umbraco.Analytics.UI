@@ -20,7 +20,7 @@ const withCompare = () =>
     );
 
 const badges = (el: Element, row: number, column: number) =>
-    deepQueryAll(shadow(el).querySelectorAll("uui-table-row")[row].querySelectorAll("uui-table-cell")[column], "uax-delta-badge") as (HTMLElement & {
+    deepQueryAll(shadow(el).querySelectorAll("uui-table-row:not(.summary)")[row].querySelectorAll("uui-table-cell")[column], "uax-delta-badge") as (HTMLElement & {
         value?: number;
     })[];
 

@@ -10,7 +10,7 @@ import darkCss from "@umbraco-ui/uui/themes/dark.css?inline";
 import highContrastCss from "@umbraco-ui/uui/themes/high-contrast.css?inline";
 import { page, userEvent } from "vitest/browser";
 import { Chart } from "chart.js";
-import { deepQuery, renderElement, shadow, type UaxTestElement } from "../internal/test/dom.js";
+import { deepQuery, renderElement, settle, shadow, type UaxTestElement } from "../internal/test/dom.js";
 import "../delta-badge/delta-badge.element.js";
 import "../chart/time-series-chart.element.js";
 import "../group-by/group-by.element.js";
@@ -187,7 +187,8 @@ describe("Feature: contrast in every theme", () => {
             describe("the group-by control, as rendered", () => {
                 it("gives the selected segment's text at least 4.5:1 and its fill at least 3:1 on the surface", async () => {
                     const el = await renderElement(html`<uax-group-by value="day"></uax-group-by>`, "uax-group-by");
-                    const selected = shadow(el).querySelector('button[aria-checked="true"]')!;
+                    await settle(el);
+                    const selected = deepQuery(el.shadowRoot!, 'button[aria-checked="true"]')!;
                     const fill = computed(selected, "backgroundColor");
                     check("text", "group-by selected text on fill", between(computed(selected, "color"), fill, surface()));
                     check("graphic", "group-by selected fill on surface", between(fill, surface(), surface()));

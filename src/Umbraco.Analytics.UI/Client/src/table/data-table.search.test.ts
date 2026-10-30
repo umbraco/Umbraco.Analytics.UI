@@ -7,7 +7,7 @@ import "../table-search/table-search.element.js";
 import "./data-table.element.js";
 import { pageColumns, pageRows } from "./table-fixtures.js";
 
-const dataRows = (el: Element) => shadow(el).querySelectorAll("uui-table-row:not([part~='header'])");
+const dataRows = (el: Element) => shadow(el).querySelectorAll("uui-table-row:not([part~='header']):not(.summary)");
 
 describe("Feature: search rows", () => {
     describe("Scenario: typing in the search box", () => {

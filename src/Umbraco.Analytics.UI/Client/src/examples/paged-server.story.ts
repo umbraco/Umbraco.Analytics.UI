@@ -1,27 +1,46 @@
 import type { Meta, StoryObj } from "@storybook/web-components-vite";
-import { html } from "@umbraco-cms/backoffice/external/lit";
+import { css, customElement, html, LitElement, ref } from "@umbraco-cms/backoffice/external/lit";
 import { regionSource, sourceDocs } from "../internal/story/source.js";
 import raw from "./paged-server.story.ts?raw";
 import "../table/data-table.element.js";
-import type { UaxDataTableElement } from "../table/data-table.element.js";
+import "../table-search/table-search.element.js";
 import { UAX_TABLE_CELL } from "../table/cells/cell-names.js";
-import type { UaxTableColumn, UaxTablePageChangeDetail, UaxTableSortChangeDetail } from "../table/types.js";
+import { UaxTableServerController, type UaxTableColumn, type UaxTableServerState } from "../table/index.js";
 
-const imports = `import { html } from "@umbraco-cms/backoffice/external/lit";
-import { UAX_TABLE_CELL, type UaxDataTableElement, type UaxTableColumn, type UaxTablePageChangeDetail, type UaxTableSortChangeDetail } from "@umbraco-analytics/ui";`;
+const imports = `import { css, customElement, html, LitElement, ref } from "@umbraco-cms/backoffice/external/lit";
+import { UAX_TABLE_CELL, UaxTableServerController, type UaxTableColumn, type UaxTableServerState } from "@umbraco-analytics/ui";`;
 
 // #region example
 type PageRow = { url: string; pageviews: number; sessions: number };
 type SortKey = "pageviews" | "sessions";
 
-// Stand-in for your API: 272 pages, sorted on request. A real product fetches this over HTTP.
+// Stand-in for your API: 272 pages, sorted and searched on request after a short delay. A real product calls fetch.
 const everyPage: PageRow[] = Array.from({ length: 272 }, (_, i) => ({
     url: `https://www.example.com/page-${i + 1}/`,
     pageviews: Math.max(1, 600 - i * 3),
     sessions: Math.max(1, 200 - i),
 }));
-const sumOf = (key: SortKey) => everyPage.reduce((sum, row) => sum + row[key], 0);
-const largestOf = (key: SortKey) => Math.max(...everyPage.map((row) => row[key]));
+const sumOf = (rows: PageRow[], key: SortKey) => rows.reduce((sum, row) => sum + row[key], 0);
+const largestOf = (rows: PageRow[], key: SortKey) => Math.max(...rows.map((row) => row[key]));
+
+async function fetchPages({ sort, page, pageSize, query }: UaxTableServerState, signal: AbortSignal) {
+    await new Promise((resolve) => setTimeout(resolve, 400));
+    // A real `fetch(url, { signal })` stops by itself. Here, give up once the request is stale.
+    signal.throwIfAborted();
+    const matching = everyPage.filter((row) => row.url.includes(query.trim().toLowerCase()));
+    const by = (sort?.key ?? "pageviews") as SortKey;
+    const sign = sort?.direction === "asc" ? 1 : -1;
+    matching.sort((a, b) => sign * (a[by] - b[by]));
+    return {
+        rows: matching.slice((page - 1) * pageSize, page * pageSize),
+        totalRows: matching.length,
+        // Each column's total and max across every page, so shares and bars mean the same on page 1 and page 28.
+        stats: {
+            pageviews: { total: sumOf(everyPage, "pageviews"), max: largestOf(everyPage, "pageviews") },
+            sessions: { total: sumOf(everyPage, "sessions"), max: largestOf(everyPage, "sessions") },
+        },
+    };
+}
 
 const columns: UaxTableColumn[] = [
     { key: "url", label: "Page URL", elementName: UAX_TABLE_CELL.link, meta: { hrefKey: "url" } },
@@ -29,45 +48,36 @@ const columns: UaxTableColumn[] = [
     { key: "sessions", label: "Page sessions", elementName: UAX_TABLE_CELL.share, width: "27%", sortable: true, sortAs: "number" },
 ];
 
-function renderPagedServer() {
-    // The sort the product last asked its API for.
-    let sorted = everyPage;
+@customElement("example-paged-server-table")
+export class ExamplePagedServerTableElement extends LitElement {
+    // Keeps the sort, page, page size and search, goes back to page 1 on a sort or search, aborts the request a newer
+    // one replaces, drops its late answer, and gives the table its rows, totals and loading flag.
+    #pages = new UaxTableServerController(this, {
+        sort: { key: "pageviews", direction: "desc" },
+        load: fetchPages,
+    });
 
-    // The editor picked another page or page size: load that page.
-    const loadPage = (event: CustomEvent<UaxTablePageChangeDetail>) => {
-        const table = event.target as UaxDataTableElement;
-        const { page, pageSize } = event.detail;
-        table.rows = sorted.slice((page - 1) * pageSize, page * pageSize);
-    };
+    override render() {
+        return html`<uui-box headline="Top pages" style="--uui-box-default-padding: 0">
+            <uax-data-table ${ref(this.#pages.attach)} .columns=${columns}>
+                <div slot="toolbar"><uax-table-search></uax-table-search></div>
+            </uax-data-table>
+        </uui-box>`;
+    }
 
-    // A sort click raises only `sort-change`. The table goes back to page 1 itself, so load page 1 of the new sort.
-    const loadSorted = (event: CustomEvent<UaxTableSortChangeDetail>) => {
-        const table = event.target as UaxDataTableElement;
-        const { key, direction } = event.detail;
-        const by = key as SortKey;
-        sorted = [...everyPage].sort((a, b) => (direction === "asc" ? a[by] - b[by] : b[by] - a[by]));
-        table.rows = sorted.slice(0, table.pageSize);
-    };
-
-    // `total-rows` is the row count across every page. `stats` holds each column's total (what a share is a percent
-    // of) and max (what a full bar stands for) across every page, so they mean the same on page 1 and page 28.
-    return html`
-        <uui-box headline="Top pages" style="--uui-box-default-padding: 0">
-            <uax-data-table
-                mode="server"
-                .columns=${columns}
-                .rows=${everyPage.slice(0, 10)}
-                .totalRows=${everyPage.length}
-                .stats=${{
-                    pageviews: { total: sumOf("pageviews"), max: largestOf("pageviews") },
-                    sessions: { total: sumOf("sessions"), max: largestOf("sessions") },
-                }}
-                @page-change=${loadPage}
-                @sort-change=${loadSorted}></uax-data-table>
-        </uui-box>
+    static override styles = css`
+        :host {
+            display: block;
+        }
     `;
 }
 // #endregion
+
+declare global {
+    interface HTMLElementTagNameMap {
+        "example-paged-server-table": ExamplePagedServerTableElement;
+    }
+}
 
 const meta: Meta = {
     title: "Examples/Paged server",
@@ -77,13 +87,13 @@ const meta: Meta = {
 export default meta;
 
 /**
- * `mode="server"`: the table shows the `rows` it is given as the current page and raises `page-change` and
- * `sort-change` for the product to load. Page forward, then click a header: the sort sends the table back to page 1.
- * `stats` keeps shares and bars on one scale across pages. In this story the "server" is a function.
- * While a real request runs, set `loading` so the footer and rows stay in step.
+ * `mode="server"` with `UaxTableServerController`: attach it with `ref` and it does the wiring. Page forward, click
+ * a header (back to page 1), or search: each loads through one function that gets the table's state and an
+ * `AbortSignal`. Change the page twice quickly and only the last answer is shown. Call `reload()` when something the
+ * loader reads changes, such as a date range. In this story the "server" is a function with a 400 ms delay.
  */
 export const PagedServer: StoryObj = {
     name: "Paged server",
-    render: () => renderPagedServer(),
+    render: () => html`<example-paged-server-table></example-paged-server-table>`,
     parameters: { docs: sourceDocs(regionSource(raw, "example", imports)) },
 };

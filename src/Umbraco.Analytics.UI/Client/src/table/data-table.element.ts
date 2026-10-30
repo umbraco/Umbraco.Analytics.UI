@@ -132,6 +132,12 @@ const SKELETON_WIDTHS = [72, 54, 83, 47, 65];
  * on a link, button or form control inside a row is that control's own and raises nothing. Without `clickable-rows` rows
  * are plain, even when something listens for `row-click`, because an element can't tell that it has a listener.
  *
+ * Put a summary under the header, such as "Total" and a column's total, by slotting content into `summary-<column key>`
+ * (`<strong slot="summary-pageviews">272</strong>`). Each piece sits in its own column's cell, so it lines up with the
+ * numbers below and takes the column's `align`. A column with nothing slotted has an empty cell, and the row is
+ * hidden while nothing is slotted for any column. The row isn't sorted, searched or paged, and the product works out its
+ * numbers, as the table's `stats` aren't totals it shows.
+ *
  * Each column's total and largest value are worked out from the `rows` the table holds: all of them in `client`
  * mode, but only the current page in `server` mode. Pass `stats` (the column's `total` and `max` across every
  * page, by column `key`) so a share is still a share of the whole and bars keep one scale from page to page.
@@ -142,6 +148,7 @@ const SKELETON_WIDTHS = [72, 54, 83, 47, 65];
  * @fires row-click - A row was clicked, or Enter or Space was pressed on it, while `clickable-rows` is set. Bubbles, not composed or cancelable, like `sort-change`. `detail` is `{ row }`: the object from `rows`.
  * @fires search - Not raised by the table: the `search` event of a `uax-table-search` in the `toolbar` slot bubbles through it, and the table has already set `query` and gone back to page 1 when a product's listener runs.
  * @slot toolbar - Content above the header row, such as a search box and totals. It pads itself with `--uax-table-padding`.
+ * @slot summary-[key] - Content for the summary row, in the cell of the column whose `key` follows `summary-`, such as a total and its change badge. The row shows when any of these has content.
  * @slot footer - Content below the rows, on the left of the pager, such as an "updated" note. The footer shows whenever this has content, even while loading, and pads itself with `--uax-table-padding`.
  * @cssprop --uax-table-padding - Padding of the toolbar and footer sections, as a CSS `padding` value. Defaults to `12px 24px`. The loading bar ignores it and spans the full width at the top edge.
  * @cssprop --uax-series-1 - Bar colour of the first share column. Also `--uax-series-2` to `--uax-series-4` for the other slots.
@@ -403,6 +410,11 @@ export class UaxDataTableElement extends UmbLitElement {
         return this.querySelector(':scope > [slot="footer"]') !== null;
     }
 
+    /** Whether anything is slotted into a `summary-*` slot, for the same reason as `#hasToolbar`. */
+    get #hasSummary(): boolean {
+        return this.columns.some((column) => this.querySelector(`:scope > [slot="${CSS.escape(`summary-${column.key}`)}"]`) !== null);
+    }
+
     /** How many skeleton rows to draw on first load. */
     get #skeletonRowCount(): number {
         return SKELETON_ROWS;
@@ -571,6 +583,7 @@ export class UaxDataTableElement extends UmbLitElement {
             <uui-table aria-busy=${this.loading ? "true" : "false"}>
                 ${this.#derived.map((derived) => html`<uui-table-column style=${ifDefined(derived.column.width ? `width: ${derived.column.width}` : undefined)}></uui-table-column>`)}
                 <uui-table-head>${this.#derived.map((derived) => this.#renderHeaderCell(derived))}</uui-table-head>
+                ${this.#renderSummaryRow()}
                 ${mode === "skeleton"
                     ? Array.from({ length: this.#skeletonRowCount }, (_, index) => this.#renderSkeletonRow(index))
                     : this.#visibleRows.map((row) => this.#renderRow(row))}
@@ -578,6 +591,21 @@ export class UaxDataTableElement extends UmbLitElement {
             ${this.#renderEmptyState(mode, hasData)}
             ${this.#renderFooter(this.#showPager && mode !== "skeleton")}
         </div>`;
+    }
+
+    /**
+     * The summary row: one cell per column, each a slot named `summary-<key>`. Always rendered, hidden while nothing is
+     * slotted for a column the table has, so the slots are there to raise `slotchange` when content arrives later. The slots
+     * sit in the cells, so content lines up with its column.
+     */
+    #renderSummaryRow(): TemplateResult {
+        return html`<uui-table-row class="summary" ?hidden=${!this.#hasSummary}>
+            ${this.#derived.map(
+                (derived) => html`<uui-table-cell class=${this.#cellClass(derived)}>
+                    <slot name=${`summary-${derived.column.key}`} @slotchange=${() => this.requestUpdate()}></slot>
+                </uui-table-cell>`,
+            )}
+        </uui-table-row>`;
     }
 
     /** "No results" when a query leaves no rows on screen (either mode), else the product's empty state when there are no rows. */
@@ -711,6 +739,17 @@ export class UaxDataTableElement extends UmbLitElement {
 
             uui-table-row.clickable:hover {
                 background-color: var(--uui-color-surface-emphasis);
+            }
+
+            /* The summary reads as a strong row between the header and the data, like the design's totals row. */
+            uui-table-row.summary {
+                font-weight: 700;
+                font-variant-numeric: tabular-nums;
+                border-bottom: 1px solid var(--uui-color-border);
+            }
+
+            uui-table-row.summary[hidden] {
+                display: none;
             }
 
             .start {

@@ -9,6 +9,8 @@ const imports = `import { css, customElement, html, nothing, property, state } f
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import {
     UAX_TABLE_CELL,
+    uaxCompareFor,
+    uaxFormatDateRange,
     type UaxCompare,
     type UaxDateRange,
     type UaxGroupBy,
@@ -20,9 +22,7 @@ import {
     type UaxTableSortChangeDetail,
 } from "@umbraco-analytics/ui";
 // Your API client (the story fakes it, and wait stands in for the network): fetchChartSeries, fetchCompareSeries, fetchPages, fetchVisitorTypes and their types. In this story they are a fake, generated from the dates.
-// formatRange turns a date range into text such as "25 May 2026 – 23 Jun 2026".
-import { formatRange } from "./my-format.js";
-import { fetchChartSeries, fetchCompareSeries, fetchPages, fetchVisitorTypes, markers, previousPeriod, wait, type ChartView, type PagesResult, type VisitorTypeRow } from "./engage-api.js";`;
+import { fetchChartSeries, fetchCompareSeries, fetchPages, fetchVisitorTypes, markers, wait, type ChartView, type PagesResult, type VisitorTypeRow } from "./engage-api.js";`;
 
 const code = regionSource(raw, "page", imports);
 

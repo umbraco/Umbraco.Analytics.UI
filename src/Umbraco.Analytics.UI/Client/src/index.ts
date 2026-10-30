@@ -7,6 +7,8 @@ export * from "./chart/index.js";
 export * from "./table/index.js";
 export * from "./table-search/index.js";
 export * from "./date-range/index.js";
+export * from "./date-helpers/index.js";
+export * from "./segmented/index.js";
 export * from "./group-by/index.js";
 export * from "./empty-state/index.js";
 export * from "./theme/index.js";

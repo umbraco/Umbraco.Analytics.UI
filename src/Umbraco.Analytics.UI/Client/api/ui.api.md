@@ -9,10 +9,13 @@ import { CSSResultGroup } from '@umbraco-cms/backoffice/external/lit';
 import { nothing } from '@umbraco-cms/backoffice/external/lit';
 import type { Observable } from '@umbraco-cms/backoffice/external/rxjs';
 import { PropertyValues } from '@umbraco-cms/backoffice/external/lit';
+import type { ReactiveController } from '@umbraco-cms/backoffice/external/lit';
+import type { ReactiveControllerHost } from '@umbraco-cms/backoffice/external/lit';
 import { TemplateResult } from '@umbraco-cms/backoffice/external/lit';
 import { UmbContextMinimal } from '@umbraco-cms/backoffice/context-api';
 import { UmbContextToken } from '@umbraco-cms/backoffice/context-api';
 import { UmbLitElement } from '@umbraco-cms/backoffice/lit-element';
+import type { UmbLocalizationController } from '@umbraco-cms/backoffice/localization-api';
 
 // @public
 export const UAX_TABLE_CELL: {
@@ -40,6 +43,9 @@ export type UaxCompare = {
 };
 
 // @public
+export function uaxCompareFor(mode: UaxCompare["mode"], range: UaxDateSpan): UaxCompare | undefined;
+
+// @public
 export class UaxDataTableElement extends UmbLitElement {
     clickableRows: boolean;
     columns: UaxTableColumn[];
@@ -63,6 +69,15 @@ export class UaxDataTableElement extends UmbLitElement {
     // (undocumented)
     protected willUpdate(changed: PropertyValues<this>): void;
 }
+
+// @public
+export type UaxDateBucket = {
+    start: string;
+    days: string[];
+};
+
+// @public
+export function uaxDateBuckets(range: UaxDateSpan, groupBy: UaxGroupBy): UaxDateBucket[];
 
 // @public
 export type UaxDatePreset = {
@@ -98,8 +113,16 @@ export class UaxDateRangeElement extends UmbLitElement {
     render(): TemplateResult;
     // (undocumented)
     static styles: CSSResultGroup;
-    value: UaxDateRange;
+    today?: string;
+    get value(): UaxDateRange;
+    set value(value: UaxDateRange | undefined);
 }
+
+// @public
+export type UaxDateSpan = Pick<UaxDateRange, "from" | "to">;
+
+// @public
+export function uaxDaysIn(range: UaxDateSpan): string[];
 
 // @public
 export class UaxDeltaBadgeElement extends UmbLitElement {
@@ -132,6 +155,14 @@ export class UaxEmptyStateElement extends UmbLitElement {
     // (undocumented)
     static styles: CSSResultGroup;
 }
+
+// @public
+export function uaxFormatDateRange(localize: Pick<UmbLocalizationController, "date" | "term">, range: UaxDateSpan, options?: UaxFormatDateRangeOptions): string;
+
+// @public
+export type UaxFormatDateRangeOptions = {
+    showYear?: boolean;
+};
 
 // @public
 export type UaxGroupBy = "day" | "week" | "month";
@@ -230,6 +261,34 @@ export class UaxPercentCellElement extends UmbLitElement implements UaxTableCell
 export type UaxPoint = {
     date: string;
     value: number;
+};
+
+// @public
+export function uaxPreviousPeriod(range: UaxDateSpan): UaxDateSpan | undefined;
+
+// @public
+export function uaxPreviousYear(range: UaxDateSpan): UaxDateSpan | undefined;
+
+// @public
+export type UaxSegmentedChangeDetail = {
+    value: string;
+};
+
+// @public
+export class UaxSegmentedElement extends UmbLitElement {
+    label: string;
+    options: UaxSegmentedOption[];
+    // (undocumented)
+    render(): TemplateResult;
+    // (undocumented)
+    static styles: CSSResultGroup;
+    value: string;
+}
+
+// @public
+export type UaxSegmentedOption = {
+    value: string;
+    label: string;
 };
 
 // @public
@@ -347,6 +406,50 @@ export class UaxTableSearchElement extends UmbLitElement {
     static styles: CSSResultGroup;
     value: string;
 }
+
+// @public
+export class UaxTableServerController<TResult extends UaxTableServerResult = UaxTableServerResult> implements ReactiveController {
+    constructor(host: ReactiveControllerHost, options: UaxTableServerOptions<TResult>);
+    readonly attach: (element?: Element) => void;
+    get error(): unknown;
+    hostConnected(): void;
+    hostDisconnected(): void;
+    get loading(): boolean;
+    reload(options?: {
+        resetPage?: boolean;
+    }): Promise<void>;
+    get result(): TResult | undefined;
+    get state(): Readonly<UaxTableServerState>;
+}
+
+// @public
+export type UaxTableServerLoader<TResult extends UaxTableServerResult> = (state: Readonly<UaxTableServerState>, signal: AbortSignal) => Promise<TResult>;
+
+// @public
+export interface UaxTableServerOptions<TResult extends UaxTableServerResult> {
+    load: UaxTableServerLoader<TResult>;
+    onError?: (error: unknown) => void;
+    page?: number;
+    pageSize?: number;
+    query?: string;
+    sort?: UaxTableSort;
+}
+
+// @public
+export type UaxTableServerResult = {
+    rows: Record<string, unknown>[];
+    compareRows?: Record<string, unknown>[];
+    totalRows?: number;
+    stats?: UaxTableStats;
+};
+
+// @public
+export type UaxTableServerState = {
+    sort?: UaxTableSort;
+    page: number;
+    pageSize: number;
+    query: string;
+};
 
 // @public
 export type UaxTableSort = {

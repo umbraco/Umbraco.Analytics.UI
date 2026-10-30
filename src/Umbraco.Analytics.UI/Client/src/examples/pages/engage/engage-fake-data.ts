@@ -2,7 +2,7 @@
 // A real product fetches this from its own endpoints; the page element below never knows the difference.
 import type { UaxMarker, UaxSeries } from "../../../chart/types.js";
 import type { UaxColorSlot } from "../../../theme/types.js";
-import type { UaxCompare, UaxDateRange } from "../../../date-range/types.js";
+import { uaxDateBuckets, uaxDaysIn } from "../../../date-helpers/index.js";
 import type { UaxGroupBy } from "../../../group-by/group-by.element.js";
 import type { UaxTableSortDirection } from "../../../table/types.js";
 
@@ -10,23 +10,7 @@ import type { UaxTableSortDirection } from "../../../table/types.js";
 export type PageRow = { url: string; pageviews: number; sessions: number };
 export type VisitorTypeRow = { type: string; visitors: number; sessions: number };
 
-const DAY_MS = 86_400_000;
 const toTime = (iso: string) => Date.parse(`${iso}T00:00:00Z`);
-const toIso = (time: number) => new Date(time).toISOString().slice(0, 10);
-
-/** Every ISO date from `from` to `to`, both included. */
-export function daysIn(from: string, to: string): string[] {
-    const days: string[] = [];
-    for (let time = toTime(from); time <= toTime(to); time += DAY_MS) days.push(toIso(time));
-    return days;
-}
-
-/** The range of the same length that ends the day before `range` starts. */
-export function previousPeriod(range: UaxDateRange): UaxCompare {
-    const length = daysIn(range.from, range.to).length;
-    const to = toTime(range.from) - DAY_MS;
-    return { mode: "previous-period", from: toIso(to - (length - 1) * DAY_MS), to: toIso(to) };
-}
 
 // Steady "noise" from any text, so the same day or page always gives the same number between 0 and 1.
 const noise = (text: string) => {
@@ -57,24 +41,10 @@ export const markers: UaxMarker[] = [
     { id: "pricing", date: "2026-06-18", title: "New pricing page" },
 ];
 
-/** The first day of the week (Monday) or month `date` falls in. */
-function bucketStart(date: string, groupBy: UaxGroupBy): string {
-    if (groupBy === "month") return `${date.slice(0, 7)}-01`;
-    if (groupBy === "week") {
-        const daysSinceMonday = (new Date(toTime(date)).getUTCDay() + 6) % 7;
-        return toIso(toTime(date) - daysSinceMonday * DAY_MS);
-    }
-    return date;
-}
-
 /** Adds the days up per day, week or month. */
 function series(id: string, label: string, color: UaxColorSlot, range: { from: string; to: string }, groupBy: UaxGroupBy, valueOn: (date: string) => number): UaxSeries {
-    const sums = new Map<string, number>();
-    for (const date of daysIn(range.from, range.to)) {
-        const key = bucketStart(date, groupBy);
-        sums.set(key, (sums.get(key) ?? 0) + valueOn(date));
-    }
-    return { id, label, color, points: [...sums].map(([date, value]) => ({ date, value })) };
+    const points = uaxDateBuckets(range, groupBy).map(({ start, days }) => ({ date: start, value: days.reduce((sum, day) => sum + valueOn(day), 0) }));
+    return { id, label, color, points };
 }
 
 export type ChartView = "pageviews" | "visitors";
@@ -109,7 +79,7 @@ const weights = everyUrl.map((_, i) => 1 / (i + 2));
 const weightSum = weights.reduce((sum, w) => sum + w, 0);
 
 const sumOver = (range: { from: string; to: string }, valueOn: (date: string) => number) =>
-    daysIn(range.from, range.to).reduce((sum, date) => sum + valueOn(date), 0);
+    uaxDaysIn(range).reduce((sum, date) => sum + valueOn(date), 0);
 
 const allPages = (range: { from: string; to: string }): PageRow[] => {
     const total = sumOver(range, pageviewsOn);
@@ -162,7 +132,7 @@ export function fetchPages({ range, compare, sort, page, pageSize, query }: Page
 }
 
 const visitorTypes = (range: { from: string; to: string }): VisitorTypeRow[] => {
-    const days = daysIn(range.from, range.to);
+    const days = uaxDaysIn(range);
     const returning = days.reduce((sum, d) => sum + visitorsOn(d).returning, 0);
     const added = days.reduce((sum, d) => sum + visitorsOn(d).new, 0);
     return [

@@ -1,5 +1,6 @@
 // Example only: a made-up store that answers like an API would. A real product calls its own endpoints
 // here. Everything is worked out from the date, so the same range always gives the same numbers.
+import { uaxDaysIn } from "../../../date-helpers/index.js";
 import type { UaxDateRange } from "../../../date-range/types.js";
 import type { UaxTableSort } from "../../../table/types.js";
 import { wait } from "../fake-latency.js";
@@ -23,15 +24,7 @@ export type Snapshot = {
 export type BuyerQuery = { sort?: UaxTableSort; page: number; pageSize: number; query: string };
 export type BuyerPage = { rows: BuyerRow[]; totalRows: number; stats: { spent: { total: number; max: number } } };
 
-const DAY_MS = 86_400_000;
 const toTime = (iso: string) => Date.parse(`${iso}T00:00:00Z`);
-const toIso = (time: number) => new Date(time).toISOString().slice(0, 10);
-
-function datesIn(range: Pick<UaxDateRange, "from" | "to">): string[] {
-    const dates: string[] = [];
-    for (let t = toTime(range.from); t <= toTime(range.to); t += DAY_MS) dates.push(toIso(t));
-    return dates;
-}
 
 /** A number from 0 up to (not including) 1 that depends only on the text. */
 function noise(seed: string): number {
@@ -126,7 +119,7 @@ function discountsFor(range: UaxDateRange, totals: Totals): DiscountRow[] {
 }
 
 function buyersFor(range: UaxDateRange): BuyerRow[] {
-    const totals = totalsOf(datesIn(range).map(dayOf));
+    const totals = totalsOf(uaxDaysIn(range).map(dayOf));
     return buyers
         .map(([name, email, weight]) => {
             const orders = Math.round(totals.orders * weight * 0.4 * wobble(range, email));
@@ -139,7 +132,7 @@ function buyersFor(range: UaxDateRange): BuyerRow[] {
 /** The KPI totals, the daily points and the two small tables for one range. */
 export async function loadSnapshot(range: UaxDateRange, latencyMs = 0): Promise<Snapshot> {
     await wait(latencyMs);
-    const days = datesIn(range).map(dayOf);
+    const days = uaxDaysIn(range).map(dayOf);
     const totals = totalsOf(days);
     return { days, totals, products: productsFor(range, totals), discounts: discountsFor(range, totals) };
 }

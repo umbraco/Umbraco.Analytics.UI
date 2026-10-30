@@ -1,4 +1,4 @@
-import { css, customElement, html, property, state } from "@umbraco-cms/backoffice/external/lit";
+import { css, customElement, html, property, ref, state } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import "../../../kpi-tile/kpi-tile.element.js";
 import "../../../chart/time-series-chart.element.js";
@@ -7,14 +7,10 @@ import "../../../table/data-table.element.js";
 import "../../../table-search/table-search.element.js";
 import { UAX_TABLE_CELL } from "../../../table/cells/cell-names.js";
 import type { UaxSeries } from "../../../chart/types.js";
+import { uaxCompareFor, uaxFormatDateRange } from "../../../date-helpers/index.js";
 import type { UaxCompare, UaxDateRange } from "../../../date-range/types.js";
-import type {
-    UaxTableColumn,
-    UaxTablePageChangeDetail,
-    UaxTableSearchDetail,
-    UaxTableSort,
-    UaxTableSortChangeDetail,
-} from "../../../table/types.js";
+import { UaxTableServerController } from "../../../table/table-server.controller.js";
+import type { UaxTableColumn, UaxTableServerState } from "../../../table/index.js";
 import {
     loadBuyerCompare,
     loadBuyers,
@@ -25,7 +21,6 @@ import {
     type Snapshot,
     type Totals,
 } from "./commerce-fake-data.js";
-import { formatRange } from "../format-range.js";
 
 // #region page
 // A product localizes labels, headlines and column names with this.localize.term(...). The examples keep English for readability.
@@ -63,6 +58,9 @@ const dayValue = (day: Day, id: MetricId): number => {
     }
 };
 
+/** A page of buyers and last period's buyers, which the controller hands to the table. */
+type BuyerResult = BuyerPage & { compareRows: BuyerRow[] };
+
 const productColumns: UaxTableColumn[] = [
     { key: "name", label: "Product", elementName: UAX_TABLE_CELL.link, meta: { hrefKey: "url" }, searchable: true, sortable: true, sortAs: "text" },
     { key: "sku", label: "SKU", searchable: true },
@@ -97,31 +95,29 @@ export class ExampleCommerceAnalyticsPageElement extends UmbLitElement {
     latency = 150;
 
     @state() private _range: UaxDateRange = { from: "2026-05-25", to: "2026-06-23" };
-    @state() private _compare?: UaxCompare = { mode: "previous-period", from: "2026-04-25", to: "2026-05-24" };
+    @state() private _compare?: UaxCompare = uaxCompareFor("previous-period", { from: "2026-05-25", to: "2026-06-23" });
     @state() private _metric: MetricId = "revenue";
 
     @state() private _data?: Snapshot;
     @state() private _compareData?: Snapshot;
     @state() private _loading = true;
 
-    // Top buyers load a page at a time, so they carry their own table state and loading flag.
-    @state() private _buyers?: BuyerPage;
-    @state() private _buyerCompare: BuyerRow[] = [];
-    @state() private _buyersLoading = true;
-    @state() private _buyerSort?: UaxTableSort = { key: "spent", direction: "desc" };
-    @state() private _buyerPage = 1;
-    @state() private _buyerPageSize = 5;
-    @state() private _buyerQuery = "";
 
     // A newer request makes an older answer stale, so only the latest one is shown. A real fetch should also abort the
     // previous request (AbortController) and abort on disconnect, so nothing runs for a page that is gone.
     #summaryRequest = 0;
-    #buyersRequest = 0;
+
+    // Top buyers load a page at a time: the controller keeps their sort, page, page size and search, drops stale
+    // answers and gives the table its rows, loading and totals. It loads on connect and on the table's own events.
+    #buyers = new UaxTableServerController<BuyerResult>(this, {
+        sort: { key: "spent", direction: "desc" },
+        pageSize: 5,
+        load: (state, signal) => this.#loadBuyers(state, signal),
+    });
 
     override connectedCallback() {
         super.connectedCallback();
         this.#loadSummary();
-        this.#loadBuyers();
     }
 
     async #loadSummary() {
@@ -137,53 +133,26 @@ export class ExampleCommerceAnalyticsPageElement extends UmbLitElement {
         this._loading = false;
     }
 
-    async #loadBuyers() {
-        const request = ++this.#buyersRequest;
-        this._buyersLoading = true;
-        const [buyers, compare] = await Promise.all([
-            loadBuyers(
-                this._range,
-                { sort: this._buyerSort, page: this._buyerPage, pageSize: this._buyerPageSize, query: this._buyerQuery },
-                this.latency,
-            ),
+    async #loadBuyers(state: Readonly<UaxTableServerState>, signal: AbortSignal): Promise<BuyerResult> {
+        const [buyers, compareRows] = await Promise.all([
+            loadBuyers(this._range, { sort: state.sort, page: state.page, pageSize: state.pageSize, query: state.query }, this.latency),
             this._compare ? loadBuyerCompare(this._compare, this.latency) : [],
         ]);
-        if (request !== this.#buyersRequest) return;
-        this._buyers = buyers;
-        this._buyerCompare = compare;
-        this._buyersLoading = false;
+        signal.throwIfAborted();
+        return { ...buyers, compareRows };
     }
 
     // The date range updates everything. A new range starts the buyers back on page 1.
     #onRangeChange(e: CustomEvent<{ value: UaxDateRange; compare?: UaxCompare }>) {
         this._range = e.detail.value;
         this._compare = e.detail.compare;
-        this._buyerPage = 1;
         this.#loadSummary();
-        this.#loadBuyers();
+        void this.#buyers.reload({ resetPage: true });
     }
 
     // A tile was pressed: the chart plots that metric. Nothing is fetched, the snapshot already holds every metric.
     #selectMetric(metric: MetricId) {
         this._metric = metric;
-    }
-
-    #onBuyerSort(e: CustomEvent<UaxTableSortChangeDetail>) {
-        this._buyerSort = e.detail;
-        this._buyerPage = 1;
-        this.#loadBuyers();
-    }
-
-    #onBuyerPage(e: CustomEvent<UaxTablePageChangeDetail>) {
-        this._buyerPage = e.detail.page;
-        this._buyerPageSize = e.detail.pageSize;
-        this.#loadBuyers();
-    }
-
-    #onBuyerSearch(e: CustomEvent<UaxTableSearchDetail>) {
-        this._buyerQuery = e.detail.query;
-        this._buyerPage = 1;
-        this.#loadBuyers();
     }
 
     // The change against last period: a percent change, or points for a rate. Undefined (no badge) when there is
@@ -227,7 +196,7 @@ export class ExampleCommerceAnalyticsPageElement extends UmbLitElement {
                 <header>
                     <h1>Analytics</h1>
                     <div class="actions">
-                        <uax-date-range .value=${this._range} .compare=${compare} @change=${this.#onRangeChange}></uax-date-range>
+                        <uax-date-range today="2026-06-23" .value=${this._range} .compare=${compare} @change=${this.#onRangeChange}></uax-date-range>
                     </div>
                 </header>
 
@@ -238,7 +207,7 @@ export class ExampleCommerceAnalyticsPageElement extends UmbLitElement {
                         kind="line"
                         .series=${this.#series(this._data?.days, this._metric)}
                         .compareSeries=${this.#series(this._compareData?.days, this._metric)}
-                        .compareLabel=${compare ? formatRange(this.localize, compare) : undefined}
+                        .compareLabel=${compare ? uaxFormatDateRange(this.localize, compare) : undefined}
                         .valueFormat=${metric.format}
                         ?loading=${this._loading}></uax-time-series-chart>
                 </uui-box>
@@ -267,20 +236,9 @@ export class ExampleCommerceAnalyticsPageElement extends UmbLitElement {
 
                 <uui-box headline="Top buyers" headline-variant="h2" style="--uui-box-default-padding: 0">
                     <uax-data-table
-                        mode="server"
+                        ${ref(this.#buyers.attach)}
                         row-key="email"
-                        .columns=${buyerColumns}
-                        .rows=${this._buyers?.rows ?? []}
-                        .compareRows=${this._buyerCompare}
-                        .totalRows=${this._buyers?.totalRows}
-                        .stats=${this._buyers?.stats}
-                        .sort=${this._buyerSort}
-                        .page=${this._buyerPage}
-                        .pageSize=${this._buyerPageSize}
-                        ?loading=${this._buyersLoading}
-                        @sort-change=${this.#onBuyerSort}
-                        @page-change=${this.#onBuyerPage}
-                        @search=${this.#onBuyerSearch}>
+                        .columns=${buyerColumns}>
                         <div slot="toolbar"><uax-table-search></uax-table-search></div>
                     </uax-data-table>
                 </uui-box>

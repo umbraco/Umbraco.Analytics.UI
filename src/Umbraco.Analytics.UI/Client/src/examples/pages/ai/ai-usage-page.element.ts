@@ -1,17 +1,21 @@
-import { css, customElement, html, property, state } from "@umbraco-cms/backoffice/external/lit";
+import { css, customElement, html, property, ref, state } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import "../../../kpi-tile/kpi-tile.element.js";
 import "../../../chart/time-series-chart.element.js";
 import "../../../group-by/group-by.element.js";
+import "../../../segmented/segmented.element.js";
+import type { UaxSegmentedChangeDetail } from "../../../segmented/segmented.element.js";
 import "../../../date-range/date-range.element.js";
 import "../../../table/data-table.element.js";
 import "../../../table-search/table-search.element.js";
 import { UAX_TABLE_CELL } from "../../../table/cells/cell-names.js";
 import type { UaxSeries } from "../../../chart/types.js";
+import { uaxCompareFor, uaxFormatDateRange } from "../../../date-helpers/index.js";
 import type { UaxColorSlot } from "../../../theme/types.js";
 import type { UaxCompare, UaxDateRange } from "../../../date-range/types.js";
 import type { UaxGroupBy } from "../../../group-by/group-by.element.js";
-import type { UaxTableColumn, UaxTablePageChangeDetail, UaxTableSearchDetail, UaxTableSort, UaxTableSortChangeDetail } from "../../../table/types.js";
+import { UaxTableServerController } from "../../../table/table-server.controller.js";
+import type { UaxTableColumn, UaxTableServerState } from "../../../table/index.js";
 import {
     getBreakdown,
     getUsage,
@@ -22,7 +26,6 @@ import {
     type UsageResult,
     type UsageTotals,
 } from "./ai-usage-fake-data.js";
-import { formatRange } from "../format-range.js";
 
 // #region page
 // A product localizes labels, headlines and column names with this.localize.term(...). The examples keep English for readability.
@@ -30,7 +33,7 @@ type Metric = "requests" | "inputTokens" | "outputTokens" | "totalTokens";
 
 // Fixed dates keep the example's data, and its screenshots, the same on every day.
 const initialRange: UaxDateRange = { from: "2026-05-25", to: "2026-06-23" };
-const initialCompare: UaxCompare = { mode: "previous-period", from: "2026-04-25", to: "2026-05-24" };
+const initialCompare = uaxCompareFor("previous-period", initialRange);
 
 const metricLabels: Record<Metric, string> = {
     requests: "Requests",
@@ -80,8 +83,8 @@ const tableColumns = (by: BreakdownBy): UaxTableColumn[] => [
 ];
 
 const breakdownOptions = [
-    { name: "Model", value: "model" },
-    { name: "Profile", value: "profile" },
+    { label: "Model", value: "model" },
+    { label: "Profile", value: "profile" },
 ];
 
 @customElement("example-ai-usage-page")
@@ -95,25 +98,25 @@ export class ExampleAiUsagePageElement extends UmbLitElement {
     @state() private _groupBy: UaxGroupBy = "day";
     @state() private _metric: Metric = "requests";
     @state() private _by: BreakdownBy = "model";
-    @state() private _sort: UaxTableSort = { key: "requests", direction: "desc" };
-    @state() private _page = 1;
-    @state() private _pageSize = 5;
-    @state() private _query = "";
 
     @state() private _usage?: UsageResult;
-    @state() private _breakdown?: BreakdownResult;
     @state() private _usageLoading = true;
-    @state() private _breakdownLoading = true;
 
     // A newer request makes an older answer stale, so only the latest one is shown. A real fetch should also abort the
     // previous request (AbortController) and abort on disconnect, so nothing runs for a page that is gone.
     #usageRequest = 0;
-    #breakdownRequest = 0;
+
+    // The table's sort, page, page size and search, the request guard and the table's rows, loading and totals.
+    // The controller loads on connect and when the table raises sort-change, page-change or search.
+    #breakdown = new UaxTableServerController<BreakdownResult>(this, {
+        sort: { key: "requests", direction: "desc" },
+        pageSize: 5,
+        load: (state, signal) => this.#loadBreakdown(state, signal),
+    });
 
     override connectedCallback() {
         super.connectedCallback();
         this.#loadUsage();
-        this.#loadBreakdown();
     }
 
     async #loadUsage() {
@@ -125,33 +128,29 @@ export class ExampleAiUsagePageElement extends UmbLitElement {
         this._usageLoading = false;
     }
 
-    async #loadBreakdown() {
-        const request = ++this.#breakdownRequest;
-        this._breakdownLoading = true;
+    async #loadBreakdown(state: Readonly<UaxTableServerState>, signal: AbortSignal) {
         const breakdown = await getBreakdown(
             {
                 by: this._by,
                 range: this._range,
                 compare: this._compare,
-                sort: { key: this._sort.key as BreakdownSortKey, direction: this._sort.direction },
-                page: this._page,
-                pageSize: this._pageSize,
-                query: this._query,
+                sort: { key: (state.sort?.key ?? "requests") as BreakdownSortKey, direction: state.sort?.direction ?? "desc" },
+                page: state.page,
+                pageSize: state.pageSize,
+                query: state.query,
             },
             this.latency,
         );
-        if (request !== this.#breakdownRequest) return;
-        this._breakdown = breakdown;
-        this._breakdownLoading = false;
+        signal.throwIfAborted();
+        return breakdown;
     }
 
     // The date range changed: every part reloads. The table goes back to page 1.
     #onDateRange(event: CustomEvent<{ value: UaxDateRange; compare?: UaxCompare }>) {
         this._range = event.detail.value;
         this._compare = event.detail.compare;
-        this._page = 1;
         this.#loadUsage();
-        this.#loadBreakdown();
+        void this.#breakdown.reload({ resetPage: true });
     }
 
     // Group by only changes how the chart's points are bucketed.
@@ -165,30 +164,9 @@ export class ExampleAiUsagePageElement extends UmbLitElement {
         this._metric = metric;
     }
 
-    #onBreakdownBy(event: Event) {
-        this._by = (event.target as HTMLSelectElement).value as BreakdownBy;
-        this._page = 1;
-        this.#loadBreakdown();
-    }
-
-    // The table has already changed its own `sort` and gone back to page 1. In server mode it is up to us to load that page.
-    #onSort(event: CustomEvent<UaxTableSortChangeDetail>) {
-        this._sort = event.detail;
-        this._page = 1;
-        this.#loadBreakdown();
-    }
-
-    #onPage(event: CustomEvent<UaxTablePageChangeDetail>) {
-        this._page = event.detail.page;
-        this._pageSize = event.detail.pageSize;
-        this.#loadBreakdown();
-    }
-
-    // The search box lives in the table's toolbar slot. Server mode ignores `query`, so the search is ours to run.
-    #onSearch(event: CustomEvent<UaxTableSearchDetail>) {
-        this._query = event.detail.query;
-        this._page = 1;
-        this.#loadBreakdown();
+    #onBreakdownBy(event: CustomEvent<UaxSegmentedChangeDetail>) {
+        this._by = event.detail.value as BreakdownBy;
+        void this.#breakdown.reload({ resetPage: true });
     }
 
     #tile(metric: Metric, icon: string, pick: (t: UsageTotals) => number) {
@@ -256,14 +234,13 @@ export class ExampleAiUsagePageElement extends UmbLitElement {
 
     override render() {
         const usage = this._usage;
-        const breakdown = this._breakdown;
         return html`
             <div class="page">
                 <header>
                     <h1>Usage</h1>
                     <div class="actions">
                         <uax-group-by .value=${this._groupBy} @change=${this.#onGroupBy}></uax-group-by>
-                        <uax-date-range .value=${this._range} .compare=${this._compare} @change=${this.#onDateRange}></uax-date-range>
+                        <uax-date-range today="2026-06-23" .value=${this._range} .compare=${this._compare} @change=${this.#onDateRange}></uax-date-range>
                     </div>
                 </header>
 
@@ -274,32 +251,22 @@ export class ExampleAiUsagePageElement extends UmbLitElement {
                         kind="stacked-bar"
                         .series=${toSeries(this._metric, usage?.buckets)}
                         .compareSeries=${toSeries(this._metric, usage?.compareBuckets)}
-                        .compareLabel=${this._compare ? formatRange(this.localize, this._compare) : undefined}
+                        .compareLabel=${this._compare ? uaxFormatDateRange(this.localize, this._compare) : undefined}
                         .groupBy=${this._groupBy}
                         ?loading=${this._usageLoading}></uax-time-series-chart>
                 </uui-box>
 
                 <uui-box headline="Breakdown" headline-variant="h2" style="--uui-box-default-padding: 0">
-                    <uui-select
+                    <uax-segmented
                         slot="header-actions"
                         label="Break down by"
-                        .options=${breakdownOptions.map((o) => ({ ...o, selected: o.value === this._by }))}
-                        @change=${this.#onBreakdownBy}></uui-select>
+                        .value=${this._by}
+                        .options=${breakdownOptions}
+                        @change=${this.#onBreakdownBy}></uax-segmented>
                     <uax-data-table
-                        mode="server"
+                        ${ref(this.#breakdown.attach)}
                         row-key="name"
-                        .columns=${tableColumns(this._by)}
-                        .rows=${breakdown?.rows ?? []}
-                        .compareRows=${breakdown?.compareRows ?? []}
-                        .totalRows=${breakdown?.totalRows}
-                        .stats=${breakdown?.stats}
-                        .sort=${this._sort}
-                        .page=${this._page}
-                        .pageSize=${this._pageSize}
-                        ?loading=${this._breakdownLoading}
-                        @sort-change=${this.#onSort}
-                        @page-change=${this.#onPage}
-                        @search=${this.#onSearch}>
+                        .columns=${tableColumns(this._by)}>
                         <div slot="toolbar"><uax-table-search></uax-table-search></div>
                     </uax-data-table>
                 </uui-box>

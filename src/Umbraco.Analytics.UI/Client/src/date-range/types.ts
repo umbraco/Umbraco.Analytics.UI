@@ -32,6 +32,8 @@ export type UaxDatePreset = {
 /** What the date range dialog is opened with. */
 export type UaxDateRangeModalData = {
     presets: UaxDatePreset[];
+    /** ISO date the presets count from. Defaults to the clock's day. */
+    today?: string;
     /** ISO date no field may be after. */
     maxDate: string;
     allowCompare: boolean;

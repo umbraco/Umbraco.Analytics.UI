@@ -15,9 +15,9 @@ import { UAX_TABLE_CELL } from "./cells/cell-names.js";
 const rows = [{ name: "Contact", views: 62 }, { name: "Home", views: 210 }];
 const header = (el: Element, label: string) =>
     [...shadow(el).querySelectorAll("uui-table-head-cell")].find((h) => h.textContent?.includes(label)) as HTMLElement;
-const firstName = (el: Element) => deepText(shadow(el).querySelector("uui-table-row:not([part~='header']) uui-table-cell")!).trim();
+const firstName = (el: Element) => deepText(shadow(el).querySelector("uui-table-row:not([part~='header']):not(.summary) uui-table-cell")!).trim();
 const names = (el: Element) =>
-    [...shadow(el).querySelectorAll("uui-table-row uui-table-cell:first-child")].map((c) => deepText(c).trim());
+    [...shadow(el).querySelectorAll("uui-table-row:not(.summary) uui-table-cell:first-child")].map((c) => deepText(c).trim());
 const sortButton = (el: Element, label: string) => header(el, label).querySelector("uax-table-sort-button")?.shadowRoot?.querySelector("button") as HTMLButtonElement;
 const textColumns = [
     { key: "name", label: "Name", sortable: true },

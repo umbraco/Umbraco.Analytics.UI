@@ -9,10 +9,10 @@ import { axeRun } from "../internal/test/a11y.js";
 import { userEvent } from "vitest/browser";
 import "./group-by.element.js";
 import type { UaxGroupByElement } from "./group-by.element.js";
-import { nextEvent, renderElement, shadow, type UaxTestElement } from "../internal/test/dom.js";
+import { deepQueryAll, nextEvent, renderElement, type UaxTestElement } from "../internal/test/dom.js";
 
 const option = (el: Element, label: string) =>
-    [...shadow(el).querySelectorAll("[role='radio']")].find((o) => o.textContent?.trim() === label) as HTMLElement;
+    deepQueryAll(el.shadowRoot!, "[role='radio']").find((o) => o.textContent?.trim() === label) as HTMLElement;
 
 describe("Feature: Day / Week / Month switch", () => {
     describe("Scenario: showing the current value", () => {
@@ -55,6 +55,17 @@ describe("Feature: Day / Week / Month switch", () => {
         });
     });
 
+    describe("Scenario: picking an option", () => {
+        it("raises exactly one change on the host", async () => {
+            const el = await renderElement(html`<uax-group-by value="day"></uax-group-by>`, "uax-group-by");
+            let count = 0;
+            el.addEventListener("change", () => count++);
+            option(el, "Month").click();
+            await el.updateComplete;
+            expect(count).toBe(1);
+        });
+    });
+
     describe("Scenario: limited options", () => {
         let el: UaxTestElement;
         beforeEach(async () => {
@@ -62,7 +73,7 @@ describe("Feature: Day / Week / Month switch", () => {
         });
 
         it("shows only Day and Week", () => {
-            expect([...shadow(el).querySelectorAll("[role='radio']")].map((o) => o.textContent?.trim())).toEqual(["Day", "Week"]);
+            expect(deepQueryAll(el.shadowRoot!, "[role='radio']").map((o) => o.textContent?.trim())).toEqual(["Day", "Week"]);
         });
     });
 

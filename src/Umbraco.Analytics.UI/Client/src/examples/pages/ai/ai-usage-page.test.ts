@@ -18,7 +18,7 @@ const tile = (page: Element, label: string) => tiles(page).find((t) => t.label =
 const chart = (page: Element) => shadow(page).querySelector("uax-time-series-chart") as UaxTimeSeriesChartElement;
 const table = (page: Element) => shadow(page).querySelector("uax-data-table") as UaxDataTableElement;
 const rowNames = (page: Element) =>
-    [...shadow(table(page)).querySelectorAll("uui-table-row:not([part~='header']) uui-table-cell:first-child")].map((c) => deepText(c).trim());
+    [...shadow(table(page)).querySelectorAll("uui-table-row:not([part~='header']):not(.summary) uui-table-cell:first-child")].map((c) => deepText(c).trim());
 const press = async (t: UaxKpiTileElement) => {
     await t.updateComplete;
     (t.shadowRoot!.querySelector("button") as HTMLButtonElement).click();
@@ -166,7 +166,7 @@ describe("Feature: Umbraco AI usage page", () => {
         beforeEach(async () => {
             page = await renderPage();
             const before = chart(page).series[0].points.length;
-            const week = shadow(shadow(page).querySelector("uax-group-by")!).querySelector<HTMLElement>("[data-value='week']")!;
+            const week = deepQuery<HTMLElement>(shadow(page).querySelector("uax-group-by")!.shadowRoot!, "[data-value='week']")!;
             week.click();
             await expect.poll(() => chart(page).series[0].points.length).toBeLessThan(before);
         });
@@ -238,9 +238,10 @@ describe("Feature: Umbraco AI usage page", () => {
     describe("Scenario: breaking down by profile", () => {
         it("swaps the name column to Profile", async () => {
             const page = await renderPage();
-            const select = shadow(page).querySelector("uui-select") as HTMLElement & { value: string };
-            select.value = "profile";
-            select.dispatchEvent(new Event("change", { bubbles: true }));
+            const profile = deepQueryAll(shadow(page), "[role='radio']").find(
+                (o) => o.textContent?.trim() === "Profile",
+            ) as HTMLElement;
+            profile.click();
             await expect.poll(() => table(page).columns[0].label).toBe("Profile");
         });
     });

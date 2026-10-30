@@ -83,6 +83,23 @@ html`<uax-time-series-chart kind="area" group-by="day" .series=${series}></uax-t
 
 `kind` is `line`, `area`, `bar` or `stacked-bar`. Add `.compareSeries` for last period's points and `.markers` (`{ id, date, title }`) for events on the x-axis. Set `.valueFormat` to `Intl.NumberFormat` options. Listen for `marker-click` (`UaxMarkerClickDetail`).
 
+### uax-segmented
+
+A row of options where one is selected, as a radio group: arrow keys move the selection, only the selected option is in the tab order. UUI has no segmented control (`uui-button-group` and `uui-tabs` have different semantics). Sets its own `value`, then raises `change`. [Storybook](https://umbraco.github.io/Umbraco.Analytics.UI/?path=/docs/components-segmented--docs)
+
+```ts
+import type { UaxSegmentedChangeDetail } from "@umbraco-analytics/ui";
+
+html`<uax-segmented
+  label="Break down by"
+  .value=${this._by}
+  .options=${[{ value: "model", label: "Model" }, { value: "profile", label: "Profile" }]}
+  @change=${(e: CustomEvent<UaxSegmentedChangeDetail>) => (this._by = e.detail.value)}
+></uax-segmented>`;
+```
+
+`label` is the group's accessible name (not shown). `uax-group-by` is built on it.
+
 ### uax-group-by
 
 Day, week or month switch. Sets its own `value`, then raises `change`. [Storybook](https://umbraco.github.io/Umbraco.Analytics.UI/?path=/docs/components-group-by--docs)
@@ -116,6 +133,34 @@ html`<uui-box headline="Visitors">
 
 Dates are `YYYY-MM-DD`. The package registers the dialog for you. `.presets`, `.maxDate` and `.allowCompare` adjust it. Comparison is on by default: turn it off with `.allowCompare=${false}`, as a boolean attribute can't say false.
 
+`today` (an ISO date, such as `today="2026-06-23"`) sets the day the presets, the default `value` and the default `max-date` count from. Leave it unset to use the browser's clock. Set it in demos and tests so presets match your fixed data. Text that isn't a real date is ignored.
+
+#### Date helpers
+
+Functions for the dates around the picker, so each product doesn't write its own. Ranges are `{ from, to }` ISO dates: a `UaxDateRange` or `UaxCompare` fits. A range that isn't valid (an unreal date, or `to` before `from`) gives `undefined`, or an empty list for the day and bucket helpers.
+
+```ts
+import { uaxCompareFor, uaxDateBuckets, uaxFormatDateRange } from "@umbraco-analytics/ui";
+
+const range = { from: "2026-05-25", to: "2026-06-23" };
+const compare = uaxCompareFor("previous-period", range); // { mode, from: "2026-04-25", to: "2026-05-24" }
+
+// Chart points per bucket: a day, a week (Monday start) or a month, plotted at the bucket's `start`.
+const points = uaxDateBuckets(range, "week").map(({ start, days }) => ({ date: start, value: sum(days) }));
+
+// The label `uax-date-range` shows, for the chart's compareLabel. Pass your element's `this.localize`.
+html`<uax-time-series-chart .compareLabel=${compare && uaxFormatDateRange(this.localize, compare)}></uax-time-series-chart>`;
+```
+
+| Function | Gives |
+| --- | --- |
+| `uaxPreviousPeriod(range)` | The same number of days straight before `range`. |
+| `uaxPreviousYear(range)` | The same dates one year earlier. |
+| `uaxCompareFor(mode, range)` | A `UaxCompare` for `previous-period` or `previous-year`. `undefined` for `custom`. |
+| `uaxDaysIn(range)` | Every ISO date in `range`, both ends included. |
+| `uaxDateBuckets(range, groupBy)` | `{ start, days }[]` for `day`, `week` or `month`, the same buckets `uax-group-by` offers. |
+| `uaxFormatDateRange(localize, range, { showYear })` | Text such as "May 25, 2026 to Jun 23, 2026" in the user's culture. |
+
 ### uax-data-table
 
 Rows and columns. Each column names the cell that shows it. [Storybook](https://umbraco.github.io/Umbraco.Analytics.UI/?path=/docs/components-data-table--docs)
@@ -139,12 +184,35 @@ html`<uax-data-table
 ```
 
 - **Client mode** (default): the table sorts, searches and pages the rows you give it.
-- **Server mode**: set `mode="server"` and `total-rows` (the row count across every page). The table never reorders or filters. Load new rows on `sort-change`, `page-change` and `search`. Pass `.stats` (`{ [columnKey]: { total, max } }` across every page) so shares and bars stay right across pages.
+- **Server mode**: set `mode="server"` and `total-rows` (the row count across every page). The table never reorders or filters. Load new rows on `sort-change`, `page-change` and `search`. Pass `.stats` (`{ [columnKey]: { total, max } }` across every page) so shares and bars stay right across pages. `UaxTableServerController` does this wiring for you (below).
 - **Compare**: pass `.compareRows` and `row-key` to show a change badge on number, percent and share cells. Set `meta: { lowerIsBetter: true }` on a column where a fall is good.
-- **Slots**: `toolbar` (above the header) and `footer` (left of the pager).
+- **Summary row**: slot content as `summary-<column key>` to show a total under its column, such as `<span slot="summary-views">1,240</span>`. Each piece sits in its column's cell and takes its `align`. With nothing slotted there is no row. The row isn't sorted or paged, and you work out its numbers.
+- **Slots**: `toolbar` (above the header), `summary-<key>` (under the header), and `footer` (left of the pager).
 - **Rows**: `clickable-rows` makes rows keyboard-reachable and raises `row-click`.
 
 Replace `rows` and `columns` with new arrays to update. Changing them in place isn't noticed.
+
+#### UaxTableServerController
+
+Wires a server-mode table so you only write the loader. It keeps the sort, page, page size and search, goes back to page 1 on a sort or search, aborts the request a newer one replaces (the `AbortSignal` it passes to `load`), drops an answer that arrives late, and sets `rows`, `compareRows`, `totalRows`, `stats` and `loading` on the table.
+
+```ts
+import { ref } from "@umbraco-cms/backoffice/external/lit";
+import { UaxTableServerController } from "@umbraco-analytics/ui";
+
+#pages = new UaxTableServerController(this, {
+  sort: { key: "views", direction: "desc" },
+  load: async ({ sort, page, pageSize, query }, signal) => {
+    const response = await fetch(`/api/pages?page=${page}&size=${pageSize}&q=${query}`, { signal });
+    return await response.json(); // { rows, totalRows, stats?, compareRows? }, plus any fields of your own
+  },
+});
+
+html`<uax-data-table ${ref(this.#pages.attach)} .columns=${columns}></uax-data-table>`;
+```
+
+- It loads when the host connects. Call `this.#pages.reload({ resetPage: true })` when something the loader reads changes, such as the date range.
+- `result` is the last answer, including your own fields. `loading` and `error` are there too, and the host redraws when they change. A failed request keeps the old rows and calls `onError`.
 
 ### uax-table-search
 
@@ -261,6 +329,7 @@ All events bubble. None is composed, so they don't cross shadow roots.
 
 | Element | Event | `detail` |
 | --- | --- | --- |
+| `uax-segmented` | `change` | `{ value }` |
 | `uax-group-by` | `change` | `{ value }` |
 | `uax-date-range` | `change` | `{ value, compare }` |
 | `uax-time-series-chart` | `marker-click` | `{ id }` |

@@ -34,7 +34,7 @@ type Field = "from" | "to" | "compare-from" | "compare-to";
 @customElement("uax-date-range-modal")
 export class UaxDateRangeModalElement extends UmbModalBaseElement<UaxDateRangeModalData, UaxDateRangeModalValue> {
     get #today() {
-        return todayIso();
+        return this.data?.today || todayIso();
     }
 
     get #maxDate() {

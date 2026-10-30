@@ -1,4 +1,4 @@
-import { addDays, dateOnly, firstOfNextMonth } from "../../internal/date/date-math.js";
+import { bucketEnd, dateOnly } from "../../internal/date/date-math.js";
 import type { UaxGroupBy } from "../../group-by/group-by.element.js";
 import type { UaxMarker } from "../types.js";
 
@@ -10,12 +10,6 @@ export interface MarkerBucket {
 }
 
 const dayOf = (marker: UaxMarker) => dateOnly(marker.date);
-
-/** The first day after the bucket that starts on `start`: the next day, the day a week on, or the 1st of the next month. */
-function bucketEnd(start: string, groupBy: UaxGroupBy): string {
-    if (groupBy === "month") return firstOfNextMonth(start);
-    return addDays(start, groupBy === "week" ? 7 : 1);
-}
 
 /**
  * Puts each marker into the bucket of the chart that contains its date. The chart's points are already grouped,

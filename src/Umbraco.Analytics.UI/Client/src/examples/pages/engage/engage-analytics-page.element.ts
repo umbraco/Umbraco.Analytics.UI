@@ -1,4 +1,4 @@
-import { css, customElement, html, nothing, property, state } from "@umbraco-cms/backoffice/external/lit";
+import { css, customElement, html, nothing, property, ref, state } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import "../../../chart/time-series-chart.element.js";
 import "../../../date-range/date-range.element.js";
@@ -7,28 +7,22 @@ import "../../../group-by/group-by.element.js";
 import "../../../table/data-table.element.js";
 import "../../../table-search/table-search.element.js";
 import type { UaxSeries } from "../../../chart/types.js";
+import { uaxCompareFor, uaxFormatDateRange } from "../../../date-helpers/index.js";
 import type { UaxCompare, UaxDateRange } from "../../../date-range/types.js";
 import type { UaxGroupBy } from "../../../group-by/group-by.element.js";
 import { UAX_TABLE_CELL } from "../../../table/cells/cell-names.js";
-import type {
-    UaxTableColumn,
-    UaxTablePageChangeDetail,
-    UaxTableSearchDetail,
-    UaxTableSort,
-    UaxTableSortChangeDetail,
-} from "../../../table/types.js";
+import { UaxTableServerController } from "../../../table/table-server.controller.js";
+import type { UaxTableColumn, UaxTableServerState, UaxTableSort } from "../../../table/index.js";
 import {
     fetchChartSeries,
     fetchCompareSeries,
     fetchPages,
     fetchVisitorTypes,
     markers,
-    previousPeriod,
     type ChartView,
     type PagesResult,
     type VisitorTypeRow,
 } from "./engage-fake-data.js";
-import { formatRange } from "../format-range.js";
 import { wait } from "../fake-latency.js";
 
 // #region page
@@ -44,6 +38,9 @@ const visitorColumns: UaxTableColumn[] = [
     { key: "visitors", label: "Visitors", elementName: UAX_TABLE_CELL.share, width: "27%", sortable: true, sortAs: "number" },
     { key: "sessions", label: "Sessions", elementName: UAX_TABLE_CELL.share, width: "27%", sortable: true, sortAs: "number" },
 ];
+
+// The visitors table is `client` mode, so the table sorts its three rows itself.
+const visitorSort: UaxTableSort = { key: "visitors", direction: "desc" };
 
 const percentChange = (current: number, previous?: number) =>
     previous ? ((current - previous) / previous) * 100 : undefined;
@@ -63,17 +60,12 @@ export class ExampleEngageAnalyticsPageElement extends UmbLitElement {
     latency = 150;
 
     @state() private _range: UaxDateRange = { from: "2026-05-25", to: "2026-06-23" };
-    @state() private _compare?: UaxCompare = previousPeriod({ from: "2026-05-25", to: "2026-06-23" });
+    @state() private _compare?: UaxCompare = uaxCompareFor("previous-period", { from: "2026-05-25", to: "2026-06-23" });
     @state() private _groupBy: UaxGroupBy = "day";
-    @state() private _sort: UaxTableSort = { key: "pageviews", direction: "desc" };
-    @state() private _page = 1;
-    @state() private _pageSize = 10;
-    @state() private _query = "";
 
     @state() private _series: UaxSeries[] = [];
     @state() private _compareSeries: UaxSeries[] = [];
     @state() private _chartLoading = true;
-    @state() private _pages?: PagesResult;
     @state() private _visitors?: { rows: VisitorTypeRow[]; compareRows: VisitorTypeRow[]; visitors: { current: number; previous?: number } };
     @state() private _tableLoading = true;
 
@@ -82,11 +74,21 @@ export class ExampleEngageAnalyticsPageElement extends UmbLitElement {
     #chartRequest = 0;
     #tableRequest = 0;
 
+    // The pageviews table is paged by the server: the controller keeps its sort, page, page size and search, drops stale
+    // answers and gives the table its rows, loading and totals. Made on connect, when the view is known.
+    #pages?: UaxTableServerController<PagesResult>;
+
     override connectedCallback() {
         super.connectedCallback();
-        if (this.view === "visitors") this._sort = { key: "visitors", direction: "desc" };
         this.#loadChart();
-        this.#loadTable();
+        if (this.view === "pageviews") {
+            this.#pages ??= new UaxTableServerController<PagesResult>(this, {
+                sort: { key: "pageviews", direction: "desc" },
+                load: (state, signal) => this.#loadPages(state, signal),
+            });
+        } else {
+            this.#loadVisitors();
+        }
     }
 
     async #loadChart() {
@@ -99,23 +101,25 @@ export class ExampleEngageAnalyticsPageElement extends UmbLitElement {
         this._chartLoading = false;
     }
 
-    async #loadTable() {
+    async #loadPages(state: Readonly<UaxTableServerState>, signal: AbortSignal): Promise<PagesResult> {
+        await wait(this.latency);
+        signal.throwIfAborted();
+        return fetchPages({
+            range: this._range,
+            compare: this._compare,
+            sort: state.sort ?? { key: "pageviews", direction: "desc" },
+            page: state.page,
+            pageSize: state.pageSize,
+            query: state.query,
+        });
+    }
+
+    async #loadVisitors() {
         const request = ++this.#tableRequest;
         this._tableLoading = true;
         await wait(this.latency);
         if (request !== this.#tableRequest) return;
-        if (this.view === "pageviews") {
-            this._pages = fetchPages({
-                range: this._range,
-                compare: this._compare,
-                sort: this._sort,
-                page: this._page,
-                pageSize: this._pageSize,
-                query: this._query,
-            });
-        } else {
-            this._visitors = fetchVisitorTypes(this._range, this._compare);
-        }
+        this._visitors = fetchVisitorTypes(this._range, this._compare);
         this._tableLoading = false;
     }
 
@@ -123,9 +127,9 @@ export class ExampleEngageAnalyticsPageElement extends UmbLitElement {
     #onDateRangeChange(event: CustomEvent<{ value: UaxDateRange; compare?: UaxCompare }>) {
         this._range = event.detail.value;
         this._compare = event.detail.compare;
-        this._page = 1;
         this.#loadChart();
-        this.#loadTable();
+        if (this.#pages) void this.#pages.reload({ resetPage: true });
+        else this.#loadVisitors();
     }
 
     // Group by only changes the chart's buckets: the table keeps its rows.
@@ -134,32 +138,15 @@ export class ExampleEngageAnalyticsPageElement extends UmbLitElement {
         this.#loadChart();
     }
 
-    // The table has already moved to page 1 itself on a sort, so only the product's own state needs to follow.
-    #onSortChange(event: CustomEvent<UaxTableSortChangeDetail>) {
-        this._sort = event.detail;
-        this._page = 1;
-        if (this.view === "pageviews") this.#loadTable();
-    }
-
-    #onPageChange(event: CustomEvent<UaxTablePageChangeDetail>) {
-        this._page = event.detail.page;
-        this._pageSize = event.detail.pageSize;
-        this.#loadTable();
-    }
-
-    #onSearch(event: CustomEvent<UaxTableSearchDetail>) {
-        this._query = event.detail.query;
-        this._page = 1;
-        this.#loadTable();
-    }
-
-    #renderTotal(label: string, total: { current: number; previous?: number }) {
+    // The total sits in the summary row, under its own column: the label in the first column's slot, the number and
+    // its change in the slot of the column it totals.
+    #renderTotal(labelKey: string, valueKey: string, label: string, total: { current: number; previous?: number }) {
         const change = percentChange(total.current, total.previous);
-        return html`<div class="total">
-            <span>${label}</span>
-            <strong>${this.localize.number(total.current)}</strong>
-            ${change === undefined ? nothing : html`<uax-delta-badge size="sm" .value=${change}></uax-delta-badge>`}
-        </div>`;
+        return html`<span slot=${`summary-${labelKey}`}>${label}</span>
+            <span slot=${`summary-${valueKey}`} class="total">
+                ${this.localize.number(total.current)}
+                ${change === undefined ? nothing : html`<uax-delta-badge size="sm" .value=${change}></uax-delta-badge>`}
+            </span>`;
     }
 
     #renderTable() {
@@ -169,38 +156,21 @@ export class ExampleEngageAnalyticsPageElement extends UmbLitElement {
                 .columns=${visitorColumns}
                 .rows=${visitors?.rows ?? []}
                 .compareRows=${visitors?.compareRows ?? []}
-                .sort=${this._sort}
+                .sort=${visitorSort}
                 row-key="type"
-                ?loading=${this._tableLoading}
-                @sort-change=${this.#onSortChange}>
-                <div slot="toolbar" class="toolbar">
-                    ${visitors ? this.#renderTotal("Total visitors", visitors.visitors) : nothing}
-                </div>
+                ?loading=${this._tableLoading}>
+                ${visitors ? this.#renderTotal("type", "visitors", "Total visitors", visitors.visitors) : nothing}
             </uax-data-table>`;
         }
-        const pages = this._pages;
+        const pages = this.#pages?.result;
         return html`<uax-data-table
-            mode="server"
+            ${ref(this.#pages?.attach)}
             .columns=${pageColumns}
-            .rows=${pages?.rows ?? []}
-            .compareRows=${pages?.compareRows ?? []}
-            .totalRows=${pages?.totalRows ?? 0}
-            .stats=${pages?.stats}
-            .sort=${this._sort}
-            .page=${this._page}
-            .pageSize=${this._pageSize}
-            .query=${this._query}
             row-key="url"
             empty-headline="No pages found"
-            empty-description="No page matches your search."
-            ?loading=${this._tableLoading}
-            @sort-change=${this.#onSortChange}
-            @page-change=${this.#onPageChange}
-            @search=${this.#onSearch}>
-            <div slot="toolbar" class="toolbar">
-                <uax-table-search .value=${this._query}></uax-table-search>
-                ${pages ? this.#renderTotal("Total pageviews", pages.pageviews) : nothing}
-            </div>
+            empty-description="No page matches your search.">
+            <div slot="toolbar"><uax-table-search></uax-table-search></div>
+            ${pages ? this.#renderTotal("url", "pageviews", "Total pageviews", pages.pageviews) : nothing}
         </uax-data-table>`;
     }
 
@@ -215,7 +185,7 @@ export class ExampleEngageAnalyticsPageElement extends UmbLitElement {
                         <uax-date-range
                             .value=${this._range}
                             .compare=${this._compare}
-                            max-date="2026-06-29"
+                            today="2026-06-29"
                             @change=${this.#onDateRangeChange}></uax-date-range>
                     </div>
                 </header>
@@ -228,7 +198,7 @@ export class ExampleEngageAnalyticsPageElement extends UmbLitElement {
                         .kind=${visitors ? "stacked-bar" : "area"}
                         .series=${this._series}
                         .compareSeries=${this._compareSeries}
-                        .compareLabel=${this._compare ? formatRange(this.localize, this._compare) : undefined}
+                        .compareLabel=${this._compare ? uaxFormatDateRange(this.localize, this._compare) : undefined}
                         .markers=${markers}
                         .groupBy=${this._groupBy}
                         ?loading=${this._chartLoading}></uax-time-series-chart>
@@ -260,12 +230,6 @@ export class ExampleEngageAnalyticsPageElement extends UmbLitElement {
         .actions {
             display: flex;
             align-items: center;
-            gap: var(--uui-size-space-4);
-        }
-        .toolbar {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
             gap: var(--uui-size-space-4);
         }
         .total {

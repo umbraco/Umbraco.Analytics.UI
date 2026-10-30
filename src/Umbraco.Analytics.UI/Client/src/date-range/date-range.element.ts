@@ -1,14 +1,14 @@
 import { css, customElement, html, nothing, property, type CSSResultGroup, type TemplateResult } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UMB_MODAL_MANAGER_CONTEXT, type UmbModalManagerContext } from "@umbraco-cms/backoffice/modal";
-import { builtInPresetRange, todayIso } from "../internal/date/date-math.js";
-import { displayIsoDate, displayIsoDateWithoutYear } from "../internal/date/format-date.js";
+import { builtInPresetRange, parseIso, todayIso } from "../internal/date/date-math.js";
+import { uaxFormatDateRange } from "../date-helpers/date-helpers.js";
 import { UAX_DATE_RANGE_MODAL } from "./date-range-modal.token.js";
 import { defaultPresets } from "./presets.js";
 import type { UaxCompare, UaxDatePreset, UaxDateRange, UaxDateRangeChangeDetail } from "./types.js";
 
-const defaultValue = (): UaxDateRange => ({
-    ...builtInPresetRange("last-30-days", todayIso())!,
+const defaultValue = (today: string): UaxDateRange => ({
+    ...builtInPresetRange("last-30-days", today)!,
     preset: "last-30-days",
 });
 
@@ -25,9 +25,15 @@ const defaultValue = (): UaxDateRange => ({
  */
 @customElement("uax-date-range")
 export class UaxDateRangeElement extends UmbLitElement {
-    /** The range shown. Defaults to the last 30 days. */
+    /** The range shown. Defaults to the last 30 days, counted back from `today`. Setting `undefined` restores that default. */
     @property({ attribute: false })
-    value: UaxDateRange = defaultValue();
+    get value(): UaxDateRange {
+        return this.#value ?? defaultValue(this.#today);
+    }
+    set value(value: UaxDateRange | undefined) {
+        this.#value = value;
+    }
+    #value?: UaxDateRange;
 
     /** The comparison range shown under the dates, when there is one. */
     @property({ attribute: false })
@@ -41,9 +47,22 @@ export class UaxDateRangeElement extends UmbLitElement {
     @property({ type: Boolean, attribute: "allow-compare" })
     allowCompare = true;
 
-    /** The latest date the dialog accepts, as an ISO date. Defaults to today. */
+    /** The latest date the dialog accepts, as an ISO date. Defaults to `today`. */
     @property({ attribute: "max-date" })
     maxDate?: string;
+
+    /**
+     * The day the presets, the default `value` and the default `maxDate` count from, as an ISO date such as
+     * "2026-06-23". Defaults to the browser's current day. Set it to keep demos and tests the same whenever they run.
+     * Text that isn't a real date is ignored.
+     */
+    @property()
+    today?: string;
+
+    /** `today` when it is a real date, else the clock's day. */
+    get #today(): string {
+        return this.today && parseIso(this.today) ? this.today : todayIso();
+    }
 
     #modalManager?: UmbModalManagerContext;
 
@@ -55,8 +74,7 @@ export class UaxDateRangeElement extends UmbLitElement {
     }
 
     #rangeText(from: string, to: string, showYear = true) {
-        const display = showYear ? displayIsoDate : displayIsoDateWithoutYear;
-        return this.localize.term("uaxAnalytics_dateRangeRange", display(from, this.localize), display(to, this.localize));
+        return uaxFormatDateRange(this.localize, { from, to }, { showYear });
     }
 
     /** The year is left off the comparison line when all four dates share one, and kept when they differ so the years can't be mixed up. */
@@ -72,7 +90,7 @@ export class UaxDateRangeElement extends UmbLitElement {
         }
         // Copies: the modal context deep-freezes what it is given, and these belong to the product.
         const modal = this.#modalManager.open(this, UAX_DATE_RANGE_MODAL, {
-            data: { presets: this.presets, maxDate: this.maxDate || todayIso(), allowCompare: this.allowCompare },
+            data: { presets: this.presets, today: this.#today, maxDate: this.maxDate || this.#today, allowCompare: this.allowCompare },
             value: { value: { ...this.value }, compare: this.compare && { ...this.compare } },
         });
         // Closing the dialog rejects it: that is the editor discarding their edits, not an error.

@@ -9,6 +9,7 @@ const imports = `import { css, customElement, html, property, state } from "@umb
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import {
     UAX_TABLE_CELL,
+    uaxFormatDateRange,
     type UaxCompare,
     type UaxDateRange,
     type UaxSeries,
@@ -19,8 +20,6 @@ import {
     type UaxTableSortChangeDetail,
 } from "@umbraco-analytics/ui";
 // Your API client: loadSnapshot, loadBuyers, loadBuyerCompare and their types. In this story they are a fake, generated from the dates.
-// formatRange turns a date range into text such as "25 May 2026 – 23 Jun 2026".
-import { formatRange } from "./my-format.js";
 import { loadBuyerCompare, loadBuyers, loadSnapshot, type BuyerPage, type BuyerRow, type Day, type Snapshot, type Totals } from "./commerce-api.js";`;
 
 const code = regionSource(raw, "page", imports);

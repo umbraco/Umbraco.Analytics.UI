@@ -9,6 +9,7 @@ const imports = `import { css, customElement, html, property, state } from "@umb
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import {
     UAX_TABLE_CELL,
+    uaxFormatDateRange,
     type UaxCompare,
     type UaxDateRange,
     type UaxGroupBy,
@@ -20,8 +21,6 @@ import {
     type UaxTableSortChangeDetail,
 } from "@umbraco-analytics/ui";
 // Your API client: getUsage, getBreakdown and their types. In this story they are a fake, generated from the date.
-// formatRange turns a date range into text such as "25 May 2026 – 23 Jun 2026".
-import { formatRange } from "./my-format.js";
 import { getBreakdown, getUsage, type BreakdownBy, type BreakdownResult, type BreakdownSortKey, type UsageBucket, type UsageResult, type UsageTotals } from "./usage-api.js";`;
 
 const code = regionSource(raw, "page", imports);

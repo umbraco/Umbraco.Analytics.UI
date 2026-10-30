@@ -27,9 +27,9 @@ const tiles = (page: Element) => [...shadow(page).querySelectorAll<UaxKpiTileEle
 const tile = (page: Element, label: string) => tiles(page).find((t) => t.label === label)!;
 const chart = (page: Element) => shadow(page).querySelector("uax-time-series-chart") as UaxTimeSeriesChartElement;
 const buyersTable = (page: Element) =>
-    shadow(page).querySelector("uax-data-table[mode='server']") as UaxTestElement & { loading: boolean };
+    shadow(page).querySelector("uax-data-table[row-key='email']") as UaxTestElement & { loading: boolean };
 const buyerCells = (page: Element, column: number) =>
-    [...shadow(buyersTable(page)).querySelectorAll(`uui-table-row uui-table-cell:nth-child(${column})`)].map((c) => deepText(c).trim());
+    [...shadow(buyersTable(page)).querySelectorAll(`uui-table-row:not(.summary) uui-table-cell:nth-child(${column})`)].map((c) => deepText(c).trim());
 const buyerNames = (page: Element) => buyerCells(page, 1);
 
 describe("Feature: the Commerce analytics page", () => {

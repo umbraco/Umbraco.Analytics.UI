@@ -12,9 +12,9 @@ import "./data-table.element.js";
 import { pageColumns, pageRows } from "./table-fixtures.js";
 import { UAX_TABLE_CELL } from "./cells/cell-names.js";
 
-const firstRowCells = (el: Element) => [...shadow(el).querySelector("uui-table-row")!.querySelectorAll("uui-table-cell")];
+const firstRowCells = (el: Element) => [...shadow(el).querySelector("uui-table-row:not(.summary)")!.querySelectorAll("uui-table-cell")];
 const bars = (el: Element, column: number) =>
-    [...shadow(el).querySelectorAll(`uui-table-row uui-table-cell:nth-child(${column + 1})`)].flatMap((cell) =>
+    [...shadow(el).querySelectorAll(`uui-table-row:not(.summary) uui-table-cell:nth-child(${column + 1})`)].flatMap((cell) =>
         deepQueryAll<HTMLElement>(cell, ".share-bar"),
     );
 

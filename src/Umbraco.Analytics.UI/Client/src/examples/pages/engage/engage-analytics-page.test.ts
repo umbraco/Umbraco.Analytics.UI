@@ -7,13 +7,13 @@ import highContrastCss from "@umbraco-ui/uui/themes/high-contrast.css?inline";
 import { userEvent } from "vitest/browser";
 import { axeRun } from "../../../internal/test/a11y.js";
 import { renderPageExample, saveDateRange, withTheme } from "../../../internal/test/page-example.js";
-import { deepQueryAll, deepText, settle, shadow, type UaxTestElement } from "../../../internal/test/dom.js";
+import { deepQuery, deepQueryAll, deepText, settle, shadow, type UaxTestElement } from "../../../internal/test/dom.js";
 import "./engage-analytics-page.element.js";
 
 type Series = { points: unknown[] }[];
 const chart = (page: Element) => shadow(page).querySelector("uax-time-series-chart")!;
 const table = (page: Element) => shadow(page).querySelector("uax-data-table")!;
-const dataRows = (page: Element) => [...shadow(table(page)).querySelectorAll("uui-table-row:not([part~='header'])")];
+const dataRows = (page: Element) => [...shadow(table(page)).querySelectorAll("uui-table-row:not(.summary)")];
 const firstRowText = (page: Element) => deepText(dataRows(page)[0]);
 const header = (page: Element, label: string) =>
     [...shadow(table(page)).querySelectorAll("uui-table-head-cell")].find((h) => h.textContent?.includes(label)) as HTMLElement;
@@ -53,8 +53,18 @@ describe("Feature: Engage analytics page example", () => {
             expect(deepQueryAll(shadow(table(page)), "uax-delta-badge").length).toBeGreaterThan(0);
         });
 
-        it("shows the total pageviews with its compare badge in the table toolbar", () => {
-            expect(table(page).querySelectorAll("uax-delta-badge")).toHaveLength(1);
+        it("shows the total pageviews with its compare badge in the table's summary row", () => {
+            expect(table(page).querySelectorAll("[slot='summary-pageviews'] uax-delta-badge")).toHaveLength(1);
+        });
+
+        it("puts the total under the Pageviews column", () => {
+            const total = table(page).querySelector("[slot='summary-pageviews']")!.getBoundingClientRect();
+            const head = header(page, "Pageviews").getBoundingClientRect();
+            expect([Math.round(total.left) >= Math.round(head.left), Math.round(total.right) <= Math.round(head.right)]).toEqual([true, true]);
+        });
+
+        it("keeps the summary row out of the toolbar", () => {
+            expect(table(page).querySelectorAll("[slot='toolbar'] uax-delta-badge")).toHaveLength(0);
         });
 
         it("shows the first page of ten rows", () => {
@@ -65,7 +75,7 @@ describe("Feature: Engage analytics page example", () => {
     describe("Scenario: choosing another group by", () => {
         it("draws one point per week", async () => {
             const page = await renderPage();
-            const week = shadow(shadow(page).querySelector("uax-group-by")!).querySelector("[data-value='week']") as HTMLElement;
+            const week = deepQuery<HTMLElement>(shadow(page).querySelector("uax-group-by")!.shadowRoot!, "[data-value='week']")!;
             week.click();
             await expect.poll(() => (chart(page).series as Series)[0].points.length).toBe(5);
         });
@@ -117,6 +127,11 @@ describe("Feature: Engage analytics page example", () => {
         it("lists a row per user type", async () => {
             const page = await renderPage("visitors");
             expect(dataRows(page)).toHaveLength(2);
+        });
+
+        it("shows the total visitors under the Visitors column", async () => {
+            const page = await renderPage("visitors");
+            expect(table(page).querySelectorAll("[slot='summary-visitors']")).toHaveLength(1);
         });
     });
 

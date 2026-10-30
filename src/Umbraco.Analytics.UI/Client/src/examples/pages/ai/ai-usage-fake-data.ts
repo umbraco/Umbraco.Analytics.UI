@@ -1,6 +1,7 @@
 // A stand-in for the Umbraco AI usage API, for the "Umbraco AI > Usage" page example. Everything is
 // invented and generated from the date, so the same range always gives the same numbers. A real
 // product fetches this over HTTP.
+import { uaxDateBuckets, uaxDaysIn } from "../../../date-helpers/index.js";
 import type { UaxCompare, UaxDateRange } from "../../../date-range/types.js";
 import type { UaxGroupBy } from "../../../group-by/group-by.element.js";
 import type { UaxTableSortDirection } from "../../../table/types.js";
@@ -98,14 +99,6 @@ const profiles: { name: string; weight: number }[] = [
 
 const DAY = 86_400_000;
 const utc = (iso: string) => Date.parse(`${iso}T00:00:00Z`);
-const toIso = (ms: number) => new Date(ms).toISOString().slice(0, 10);
-
-/** Every ISO date from `from` to `to`, both inclusive. */
-const daysIn = (range: { from: string; to: string }): string[] => {
-    const days: string[] = [];
-    for (let ms = utc(range.from); ms <= utc(range.to); ms += DAY) days.push(toIso(ms));
-    return days;
-};
 
 /** A repeatable number between 0 and 1 for any text. */
 function hash01(text: string): number {
@@ -192,21 +185,8 @@ function profileDay(date: string): UsageTotals[] {
     }));
 }
 
-/** The first day of the week (Monday) or month a date falls in. */
-function bucketStart(date: string, groupBy: UaxGroupBy): string {
-    if (groupBy === "day") return date;
-    if (groupBy === "month") return `${date.slice(0, 7)}-01`;
-    const weekday = (new Date(utc(date)).getUTCDay() + 6) % 7;
-    return toIso(utc(date) - weekday * DAY);
-}
-
 function bucketsFor(range: { from: string; to: string }, groupBy: UaxGroupBy): UsageBucket[] {
-    const byStart = new Map<string, UsageTotals>();
-    for (const date of daysIn(range)) {
-        const start = bucketStart(date, groupBy);
-        byStart.set(start, add(byStart.get(start) ?? empty(), dayTotals(date)));
-    }
-    return [...byStart].map(([date, totals]) => ({ date, ...totals }));
+    return uaxDateBuckets(range, groupBy).map(({ start, days }) => ({ date: start, ...days.map(dayTotals).reduce(add, empty()) }));
 }
 
 const sumOf = (buckets: UsageTotals[]) => buckets.reduce(add, empty());
@@ -227,7 +207,7 @@ export async function getUsage(query: UsageQuery, latencyMs = 0): Promise<UsageR
 function rowsFor(by: BreakdownBy, range: { from: string; to: string }): BreakdownRow[] {
     const names = by === "model" ? models.map((m) => m.name) : profiles.map((p) => p.name);
     const totals = names.map(() => empty());
-    for (const date of daysIn(range)) {
+    for (const date of uaxDaysIn(range)) {
         const day = by === "model" ? models.map((m) => modelDay(m, date)) : profileDay(date);
         day.forEach((usage, i) => (totals[i] = add(totals[i], usage)));
     }

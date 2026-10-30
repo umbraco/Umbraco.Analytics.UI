@@ -20,6 +20,7 @@ Live previews of every element, all states, and full example pages (Commerce, En
 | `uax-kpi-tile` | A headline number as a card, with an icon and a change badge. Can be selectable. |
 | `uax-delta-badge` | The change against a comparison period, e.g. "▲ 12.4%". |
 | `uax-time-series-chart` | Lines, areas, bars or stacked bars over time, with compare, markers and a legend. |
+| `uax-segmented` | Segmented control: one selected option in a row. |
 | `uax-group-by` | Day, week or month switch for a chart. |
 | `uax-date-range` | Button and dialog to pick a date range and a comparison. |
 | `uax-data-table` | Sortable, searchable, pageable table. Client or server mode. |

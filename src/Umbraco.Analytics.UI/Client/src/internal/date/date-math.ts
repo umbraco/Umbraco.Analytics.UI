@@ -112,3 +112,42 @@ export function compareRangeFor(mode: "previous-period" | "previous-year" | "cus
     if (mode === "previous-year") return previousYearRange(range);
     return undefined;
 }
+
+/** Every ISO date from `range.from` to `range.to`, both included. Empty when `range` isn't a valid range. */
+export function daysIn(range: Range): string[] {
+    const count = inclusiveDays(range);
+    return count === undefined ? [] : Array.from({ length: count }, (_, i) => addDays(range.from, i));
+}
+
+/** How a chart groups its points. The same three values as `UaxGroupBy`. */
+export type BucketUnit = "day" | "week" | "month";
+
+/** The first day of the bucket an ISO date falls in: the day itself, the Monday of its week, or the 1st of its month. */
+export function bucketStart(iso: string, unit: BucketUnit): string {
+    const parts = parseIso(iso);
+    if (!parts || unit === "day") return iso;
+    if (unit === "month") return toIso(parts.year, parts.month, 1);
+    const sinceMonday = (new Date(Date.UTC(parts.year, parts.month - 1, parts.day)).getUTCDay() + 6) % 7;
+    return addDays(iso, -sinceMonday);
+}
+
+/** The first day after the bucket that starts on `start`: the next day, the day a week on, or the 1st of the next month. */
+export function bucketEnd(start: string, unit: BucketUnit): string {
+    if (unit === "month") return firstOfNextMonth(start);
+    return addDays(start, unit === "week" ? 7 : 1);
+}
+
+/** A bucket of a range: the date its point is plotted at and the days of the range inside it. */
+export type DateBucket = { start: string; days: string[] };
+
+/** Splits `range` into day, week (Monday start) or month buckets, in order. A bucket at either end holds only the days inside the range. */
+export function dateBuckets(range: Range, unit: BucketUnit): DateBucket[] {
+    const buckets: DateBucket[] = [];
+    for (const day of daysIn(range)) {
+        const start = bucketStart(day, unit);
+        const last = buckets[buckets.length - 1];
+        if (last?.start === start) last.days.push(day);
+        else buckets.push({ start, days: [day] });
+    }
+    return buckets;
+}

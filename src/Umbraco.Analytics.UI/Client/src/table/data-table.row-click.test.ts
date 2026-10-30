@@ -14,7 +14,7 @@ import { UAX_TABLE_CELL } from "./cells/cell-names.js";
 import { nameColumns } from "./table-fixtures.js";
 
 const rows = [{ name: "Home", views: 210 }];
-const firstRow = (el: Element) => shadow(el).querySelector("uui-table-row:not([part~='header'])") as HTMLElement;
+const firstRow = (el: Element) => shadow(el).querySelector("uui-table-row:not([part~='header']):not(.summary)") as HTMLElement;
 
 describe("Feature: open a row", () => {
     describe("Scenario: clicking a row", () => {

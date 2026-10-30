@@ -4,6 +4,7 @@ import { UAX_TABLE_CELL } from "./cells/cell-names.js";
 import type { UaxDataTableElement } from "./data-table.element.js";
 import "./data-table.element.js";
 import "../table-search/table-search.element.js";
+import "../delta-badge/delta-badge.element.js";
 import type { UaxTableColumn, UaxTableRowClickDetail } from "./types.js";
 
 // Focused stories of the table's options. Complete, worked tables are under "Examples".
@@ -121,6 +122,21 @@ export const PagedClient: Story = {
     render: (args) =>
         html`<uui-box headline="Top pages" style="--uui-box-default-padding: 0">
             <uax-data-table .columns=${args.columns} .rows=${args.rows}></uax-data-table>
+        </uui-box>`,
+};
+
+/** A summary row under the header, for a total that lines up with its column. Slot content as `summary-<column key>`: here "Total pageviews" in the first column, and the number and its change in the Pageviews column. The row isn't sorted or paged, and the product works out the numbers. Columns with nothing slotted stay empty; with nothing slotted at all there is no row. */
+export const Summary: Story = {
+    args: { columns: pageColumns, rows: pageRows },
+    render: (args) =>
+        html`<uui-box headline="Top pages" style="--uui-box-default-padding: 0">
+            <uax-data-table .columns=${args.columns} .rows=${args.rows}>
+                <uax-table-search slot="toolbar"></uax-table-search>
+                <span slot="summary-url">Total pageviews</span>
+                <span slot="summary-pageviews" style="display: inline-flex; align-items: center; gap: var(--uui-size-space-3)">
+                    272 <uax-delta-badge size="sm" .value=${6.2}></uax-delta-badge>
+                </span>
+            </uax-data-table>
         </uui-box>`,
 };
 
