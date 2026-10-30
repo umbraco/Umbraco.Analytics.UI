@@ -49,13 +49,15 @@ export interface UaxTableServerOptions<TResult extends UaxTableServerResult> {
     query?: string;
     /** Called when `load` rejects with something other than an abort, after `error` is set. */
     onError?: (error: unknown) => void;
+    /** Whether the table's error state offers Retry (which calls `reload()`). Defaults to true. */
+    retryable?: boolean;
 }
 
 /**
  * Runs the server side of a `uax-data-table` in `server` mode, so a product doesn't write the wiring again. It keeps
  * the sort, page, page size and search from the table's `sort-change`, `page-change` and `search` events, goes back to
  * page 1 on a sort or search, calls `load` with that state, and gives the answer to the table: `rows`,
- * `compareRows`, `totalRows`, `stats` and `loading`. A newer request aborts the one before it (its `AbortSignal`) and an
+ * `compareRows`, `totalRows`, `stats`, `loading` and `error` (with `retryable`, on unless the option says otherwise; the table's `retry` calls `reload()`). A newer request aborts the one before it (its `AbortSignal`) and an
  * older answer that still arrives is dropped, so the table never shows a page the editor has left. The host
  * leaving the page aborts the request too.
  *
@@ -78,6 +80,8 @@ export class UaxTableServerController<TResult extends UaxTableServerResult = Uax
     #loading = false;
     #result?: TResult;
     #error?: unknown;
+    // Apart from `#error` because a loader may reject with `undefined`.
+    #failed = false;
 
     constructor(host: ReactiveControllerHost, options: UaxTableServerOptions<TResult>) {
         this.#host = host;
@@ -106,7 +110,7 @@ export class UaxTableServerController<TResult extends UaxTableServerResult = Uax
         return this.#result;
     }
 
-    /** What the last request rejected with, or `undefined` while it works and after a success. The table keeps its old rows. */
+    /** What the last request rejected with, or `undefined` while it works and after a success. The table shows its error state, with Retry, in place of the rows; `result` keeps the old answer. */
     get error(): unknown {
         return this.#error;
     }
@@ -124,6 +128,7 @@ export class UaxTableServerController<TResult extends UaxTableServerResult = Uax
         table.addEventListener("sort-change", this.#onSortChange);
         table.addEventListener("page-change", this.#onPageChange);
         table.addEventListener("search", this.#onSearch);
+        table.addEventListener("retry", this.#onRetry);
         this.#apply();
     };
 
@@ -151,6 +156,7 @@ export class UaxTableServerController<TResult extends UaxTableServerResult = Uax
         table.removeEventListener("sort-change", this.#onSortChange);
         table.removeEventListener("page-change", this.#onPageChange);
         table.removeEventListener("search", this.#onSearch);
+        table.removeEventListener("retry", this.#onRetry);
         this.#table = undefined;
     }
 
@@ -173,6 +179,11 @@ export class UaxTableServerController<TResult extends UaxTableServerResult = Uax
         void this.#run();
     };
 
+    // The table's Retry button: the same state again.
+    #onRetry = () => {
+        void this.reload();
+    };
+
     async #run(): Promise<void> {
         // A host that is away starts nothing: the next `hostConnected` loads the state as it is by then.
         if (!this.#connected) return;
@@ -182,6 +193,7 @@ export class UaxTableServerController<TResult extends UaxTableServerResult = Uax
         const request = ++this.#request;
         this.#loading = true;
         this.#error = undefined;
+        this.#failed = false;
         this.#apply();
         try {
             const result = await this.#options.load({ ...this.#state }, abort.signal);
@@ -191,6 +203,7 @@ export class UaxTableServerController<TResult extends UaxTableServerResult = Uax
             // An aborted request is one this controller gave up on, not a failure.
             if (request !== this.#request || abort.signal.aborted) return;
             this.#error = error;
+            this.#failed = true;
             this.#loading = false;
             this.#apply();
             this.#options.onError?.(error);
@@ -215,6 +228,8 @@ export class UaxTableServerController<TResult extends UaxTableServerResult = Uax
             table.totalRows = result?.totalRows;
             table.stats = result?.stats;
             table.loading = this.#loading;
+            table.error = this.#failed;
+            table.retryable = this.#options.retryable ?? true;
         }
         this.#host.requestUpdate();
     }

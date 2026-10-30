@@ -12,6 +12,7 @@ import {
 } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import "../empty-state/empty-state.element.js";
+import "../error-state/error-state.element.js";
 import type { UaxGroupBy } from "../group-by/group-by.element.js";
 import { dateOnly } from "../internal/date/date-math.js";
 import { formatIsoDate } from "../internal/date/format-date.js";
@@ -129,9 +130,11 @@ function tickFormat(valueFormat: Intl.NumberFormatOptions | undefined, max: numb
  * The x-axis labels follow `group-by`, and every number
  * (axis, tooltip, table) is formatted with `value-format` in the backoffice user's culture.
  * While `loading` is set it shows a skeleton on first load, or keeps the old data under a loading bar
- * when reloading. With no points it shows `uax-empty-state`.
+ * when reloading. With no points it shows `uax-empty-state`. While `error` is set it shows `uax-error-state` in place
+ * of the plot (error wins over loading, and loading over empty).
  *
  * @element uax-time-series-chart
+ * @fires retry - The Retry button of the error state was pressed (needs `retryable`). Bubbles, not composed.
  * @fires marker-click - The editor clicked a marker's dot, or pressed Enter or Space on it. Bubbles, not composed or cancelable, like `uax-group-by`'s `change`. `detail` is `{ id }` (`UaxMarkerClickDetail`); a dot standing for several markers raises the earliest one's id.
  * @cssprop --uax-chart-height - Height of the plot, without the legend or padding. Defaults to 260px.
  * @cssprop --uax-chart-padding - Padding around the plot, legend and empty state, as a CSS `padding` value. Defaults to `12px 24px 28px`. The loading bar ignores it and spans the full width at the top edge, so put the chart in a `uui-box` with `--uui-box-default-padding: 0`.
@@ -200,6 +203,22 @@ export class UaxTimeSeriesChartElement extends UmbLitElement {
     /** Shows a skeleton on first load, or a loading bar over the old data when reloading. */
     @property({ type: Boolean, reflect: true })
     loading = false;
+
+    /** The load failed. Shows `uax-error-state` in place of the plot, legend and data table, and wins over `loading` and the empty state. */
+    @property({ type: Boolean, reflect: true })
+    error = false;
+
+    /** Headline of the error state. Defaults to the translation of "Something went wrong". */
+    @property({ type: String, attribute: "error-headline" })
+    errorHeadline?: string;
+
+    /** Description of the error state. Defaults to the translation of "The data could not be loaded.". */
+    @property({ type: String, attribute: "error-description" })
+    errorDescription?: string;
+
+    /** Shows a Retry button in the error state. Pressing it raises `retry` on the chart. */
+    @property({ type: Boolean })
+    retryable = false;
 
     /** Headline of the empty state. Defaults to the translation of "No data yet". */
     @property({ type: String, attribute: "empty-headline" })
@@ -574,18 +593,34 @@ export class UaxTimeSeriesChartElement extends UmbLitElement {
             .numberFormat=${numberFormat}></uax-chart-data-table>`;
     }
 
+    // The error state's `retry` stops at its shadow root, so the chart raises its own.
+    #onRetry() {
+        this.dispatchEvent(new Event("retry", { bubbles: true }));
+    }
+
     override render(): TemplateResult {
-        const mode = getLoadingMode(this.loading, this.#hasData);
-        const showPlot = this.#hasData && mode !== "skeleton";
+        // Error wins over loading, and loading over empty.
+        const mode = this.error ? "idle" : getLoadingMode(this.loading, this.#hasData);
+        const busy = this.loading && !this.error;
+        const showPlot = this.#hasData && mode !== "skeleton" && !this.error;
         return html`<div
             class="region"
             role="figure"
             aria-label=${this.localize.term("uaxAnalytics_chartAriaLabel")}
-            aria-busy=${this.loading ? "true" : "false"}>
+            aria-busy=${busy ? "true" : "false"}>
             ${mode === "reload" ? html`<uax-loading-bar></uax-loading-bar>` : nothing}
             <div class="content">
             ${mode === "skeleton" ? html`<uax-skeleton></uax-skeleton>` : nothing}
-            ${mode === "idle" && !this.#hasData
+            ${this.error
+                ? html`<div class="empty">
+                      <uax-error-state
+                          .headline=${this.errorHeadline}
+                          .description=${this.errorDescription}
+                          .retryable=${this.retryable}
+                          @retry=${this.#onRetry}></uax-error-state>
+                  </div>`
+                : nothing}
+            ${mode === "idle" && !this.error && !this.#hasData
                 ? html`<div class="empty">
                       <uax-empty-state
                           .headline=${this.emptyHeadline}
@@ -633,7 +668,8 @@ export class UaxTimeSeriesChartElement extends UmbLitElement {
                 min-height: var(--_uax-skeleton-height);
             }
 
-            uax-empty-state {
+            uax-empty-state,
+            uax-error-state {
                 width: 100%;
             }
 

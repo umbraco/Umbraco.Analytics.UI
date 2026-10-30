@@ -15,6 +15,7 @@ const meta: Meta<UaxKpiTileElement> = {
         lowerIsBetter: false,
         loading: false,
         noData: false,
+        error: false,
         selectable: false,
         selected: false,
     },
@@ -32,6 +33,7 @@ const meta: Meta<UaxKpiTileElement> = {
                 .lowerIsBetter=${args.lowerIsBetter}
                 .loading=${args.loading}
                 .noData=${args.noData}
+                .error=${args.error}
                 .selectable=${args.selectable}
                 .selected=${args.selected}></uax-kpi-tile>
         </div>`,
@@ -57,6 +59,9 @@ export const UnknownChange: Story = { args: { label: "Success rate", value: "98%
 
 /** The range has no data: a dash instead of "0", no badge, "No data yet" for screen readers. Still selectable. */
 export const NoData: Story = { args: { value: undefined, delta: undefined, noData: true, selectable: true } };
+
+/** The load failed: a dash with hidden "Something went wrong" text in place of the value, and no badge. Wins over loading and no-data. */
+export const LoadFailed: Story = { args: { error: true, selectable: true } };
 
 export const NoDelta: Story = { args: { label: "Orders", value: "26", icon: "icon-inbox", delta: undefined } };
 

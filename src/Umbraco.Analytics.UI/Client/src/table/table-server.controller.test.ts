@@ -42,6 +42,21 @@ class TestServerTableHost extends LitElement {
     }
 }
 
+@customElement("test-no-retry-table-host")
+class TestNoRetryTableHost extends LitElement {
+    table = new UaxTableServerController<Result>(this, {
+        retryable: false,
+        load: (state, signal) =>
+            new Promise<Result>((resolve, reject) => {
+                requests.push({ state, signal, resolve, reject });
+            }),
+    });
+
+    override render() {
+        return html`<uax-data-table .columns=${pageColumns} ${ref(this.table.attach)}></uax-data-table>`;
+    }
+}
+
 @customElement("test-swapping-table-host")
 class TestSwappingTableHost extends LitElement {
     table = new UaxTableServerController<Result>(this, {
@@ -317,6 +332,44 @@ describe("Feature: server mode wiring helper", () => {
         it("clears the error on the next request", () => {
             void host.table.reload();
             expect(host.table.error).toBeUndefined();
+        });
+
+        it("sets the table's error", () => {
+            expect(tableOf(host).error).toBe(true);
+        });
+
+        it("lets the table offer Retry", () => {
+            expect(tableOf(host).retryable).toBe(true);
+        });
+
+        it("loads the same state again when the table raises retry", () => {
+            tableOf(host).dispatchEvent(new Event("retry", { bubbles: true }));
+            expect(requests).toHaveLength(3);
+        });
+
+        it("clears the table's error when the next load starts", () => {
+            void host.table.reload();
+            expect(tableOf(host).error).toBe(false);
+        });
+
+        it("keeps the table's error cleared after the next load succeeds", async () => {
+            void host.table.reload();
+            requests[2].resolve(answer("second"));
+            await expect.poll(() => tableOf(host).loading).toBe(false);
+            expect(tableOf(host).error).toBe(false);
+        });
+    });
+
+    describe("Scenario (sad path): the request fails with retryable false", () => {
+        it("leaves the table's retryable false", async () => {
+            const host = render(html`<test-no-retry-table-host></test-no-retry-table-host>`).container.querySelector(
+                "test-no-retry-table-host",
+            ) as TestNoRetryTableHost;
+            await host.updateComplete;
+            requests[0].reject(new Error("boom"));
+            const table = shadow(host).querySelector("uax-data-table") as UaxDataTableElement;
+            await expect.poll(() => table.error).toBe(true);
+            expect(table.retryable).toBe(false);
         });
     });
 

@@ -10,6 +10,9 @@ export default {
         emptyHeadline: "No data yet",
         emptyDescription: "Try a wider date range.",
 
+        // Error state (Retry is Umbraco's `general_retry`)
+        errorHeadline: "Something went wrong",
+        errorDescription: "The data could not be loaded.",
 
         // Delta badge
         deltaPercentagePoints: "{0} pp",

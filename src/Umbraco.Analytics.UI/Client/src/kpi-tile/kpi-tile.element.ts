@@ -13,6 +13,9 @@ import "../delta-badge/delta-badge.element.js";
  * too narrow for both. While `loading` with no `value` it shows a skeleton the size of a loaded tile. While
  * loading with a `value` it keeps the value and marks the tile busy, without a loading bar.
  *
+ * Set `error` when the load failed: the tile keeps its label and shows a dash with the hidden text "Something went
+ * wrong" in place of the value, and no change badge. It wins over `loading`, `no-data` and `value`. The tile stays selectable.
+ *
  * Set `no-data` when the range has no data: the tile shows a dash instead of a number and no change badge.
  * Leave `delta` unset when there is nothing to compare with (no badge); a `delta` of 0 is "no change" and
  * shows a neutral badge.
@@ -40,6 +43,10 @@ export class UaxKpiTileElement extends UmbLitElement {
      */
     @property({ type: Boolean, attribute: "no-data", reflect: true })
     noData = false;
+
+    /** The load failed. Shows a dash with the hidden text "Something went wrong" in place of the value, and no change badge. Wins over `loading`, `no-data` and `value`. */
+    @property({ type: Boolean, reflect: true })
+    error = false;
 
     /** Name of a backoffice icon, shown in the pink square. */
     @property({ type: String })
@@ -95,26 +102,28 @@ export class UaxKpiTileElement extends UmbLitElement {
 
     override render(): TemplateResult {
         const hasValue = this.value !== undefined && this.value !== null && this.value !== "";
-        const mode = getLoadingMode(this.loading, hasValue || this.noData);
+        // Error wins over loading, and loading over empty.
+        const mode = this.error ? "idle" : getLoadingMode(this.loading, hasValue || this.noData);
+        const busy = this.loading && !this.error;
 
         const content = html`${this.icon
                 ? html`<span class="icon" aria-hidden="true"><uui-icon name=${this.icon}></uui-icon></span>`
                 : nothing}
-            <span class="content" aria-busy=${this.loading ? "true" : "false"}>
+            <span class="content" aria-busy=${busy ? "true" : "false"}>
                 ${mode === "skeleton"
                     ? html`<uax-skeleton></uax-skeleton>`
                     : html`<span class="body">
                           <span class="label">${this.label}</span>
                           <span class="row">
-                              ${this.noData
+                              ${this.error || this.noData
                                   ? html`<span class="value no-data"
                                         ><span aria-hidden="true">—</span
-                                        ><span class="visually-hidden">${this.localize.term("uaxAnalytics_emptyHeadline")}</span></span
+                                        ><span class="visually-hidden">${this.localize.term(this.error ? "uaxAnalytics_errorHeadline" : "uaxAnalytics_emptyHeadline")}</span></span
                                     >`
                                   : hasValue
                                     ? html`<span class="value">${this.value}</span>`
                                     : nothing}
-                              ${this.noData || !Number.isFinite(this.delta)
+                              ${this.error || this.noData || !Number.isFinite(this.delta)
                                   ? nothing
                                   : html`<uax-delta-badge
                                         .value=${this.delta}

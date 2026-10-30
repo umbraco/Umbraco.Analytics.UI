@@ -207,6 +207,8 @@ export class ExampleCommerceAnalyticsPageElement extends UmbLitElement {
                         kind="line"
                         .series=${this.#series(this._data?.days, this._metric)}
                         .compareSeries=${this.#series(this._compareData?.days, this._metric)}
+                        .range=${this._range}
+                        .compare=${this._compare}
                         .compareLabel=${compare ? uaxFormatDateRange(this.localize, compare) : undefined}
                         .valueFormat=${metric.format}
                         ?loading=${this._loading}></uax-time-series-chart>

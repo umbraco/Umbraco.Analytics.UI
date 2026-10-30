@@ -34,9 +34,9 @@ const meta: Meta = {
 export default meta;
 
 // The host stands in for the backoffice's modal manager, which the date range dialog opens through.
-const render = (view: "pageviews" | "visitors", latency?: number) => html`
+const render = (view: "pageviews" | "visitors", latency?: number, failing = false) => html`
     <uax-test-modal-host>
-        <example-engage-analytics-page view=${view} latency=${ifDefined(latency)}></example-engage-analytics-page>
+        <example-engage-analytics-page view=${view} latency=${ifDefined(latency)} ?failing=${failing}></example-engage-analytics-page>
     </uax-test-modal-host>
 `;
 
@@ -61,5 +61,12 @@ export const Visitors: StoryObj = {
 export const SlowApi: StoryObj = {
     name: "Slow API",
     render: () => render("pageviews", 1500),
+    parameters: { docs: sourceDocs(code) },
+};
+
+/** The same page when the API fails: the chart and the table show the error state with Retry. Pressing Retry loads again, and fails again, since the fake API keeps failing. */
+export const FailingApi: StoryObj = {
+    name: "Failing API",
+    render: () => render("pageviews", undefined, true),
     parameters: { docs: sourceDocs(code) },
 };

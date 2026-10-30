@@ -11,6 +11,7 @@ import {
 } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import "../empty-state/empty-state.element.js";
+import "../error-state/error-state.element.js";
 import { getLoadingMode } from "../internal/loading/loading-mode.js";
 import "../internal/loading/loading-bar.element.js";
 import "../internal/loading/skeleton.element.js";
@@ -105,7 +106,8 @@ const SKELETON_WIDTHS = [72, 54, 83, 47, 65];
  * can compare a row with its match. A row with no matching compare row shows no badge. Without a `row-key` there is no match.
  *
  * While `loading` is set it shows skeleton rows on first load, or keeps the old rows under a loading
- * bar when reloading. With no rows it shows `uax-empty-state` under the header. Replace `rows` and
+ * bar when reloading. With no rows it shows `uax-empty-state` under the header. While `error` is set it shows
+ * `uax-error-state` under the header in place of the rows and pager (error wins over loading, and loading over empty). Replace `rows` and
  * `columns` (and `compare-rows`) with new arrays to update the table: changing one in place isn't noticed.
  *
  * Give a column `sortable` to make its header a button. Clicking it sets `sort` and raises `sort-change`
@@ -143,6 +145,7 @@ const SKELETON_WIDTHS = [72, 54, 83, 47, 65];
  * page, by column `key`) so a share is still a share of the whole and bars keep one scale from page to page.
  *
  * @element uax-data-table
+ * @fires retry - The Retry button of the error state was pressed (needs `retryable`). Bubbles, not composed.
  * @fires sort-change - A sortable header was clicked, by pointer or keyboard. Bubbles, not composed or cancelable, like `uax-group-by`. `detail` is `{ key, direction }`; the table has already set `sort` to it and reset `page` to 1, so a `server` product loads page 1 and resets its own page binding.
  * @fires page-change - The editor picked another page or page size. Bubbles, not composed or cancelable, like `sort-change`. `detail` is `{ page, pageSize }`; the table has already set `page` and `pageSize`. A new page size goes back to page 1.
  * @fires row-click - A row was clicked, or Enter or Space was pressed on it, while `clickable-rows` is set. Bubbles, not composed or cancelable, like `sort-change`. `detail` is `{ row }`: the object from `rows`.
@@ -175,6 +178,22 @@ export class UaxDataTableElement extends UmbLitElement {
     /** Shows skeleton rows on first load, or a loading bar over the old rows when reloading. */
     @property({ type: Boolean, reflect: true })
     loading = false;
+
+    /** The load failed. Shows `uax-error-state` under the header in place of the rows and pager, and wins over `loading` and the empty state. */
+    @property({ type: Boolean, reflect: true })
+    error = false;
+
+    /** Headline of the error state. Defaults to the translation of "Something went wrong". */
+    @property({ type: String, attribute: "error-headline" })
+    errorHeadline?: string;
+
+    /** Description of the error state. Defaults to the translation of "The data could not be loaded.". */
+    @property({ type: String, attribute: "error-description" })
+    errorDescription?: string;
+
+    /** Shows a Retry button in the error state. Pressing it raises `retry` on the table. */
+    @property({ type: Boolean })
+    retryable = false;
 
     /** Headline of the empty state. Defaults to the translation of "No data yet". */
     @property({ type: String, attribute: "empty-headline" })
@@ -574,22 +593,31 @@ export class UaxDataTableElement extends UmbLitElement {
         </uui-table-row>`;
     }
 
+    // The error state's `retry` stops at its shadow root, so the table raises its own.
+    #onRetry() {
+        this.dispatchEvent(new Event("retry", { bubbles: true }));
+    }
+
     override render(): TemplateResult {
         const hasData = this.rows.length > 0;
-        const mode = getLoadingMode(this.loading, hasData);
+        // Error wins over loading, and loading over empty.
+        const mode = this.error ? "idle" : getLoadingMode(this.loading, hasData);
+        const busy = this.loading && !this.error;
         return html`<div class="region ${this.#hasToolbar ? "has-toolbar" : ""}">
             ${mode === "reload" ? html`<uax-loading-bar></uax-loading-bar>` : nothing}
             <div class="toolbar"><slot name="toolbar" @slotchange=${() => this.requestUpdate()} @search=${this.#onSearch}></slot></div>
-            <uui-table aria-busy=${this.loading ? "true" : "false"}>
+            <uui-table aria-busy=${busy ? "true" : "false"}>
                 ${this.#derived.map((derived) => html`<uui-table-column style=${ifDefined(derived.column.width ? `width: ${derived.column.width}` : undefined)}></uui-table-column>`)}
                 <uui-table-head>${this.#derived.map((derived) => this.#renderHeaderCell(derived))}</uui-table-head>
                 ${this.#renderSummaryRow()}
-                ${mode === "skeleton"
-                    ? Array.from({ length: this.#skeletonRowCount }, (_, index) => this.#renderSkeletonRow(index))
-                    : this.#visibleRows.map((row) => this.#renderRow(row))}
+                ${this.error
+                    ? nothing
+                    : mode === "skeleton"
+                      ? Array.from({ length: this.#skeletonRowCount }, (_, index) => this.#renderSkeletonRow(index))
+                      : this.#visibleRows.map((row) => this.#renderRow(row))}
             </uui-table>
-            ${this.#renderEmptyState(mode, hasData)}
-            ${this.#renderFooter(this.#showPager && mode !== "skeleton")}
+            ${this.error ? this.#renderErrorState() : this.#renderEmptyState(mode, hasData)}
+            ${this.#renderFooter(this.#showPager && mode !== "skeleton" && !this.error)}
         </div>`;
     }
 
@@ -599,13 +627,21 @@ export class UaxDataTableElement extends UmbLitElement {
      * sit in the cells, so content lines up with its column.
      */
     #renderSummaryRow(): TemplateResult {
-        return html`<uui-table-row class="summary" ?hidden=${!this.#hasSummary}>
+        return html`<uui-table-row class="summary" ?hidden=${!this.#hasSummary || this.error}>
             ${this.#derived.map(
                 (derived) => html`<uui-table-cell class=${this.#cellClass(derived)}>
                     <slot name=${`summary-${derived.column.key}`} @slotchange=${() => this.requestUpdate()}></slot>
                 </uui-table-cell>`,
             )}
         </uui-table-row>`;
+    }
+
+    #renderErrorState(): TemplateResult {
+        return html`<uax-error-state
+            .headline=${this.errorHeadline}
+            .description=${this.errorDescription}
+            .retryable=${this.retryable}
+            @retry=${this.#onRetry}></uax-error-state>`;
     }
 
     /** "No results" when a query leaves no rows on screen (either mode), else the product's empty state when there are no rows. */
@@ -760,7 +796,8 @@ export class UaxDataTableElement extends UmbLitElement {
                 text-align: end;
             }
 
-            uax-empty-state {
+            uax-empty-state,
+            uax-error-state {
                 border-top: 1px solid var(--uui-color-border);
             }
         `,

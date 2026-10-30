@@ -59,6 +59,10 @@ const meta: Meta<UaxDataTableElement> = {
         columns: pageColumns,
         rows: pageRows,
         loading: false,
+        error: false,
+        errorHeadline: undefined,
+        errorDescription: undefined,
+        retryable: false,
         emptyHeadline: undefined,
         emptyDescription: undefined,
     },
@@ -68,6 +72,10 @@ const meta: Meta<UaxDataTableElement> = {
                 .columns=${args.columns}
                 .rows=${args.rows}
                 .loading=${args.loading}
+                .error=${args.error}
+                .errorHeadline=${args.errorHeadline}
+                .errorDescription=${args.errorDescription}
+                .retryable=${args.retryable}
                 .emptyHeadline=${args.emptyHeadline}
                 .emptyDescription=${args.emptyDescription}></uax-data-table>
         </uui-box>`,
@@ -189,6 +197,9 @@ export const Loading: Story = { args: { rows: [], loading: true } };
 
 /** Reloading with rows already shown: the old rows stay under a thin loading bar at the top edge. */
 export const Reloading: Story = { args: { loading: true } };
+
+/** The load failed: the error state under the header in place of the rows and pager, with Retry when `retryable` (it raises `retry`). Error wins over loading and empty. */
+export const LoadFailed: Story = { args: { error: true, retryable: true } };
 
 /** No rows: the empty state under the header, with the product's own text when it sets one. */
 export const Empty: Story = {

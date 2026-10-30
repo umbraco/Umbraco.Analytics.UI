@@ -57,6 +57,8 @@ Say what the change is:
 
 Add `no-data` when the range has no data. The tile shows a dash and no badge, instead of "0", and says "No data yet" to screen readers (key `uaxAnalytics_emptyHeadline`).
 
+Add `error` when the load failed. The tile keeps its label, shows a dash and no badge, and says "Something went wrong" to screen readers (key `uaxAnalytics_errorHeadline`). `error` wins over `loading`, `no-data` and `value`. The message is for screen readers only, so a page of tiles with no chart or table should show its own alert.
+
 ### uax-delta-badge
 
 The change against a comparison period. `12.4` means +12.4%. [Storybook](https://umbraco.github.io/Umbraco.Analytics.UI/?path=/docs/components-delta-badge--docs)
@@ -82,6 +84,8 @@ html`<uax-time-series-chart kind="area" group-by="day" .series=${series}></uax-t
 ```
 
 `kind` is `line`, `area`, `bar` or `stacked-bar`. Add `.compareSeries` for last period's points, plus `.range` and `.compare` (the `{ from, to }` that `uax-date-range` emits) so they line up by bucket: compare points sit under the same bucket number of the current period, counted from each range's first bucket. Pass both: without them each side starts at its first point, so sparse data that omits a period's first days (or weeks, or months) shifts the compare out of line. Points on one date are added, so aggregate rates and averages first. Add `.markers` (`{ id, date, title }`) for events on the x-axis. Set `.valueFormat` to `Intl.NumberFormat` options. Listen for `marker-click` (`UaxMarkerClickDetail`).
+
+Set `error` when the load failed: the chart shows `uax-error-state` in place of the plot. Add `retryable` for a Retry button, and listen for `retry` on the chart. `error-headline` and `error-description` reword it. `error` wins over `loading`, and `loading` over the empty state.
 
 ### uax-segmented
 
@@ -192,9 +196,11 @@ html`<uax-data-table
 
 Replace `rows` and `columns` with new arrays to update. Changing them in place isn't noticed.
 
+Set `error` when the load failed: the table keeps its header and shows `uax-error-state` in place of the rows and pager. Add `retryable` for a Retry button, and listen for `retry` on the table. `error-headline` and `error-description` reword it. `error` wins over `loading`, and `loading` over the empty state.
+
 #### UaxTableServerController
 
-Wires a server-mode table so you only write the loader. It keeps the sort, page, page size and search, goes back to page 1 on a sort or search, aborts the request a newer one replaces (the `AbortSignal` it passes to `load`), drops an answer that arrives late, and sets `rows`, `compareRows`, `totalRows`, `stats` and `loading` on the table.
+Wires a server-mode table so you only write the loader. It keeps the sort, page, page size and search, goes back to page 1 on a sort or search, aborts the request a newer one replaces (the `AbortSignal` it passes to `load`), drops an answer that arrives late, and sets `rows`, `compareRows`, `totalRows`, `stats`, `loading` and `error` on the table.
 
 ```ts
 import { ref } from "@umbraco-cms/backoffice/external/lit";
@@ -212,7 +218,7 @@ html`<uax-data-table ${ref(this.#pages.attach)} .columns=${columns}></uax-data-t
 ```
 
 - It loads when the host connects. Call `this.#pages.reload({ resetPage: true })` when something the loader reads changes, such as the date range.
-- `result` is the last answer, including your own fields. `loading` and `error` are there too, and the host redraws when they change. A failed request keeps the old rows and calls `onError`.
+- `result` is the last answer, including your own fields. `loading` and `error` are there too, and the host redraws when they change. A failed request calls `onError` and shows the table's error state with Retry, which calls `reload()`. The next request clears it.
 
 ### uax-table-search
 
@@ -274,6 +280,16 @@ html`<uax-empty-state headline="No orders yet" description="Orders show up here 
 
 An empty string hides that line. `icon` is a backoffice icon name.
 
+### uax-error-state
+
+A "could not load" message. The tile, chart and table show it when their `error` is set. [Storybook](https://umbraco.github.io/Umbraco.Analytics.UI/?path=/docs/components-error-state--docs)
+
+```ts
+html`<uax-error-state retryable @retry=${() => this.#load()}></uax-error-state>`;
+```
+
+Without `headline` and `description` it says "Something went wrong" and "The data could not be loaded." (keys `uaxAnalytics_errorHeadline` and `uaxAnalytics_errorDescription`). An empty string hides that line. `retryable` shows a Retry button (Umbraco's `general_retry`) that raises `retry`. `icon` is a backoffice icon name. The text is announced when it appears (`role="alert"`).
+
 ### Full pages
 
 [Examples > Pages](https://umbraco.github.io/Umbraco.Analytics.UI/?path=/docs/examples-pages-commerce--docs) in Storybook rebuild the Commerce, Engage and Umbraco AI analytics pages from these elements, with the code beside each.
@@ -333,6 +349,9 @@ All events bubble. None is composed, so they don't cross shadow roots.
 | `uax-group-by` | `change` | `{ value }` |
 | `uax-date-range` | `change` | `{ value, compare }` |
 | `uax-time-series-chart` | `marker-click` | `{ id }` |
+| `uax-error-state` | `retry` | none |
+| `uax-time-series-chart` | `retry` | none |
+| `uax-data-table` | `retry` | none |
 | `uax-kpi-tile` | `selected`, `deselected` | `{}` (cancelable) |
 | `uax-table-search` | `search` | `{ query }` |
 | `uax-data-table` | `sort-change` | `{ key, direction }` |

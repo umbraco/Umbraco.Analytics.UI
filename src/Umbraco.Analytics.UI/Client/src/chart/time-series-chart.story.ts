@@ -27,6 +27,10 @@ const meta: Meta<UaxTimeSeriesChartElement> = {
         groupBy: "day",
         valueFormat: undefined,
         loading: false,
+        error: false,
+        errorHeadline: undefined,
+        errorDescription: undefined,
+        retryable: false,
         emptyHeadline: undefined,
         emptyDescription: undefined,
     },
@@ -45,6 +49,10 @@ const meta: Meta<UaxTimeSeriesChartElement> = {
                 .groupBy=${args.groupBy}
                 .valueFormat=${args.valueFormat}
                 .loading=${args.loading}
+                .error=${args.error}
+                .errorHeadline=${args.errorHeadline}
+                .errorDescription=${args.errorDescription}
+                .retryable=${args.retryable}
                 .emptyHeadline=${args.emptyHeadline}
                 .emptyDescription=${args.emptyDescription}></uax-time-series-chart>
         </uui-box>`,
@@ -72,6 +80,9 @@ export const Reloading: Story = { args: { loading: true } };
 export const Empty: Story = {
     args: { series: [], emptyHeadline: "No pageviews yet", emptyDescription: "Views appear here once visitors arrive." },
 };
+
+/** The load failed: the error state in place of the plot, with Retry when `retryable` (it raises `retry`). Error wins over loading and empty. */
+export const LoadFailed: Story = { args: { error: true, retryable: true } };
 
 /** Two series get a legend. */
 export const TwoSeries: Story = { args: { series: [pageviews, sessions] } };

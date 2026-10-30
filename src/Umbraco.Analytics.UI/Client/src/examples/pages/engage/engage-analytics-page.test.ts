@@ -152,4 +152,41 @@ describe("Feature: Engage analytics page example", () => {
             expect(await audit("visitors")).toHaveNoViolations();
         });
     });
+
+    describe("Scenario: the API fails", () => {
+        let page: UaxTestElement;
+        beforeEach(async () => {
+            page = await renderPageExample(
+                html`<example-engage-analytics-page .latency=${0} failing></example-engage-analytics-page>`,
+                "example-engage-analytics-page",
+            );
+            await expect.poll(() => chart(page).error).toBe(true);
+            await expect.poll(() => table(page).error).toBe(true);
+            await settle(page);
+        });
+
+        it("shows the chart's error state", () => {
+            expect(shadow(chart(page)).querySelector("uax-error-state")).not.toBe(null);
+        });
+
+        it("shows the table's error state", () => {
+            expect(shadow(table(page)).querySelector("uax-error-state")).not.toBe(null);
+        });
+
+        it("offers Retry on the chart", () => {
+            expect(chart(page).retryable).toBe(true);
+        });
+
+        it("loads the chart again when its Retry is pressed", async () => {
+            (page as unknown as { failing: boolean }).failing = false;
+            chart(page).dispatchEvent(new Event("retry", { bubbles: true }));
+            await expect.poll(() => chart(page).error).toBe(false);
+        });
+
+        it("loads the table again when its Retry is pressed", async () => {
+            (page as unknown as { failing: boolean }).failing = false;
+            table(page).dispatchEvent(new Event("retry", { bubbles: true }));
+            await expect.poll(() => table(page).error).toBe(false);
+        });
+    });
 });

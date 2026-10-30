@@ -52,6 +52,9 @@ export class UaxDataTableElement extends UmbLitElement {
     compareRows: Record<string, unknown>[];
     emptyDescription?: string;
     emptyHeadline?: string;
+    error: boolean;
+    errorDescription?: string;
+    errorHeadline?: string;
     loading: boolean;
     mode: UaxTableMode;
     page: number;
@@ -59,6 +62,7 @@ export class UaxDataTableElement extends UmbLitElement {
     query: string;
     // (undocumented)
     render(): TemplateResult;
+    retryable: boolean;
     rowKey?: string;
     rows: Record<string, unknown>[];
     sort?: UaxTableSort;
@@ -157,6 +161,18 @@ export class UaxEmptyStateElement extends UmbLitElement {
 }
 
 // @public
+export class UaxErrorStateElement extends UmbLitElement {
+    description?: string;
+    headline?: string;
+    icon: string;
+    // (undocumented)
+    render(): TemplateResult;
+    retryable: boolean;
+    // (undocumented)
+    static styles: CSSResultGroup;
+}
+
+// @public
 export function uaxFormatDateRange(localize: Pick<UmbLocalizationController, "date" | "term">, range: UaxDateSpan, options?: UaxFormatDateRangeOptions): string;
 
 // @public
@@ -187,6 +203,7 @@ export class UaxKpiTileElement extends UmbLitElement {
     delta?: number;
     deltaUnit: UaxDeltaUnit;
     deselectable: boolean;
+    error: boolean;
     icon?: string;
     label: string;
     loading: boolean;
@@ -432,6 +449,7 @@ export interface UaxTableServerOptions<TResult extends UaxTableServerResult> {
     page?: number;
     pageSize?: number;
     query?: string;
+    retryable?: boolean;
     sort?: UaxTableSort;
 }
 
@@ -487,6 +505,9 @@ export class UaxTimeSeriesChartElement extends UmbLitElement {
     disconnectedCallback(): void;
     emptyDescription?: string;
     emptyHeadline?: string;
+    error: boolean;
+    errorDescription?: string;
+    errorHeadline?: string;
     groupBy: UaxGroupBy;
     kind: UaxChartKind;
     loading: boolean;
@@ -494,6 +515,7 @@ export class UaxTimeSeriesChartElement extends UmbLitElement {
     range?: UaxDateRange;
     // (undocumented)
     render(): TemplateResult;
+    retryable: boolean;
     series: UaxSeries[];
     // (undocumented)
     static styles: CSSResultGroup;

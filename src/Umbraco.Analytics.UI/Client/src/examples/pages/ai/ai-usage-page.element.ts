@@ -251,6 +251,8 @@ export class ExampleAiUsagePageElement extends UmbLitElement {
                         kind="stacked-bar"
                         .series=${toSeries(this._metric, usage?.buckets)}
                         .compareSeries=${toSeries(this._metric, usage?.compareBuckets)}
+                        .range=${this._range}
+                        .compare=${this._compare}
                         .compareLabel=${this._compare ? uaxFormatDateRange(this.localize, this._compare) : undefined}
                         .groupBy=${this._groupBy}
                         ?loading=${this._usageLoading}></uax-time-series-chart>

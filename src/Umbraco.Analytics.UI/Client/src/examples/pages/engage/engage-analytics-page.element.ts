@@ -59,6 +59,10 @@ export class ExampleEngageAnalyticsPageElement extends UmbLitElement {
     @property({ type: Number })
     latency = 150;
 
+    /** Makes every request to the fake API fail, to show the error states and Retry. */
+    @property({ type: Boolean })
+    failing = false;
+
     @state() private _range: UaxDateRange = { from: "2026-05-25", to: "2026-06-23" };
     @state() private _compare?: UaxCompare = uaxCompareFor("previous-period", { from: "2026-05-25", to: "2026-06-23" });
     @state() private _groupBy: UaxGroupBy = "day";
@@ -66,6 +70,7 @@ export class ExampleEngageAnalyticsPageElement extends UmbLitElement {
     @state() private _series: UaxSeries[] = [];
     @state() private _compareSeries: UaxSeries[] = [];
     @state() private _chartLoading = true;
+    @state() private _chartError = false;
     @state() private _visitors?: { rows: VisitorTypeRow[]; compareRows: VisitorTypeRow[]; visitors: { current: number; previous?: number } };
     @state() private _tableLoading = true;
 
@@ -94,8 +99,14 @@ export class ExampleEngageAnalyticsPageElement extends UmbLitElement {
     async #loadChart() {
         const request = ++this.#chartRequest;
         this._chartLoading = true;
+        this._chartError = false;
         await wait(this.latency);
         if (request !== this.#chartRequest) return;
+        if (this.failing) {
+            this._chartError = true;
+            this._chartLoading = false;
+            return;
+        }
         this._series = fetchChartSeries(this.view, this._range, this._groupBy);
         this._compareSeries = this._compare ? fetchCompareSeries(this.view, this._compare, this._groupBy) : [];
         this._chartLoading = false;
@@ -104,6 +115,7 @@ export class ExampleEngageAnalyticsPageElement extends UmbLitElement {
     async #loadPages(state: Readonly<UaxTableServerState>, signal: AbortSignal): Promise<PagesResult> {
         await wait(this.latency);
         signal.throwIfAborted();
+        if (this.failing) throw new Error("The pages request failed.");
         return fetchPages({
             range: this._range,
             compare: this._compare,
@@ -198,10 +210,15 @@ export class ExampleEngageAnalyticsPageElement extends UmbLitElement {
                         .kind=${visitors ? "stacked-bar" : "area"}
                         .series=${this._series}
                         .compareSeries=${this._compareSeries}
+                        .range=${this._range}
+                        .compare=${this._compare}
                         .compareLabel=${this._compare ? uaxFormatDateRange(this.localize, this._compare) : undefined}
                         .markers=${markers}
                         .groupBy=${this._groupBy}
-                        ?loading=${this._chartLoading}></uax-time-series-chart>
+                        ?loading=${this._chartLoading}
+                        ?error=${this._chartError}
+                        retryable
+                        @retry=${() => this.#loadChart()}></uax-time-series-chart>
                     ${this.#renderTable()}
                 </uui-box>
             </div>
