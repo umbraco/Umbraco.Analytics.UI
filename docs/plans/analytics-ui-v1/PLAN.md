@@ -160,7 +160,7 @@
 Run after whole-feature review round B. Each gets a builder, a review and its own commit. Public API changes update `api/ui.api.md`, both READMEs, stories and examples.
 
 - [x] **T25** - Compare badges by composition (follow-ups 1 and 2). Built-in value cells (number, percent, share) show a compare badge through one shared piece instead of each cell special-casing it, and product cells can use the same piece. What "better" means is column metadata, not cell logic: `UaxTableColumn` gets a metadata bag (e.g. `meta`) that cells and the badge piece read, holding `lowerIsBetter`. Consider moving the cell-specific fields (`hrefKey`, `color`) into the same bag so the column type stops growing per cell; check the CMS `umb-table` column shape first and log the choice. User approved the shape 30-10-2026.
-- [ ] **T26** - KPI tile "no data" state (follow-up 3).
+- [x] **T26** - KPI tile "no data" state (follow-up 3).
 - [ ] **T27** - Error state element for tiles, chart and table (follow-up 4), alongside `uax-empty-state`.
 - [ ] **T28** - Compare-label formatter for a `UaxCompare` (follow-up 5); page examples drop `formatRange`.
 - [ ] **T29** - Public date helpers: previous period, previous year, range to day/week/month buckets (follow-up 6); page examples drop their own.
@@ -169,11 +169,11 @@ Run after whole-feature review round B. Each gets a builder, a review and its ow
 - [ ] **T32** - Compare series aligned by date, not position, for week and month buckets (follow-up 9).
 - [ ] **T33** - Generic segmented control (follow-up 10); check UUI first; `uax-group-by` built on it.
 - [ ] **T34** - Total aligned to its column (follow-up 11).
-- [ ] **T35** - Pressing a selected, non-deselectable KPI tile raises nothing (follow-up 12).
-- [ ] **T36** - KPI delta: "no change" vs "unknown" (follow-up 13).
+- [x] **T35** - Pressing a selected, non-deselectable KPI tile raises nothing (follow-up 12).
+- [x] **T36** - KPI delta: "no change" vs "unknown" (follow-up 13).
 - [ ] **T37** - Page examples use the CMS `umb-body-layout` (headline, header and action slots) instead of a hand-made page header (follow-up 14); no new element. User: "try it and see": report how it looks in Storybook before settling.
-- [ ] **T38** - Date range button keeps the same height with compare on, without looking cramped. Show options in Storybook for the user to pick before building.
-- [ ] **T39** - The table pager becomes a generic compact pager (internal), and "Show rows" becomes a generic label (e.g. "Per page") under a translation key products can override.
+- [x] **T38** - Date range button keeps the same height with compare on, without looking cramped. Show options in Storybook for the user to pick before building.
+- [x] **T39** - The table pager becomes a generic compact pager (internal), and "Show rows" becomes a generic label (e.g. "Per page") under a translation key products can override.
 - [ ] **T40** - Localization audit: every fixed user-facing string (labels, aria-labels, titles, placeholders, sr-only text) goes through a `uaxAnalytics_*` or Umbraco key; a spec fails on new hard-coded text where practical.
 
 ## Follow-ups from T22
