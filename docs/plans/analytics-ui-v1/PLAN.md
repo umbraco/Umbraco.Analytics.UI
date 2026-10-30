@@ -48,7 +48,7 @@
 
 ## Time-series chart
 
-- [ ] **T9** - story: CHT-1 (AC1–AC7), FND-3 (AC2–AC6 for the chart). Add `uax-time-series-chart` with the shared types in `src/chart/types.ts` (SPEC.md "Shared types"). Wrap Chart.js in `src/chart/internal/` (register only the controllers and scales used, so the bundle stays small). Kinds `line` and `area` only in this task: smooth lines, y-axis from 0 with about 5 round ticks, x labels by `group-by`, `value-format` through `this.localize.number`. An HTML tooltip (not canvas), so later tasks can put `uax-delta-badge` in it. Legend, visually hidden data table, empty state (T4), and loading (T5). No Chart.js type in the public API (ARCHITECTURE.md decision 4).
+- [x] **T9** - story: CHT-1 (AC1–AC7), FND-3 (AC2–AC6 for the chart). Add `uax-time-series-chart` with the shared types in `src/chart/types.ts` (SPEC.md "Shared types"). Wrap Chart.js in `src/chart/internal/` (register only the controllers and scales used, so the bundle stays small). Kinds `line` and `area` only in this task: smooth lines, y-axis from 0 with about 5 round ticks, x labels by `group-by`, `value-format` through `this.localize.number`. An HTML tooltip (not canvas), so later tasks can put `uax-delta-badge` in it. Legend, visually hidden data table, empty state (T4), and loading (T5). No Chart.js type in the public API (ARCHITECTURE.md decision 4).
   Acceptance: CHT-1 specs green. `api/ui.api.md` has no `chart.js` import. The "Line" and "Area" stories match `an-pin-tip.png` apart from markers.
   depends-on: T1, T2, T3, T4, T5
 
