@@ -92,7 +92,11 @@
   Acceptance: TBL-3 specs green.
   depends-on: T17
 
-- [ ] **T19** - story: TBL-4 (AC1–AC3). Add `uax-table-search` (300ms debounce, raises `search`). Client mode filters rows on `text` and `link` columns and shows the empty state when nothing matches.
+- [ ] **T18b** - story: TBL-1 (all). Cells as elements, mirroring the CMS `umb-table` contract. Each built-in column type becomes a cell element (`uax-text-cell`, `uax-link-cell`, `uax-number-cell`, `uax-percent-cell`, `uax-share-cell`) that receives `column`, `item` (the row) and `value`. A column's `type` picks one; a new `elementName` on `UaxTableColumn` picks a product's own element instead, created and reused like the CMS (same element reused while the name doesn't change). The share cell also gets table-derived extras (column total, column max, compare value) as extra properties, which plain product cells don't need. No behaviour change: every existing table spec stays green.
+  Acceptance: all table specs green unchanged; new specs for an `elementName` column (receives column/item/value, element reused across renders) and a built-in cell used on its own; axe ×3; `api/ui.api.md` shows `elementName` and the exported cell elements.
+  depends-on: T18
+
+- [ ] **T19** - story: TBL-4 (AC1–AC3). Add `uax-table-search`, built like the CMS's own collection search box (find the CMS search input and copy its markup, icon position and spacing; the T15 story's hand-made search box has a misplaced icon, user feedback). Replace the story placeholders with it (300ms debounce, raises `search`). Client mode filters rows on `text` and `link` columns and shows the empty state when nothing matches.
   Acceptance: TBL-4 specs green.
   depends-on: T18
 

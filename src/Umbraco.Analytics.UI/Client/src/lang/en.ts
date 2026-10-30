@@ -59,6 +59,7 @@ export default {
 
         // Data table
         tableShowRows: "Show rows",
+        tablePagination: "Pagination",
         tablePagerPosition: "{0}–{1} of {2}",
         tablePreviousPage: "Previous page",
         tableNextPage: "Next page",

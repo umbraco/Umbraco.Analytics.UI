@@ -28,7 +28,10 @@ export class UaxDataTableElement extends UmbLitElement {
     emptyDescription?: string;
     emptyHeadline?: string;
     loading: boolean;
+    maxes?: Record<string, number>;
     mode: UaxTableMode;
+    page: number;
+    pageSize: number;
     // (undocumented)
     render(): TemplateResult_2<1>;
     rowKey?: string;
@@ -36,6 +39,8 @@ export class UaxDataTableElement extends UmbLitElement {
     sort?: UaxTableSort;
     // (undocumented)
     static styles: CSSResultGroup;
+    total?: number;
+    totals?: Record<string, number>;
     // (undocumented)
     protected willUpdate(changed: PropertyValues<this>): void;
 }
@@ -173,6 +178,12 @@ export type UaxTableColumnType = "text" | "link" | "number" | "percent" | "share
 
 // @public
 export type UaxTableMode = "client" | "server";
+
+// @public
+export type UaxTablePageChangeDetail = {
+    page: number;
+    pageSize: number;
+};
 
 // @public
 export type UaxTableSort = {

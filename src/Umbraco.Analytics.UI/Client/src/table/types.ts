@@ -42,3 +42,9 @@ export type UaxTableMode = "client" | "server";
 
 /** The detail of the `sort-change` event: the column the editor chose and the direction to sort it in. */
 export type UaxTableSortChangeDetail = UaxTableSort;
+
+/** The detail of the `page-change` event: the page and page size the editor chose. `page` starts at 1. */
+export type UaxTablePageChangeDetail = {
+    page: number;
+    pageSize: number;
+};

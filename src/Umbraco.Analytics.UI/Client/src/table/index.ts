@@ -3,6 +3,7 @@ export type {
     UaxTableColumn,
     UaxTableColumnType,
     UaxTableMode,
+    UaxTablePageChangeDetail,
     UaxTableSort,
     UaxTableSortChangeDetail,
     UaxTableSortDirection,

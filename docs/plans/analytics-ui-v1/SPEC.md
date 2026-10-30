@@ -137,6 +137,7 @@ Storybook gets a "Pane" story showing this recipe, a chart and a table in one `u
   - `page`, `page-size`, `total`
   - `loading`
   - `empty-headline`, `empty-description`
+- **Cells are elements**, as in the CMS `umb-table`: each gets `column`, `item` (the row) and `value`. Built-in types are ready-made cell elements (`uax-share-cell` and others, usable on their own). A column's `elementName` uses a product's own cell element instead.
 - Slots: `toolbar`, for the search box and totals above the header.
 - **Padding:** the cells pad themselves. The `toolbar` slot pads itself with the public CSS property `--uax-table-padding` (default `12px 24px`), only when something is slotted. The reload loading bar sits outside it at the element's top edge, full width, so put the table in a `uui-box` with `--uui-box-default-padding: 0`.
 - **`share` columns:** show the value, its percent of the column total, and a thin bar scaled to the column's largest value.
@@ -144,7 +145,7 @@ Storybook gets a "Pane" story showing this recipe, a chart and a table in one `u
   - When comparing, a small delta badge sits after the value.
 - **`link` columns:** render an anchor. The row's `href` comes from the column's `hrefKey`.
 - **Sorting:** clicking a sortable header toggles the direction and raises `sort-change`. In `client` mode the table also sorts itself.
-- **Paging:** the footer has "Show rows" (10, 25, 50, 100) and "1–10 of 272". It raises `page-change` with `{ page, pageSize }`, and in `client` mode it also pages itself. The footer is hidden when everything fits on one page.
+- **Paging:** the footer has "Show rows" (10, 25, 50, 100) and "1–10 of 272". It raises `page-change` with `{ page, pageSize }`, and in `client` mode it also pages itself. The footer is hidden when the rows fit on one page at the smallest page size the editor could need (row count ≤ the smaller of the current page size and 10), so a table at 50 rows per page can still go back to 10.
 - **Search:** `uax-data-table` exports `uax-table-search` for the toolbar. It raises `search` with `{ query }`, 300ms after typing stops. In `client` mode the table filters rows on any `text` or `link` column.
 - **Rows:** a row is clickable only when the product listens for `row-click`. Then it's keyboard-reachable and raises `row-click` with `{ row }`.
 

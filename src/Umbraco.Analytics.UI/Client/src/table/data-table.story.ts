@@ -189,6 +189,73 @@ export const Sortable: Story = {
         </uui-box>`,
 };
 
+/** 34 pages: the long tail that shows why paging matters. */
+const manyPageRows = Array.from({ length: 34 }, (_, i) => ({
+    url: `${host}/section-${i + 1}/`,
+    pageviews: Math.max(1, 210 - i * 6),
+    sessions: Math.max(1, 60 - i),
+}));
+
+/** `client` mode (the default) pages the rows itself: 10 a page, "Show rows" offers 10, 25, 50 and 100, and the footer is hidden when the rows fit one page. Sorting goes back to page 1 and sorts every page. Shares and bars stay of all 34 rows. */
+export const PagedClient: Story = {
+    name: "Paged (client)",
+    args: {
+        columns: pageColumns.map((c) => (c.type === "share" ? { ...c, sortable: true } : c)),
+        rows: manyPageRows,
+    },
+    render: (args) =>
+        html`<uui-box headline="Top pages" style="--uui-box-default-padding: 0">
+            <uax-data-table .columns=${args.columns} .rows=${args.rows}></uax-data-table>
+        </uui-box>`,
+};
+
+/** The whole data set a server would hold, for the demo below. */
+const serverRows = Array.from({ length: 272 }, (_, i) => ({
+    url: `${host}/page-${i + 1}/`,
+    pageviews: Math.max(1, 600 - i * 3),
+    sessions: Math.max(1, 200 - i),
+}));
+/** The story's "server" keeps the sort it was last asked for. */
+let currentServerRows = serverRows;
+const sum = (key: "pageviews" | "sessions") => serverRows.reduce((total, row) => total + row[key], 0);
+const largest = (key: "pageviews" | "sessions") => Math.max(...serverRows.map((row) => row[key]));
+
+/**
+ * `mode="server"`: the table shows the `rows` it's given as the current page, reads the count from `total`, and
+ * raises `page-change` with `{ page, pageSize }` for the product to load. `totals` is each share column's total
+ * across every page, so "(x%)" is a share of the whole; `maxes` is the largest value across every page, so bars keep
+ * one scale from page to page. Without them both are worked out from the page alone. Here the "server" is this story.
+ */
+export const PagedServer: Story = {
+    name: "Paged (server)",
+    render: () => {
+        const load = (event: CustomEvent<{ page: number; pageSize: number }>) => {
+            const table = event.target as UaxDataTableElement;
+            const { page, pageSize } = event.detail;
+            table.rows = currentServerRows.slice((page - 1) * pageSize, page * pageSize);
+        };
+        // A sort click goes back to page 1: the product loads it with the new sort and resets its own page binding.
+        const sortBy = (event: CustomEvent<{ key: "pageviews" | "sessions"; direction: "asc" | "desc" }>) => {
+            const table = event.target as UaxDataTableElement;
+            const { key, direction } = event.detail;
+            const sorted = [...serverRows].sort((a, b) => (direction === "asc" ? a[key] - b[key] : b[key] - a[key]));
+            table.rows = sorted.slice(0, table.pageSize);
+            currentServerRows = sorted;
+        };
+        return html`<uui-box headline="Top pages" style="--uui-box-default-padding: 0">
+            <uax-data-table
+                mode="server"
+                @sort-change=${sortBy}
+                .columns=${pageColumns.map((c) => (c.type === "share" ? { ...c, sortable: true } : c))}
+                .rows=${serverRows.slice(0, 10)}
+                .total=${serverRows.length}
+                .totals=${{ pageviews: sum("pageviews"), sessions: sum("sessions") }}
+                .maxes=${{ pageviews: largest("pageviews"), sessions: largest("sessions") }}
+                @page-change=${load}></uax-data-table>
+        </uui-box>`;
+    },
+};
+
 /** First load, nothing to show yet: skeleton rows under the header. */
 export const Loading: Story = { args: { rows: [], loading: true } };
 

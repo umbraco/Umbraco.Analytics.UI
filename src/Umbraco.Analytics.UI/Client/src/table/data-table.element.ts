@@ -18,7 +18,7 @@ import "../internal/loading/skeleton.element.js";
 import { uaxThemeTokens } from "../internal/theme/tokens.css.js";
 import { asNumber, asText, getNumberFormat } from "./internal/number-format.js";
 import { safeHref } from "./internal/safe-href.js";
-import type { UaxTableColumn, UaxTableMode, UaxTableSort } from "./types.js";
+import type { UaxTableColumn, UaxTableMode, UaxTablePageChangeDetail, UaxTableSort } from "./types.js";
 
 type UaxTableRow = Record<string, unknown>;
 
@@ -42,8 +42,14 @@ interface DerivedFrom {
     rows: UaxTableRow[];
     compareRows: UaxTableRow[];
     rowKey?: string;
+    totals?: Record<string, number>;
+    maxes?: Record<string, number>;
     lang: string;
 }
+
+/** The page sizes the footer offers. The first is also the size under which a table never needs a footer. */
+const PAGE_SIZES = [10, 25, 50, 100];
+const DEFAULT_PAGE_SIZE = PAGE_SIZES[0];
 
 function isNumeric(column: UaxTableColumn): boolean {
     return column.type === "number" || column.type === "percent" || column.type === "share";
@@ -99,8 +105,21 @@ const percentFormatOptions: Intl.NumberFormatOptions = { style: "percent", maxim
  * given, keeping equal rows in their order and empty values last. In `server` mode it never reorders:
  * the product sorts and passes new `rows`. Shares stay a share of the whole column either way.
  *
+ * The footer shows "Show rows" (10, 25, 50 or 100), the range ("1–10 of 272") and previous and next
+ * buttons, and is hidden when the rows fit the smallest page size. In `client` mode the table pages the
+ * (sorted) rows itself. In `server` mode it draws the `rows` it's given as the current page, reads the
+ * row count from `total`, and the product loads the new page when `page-change` is raised. Either way the
+ * table sets its own `page` and `page-size` when the editor changes them, and goes back to page 1 when a
+ * header is clicked. In `server` mode that sort is a `sort-change` for the product to load, not a `page-change`.
+ *
+ * Shares and bars are worked out from the `rows` the table holds: all of them in `client` mode, but only
+ * the current page in `server` mode. Pass `totals` (the column's total across every page) so a share is
+ * still a share of the whole, and `maxes` (the column's largest value across every page) so bars
+ * keep one scale from page to page.
+ *
  * @element uax-data-table
- * @fires sort-change - A sortable header was clicked, by pointer or keyboard. Bubbles, not composed or cancelable, like `uax-group-by`. `detail` is `{ key, direction }`; the table has already set `sort` to it.
+ * @fires sort-change - A sortable header was clicked, by pointer or keyboard. Bubbles, not composed or cancelable, like `uax-group-by`. `detail` is `{ key, direction }`; the table has already set `sort` to it and reset `page` to 1, so a `server` product loads page 1 and resets its own page binding.
+ * @fires page-change - The editor picked another page or page size. Bubbles, not composed or cancelable, like `sort-change`. `detail` is `{ page, pageSize }`; the table has already set `page` and `pageSize`. A new page size goes back to page 1.
  * @slot toolbar - Content above the header row, such as a search box and totals. It pads itself with `--uax-table-padding`.
  * @cssprop --uax-table-padding - Padding around the `toolbar` slot, as a CSS `padding` value. Defaults to `12px 24px`. The loading bar ignores it and spans the full width at the top edge.
  * @cssprop --uax-series-1 - Bar colour of the first share column. Also `--uax-series-2` to `--uax-series-4` for the other slots.
@@ -144,6 +163,32 @@ export class UaxDataTableElement extends UmbLitElement {
     @property({ type: String })
     mode: UaxTableMode = "client";
 
+    /** The page shown, starting at 1. Set by the product, and by the table itself when the editor pages. A page past the last one shows the last. */
+    @property({ type: Number })
+    page = 1;
+
+    /** Rows per page. The footer offers 10, 25, 50 and 100, and adds this size to the list when it's another number. */
+    @property({ type: Number, attribute: "page-size" })
+    pageSize = DEFAULT_PAGE_SIZE;
+
+    /** `server` mode: how many rows there are across every page. `client` mode counts `rows` and ignores this. */
+    @property({ type: Number })
+    total?: number;
+
+    /**
+     * Each `share` column's total across every page, by column `key`: the number a share is a percent of,
+     * not a total the table shows. Without an entry the total is the sum of the `rows` the table holds.
+     */
+    @property({ attribute: false })
+    totals?: Record<string, number>;
+
+    /**
+     * Each `share` column's largest value across every page, by column `key`: what a full bar stands for.
+     * Without an entry the largest value in the `rows` the table holds is a full bar.
+     */
+    @property({ attribute: false })
+    maxes?: Record<string, number>;
+
     #derived: DerivedColumn[] = [];
     #sorted?: { rows: UaxTableRow[]; sort: UaxTableSort; column: UaxTableColumn; lang: string; sortedRows: UaxTableRow[] };
     #derivedFrom?: DerivedFrom;
@@ -157,10 +202,17 @@ export class UaxDataTableElement extends UmbLitElement {
         if (!prev || prev.compareRows !== this.compareRows || prev.rowKey !== this.rowKey) {
             this.#compareByKey = this.#indexCompareRows(this.compareRows, this.rowKey);
         }
-        if (!prev || prev.columns !== this.columns || prev.rows !== this.rows || prev.lang !== lang) {
+        if (
+            !prev ||
+            prev.columns !== this.columns ||
+            prev.rows !== this.rows ||
+            prev.totals !== this.totals ||
+            prev.maxes !== this.maxes ||
+            prev.lang !== lang
+        ) {
             this.#derived = this.#derive(this.columns, this.#statsRows, lang);
         }
-        this.#derivedFrom = { columns: this.columns, rows: this.rows, compareRows: this.compareRows, rowKey: this.rowKey, lang };
+        this.#derivedFrom = { columns: this.columns, rows: this.rows, compareRows: this.compareRows, rowKey: this.rowKey, totals: this.totals, maxes: this.maxes, lang };
     }
 
     #indexCompareRows(compareRows: UaxTableRow[], rowKey?: string): Map<string, UaxTableRow> {
@@ -183,16 +235,81 @@ export class UaxDataTableElement extends UmbLitElement {
     }
 
     /**
-     * The rows that column totals and bar scales are worked out from. All rows for now: when paging
-     * and search arrive, a share stays a share of the whole column, not of the page on screen.
+     * The rows that column totals and bar scales are worked out from: all the rows the table holds, never
+     * just the page on screen. In `server` mode that is the page the product passed, unless `totals` and `maxes` say more.
      */
     get #statsRows(): UaxTableRow[] {
         return this.rows;
     }
 
-    /** The rows to draw. Searching and paging will narrow this. */
+    /** The rows to draw: the sorted rows, cut down to the current page in client mode. Searching will narrow this. */
     get #visibleRows(): UaxTableRow[] {
-        return this.#sortedRows;
+        const rows = this.#sortedRows;
+        if (this.mode !== "client") return rows;
+        const size = this.#pageSize;
+        const start = (this.#currentPage - 1) * size;
+        return rows.slice(start, start + size);
+    }
+
+    /** `pageSize`, or the default when it isn't a whole number of at least 1. */
+    get #pageSize(): number {
+        const size = Math.floor(this.pageSize);
+        return Number.isFinite(size) && size >= 1 ? size : DEFAULT_PAGE_SIZE;
+    }
+
+    /** How many rows there are across every page. */
+    get #totalRows(): number {
+        if (this.mode !== "server") return this.rows.length;
+        const total = asNumber(this.total);
+        return total === undefined ? this.rows.length : Math.max(0, Math.floor(total));
+    }
+
+    get #pageCount(): number {
+        return Math.max(1, Math.ceil(this.#totalRows / this.#pageSize));
+    }
+
+    /** `page`, kept between the first page and the last. */
+    get #currentPage(): number {
+        const page = Math.floor(this.page);
+        return Number.isFinite(page) ? Math.min(Math.max(page, 1), this.#pageCount) : 1;
+    }
+
+    /** The footer has nothing to offer when the rows fit the smallest size: even the smallest choice wouldn't make a second page. */
+    get #showPager(): boolean {
+        return this.#totalRows > Math.min(this.#pageSize, PAGE_SIZES[0]);
+    }
+
+    /** The page sizes to offer: the standard ones, plus the current size when it's another number. */
+    get #pageSizeOptions(): number[] {
+        const size = this.#pageSize;
+        return PAGE_SIZES.includes(size) ? PAGE_SIZES : [...PAGE_SIZES, size].sort((a, b) => a - b);
+    }
+
+    /** Sets the page and size the editor chose, then raises `page-change` so a product can load them. */
+    #changePage(page: number, pageSize: number) {
+        this.page = page;
+        this.pageSize = pageSize;
+        this.dispatchEvent(new CustomEvent<UaxTablePageChangeDetail>("page-change", { bubbles: true, detail: { page, pageSize } }));
+    }
+
+    /**
+     * Moves one page. When that disables the button that has focus (the last or first page), focus moves to the
+     * other nav button so a keyboard user isn't dropped. `uui-pagination` loses focus there.
+     */
+    async #step(by: 1 | -1) {
+        const button = this.renderRoot.querySelector<HTMLElement>(by === 1 ? ".next" : ".previous");
+        const hadFocus = !!button?.matches(":focus-within");
+        this.#changePage(this.#currentPage + by, this.#pageSize);
+        if (!hadFocus) return;
+        await this.updateComplete;
+        const atEnd = by === 1 ? this.#currentPage >= this.#pageCount : this.#currentPage <= 1;
+        if (atEnd) this.renderRoot.querySelector<HTMLElement>(by === 1 ? ".previous" : ".next")?.focus();
+    }
+
+    #onPageSizeChange(event: Event) {
+        const size = Number((event.target as HTMLElement & { value: string }).value);
+        if (!Number.isInteger(size) || size < 1 || size === this.#pageSize) return;
+        this.#changePage(1, size);
     }
 
     /** `rows` in the `sort` order in client mode, sorted once per change of rows, sort or language. Never reorders `rows` itself. */
@@ -222,6 +339,7 @@ export class UaxDataTableElement extends UmbLitElement {
         const current = this.sort;
         const direction = current?.key === column.key ? (current.direction === "asc" ? "desc" : "asc") : isNumeric(column) ? "desc" : "asc";
         this.sort = { key: column.key, direction };
+        this.page = 1;
         this.dispatchEvent(new CustomEvent("sort-change", { bubbles: true, detail: { key: column.key, direction } }));
     }
 
@@ -259,6 +377,8 @@ export class UaxDataTableElement extends UmbLitElement {
                     derived.total += value;
                     derived.max = Math.max(derived.max, value);
                 }
+                derived.total = asNumber(this.totals?.[column.key]) ?? derived.total;
+                derived.max = asNumber(this.maxes?.[column.key]) ?? derived.max;
             }
             return derived;
         });
@@ -375,6 +495,46 @@ export class UaxDataTableElement extends UmbLitElement {
             ${mode === "idle" && !hasData
                 ? html`<uax-empty-state .headline=${this.emptyHeadline} .description=${this.emptyDescription}></uax-empty-state>`
                 : nothing}
+            ${this.#showPager && mode !== "skeleton" ? this.#renderPager() : nothing}
+        </div>`;
+    }
+
+    #renderPager(): TemplateResult {
+        const size = this.#pageSize;
+        const page = this.#currentPage;
+        const total = this.#totalRows;
+        const format = getNumberFormat(this.localize.lang()).format;
+        const from = (page - 1) * size + 1;
+        const to = Math.min(total, page * size);
+        return html`<div class="pager" role="navigation" aria-label=${this.localize.term("uaxAnalytics_tablePagination")}>
+            <div class="page-size">
+                <span aria-hidden="true">${this.localize.term("uaxAnalytics_tableShowRows")}</span>
+                <uui-select
+                    name="page-size"
+                    label=${this.localize.term("uaxAnalytics_tableShowRows")}
+                    .options=${this.#pageSizeOptions.map((option) => ({ name: String(option), value: String(option), selected: option === size }))}
+                    .value=${String(size)}
+                    @change=${this.#onPageSizeChange}></uui-select>
+            </div>
+            <div class="range" aria-live="polite">${this.localize.term("uaxAnalytics_tablePagerPosition", format(from), format(to), format(total))}</div>
+            <div class="nav">
+                <uui-button
+                    class="previous"
+                    compact
+                    label=${this.localize.term("uaxAnalytics_tablePreviousPage")}
+                    ?disabled=${page <= 1}
+                    @click=${() => page > 1 && this.#step(-1)}>
+                    <uui-icon name="icon-navigation-left"></uui-icon>
+                </uui-button>
+                <uui-button
+                    class="next"
+                    compact
+                    label=${this.localize.term("uaxAnalytics_tableNextPage")}
+                    ?disabled=${page >= this.#pageCount}
+                    @click=${() => page < this.#pageCount && this.#step(1)}>
+                    <uui-icon name="icon-navigation-right"></uui-icon>
+                </uui-button>
+            </div>
         </div>`;
     }
 
@@ -557,6 +717,34 @@ export class UaxDataTableElement extends UmbLitElement {
 
             .end .skeleton-cell {
                 justify-content: flex-end;
+            }
+
+            /* The design's footer: right-aligned, "Show rows", the range, then previous and next. */
+            .pager {
+                display: flex;
+                align-items: center;
+                justify-content: flex-end;
+                flex-wrap: wrap;
+                gap: var(--uui-size-space-4);
+                padding: var(--uax-table-padding, var(--uui-size-space-4) var(--uui-size-space-6));
+                border-top: 1px solid var(--uui-color-border);
+                font-size: 12px;
+                color: var(--uui-color-text-alt);
+            }
+
+            .page-size,
+            .nav {
+                display: inline-flex;
+                align-items: center;
+                gap: var(--uui-size-space-2);
+            }
+
+            .range {
+                font-variant-numeric: tabular-nums;
+            }
+
+            uui-select {
+                font-size: inherit;
             }
 
             uax-empty-state {
