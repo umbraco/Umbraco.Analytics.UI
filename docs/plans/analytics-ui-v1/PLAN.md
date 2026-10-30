@@ -162,12 +162,12 @@ Run after whole-feature review round B. Each gets a builder, a review and its ow
 - [x] **T25** - Compare badges by composition (follow-ups 1 and 2). Built-in value cells (number, percent, share) show a compare badge through one shared piece instead of each cell special-casing it, and product cells can use the same piece. What "better" means is column metadata, not cell logic: `UaxTableColumn` gets a metadata bag (e.g. `meta`) that cells and the badge piece read, holding `lowerIsBetter`. Consider moving the cell-specific fields (`hrefKey`, `color`) into the same bag so the column type stops growing per cell; check the CMS `umb-table` column shape first and log the choice. User approved the shape 30-10-2026.
 - [x] **T26** - KPI tile "no data" state (follow-up 3).
 - [ ] **T27** - Error state element for tiles, chart and table (follow-up 4), alongside `uax-empty-state`.
-- [ ] **T28** - Compare-label formatter for a `UaxCompare` (follow-up 5); page examples drop `formatRange`.
-- [ ] **T29** - Public date helpers: previous period, previous year, range to day/week/month buckets (follow-up 6); page examples drop their own.
-- [ ] **T30** - A fixed "today" for the date range (follow-up 7). Presets are already configurable (a product passes its own list, each with an optional `range(today)`), but "today" always comes from the clock.
+- [x] **T28** - Compare-label formatter for a `UaxCompare` (follow-up 5); page examples drop `formatRange`.
+- [x] **T29** - Public date helpers: previous period, previous year, range to day/week/month buckets (follow-up 6); page examples drop their own.
+- [x] **T30** - A fixed "today" for the date range (follow-up 7). Presets are already configurable (a product passes its own list, each with an optional `range(today)`), but "today" always comes from the clock.
 - [x] **T31** - Server-mode table helper (follow-up 8): sort, page, page size and query state plus a stale-response guard, so products don't rewrite it.
 - [ ] **T32** - Compare series aligned by date, not position, for week and month buckets (follow-up 9).
-- [ ] **T33** - Generic segmented control (follow-up 10); check UUI first; `uax-group-by` built on it.
+- [x] **T33** - Generic segmented control (follow-up 10); check UUI first; `uax-group-by` built on it.
 - [x] **T34** - Total aligned to its column (follow-up 11).
 - [x] **T35** - Pressing a selected, non-deselectable KPI tile raises nothing (follow-up 12).
 - [x] **T36** - KPI delta: "no change" vs "unknown" (follow-up 13).
