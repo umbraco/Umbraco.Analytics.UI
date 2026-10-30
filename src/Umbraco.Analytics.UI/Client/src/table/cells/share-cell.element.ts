@@ -1,7 +1,7 @@
-import { css, customElement, html, nothing, property, state, type CSSResultGroup, type PropertyValues } from "@umbraco-cms/backoffice/external/lit";
+import { css, customElement, html, nothing, property, state, type CSSResultGroup, type PropertyValues, type TemplateResult } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import "../../delta-badge/delta-badge.element.js";
-import { UaxPaletteStyles } from "../../theme/index.js";
+import { UaxPaletteStyles, type UaxColorSlot } from "../../theme/index.js";
 import "../internal/share-bar.element.js";
 import { asNumber, getNumberFormat } from "../internal/number-format.js";
 import { UAX_TABLE_CONTEXT } from "../table-context.js";
@@ -46,7 +46,7 @@ export class UaxShareCellElement extends UmbLitElement implements UaxTableCellEl
 
     /** The palette slot of the bar, as `UaxSeries.color`. Defaults to `column.color`, then the cell's position among the table's share columns, then 1. */
     @property({ type: Number })
-    color?: 1 | 2 | 3 | 4;
+    color?: UaxColorSlot;
 
     /** The same row's value in the comparison period. Shows a change badge, unless it is missing or 0. Defaults to the table's compare row. */
     @property({ type: Number, attribute: "compare-value" })
@@ -70,12 +70,12 @@ export class UaxShareCellElement extends UmbLitElement implements UaxTableCellEl
     }
 
     /** The bar colour: set, else the column's, else the next free slot by position among the table's share columns. */
-    get #color(): 1 | 2 | 3 | 4 {
+    get #color(): UaxColorSlot {
         if (this.color) return this.color;
         if (this.column.color) return this.column.color;
         const position = this._columns.findIndex((c) => c.key === this.column.key);
         const before = position < 0 ? 0 : this._columns.slice(0, position).filter(isShareColumn).length;
-        return ((before % 4) + 1) as 1 | 2 | 3 | 4;
+        return ((before % 4) + 1) as UaxColorSlot;
     }
 
     #formats?: { column: UaxTableColumn; lang: string; value: Intl.NumberFormat; percent: Intl.NumberFormat };
@@ -93,7 +93,7 @@ export class UaxShareCellElement extends UmbLitElement implements UaxTableCellEl
         }
     }
 
-    override render() {
+    override render(): TemplateResult | typeof nothing {
         if (this.loading) {
             return html`<div class="share ${this.column.align === "end" ? "end" : ""}">
                 <div class="share-top"><uax-skeleton style="width: var(--_uax-skeleton-width, 40%); height: var(--_uax-skeleton-height, 14px)"></uax-skeleton></div>

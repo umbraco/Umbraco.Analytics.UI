@@ -1,4 +1,4 @@
-import { css, customElement, html, nothing, property, type CSSResultGroup } from "@umbraco-cms/backoffice/external/lit";
+import { css, customElement, html, nothing, property, type CSSResultGroup, type TemplateResult } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { getLoadingMode } from "../internal/loading/index.js";
 import { UaxPaletteStyles } from "../theme/index.js";
@@ -42,7 +42,7 @@ export class UaxKpiTileElement extends UmbLitElement {
     deltaUnit: UaxDeltaUnit = "percent";
 
     /** Shows a fall as good (green) and a rise as bad (red), e.g. for refund rate. */
-    @property({ type: Boolean, attribute: "lower-is-better" })
+    @property({ type: Boolean, attribute: "lower-is-better", reflect: true })
     lowerIsBetter = false;
 
     /** The product is fetching the value. */
@@ -76,7 +76,7 @@ export class UaxKpiTileElement extends UmbLitElement {
         this.selected = !deselecting;
     }
 
-    override render() {
+    override render(): TemplateResult {
         const hasValue = this.value !== undefined && this.value !== null && this.value !== "";
         const mode = getLoadingMode(this.loading, hasValue);
 

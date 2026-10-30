@@ -44,7 +44,7 @@ const serverTable = (attrs: { page?: number; pageSize?: number; total?: number }
             mode="server"
             .columns=${nameColumns}
             .rows=${manyRows(10)}
-            total=${attrs.total ?? 272}
+            total-rows=${attrs.total ?? 272}
             page=${attrs.page ?? 1}
             page-size=${attrs.pageSize ?? 10}></uax-data-table>`,
         "uax-data-table",
@@ -356,7 +356,7 @@ describe("Feature: page through rows", () => {
 
         it("shows the footer for slot content under the skeleton", async () => {
             const el = await renderElement(
-                html`<uax-data-table mode="server" .columns=${nameColumns} .rows=${[]} total="272" loading>
+                html`<uax-data-table mode="server" .columns=${nameColumns} .rows=${[]} total-rows="272" loading>
                     <span slot="footer">Updated</span>
                 </uax-data-table>`,
                 "uax-data-table",
@@ -388,7 +388,7 @@ describe("Feature: page through rows", () => {
     describe("Scenario: first load of a server table", () => {
         const loadingTable = (loading: boolean, rows: unknown[]) =>
             renderElement(
-                html`<uax-data-table mode="server" .columns=${nameColumns} .rows=${rows} total="272" ?loading=${loading}></uax-data-table>`,
+                html`<uax-data-table mode="server" .columns=${nameColumns} .rows=${rows} total-rows="272" ?loading=${loading}></uax-data-table>`,
                 "uax-data-table",
             );
 
@@ -408,14 +408,14 @@ describe("Feature: page through rows", () => {
         ];
         const rows = [{ name: "A", views: 50 }, { name: "B", views: 25 }];
 
-        it("uses the page's rows as the total when no totals are given", async () => {
-            const el = await renderElement(html`<uax-data-table mode="server" .columns=${columns} .rows=${rows} total="272"></uax-data-table>`, "uax-data-table");
+        it("uses the page's rows as the total when no stats are given", async () => {
+            const el = await renderElement(html`<uax-data-table mode="server" .columns=${columns} .rows=${rows} total-rows="272"></uax-data-table>`, "uax-data-table");
             expect(shares(el)).toEqual(["(66.7%)", "(33.3%)"]);
         });
 
-        it("uses totals as the denominator", async () => {
+        it("uses the stats total as the denominator", async () => {
             const el = await renderElement(
-                html`<uax-data-table mode="server" .columns=${columns} .rows=${rows} total="272" .totals=${{ views: 200 }}></uax-data-table>`,
+                html`<uax-data-table mode="server" .columns=${columns} .rows=${rows} total-rows="272" .stats=${{ views: { total: 200, max: 0 } }}></uax-data-table>`,
                 "uax-data-table",
             );
             expect(shares(el)).toEqual(["(25.0%)", "(12.5%)"]);
@@ -423,7 +423,7 @@ describe("Feature: page through rows", () => {
 
         it("ignores a total for another column", async () => {
             const el = await renderElement(
-                html`<uax-data-table mode="server" .columns=${columns} .rows=${rows} total="272" .totals=${{ other: 200 }}></uax-data-table>`,
+                html`<uax-data-table mode="server" .columns=${columns} .rows=${rows} total-rows="272" .stats=${{ other: { total: 200, max: 0 } }}></uax-data-table>`,
                 "uax-data-table",
             );
             expect(shares(el)).toEqual(["(66.7%)", "(33.3%)"]);
@@ -431,18 +431,18 @@ describe("Feature: page through rows", () => {
 
         it("shows 0% when the total is zero", async () => {
             const el = await renderElement(
-                html`<uax-data-table mode="server" .columns=${columns} .rows=${rows} total="272" .totals=${{ views: 0 }}></uax-data-table>`,
+                html`<uax-data-table mode="server" .columns=${columns} .rows=${rows} total-rows="272" .stats=${{ views: { total: 0, max: 0 } }}></uax-data-table>`,
                 "uax-data-table",
             );
             expect(shares(el)).toEqual(["(0.0%)", "(0.0%)"]);
         });
 
-        it("recomputes when totals change", async () => {
+        it("recomputes when stats change", async () => {
             const el = await renderElement(
-                html`<uax-data-table mode="server" .columns=${columns} .rows=${rows} total="272" .totals=${{ views: 200 }}></uax-data-table>`,
+                html`<uax-data-table mode="server" .columns=${columns} .rows=${rows} total-rows="272" .stats=${{ views: { total: 200, max: 0 } }}></uax-data-table>`,
                 "uax-data-table",
             );
-            el.totals = { views: 100 };
+            el.stats = { views: { total: 100, max: 0 } };
             await el.updateComplete;
             expect(shares(el)).toEqual(["(50.0%)", "(25.0%)"]);
         });
@@ -455,14 +455,14 @@ describe("Feature: page through rows", () => {
         ];
         const rows = [{ name: "A", views: 50 }, { name: "B", views: 25 }];
 
-        it("scales to the page's largest value when no maxes are given", async () => {
-            const el = await renderElement(html`<uax-data-table mode="server" .columns=${columns} .rows=${rows} total="272"></uax-data-table>`, "uax-data-table");
+        it("scales to the page's largest value when no stats are given", async () => {
+            const el = await renderElement(html`<uax-data-table mode="server" .columns=${columns} .rows=${rows} total-rows="272"></uax-data-table>`, "uax-data-table");
             expect(barWidths(el)).toEqual(["100%", "50%"]);
         });
 
-        it("scales to maxes when given", async () => {
+        it("scales to the stats max when given", async () => {
             const el = await renderElement(
-                html`<uax-data-table mode="server" .columns=${columns} .rows=${rows} total="272" .maxes=${{ views: 200 }}></uax-data-table>`,
+                html`<uax-data-table mode="server" .columns=${columns} .rows=${rows} total-rows="272" .stats=${{ views: { total: 0, max: 200 } }}></uax-data-table>`,
                 "uax-data-table",
             );
             expect(barWidths(el)).toEqual(["25%", "12.5%"]);
@@ -470,7 +470,7 @@ describe("Feature: page through rows", () => {
 
         it("never draws a bar wider than its track", async () => {
             const el = await renderElement(
-                html`<uax-data-table mode="server" .columns=${columns} .rows=${rows} total="272" .maxes=${{ views: 10 }}></uax-data-table>`,
+                html`<uax-data-table mode="server" .columns=${columns} .rows=${rows} total-rows="272" .stats=${{ views: { total: 0, max: 10 } }}></uax-data-table>`,
                 "uax-data-table",
             );
             expect(barWidths(el)).toEqual(["100%", "100%"]);

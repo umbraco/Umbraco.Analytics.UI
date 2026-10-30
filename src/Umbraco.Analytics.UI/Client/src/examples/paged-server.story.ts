@@ -49,17 +49,19 @@ function renderPagedServer() {
         table.rows = sorted.slice(0, table.pageSize);
     };
 
-    // `total` is the row count across every page. `totals` is what a share is a percent of, `maxes` is what a
-    // full bar stands for: both across every page, so shares and bars mean the same on page 1 and page 28.
+    // `total-rows` is the row count across every page. `stats` holds each column's total (what a share is a percent
+    // of) and max (what a full bar stands for) across every page, so they mean the same on page 1 and page 28.
     return html`
         <uui-box headline="Top pages" style="--uui-box-default-padding: 0">
             <uax-data-table
                 mode="server"
                 .columns=${columns}
                 .rows=${everyPage.slice(0, 10)}
-                .total=${everyPage.length}
-                .totals=${{ pageviews: sumOf("pageviews"), sessions: sumOf("sessions") }}
-                .maxes=${{ pageviews: largestOf("pageviews"), sessions: largestOf("sessions") }}
+                .totalRows=${everyPage.length}
+                .stats=${{
+                    pageviews: { total: sumOf("pageviews"), max: largestOf("pageviews") },
+                    sessions: { total: sumOf("sessions"), max: largestOf("sessions") },
+                }}
                 @page-change=${loadPage}
                 @sort-change=${loadSorted}></uax-data-table>
         </uui-box>
@@ -77,7 +79,7 @@ export default meta;
 /**
  * `mode="server"`: the table shows the `rows` it is given as the current page and raises `page-change` and
  * `sort-change` for the product to load. Page forward, then click a header: the sort sends the table back to page 1.
- * `totals` and `maxes` keep shares and bars on one scale across pages. In this story the "server" is a function.
+ * `stats` keeps shares and bars on one scale across pages. In this story the "server" is a function.
  * While a real request runs, set `loading` so the footer and rows stay in step.
  */
 export const PagedServer: StoryObj = {

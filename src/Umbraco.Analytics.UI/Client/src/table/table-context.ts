@@ -9,7 +9,7 @@ import type { UaxTableColumn, UaxTableCompareLookup, UaxTableStats } from "./typ
 export interface UaxTableContext extends UmbContextMinimal {
     /** The columns, left to right. */
     readonly columns: Observable<UaxTableColumn[]>;
-    /** Each column's total and largest value, by column `key`, honouring the table's `totals` and `maxes`. */
+    /** Each column's total and largest value, by column `key`, honouring the table's `stats`. */
     readonly stats: Observable<UaxTableStats>;
     /** Finds a row's compare-period row, by the table's `rowKey`. Replaced when `compare-rows` or `row-key` change. */
     readonly compare: Observable<UaxTableCompareLookup>;

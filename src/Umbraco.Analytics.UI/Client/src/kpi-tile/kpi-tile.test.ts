@@ -33,6 +33,13 @@ describe("Feature: KPI tile shows a headline number", () => {
         });
     });
 
+    describe("Scenario: lower is better", () => {
+        it("reflects lower-is-better to the attribute, like uax-delta-badge", async () => {
+            const el = await renderElement(html`<uax-kpi-tile label="Refunds" value="1" .lowerIsBetter=${true}></uax-kpi-tile>`, "uax-kpi-tile");
+            expect(el.hasAttribute("lower-is-better")).toBe(true);
+        });
+    });
+
     describe("Scenario: with a delta", () => {
         let el: UaxTestElement;
         beforeEach(async () => {

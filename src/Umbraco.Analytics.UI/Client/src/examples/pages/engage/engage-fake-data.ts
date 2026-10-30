@@ -1,6 +1,8 @@
 // A stand-in for the product's API: invented numbers for example.com, worked out from the dates asked for.
 // A real product fetches this from its own endpoints; the page element below never knows the difference.
-import type { UaxCompare, UaxDateRange, UaxMarker, UaxSeries } from "../../../chart/types.js";
+import type { UaxMarker, UaxSeries } from "../../../chart/types.js";
+import type { UaxColorSlot } from "../../../theme/types.js";
+import type { UaxCompare, UaxDateRange } from "../../../date-range/types.js";
 import type { UaxGroupBy } from "../../../group-by/group-by.element.js";
 import type { UaxTableSortDirection } from "../../../table/types.js";
 
@@ -66,7 +68,7 @@ function bucketStart(date: string, groupBy: UaxGroupBy): string {
 }
 
 /** Adds the days up per day, week or month. */
-function series(id: string, label: string, color: 1 | 2 | 3 | 4, range: { from: string; to: string }, groupBy: UaxGroupBy, valueOn: (date: string) => number): UaxSeries {
+function series(id: string, label: string, color: UaxColorSlot, range: { from: string; to: string }, groupBy: UaxGroupBy, valueOn: (date: string) => number): UaxSeries {
     const sums = new Map<string, number>();
     for (const date of daysIn(range.from, range.to)) {
         const key = bucketStart(date, groupBy);
@@ -131,11 +133,9 @@ export type PagesResult = {
     /** The same pages in the compare range, for the badges. */
     compareRows: PageRow[];
     /** How many pages match the search, across every page of the table. */
-    total: number;
-    /** Each column's total over every page, searched or not: what a share is a percent of. */
-    totals: { pageviews: number; sessions: number };
-    /** Each column's largest value over every page: what a full bar stands for. */
-    maxes: { pageviews: number; sessions: number };
+    totalRows: number;
+    /** Each column's total (what a share is a percent of) and largest value (what a full bar stands for) over every page, searched or not. */
+    stats: Record<"pageviews" | "sessions", { total: number; max: number }>;
     /** All pageviews in the range and in the compare range. */
     pageviews: { current: number; previous?: number };
 };
@@ -152,9 +152,11 @@ export function fetchPages({ range, compare, sort, page, pageSize, query }: Page
     return {
         rows: matching.slice((page - 1) * pageSize, page * pageSize),
         compareRows: previous,
-        total: matching.length,
-        totals: { pageviews: every.reduce((s, r) => s + r.pageviews, 0), sessions: every.reduce((s, r) => s + r.sessions, 0) },
-        maxes: { pageviews: Math.max(...every.map((r) => r.pageviews)), sessions: Math.max(...every.map((r) => r.sessions)) },
+        totalRows: matching.length,
+        stats: {
+            pageviews: { total: every.reduce((s, r) => s + r.pageviews, 0), max: Math.max(...every.map((r) => r.pageviews)) },
+            sessions: { total: every.reduce((s, r) => s + r.sessions, 0), max: Math.max(...every.map((r) => r.sessions)) },
+        },
         pageviews: { current: sumOver(range, pageviewsOn), previous: compare ? sumOver(compare, pageviewsOn) : undefined },
     };
 }

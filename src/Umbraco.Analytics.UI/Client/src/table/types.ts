@@ -1,3 +1,5 @@
+import type { UaxColorSlot } from "../theme/types.js";
+
 /** One column of a `uax-data-table`. */
 export type UaxTableColumn = {
     /** The key in each row that holds this column's value. */
@@ -18,7 +20,7 @@ export type UaxTableColumn = {
     /** Text alignment of the header and cells. Defaults to `"start"`: numeric columns usually want `"end"`. */
     align?: "start" | "end";
     /** `uax-share-cell`: the palette slot of the bar (the same slots as `UaxSeries.color`). Defaults to the share column's position. */
-    color?: 1 | 2 | 3 | 4;
+    color?: UaxColorSlot;
     /** The column's width as a CSS length, e.g. `"27%"` or `"120px"`, as `uui-table-column` takes it. Without it the browser sizes the column. */
     width?: string;
     /** Whether the table's search looks in this column's values. Only text values are searched. */
@@ -81,9 +83,9 @@ export type UaxTableRowClickDetail = {
 
 /** What `UAX_TABLE_CONTEXT` knows about one column's numbers. */
 export type UaxTableColumnStats = {
-    /** The sum of the column's values, or the table's `totals` entry for it. What a share is a percent of. */
+    /** The sum of the column's values, or the table's `stats` entry for it. What a share is a percent of. */
     total: number;
-    /** The largest of the column's values, or the table's `maxes` entry for it. What a full bar stands for. */
+    /** The largest of the column's values, or the table's `stats` entry for it. What a full bar stands for. */
     max: number;
 };
 

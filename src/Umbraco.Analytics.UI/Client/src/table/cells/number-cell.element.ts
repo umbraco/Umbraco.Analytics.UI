@@ -1,4 +1,4 @@
-import { css, customElement, html, nothing, property, type CSSResultGroup, type PropertyValues } from "@umbraco-cms/backoffice/external/lit";
+import { css, customElement, html, nothing, property, type CSSResultGroup, type PropertyValues, type TemplateResult } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { asNumber, getNumberFormat } from "../internal/number-format.js";
 import "../internal/table-skeleton-cell.element.js";
@@ -39,7 +39,7 @@ export class UaxNumberCellElement extends UmbLitElement implements UaxTableCellE
     @property({ type: Boolean })
     loading = false;
 
-    override render() {
+    override render(): TemplateResult | typeof nothing {
         if (this.loading) return html`<uax-table-skeleton-cell .align=${this.column.align ?? "start"}></uax-table-skeleton-cell>`;
         const value = asNumber(this.value);
         return value === undefined ? nothing : html`${this.#format!.format.format(value)}`;

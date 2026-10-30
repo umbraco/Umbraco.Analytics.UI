@@ -9,8 +9,7 @@ import { CSSResultGroup } from '@umbraco-cms/backoffice/external/lit';
 import { nothing } from '@umbraco-cms/backoffice/external/lit';
 import type { Observable } from '@umbraco-cms/backoffice/external/rxjs';
 import { PropertyValues } from '@umbraco-cms/backoffice/external/lit';
-import { TemplateResult } from 'lit-html';
-import { TemplateResult as TemplateResult_2 } from '@umbraco-cms/backoffice/external/lit';
+import { TemplateResult } from '@umbraco-cms/backoffice/external/lit';
 import { UmbContextMinimal } from '@umbraco-cms/backoffice/context-api';
 import { UmbContextToken } from '@umbraco-cms/backoffice/context-api';
 import { UmbLitElement } from '@umbraco-cms/backoffice/lit-element';
@@ -31,6 +30,9 @@ export const UAX_TABLE_CONTEXT: UmbContextToken<UaxTableContext, UaxTableContext
 export type UaxChartKind = "line" | "area" | "bar" | "stacked-bar";
 
 // @public
+export type UaxColorSlot = 1 | 2 | 3 | 4;
+
+// @public
 export type UaxCompare = {
     mode: "previous-period" | "previous-year" | "custom";
     from: string;
@@ -45,20 +47,19 @@ export class UaxDataTableElement extends UmbLitElement {
     emptyDescription?: string;
     emptyHeadline?: string;
     loading: boolean;
-    maxes?: Record<string, number>;
     mode: UaxTableMode;
     page: number;
     pageSize: number;
     query: string;
     // (undocumented)
-    render(): TemplateResult_2<1>;
+    render(): TemplateResult;
     rowKey?: string;
     rows: Record<string, unknown>[];
     sort?: UaxTableSort;
+    stats?: UaxTableStats;
     // (undocumented)
     static styles: CSSResultGroup;
-    total?: number;
-    totals?: Record<string, number>;
+    totalRows?: number;
     // (undocumented)
     protected willUpdate(changed: PropertyValues<this>): void;
 }
@@ -81,6 +82,12 @@ export type UaxDateRange = {
 };
 
 // @public
+export type UaxDateRangeChangeDetail = {
+    value: UaxDateRange;
+    compare?: UaxCompare;
+};
+
+// @public
 export class UaxDateRangeElement extends UmbLitElement {
     constructor();
     allowCompare: boolean;
@@ -88,7 +95,7 @@ export class UaxDateRangeElement extends UmbLitElement {
     maxDate?: string;
     presets: UaxDatePreset[];
     // (undocumented)
-    render(): TemplateResult<1>;
+    render(): TemplateResult;
     // (undocumented)
     static styles: CSSResultGroup;
     value: UaxDateRange;
@@ -100,7 +107,7 @@ export class UaxDeltaBadgeElement extends UmbLitElement {
     lowerIsBetter: boolean;
     maxDecimals: number;
     // (undocumented)
-    render(): TemplateResult<1> | typeof nothing;
+    render(): TemplateResult | typeof nothing;
     get sentiment(): "positive" | "negative" | "neutral";
     size: UaxDeltaBadgeSize;
     // (undocumented)
@@ -109,10 +116,10 @@ export class UaxDeltaBadgeElement extends UmbLitElement {
     value?: number;
 }
 
-// @public (undocumented)
+// @public
 export type UaxDeltaBadgeSize = "md" | "sm";
 
-// @public (undocumented)
+// @public
 export type UaxDeltaUnit = "percent" | "points";
 
 // @public
@@ -121,19 +128,24 @@ export class UaxEmptyStateElement extends UmbLitElement {
     headline?: string;
     icon: string;
     // (undocumented)
-    render(): TemplateResult<1>;
+    render(): TemplateResult;
     // (undocumented)
     static styles: CSSResultGroup;
 }
 
-// @public (undocumented)
+// @public
 export type UaxGroupBy = "day" | "week" | "month";
+
+// @public
+export type UaxGroupByChangeDetail = {
+    value: UaxGroupBy;
+};
 
 // @public
 export class UaxGroupByElement extends UmbLitElement {
     options: UaxGroupBy[];
     // (undocumented)
-    render(): TemplateResult<1>;
+    render(): TemplateResult;
     // (undocumented)
     static styles: CSSResultGroup;
     value: UaxGroupBy;
@@ -149,7 +161,7 @@ export class UaxKpiTileElement extends UmbLitElement {
     loading: boolean;
     lowerIsBetter: boolean;
     // (undocumented)
-    render(): TemplateResult<1>;
+    render(): TemplateResult;
     selectable: boolean;
     selected: boolean;
     // (undocumented)
@@ -163,7 +175,7 @@ export class UaxLinkCellElement extends UmbLitElement implements UaxTableCellEle
     item: Record<string, unknown>;
     loading: boolean;
     // (undocumented)
-    render(): TemplateResult<1>;
+    render(): TemplateResult;
     // (undocumented)
     static styles: CSSResultGroup;
     value: unknown;
@@ -178,12 +190,17 @@ export type UaxMarker = {
 };
 
 // @public
+export type UaxMarkerClickDetail = {
+    id: string;
+};
+
+// @public
 export class UaxNumberCellElement extends UmbLitElement implements UaxTableCellElement {
     column: UaxTableColumn;
     item: Record<string, unknown>;
     loading: boolean;
     // (undocumented)
-    render(): TemplateResult<1> | typeof nothing;
+    render(): TemplateResult | typeof nothing;
     // (undocumented)
     static styles: CSSResultGroup;
     value: unknown;
@@ -200,7 +217,7 @@ export class UaxPercentCellElement extends UmbLitElement implements UaxTableCell
     item: Record<string, unknown>;
     loading: boolean;
     // (undocumented)
-    render(): TemplateResult<1> | typeof nothing;
+    render(): TemplateResult | typeof nothing;
     // (undocumented)
     static styles: CSSResultGroup;
     value: unknown;
@@ -218,21 +235,21 @@ export type UaxPoint = {
 export type UaxSeries = {
     id: string;
     label: string;
-    color?: 1 | 2 | 3 | 4;
+    color?: UaxColorSlot;
     points: UaxPoint[];
 };
 
 // @public
 export class UaxShareCellElement extends UmbLitElement implements UaxTableCellElement {
     constructor();
-    color?: 1 | 2 | 3 | 4;
+    color?: UaxColorSlot;
     column: UaxTableColumn;
     compareValue?: number;
     item: Record<string, unknown>;
     loading: boolean;
     max?: number;
     // (undocumented)
-    render(): TemplateResult<1> | typeof nothing;
+    render(): TemplateResult | typeof nothing;
     // (undocumented)
     static styles: CSSResultGroup;
     total?: number;
@@ -257,7 +274,7 @@ export type UaxTableColumn = {
     hrefKey?: string;
     valueFormat?: Intl.NumberFormatOptions;
     align?: "start" | "end";
-    color?: 1 | 2 | 3 | 4;
+    color?: UaxColorSlot;
     width?: string;
     searchable?: boolean;
     sortable?: boolean;
@@ -306,7 +323,7 @@ export class UaxTableSearchElement extends UmbLitElement {
     // (undocumented)
     focus(): void;
     // (undocumented)
-    render(): TemplateResult<1>;
+    render(): TemplateResult;
     // (undocumented)
     static styles: CSSResultGroup;
     value: string;
@@ -333,7 +350,7 @@ export class UaxTextCellElement extends UmbLitElement implements UaxTableCellEle
     item: Record<string, unknown>;
     loading: boolean;
     // (undocumented)
-    render(): TemplateResult<1>;
+    render(): TemplateResult;
     value: unknown;
 }
 
@@ -352,7 +369,7 @@ export class UaxTimeSeriesChartElement extends UmbLitElement {
     loading: boolean;
     markers: UaxMarker[];
     // (undocumented)
-    render(): TemplateResult<1>;
+    render(): TemplateResult;
     series: UaxSeries[];
     // (undocumented)
     static styles: CSSResultGroup;

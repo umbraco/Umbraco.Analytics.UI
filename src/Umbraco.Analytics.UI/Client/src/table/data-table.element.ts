@@ -25,6 +25,7 @@ import { asNumber, asText } from "./internal/number-format.js";
 import type {
     UaxTableCellElement,
     UaxTableColumn,
+    UaxTableColumnStats,
     UaxTableMode,
     UaxTablePageChangeDetail,
     UaxTableRowClickDetail,
@@ -46,8 +47,7 @@ interface DerivedFrom {
     rows: UaxTableRow[];
     compareRows: UaxTableRow[];
     rowKey?: string;
-    totals?: Record<string, number>;
-    maxes?: Record<string, number>;
+    stats?: UaxTableStats;
     lang: string;
 }
 
@@ -117,7 +117,7 @@ const SKELETON_WIDTHS = [72, 54, 83, 47, 65];
  * The footer shows "Show rows" (10, 25, 50 or 100), the range ("1–10 of 272") and previous and next
  * buttons, and is hidden when the rows fit the smallest page size. In `client` mode the table pages the
  * (sorted) rows itself. In `server` mode it draws the `rows` it's given as the current page, reads the
- * row count from `total`, and the product loads the new page when `page-change` is raised. Either way the
+ * row count from `total-rows`, and the product loads the new page when `page-change` is raised. Either way the
  * table sets its own `page` and `page-size` when the editor changes them, and goes back to page 1 when a
  * header is clicked. In `server` mode that sort is a `sort-change` for the product to load, not a `page-change`.
  *
@@ -132,10 +132,9 @@ const SKELETON_WIDTHS = [72, 54, 83, 47, 65];
  * on a link, button or form control inside a row is that control's own and raises nothing. Without `clickable-rows` rows
  * are plain, even when something listens for `row-click`, because an element can't tell that it has a listener.
  *
- * Totals and maxes are worked out from the `rows` the table holds: all of them in `client` mode, but only
- * the current page in `server` mode. Pass `totals` (the column's total across every page) so a share is
- * still a share of the whole, and `maxes` (the column's largest value across every page) so bars
- * keep one scale from page to page.
+ * Each column's total and largest value are worked out from the `rows` the table holds: all of them in `client`
+ * mode, but only the current page in `server` mode. Pass `stats` (the column's `total` and `max` across every
+ * page, by column `key`) so a share is still a share of the whole and bars keep one scale from page to page.
  *
  * @element uax-data-table
  * @fires sort-change - A sortable header was clicked, by pointer or keyboard. Bubbles, not composed or cancelable, like `uax-group-by`. `detail` is `{ key, direction }`; the table has already set `sort` to it and reset `page` to 1, so a `server` product loads page 1 and resets its own page binding.
@@ -158,7 +157,7 @@ export class UaxDataTableElement extends UmbLitElement {
     @property({ attribute: false })
     rows: Record<string, unknown>[] = [];
 
-    /** Last period's rows. Each is matched to a row in `rows` by its `rowKey` value. */
+    /** Last period's rows. Each is matched to a row in `rows` by its `rowKey` value. When several share a key, the last one wins. */
     @property({ attribute: false })
     compareRows: Record<string, unknown>[] = [];
 
@@ -195,22 +194,16 @@ export class UaxDataTableElement extends UmbLitElement {
     pageSize = DEFAULT_PAGE_SIZE;
 
     /** `server` mode: how many rows there are across every page. `client` mode counts `rows` and ignores this. */
-    @property({ type: Number })
-    total?: number;
+    @property({ type: Number, attribute: "total-rows" })
+    totalRows?: number;
 
     /**
-     * Each column's total across every page, by column `key`: the number a share is a percent of,
-     * not a total the table shows. Without an entry the total is the sum of the `rows` the table holds.
+     * Each column's `total` and `max` across every page, by column `key`: the number a share is a percent of
+     * and what a full bar stands for. Not a total the table shows. A column without an entry uses the sum and the
+     * largest value of the `rows` the table holds.
      */
     @property({ attribute: false })
-    totals?: Record<string, number>;
-
-    /**
-     * Each column's largest value across every page, by column `key`: what a full bar stands for.
-     * Without an entry the largest value in the `rows` the table holds is a full bar.
-     */
-    @property({ attribute: false })
-    maxes?: Record<string, number>;
+    stats?: UaxTableStats;
 
     /**
      * The text to search for. Set by the product, and by the table itself when a `search` event reaches it from a
@@ -247,15 +240,14 @@ export class UaxDataTableElement extends UmbLitElement {
             !prev ||
             prev.columns !== this.columns ||
             prev.rows !== this.rows ||
-            prev.totals !== this.totals ||
-            prev.maxes !== this.maxes ||
+            prev.stats !== this.stats ||
             prev.lang !== lang
         ) {
             this.#derived = this.#derive(this.columns);
             this.#context.setColumns(this.columns);
             this.#context.setStats(this.#computeStats(this.columns, this.#statsRows));
         }
-        this.#derivedFrom = { columns: this.columns, rows: this.rows, compareRows: this.compareRows, rowKey: this.rowKey, totals: this.totals, maxes: this.maxes, lang };
+        this.#derivedFrom = { columns: this.columns, rows: this.rows, compareRows: this.compareRows, rowKey: this.rowKey, stats: this.stats, lang };
     }
 
     #indexCompareRows(compareRows: UaxTableRow[], rowKey?: string): Map<string, UaxTableRow> {
@@ -277,7 +269,7 @@ export class UaxDataTableElement extends UmbLitElement {
 
     /**
      * The rows that column totals and bar scales are worked out from: all the rows the table holds, never
-     * just the page on screen. In `server` mode that is the page the product passed, unless `totals` and `maxes` say more.
+     * just the page on screen. In `server` mode that is the page the product passed, unless `stats` says more.
      */
     get #statsRows(): UaxTableRow[] {
         return this.rows;
@@ -326,7 +318,7 @@ export class UaxDataTableElement extends UmbLitElement {
     /** How many rows there are across every page. */
     get #totalRows(): number {
         if (this.mode !== "server") return this.#searchedRows.length;
-        const total = asNumber(this.total);
+        const total = asNumber(this.totalRows);
         return total === undefined ? this.rows.length : Math.max(0, Math.floor(total));
     }
 
@@ -420,9 +412,9 @@ export class UaxDataTableElement extends UmbLitElement {
         return columns.map((column) => ({ column, align: column.align ?? "start" }));
     }
 
-    /** Each column's total and largest number, from `totals` and `maxes` where given, else from the rows the table holds. */
+    /** Each column's total and largest number, from `stats` where given, else from the rows the table holds. */
     #computeStats(columns: UaxTableColumn[], rows: UaxTableRow[]): UaxTableStats {
-        const stats: Record<string, { total: number; max: number }> = {};
+        const stats: Record<string, UaxTableColumnStats> = {};
         for (const { key } of columns) {
             let total = 0;
             let max = 0;
@@ -434,9 +426,10 @@ export class UaxDataTableElement extends UmbLitElement {
                 total += value;
                 max = Math.max(max, value);
             }
-            total = asNumber(this.totals?.[key]) ?? total;
-            max = asNumber(this.maxes?.[key]) ?? max;
-            if (any || this.totals?.[key] !== undefined || this.maxes?.[key] !== undefined) stats[key] = { total, max };
+            const given = this.stats?.[key];
+            total = asNumber(given?.total) ?? total;
+            max = asNumber(given?.max) ?? max;
+            if (any || given !== undefined) stats[key] = { total, max };
         }
         return stats;
     }
@@ -537,7 +530,7 @@ export class UaxDataTableElement extends UmbLitElement {
             this.#waitingFor.add(elementName);
             void customElements.whenDefined(elementName).then(() => {
                 this.#waitingFor.delete(elementName);
-                this.requestUpdate();
+                if (this.isConnected) this.requestUpdate();
             });
         }
         if (!definition || !("loading" in definition.prototype)) {
@@ -569,7 +562,7 @@ export class UaxDataTableElement extends UmbLitElement {
         </uui-table-row>`;
     }
 
-    override render() {
+    override render(): TemplateResult {
         const hasData = this.rows.length > 0;
         const mode = getLoadingMode(this.loading, hasData);
         return html`<div class="region ${this.#hasToolbar ? "has-toolbar" : ""}">

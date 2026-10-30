@@ -6,8 +6,7 @@ import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
 import "@umbraco-cms/backoffice/components";
 import { builtInPresetRange, isoToDate, parseIso, previousPeriodRange, previousYearRange, todayIso } from "./date-math.js";
 import { defaultPresets } from "./presets.js";
-import type { UaxCompare, UaxDateRange } from "../chart/types.js";
-import type { UaxDatePreset, UaxDateRangeModalData, UaxDateRangeModalValue } from "./types.js";
+import type { UaxCompare, UaxDateRange, UaxDatePreset, UaxDateRangeModalData, UaxDateRangeModalValue } from "./types.js";
 
 const CUSTOM = "custom";
 

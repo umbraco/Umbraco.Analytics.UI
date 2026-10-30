@@ -38,7 +38,7 @@ class TestStatsCellElement extends UmbLitElement implements UaxTableCellElement 
 
 const rows = [{ url: "/a", n: 6 }, { url: "/b", n: 2 }];
 const columns: UaxTableColumn[] = [{ key: "url", label: "URL" }, { key: "n", label: "N", elementName: "uax-test-stats-cell" }];
-const table = (el: Element) => el as UaxTestElement & { rows: unknown[]; totals?: Record<string, number>; maxes?: Record<string, number> };
+const table = (el: Element) => el as UaxTestElement & { rows: unknown[]; stats?: Record<string, { total: number; max: number }> };
 const cellTexts = (el: Element) =>
     [...shadow(el).querySelectorAll("uui-table-row:not([part~='header']) uui-table-cell:nth-child(2)")].map((c) => deepText(c).trim());
 
@@ -65,10 +65,10 @@ describe("Feature: a table provides its column stats to cells", () => {
         });
     });
 
-    describe("Scenario: the table has totals and maxes", () => {
+    describe("Scenario: the table has stats", () => {
         it("gives the cell those instead of the rows' sums", async () => {
             const el = await renderElement(
-                html`<uax-data-table .columns=${columns} .rows=${rows} .totals=${{ n: 100 }} .maxes=${{ n: 40 }}></uax-data-table>`,
+                html`<uax-data-table .columns=${columns} .rows=${rows} .stats=${{ n: { total: 100, max: 40 } }}></uax-data-table>`,
                 "uax-data-table",
             );
             await settle(el);

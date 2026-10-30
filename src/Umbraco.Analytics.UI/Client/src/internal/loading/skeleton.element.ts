@@ -22,7 +22,7 @@ export class UaxSkeletonElement extends UmbLitElement {
     }
 
     override render() {
-        return html`<div class="block"></div>`;
+        return html`<span class="block"></span>`;
     }
 
     static override styles: CSSResultGroup = [
@@ -36,6 +36,7 @@ export class UaxSkeletonElement extends UmbLitElement {
             }
 
             .block {
+                display: block;
                 height: 100%;
                 border-radius: var(--uui-border-radius);
                 background-color: var(--uax-color-tint-neutral);

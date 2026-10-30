@@ -109,6 +109,16 @@ describe("Feature: event markers", () => {
         });
     });
 
+    describe("Scenario: the marker-click event's options", () => {
+        it("bubbles but is not composed, like every other event", async () => {
+            const el = await chart([launch]);
+            const event = nextEvent(el, "marker-click");
+            markers(el)[0].click();
+            const { bubbles, composed } = await event;
+            expect([bubbles, composed]).toEqual([true, false]);
+        });
+    });
+
     describe("Scenario: pressing Enter on a focused marker", () => {
         it("raises marker-click", async () => {
             const el = await chart([launch]);

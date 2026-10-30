@@ -1,4 +1,4 @@
-import { css, customElement, html, nothing, property, type CSSResultGroup } from "@umbraco-cms/backoffice/external/lit";
+import { css, customElement, html, nothing, property, type CSSResultGroup, type TemplateResult } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 
 /**
@@ -25,7 +25,7 @@ export class UaxEmptyStateElement extends UmbLitElement {
     @property({ type: String })
     icon = "icon-search";
 
-    override render() {
+    override render(): TemplateResult {
         const headline = this.headline ?? this.localize.term("uaxAnalytics_emptyHeadline");
         const description = this.description ?? this.localize.term("uaxAnalytics_emptyDescription");
 

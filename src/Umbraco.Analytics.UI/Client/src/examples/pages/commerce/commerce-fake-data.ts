@@ -1,6 +1,6 @@
 // Example only: a made-up store that answers like an API would. A real product calls its own endpoints
 // here. Everything is worked out from the date, so the same range always gives the same numbers.
-import type { UaxDateRange } from "../../../chart/types.js";
+import type { UaxDateRange } from "../../../date-range/types.js";
 import type { UaxTableSort } from "../../../table/types.js";
 import { wait } from "../fake-latency.js";
 
@@ -21,7 +21,7 @@ export type Snapshot = {
 };
 
 export type BuyerQuery = { sort?: UaxTableSort; page: number; pageSize: number; query: string };
-export type BuyerPage = { rows: BuyerRow[]; total: number; totals: { spent: number }; maxes: { spent: number } };
+export type BuyerPage = { rows: BuyerRow[]; totalRows: number; stats: { spent: { total: number; max: number } } };
 
 const DAY_MS = 86_400_000;
 const toTime = (iso: string) => Date.parse(`${iso}T00:00:00Z`);
@@ -163,9 +163,8 @@ export async function loadBuyers(range: UaxDateRange, query: BuyerQuery, latency
     const start = (query.page - 1) * query.pageSize;
     return {
         rows: sorted.slice(start, start + query.pageSize),
-        total: sorted.length,
-        totals: { spent: found.reduce((sum, b) => sum + b.spent, 0) },
-        maxes: { spent: found.reduce((max, b) => Math.max(max, b.spent), 0) },
+        totalRows: sorted.length,
+        stats: { spent: { total: found.reduce((sum, b) => sum + b.spent, 0), max: found.reduce((max, b) => Math.max(max, b.spent), 0) } },
     };
 }
 

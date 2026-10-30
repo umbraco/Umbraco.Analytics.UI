@@ -1,7 +1,7 @@
 // A stand-in for the Umbraco AI usage API, for the "Umbraco AI > Usage" page example. Everything is
 // invented and generated from the date, so the same range always gives the same numbers. A real
 // product fetches this over HTTP.
-import type { UaxCompare, UaxDateRange } from "../../../chart/types.js";
+import type { UaxCompare, UaxDateRange } from "../../../date-range/types.js";
 import type { UaxGroupBy } from "../../../group-by/group-by.element.js";
 import type { UaxTableSortDirection } from "../../../table/types.js";
 import { wait } from "../fake-latency.js";
@@ -64,11 +64,9 @@ export type BreakdownResult = {
     /** The same rows in the comparison period, when there is one. */
     compareRows: BreakdownRow[];
     /** Rows that match the search, across every page. */
-    total: number;
-    /** Each number column's total across every row, before the search, so shares keep their meaning. */
-    totals: Record<"requests" | "totalTokens", number>;
-    /** Each number column's largest value across every row, before the search. */
-    maxes: Record<"requests" | "totalTokens", number>;
+    totalRows: number;
+    /** Each number column's total and largest value across every row, before the search, so shares keep their meaning. */
+    stats: Record<"requests" | "totalTokens", { total: number; max: number }>;
 };
 
 type Model = { name: string; requests: number; inputPerRequest: number; outputPerRequest: number; cached: number; failRate: number; durationMs: number };
@@ -252,14 +250,10 @@ export async function getBreakdown(query: BreakdownQuery, latencyMs = 0): Promis
     return {
         rows,
         compareRows: previous ? previous.filter((p) => rows.some((r) => r.name === p.name)) : [],
-        total: matching.length,
-        totals: {
-            requests: all.reduce((sum, r) => sum + r.requests, 0),
-            totalTokens: all.reduce((sum, r) => sum + r.totalTokens, 0),
-        },
-        maxes: {
-            requests: Math.max(...all.map((r) => r.requests)),
-            totalTokens: Math.max(...all.map((r) => r.totalTokens)),
+        totalRows: matching.length,
+        stats: {
+            requests: { total: all.reduce((sum, r) => sum + r.requests, 0), max: Math.max(...all.map((r) => r.requests)) },
+            totalTokens: { total: all.reduce((sum, r) => sum + r.totalTokens, 0), max: Math.max(...all.map((r) => r.totalTokens)) },
         },
     };
 }

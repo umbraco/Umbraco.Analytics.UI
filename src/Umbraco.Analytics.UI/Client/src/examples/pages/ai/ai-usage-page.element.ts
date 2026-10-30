@@ -7,7 +7,9 @@ import "../../../date-range/date-range.element.js";
 import "../../../table/data-table.element.js";
 import "../../../table-search/table-search.element.js";
 import { UAX_TABLE_CELL } from "../../../table/cells/cell-names.js";
-import type { UaxCompare, UaxDateRange, UaxSeries } from "../../../chart/types.js";
+import type { UaxSeries } from "../../../chart/types.js";
+import type { UaxColorSlot } from "../../../theme/types.js";
+import type { UaxCompare, UaxDateRange } from "../../../date-range/types.js";
 import type { UaxGroupBy } from "../../../group-by/group-by.element.js";
 import type { UaxTableColumn, UaxTablePageChangeDetail, UaxTableSearchDetail, UaxTableSort, UaxTableSortChangeDetail } from "../../../table/types.js";
 import {
@@ -38,7 +40,7 @@ const metricLabels: Record<Metric, string> = {
 };
 
 /** What each metric stacks into. A tile picks the metric, and this turns the buckets into the chart's series. */
-const stacks: Record<Metric, { id: string; label: string; color: 1 | 2 | 3 | 4; of: (b: UsageBucket) => number }[]> = {
+const stacks: Record<Metric, { id: string; label: string; color: UaxColorSlot; of: (b: UsageBucket) => number }[]> = {
     requests: [
         { id: "succeeded", label: "Succeeded", color: 1, of: (b) => b.requests - b.failed },
         { id: "failed", label: "Failed", color: 2, of: (b) => b.failed },
@@ -282,9 +284,8 @@ export class ExampleAiUsagePageElement extends UmbLitElement {
                         .columns=${tableColumns(this._by)}
                         .rows=${breakdown?.rows ?? []}
                         .compareRows=${breakdown?.compareRows ?? []}
-                        .total=${breakdown?.total}
-                        .totals=${breakdown?.totals}
-                        .maxes=${breakdown?.maxes}
+                        .totalRows=${breakdown?.totalRows}
+                        .stats=${breakdown?.stats}
                         .sort=${this._sort}
                         .page=${this._page}
                         .pageSize=${this._pageSize}

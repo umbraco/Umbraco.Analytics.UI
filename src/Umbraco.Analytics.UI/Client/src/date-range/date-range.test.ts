@@ -50,6 +50,13 @@ describe("Feature: pick a date range", () => {
         umbLocalizationManager.documentLanguage = previousLanguage;
     });
 
+    describe("Scenario: comparison is on by default", () => {
+        it("allows compare without the allow-compare attribute", async () => {
+            const el = await renderWithModals(html`<uax-date-range .value=${value}></uax-date-range>`, "uax-date-range");
+            expect((el as unknown as { allowCompare: boolean }).allowCompare).toBe(true);
+        });
+    });
+
     describe("Scenario: the button", () => {
         let el: UaxTestElement;
         beforeEach(async () => {

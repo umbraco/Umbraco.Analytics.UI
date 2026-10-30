@@ -1,4 +1,4 @@
-import { css, customElement, html, property, type CSSResultGroup } from "@umbraco-cms/backoffice/external/lit";
+import { css, customElement, html, property, type CSSResultGroup, type TemplateResult } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { asText } from "../internal/number-format.js";
 import { safeHref } from "../internal/safe-href.js";
@@ -30,7 +30,7 @@ export class UaxLinkCellElement extends UmbLitElement implements UaxTableCellEle
     @property({ type: Boolean })
     loading = false;
 
-    override render() {
+    override render(): TemplateResult {
         if (this.loading) return html`<uax-table-skeleton-cell .align=${this.column.align ?? "start"}></uax-table-skeleton-cell>`;
         const text = asText(this.value);
         const href = this.column.hrefKey ? safeHref(this.item[this.column.hrefKey]) : undefined;

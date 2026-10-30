@@ -6,7 +6,8 @@ import "../../../date-range/date-range.element.js";
 import "../../../table/data-table.element.js";
 import "../../../table-search/table-search.element.js";
 import { UAX_TABLE_CELL } from "../../../table/cells/cell-names.js";
-import type { UaxCompare, UaxDateRange, UaxSeries } from "../../../chart/types.js";
+import type { UaxSeries } from "../../../chart/types.js";
+import type { UaxCompare, UaxDateRange } from "../../../date-range/types.js";
 import type {
     UaxTableColumn,
     UaxTablePageChangeDetail,
@@ -269,9 +270,8 @@ export class ExampleCommerceAnalyticsPageElement extends UmbLitElement {
                         .columns=${buyerColumns}
                         .rows=${this._buyers?.rows ?? []}
                         .compareRows=${this._buyerCompare}
-                        .total=${this._buyers?.total}
-                        .totals=${this._buyers?.totals}
-                        .maxes=${this._buyers?.maxes}
+                        .totalRows=${this._buyers?.totalRows}
+                        .stats=${this._buyers?.stats}
                         .sort=${this._buyerSort}
                         .page=${this._buyerPage}
                         .pageSize=${this._buyerPageSize}

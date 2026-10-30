@@ -1,10 +1,14 @@
-import { css, customElement, html, property, repeat, type CSSResultGroup } from "@umbraco-cms/backoffice/external/lit";
+import { css, customElement, html, property, repeat, type CSSResultGroup, type TemplateResult } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UaxPaletteStyles } from "../theme/index.js";
 
+/** How a chart groups its points: one per day, week or month. */
 export type UaxGroupBy = "day" | "week" | "month";
 
-const allOptions: UaxGroupBy[] = ["day", "week", "month"];
+/** The detail of the `change` event of `uax-group-by`: the option the editor picked. */
+export type UaxGroupByChangeDetail = { value: UaxGroupBy };
+
+const allOptions = (): UaxGroupBy[] => ["day", "week", "month"];
 
 const termKeys: Record<UaxGroupBy, string> = {
     day: "uaxAnalytics_groupByDay",
@@ -19,7 +23,7 @@ const termKeys: Record<UaxGroupBy, string> = {
  * `uui-radio-group`. Only the selected option is in the tab order. Put it in a `uui-box`'s `header-actions` slot.
  *
  * @element uax-group-by
- * @fires change - The editor picked a different option. Bubbles, not cancelable. `detail` is `{ value }`.
+ * @fires change - The editor picked a different option. Bubbles, not cancelable. `detail` is `{ value }` (`UaxGroupByChangeDetail`).
  */
 @customElement("uax-group-by")
 export class UaxGroupByElement extends UmbLitElement {
@@ -29,12 +33,12 @@ export class UaxGroupByElement extends UmbLitElement {
 
     /** The options to show, in order. Defaults to day, week and month. */
     @property({ attribute: false })
-    options: UaxGroupBy[] = allOptions;
+    options: UaxGroupBy[] = allOptions();
 
     #select(value: UaxGroupBy) {
         if (value === this.value) return;
         this.value = value;
-        this.dispatchEvent(new CustomEvent("change", { bubbles: true, detail: { value } }));
+        this.dispatchEvent(new CustomEvent<UaxGroupByChangeDetail>("change", { bubbles: true, detail: { value } }));
     }
 
     #onKeydown(e: KeyboardEvent, index: number) {
@@ -48,7 +52,7 @@ export class UaxGroupByElement extends UmbLitElement {
         this.updateComplete.then(() => this.shadowRoot?.querySelector<HTMLElement>(`[data-value="${next}"]`)?.focus());
     }
 
-    override render() {
+    override render(): TemplateResult {
         // With no selected option (a value that isn't in `options`), the first one takes the tab stop.
         const tabStop = this.options.includes(this.value) ? this.value : this.options[0];
         return html`<div class="group" role="radiogroup" aria-label=${this.localize.term("uaxAnalytics_groupByLabel")}>

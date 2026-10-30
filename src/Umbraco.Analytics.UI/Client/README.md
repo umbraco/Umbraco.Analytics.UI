@@ -74,18 +74,18 @@ const series: UaxSeries[] = [
 html`<uax-time-series-chart kind="area" group-by="day" .series=${series}></uax-time-series-chart>`;
 ```
 
-`kind` is `line`, `area`, `bar` or `stacked-bar`. Add `.compareSeries` for last period's points and `.markers` (`{ id, date, title }`) for events on the x-axis. Set `.valueFormat` to `Intl.NumberFormat` options. Listen for `marker-click`.
+`kind` is `line`, `area`, `bar` or `stacked-bar`. Add `.compareSeries` for last period's points and `.markers` (`{ id, date, title }`) for events on the x-axis. Set `.valueFormat` to `Intl.NumberFormat` options. Listen for `marker-click` (`UaxMarkerClickDetail`).
 
 ### uax-group-by
 
 Day, week or month switch. Sets its own `value`, then raises `change`. [Storybook](https://umbraco.github.io/Umbraco.Analytics.UI/?path=/docs/components-group-by--docs)
 
 ```ts
-import type { UaxGroupBy } from "@umbraco-analytics/ui";
+import type { UaxGroupByChangeDetail } from "@umbraco-analytics/ui";
 
 html`<uax-group-by
   .value=${this._groupBy}
-  @change=${(e: CustomEvent<{ value: UaxGroupBy }>) => (this._groupBy = e.detail.value)}
+  @change=${(e: CustomEvent<UaxGroupByChangeDetail>) => (this._groupBy = e.detail.value)}
 ></uax-group-by>`;
 ```
 
@@ -96,18 +96,18 @@ html`<uax-group-by
 A button that opens a dialog to pick a range and a comparison. Put it in a `uui-box`'s `header-actions` slot. [Storybook](https://umbraco.github.io/Umbraco.Analytics.UI/?path=/docs/components-date-range--docs)
 
 ```ts
-import type { UaxCompare, UaxDateRange } from "@umbraco-analytics/ui";
+import type { UaxDateRangeChangeDetail } from "@umbraco-analytics/ui";
 
 html`<uui-box headline="Visitors">
   <uax-date-range
     slot="header-actions"
     .value=${{ from: "2026-06-01", to: "2026-06-30" }}
-    @change=${(e: CustomEvent<{ value: UaxDateRange; compare?: UaxCompare }>) => this.#load(e.detail)}
+    @change=${(e: CustomEvent<UaxDateRangeChangeDetail>) => this.#load(e.detail)}
   ></uax-date-range>
 </uui-box>`;
 ```
 
-Dates are `YYYY-MM-DD`. The package registers the dialog for you. `.presets`, `.maxDate` and `allow-compare="false"` adjust it.
+Dates are `YYYY-MM-DD`. The package registers the dialog for you. `.presets`, `.maxDate` and `.allowCompare` adjust it. Comparison is on by default: turn it off with `.allowCompare=${false}`, as a boolean attribute can't say false.
 
 ### uax-data-table
 
@@ -132,7 +132,7 @@ html`<uax-data-table
 ```
 
 - **Client mode** (default): the table sorts, searches and pages the rows you give it.
-- **Server mode**: set `mode="server"` and `.total`. The table never reorders or filters. Load new rows on `sort-change`, `page-change` and `search`. Pass `.totals` and `.maxes` so shares and bars stay right across pages.
+- **Server mode**: set `mode="server"` and `total-rows` (the row count across every page). The table never reorders or filters. Load new rows on `sort-change`, `page-change` and `search`. Pass `.stats` (`{ [columnKey]: { total, max } }` across every page) so shares and bars stay right across pages.
 - **Compare**: pass `.compareRows` and `row-key` to show a change badge on share cells.
 - **Slots**: `toolbar` (above the header) and `footer` (left of the pager).
 - **Rows**: `clickable-rows` makes rows keyboard-reachable and raises `row-click`.
@@ -169,9 +169,9 @@ const columns: UaxTableColumn[] = [
 - **`uax-link-cell`**: a link. The URL is the item's `hrefKey` value. Unsafe URLs show plain text.
 - **`uax-number-cell`**: a number in the editor's culture, formatted with `valueFormat`.
 - **`uax-percent-cell`**: a fraction as a percentage.
-- **`uax-share-cell`**: the value, its percent of the column total and a bar. Reads totals from the table.
+- **`uax-share-cell`**: the value, its percent of the column total and a bar. Reads the column's `total` and `max` from the table's `stats`.
 
-To write your own cell, implement `UaxTableCellElement` and read the table's totals and compare rows from `UAX_TABLE_CONTEXT`. See the [custom cell example](https://umbraco.github.io/Umbraco.Analytics.UI/?path=/docs/examples-custom-cell-with-table-context--docs).
+To write your own cell, implement `UaxTableCellElement` and read the table's stats and compare rows from `UAX_TABLE_CONTEXT`. See the [custom cell example](https://umbraco.github.io/Umbraco.Analytics.UI/?path=/docs/examples-custom-cell-with-table-context--docs).
 
 ```ts
 import { UAX_TABLE_CONTEXT } from "@umbraco-analytics/ui";
@@ -242,7 +242,7 @@ Notes:
 
 ## Events
 
-All events bubble. Only `marker-click` also crosses shadow roots (composed).
+All events bubble. None is composed, so they don't cross shadow roots.
 
 | Element | Event | `detail` |
 | --- | --- | --- |

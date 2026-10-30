@@ -10,7 +10,7 @@ All elements live in `src/Umbraco.Analytics.UI/Client/src/<name>/` and are expor
 
 - extends `UmbLitElement` and localizes every visible string, `aria-label` and placeholder
 - uses `--uui-*` tokens and reads colours through the `--uax-color-*` read tokens (ARCHITECTURE.md decision 6), and reads correctly in the light, dark and high-contrast themes
-- raises events as `CustomEvent`s that bubble and are `composed`, with the payload in `detail`, except where it mirrors a UUI event, which keeps UUI's exact options (the KPI tile's `selected`/`deselected` are plain bubbling, cancelable, non-composed `Event`s, like `UUISelectableEvent`)
+- raises events as `CustomEvent`s that bubble but are not `composed`, like UUI's `change`, with the payload in `detail` (an exported `Uax…Detail` type). The KPI tile's `selected`/`deselected` are bubbling, cancelable, non-composed `CustomEvent`s with `detail` `{}`, like `UUISelectableEvent`
 - passes an axe audit in its tests and in every Storybook story
 - takes corner radius from `--uui-border-radius-*` tokens, so it follows the v18+ rounded backoffice
 
@@ -20,12 +20,18 @@ Screenshots are from the Phase 1 design ([`docs/design/phase-1`](../../design/ph
 
 ```ts
 type UaxPoint = { date: string; value: number };              // date: ISO "2026-06-11"
-type UaxSeries = { id: string; label: string; points: UaxPoint[]; color?: 1 | 2 | 3 | 4 }; // color: palette slot, defaults to the series' position
+type UaxSeries = { id: string; label: string; points: UaxPoint[]; color?: UaxColorSlot }; // color: palette slot, defaults to the series' position
 type UaxMarker = { id: string; date: string; title: string; description?: string };
+type UaxColorSlot = 1 | 2 | 3 | 4;                           // --uax-series-1 to --uax-series-4
 type UaxGroupBy = "day" | "week" | "month";
 type UaxChartKind = "line" | "area" | "bar" | "stacked-bar";
 type UaxDateRange = { from: string; to: string; preset?: string };
 type UaxCompare = { mode: "previous-period" | "previous-year" | "custom"; from: string; to: string };
+
+// Event details
+type UaxGroupByChangeDetail = { value: UaxGroupBy };
+type UaxDateRangeChangeDetail = { value: UaxDateRange; compare?: UaxCompare };
+type UaxMarkerClickDetail = { id: string };
 ```
 
 ### 1. Panes: `uui-box`, not a new element
@@ -89,7 +95,7 @@ Storybook gets a "Pane" story showing this recipe, a chart and a table in one `u
 - **Tooltip:** hovering a point shows a dark tooltip with the date, each series' value and, when comparing, the comparison value and a delta.
 - **Markers:** each marker shows as a dot on the x-axis, with a dashed line up the chart.
   - Hovering or focusing a dot shows its title and description.
-  - Clicking or pressing Enter raises `marker-click` with `{ id }`.
+  - Clicking or pressing Enter raises `marker-click` with `{ id }` (`UaxMarkerClickDetail`).
   - Dots are keyboard-focusable, in date order.
 - **Legend:** one entry per series, plus the comparison range when comparing. A single series with no comparison has no legend, as in the design.
 - **Height:** the plot height comes from the public CSS property `--uax-chart-height` (default 260px). The loading skeleton uses the same value.
@@ -103,7 +109,7 @@ Storybook gets a "Pane" story showing this recipe, a chart and a table in one `u
 ### 5. `uax-group-by`: Day / Week / Month switch
 
 - Properties: `value` (`UaxGroupBy`), `options` (defaults to all three).
-- A radio group. Arrow keys move between options. Changing raises `change` with `{ value }`.
+- A radio group. Arrow keys move between options. Changing raises `change` with `{ value }` (`UaxGroupByChangeDetail`).
 
 ### 6. `uax-date-range`: date range picker
 
@@ -114,10 +120,10 @@ Storybook gets a "Pane" story showing this recipe, a chart and a table in one `u
   - `value` (`UaxDateRange`)
   - `compare` (`UaxCompare | undefined`)
   - `presets` (defaults to last 7 days, last 30 days, last month, last year and custom; a product can pass its own, such as AI's last 24 hours)
-  - `allow-compare` (default true)
+  - `allow-compare` (default true). A plain boolean attribute, like `deselectable` and UUI's: it can't say false, so turn it off with the property, `.allowCompare=${false}`
   - `max-date` (default today)
 - The button opens `uax-date-range-modal` through the backoffice modal manager.
-  - **Save** closes the dialog and raises `change` with `{ value, compare }`.
+  - **Save** closes the dialog and raises `change` with `{ value, compare }` (`UaxDateRangeChangeDetail`).
   - **Close** discards the edits.
 - **Presets:** choosing one fills both dates. Editing either date switches the preset to "Custom".
 - **Compare:** turning it on shows the compare mode. "Previous period" and "Previous year" fill the comparison dates. "Custom" shows two more date fields.
@@ -128,18 +134,20 @@ Storybook gets a "Pane" story showing this recipe, a chart and a table in one `u
 ![Table with share columns](../../design/phase-1/screenshots/an-table.png)
 
 - Properties:
-  - `columns`: `{ key, label, elementName?, hrefKey?, valueFormat?, align?, width?, color?, sortable?, sortAs?, searchable? }[]`. `elementName` picks the cell (default the text cell; constants in `UAX_TABLE_CELL`). `width` is a CSS width, as in the CMS `umb-table`. `color` (1 to 4) picks a share bar's palette slot.
+  - `columns`: `{ key, label, elementName?, hrefKey?, valueFormat?, align?, width?, color?, sortable?, sortAs?, searchable? }[]`. `elementName` picks the cell (default the text cell; constants in `UAX_TABLE_CELL`). `valueFormat` is per column (`Intl.NumberFormatOptions`). `width` is a CSS width, as in the CMS `umb-table`. `color` (1 to 4) picks a share bar's palette slot.
   - `rows`: `Record<string, unknown>[]`
-  - `compare-rows` (matched by a `row-key` property)
-  - `value-format` (per column, optional)
+  - `compare-rows`, matched to `rows` by the `row-key` property (the key in each row that identifies it). When several compare rows share a key, the last wins
+  - `stats`: `{ [columnKey]: { total, max } }` (`UaxTableStats`) across every page, for share percents and bar scales in `server` mode. A column without an entry uses the rows the table holds
   - `sort` (`{ key, direction }`)
   - `mode` (`"client"` | `"server"`)
-  - `page`, `page-size`, `total`
+  - `page`, `page-size`, `total-rows` (the row count across every page, `server` mode)
+  - `query` (the search text; the table sets it from a `uax-table-search` in the `toolbar` slot)
+  - `clickable-rows` (makes rows openable and raises `row-click`)
   - `loading`
   - `empty-headline`, `empty-description`
 - **Loading:** cells take an optional `loading` flag and draw their own placeholder, so loading rows match loaded rows. A cell without `loading` gets a generic placeholder.
 - **Cells are elements**, as in the CMS `umb-table`: each gets `column`, `item` (the row) and `value`. A column names its cell with `elementName` (default the text cell); the package ships ready-made cells (`uax-share-cell` and others, with exported name constants). Columns have no `type`: alignment is `align`, sorting is `sortAs` (number, text or a compare function). Cells that need table-wide data (column total and max, compare rows) read it from the table's context, so the table doesn't special-case any cell.
-- Slots: `toolbar`, for the search box and totals above the header.
+- Slots: `toolbar`, for the search box and totals above the header, and `footer`, left of the pager.
 - **Padding:** the cells pad themselves. The `toolbar` slot pads itself with the public CSS property `--uax-table-padding` (default `12px 24px`), only when something is slotted. The reload loading bar sits outside it at the element's top edge, full width, so put the table in a `uui-box` with `--uui-box-default-padding: 0`.
 - **Share cells (`UAX_TABLE_CELL.share`):** show the value, its percent of the column total, and a thin bar scaled to the column's largest value.
   - The first share column uses `--uax-series-1`, the second `--uax-series-2`.

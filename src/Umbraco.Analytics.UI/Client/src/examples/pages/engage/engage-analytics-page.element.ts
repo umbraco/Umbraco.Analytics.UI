@@ -6,7 +6,8 @@ import "../../../delta-badge/delta-badge.element.js";
 import "../../../group-by/group-by.element.js";
 import "../../../table/data-table.element.js";
 import "../../../table-search/table-search.element.js";
-import type { UaxCompare, UaxDateRange, UaxSeries } from "../../../chart/types.js";
+import type { UaxSeries } from "../../../chart/types.js";
+import type { UaxCompare, UaxDateRange } from "../../../date-range/types.js";
 import type { UaxGroupBy } from "../../../group-by/group-by.element.js";
 import { UAX_TABLE_CELL } from "../../../table/cells/cell-names.js";
 import type {
@@ -183,9 +184,8 @@ export class ExampleEngageAnalyticsPageElement extends UmbLitElement {
             .columns=${pageColumns}
             .rows=${pages?.rows ?? []}
             .compareRows=${pages?.compareRows ?? []}
-            .total=${pages?.total ?? 0}
-            .totals=${pages?.totals}
-            .maxes=${pages?.maxes}
+            .totalRows=${pages?.totalRows ?? 0}
+            .stats=${pages?.stats}
             .sort=${this._sort}
             .page=${this._page}
             .pageSize=${this._pageSize}

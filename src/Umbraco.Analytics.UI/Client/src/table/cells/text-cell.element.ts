@@ -1,4 +1,4 @@
-import { customElement, html, property } from "@umbraco-cms/backoffice/external/lit";
+import { customElement, html, property, type TemplateResult } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { asText } from "../internal/number-format.js";
 import "../internal/table-skeleton-cell.element.js";
@@ -27,7 +27,7 @@ export class UaxTextCellElement extends UmbLitElement implements UaxTableCellEle
     @property({ type: Boolean })
     loading = false;
 
-    override render() {
+    override render(): TemplateResult {
         if (this.loading) return html`<uax-table-skeleton-cell .align=${this.column.align ?? "start"}></uax-table-skeleton-cell>`;
         return html`${asText(this.value)}`;
     }

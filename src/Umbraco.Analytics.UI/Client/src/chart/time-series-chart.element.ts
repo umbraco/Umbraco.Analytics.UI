@@ -9,6 +9,7 @@ import {
     state,
     type CSSResultGroup,
     type PropertyValues,
+    type TemplateResult,
 } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import "../delta-badge/delta-badge.element.js";
@@ -25,7 +26,7 @@ import { colorsDiffer, resolveChartColors, type UaxChartColors } from "./interna
 import { UaxChartRenderer, type UaxChartHover } from "./internal/chart-renderer.js";
 import { niceScale } from "./internal/nice-scale.js";
 import { watchTheme } from "./internal/theme-watch.js";
-import type { UaxChartKind, UaxMarker, UaxSeries } from "./types.js";
+import type { UaxChartKind, UaxMarker, UaxMarkerClickDetail, UaxSeries } from "./types.js";
 
 const axisDateFormat: Record<UaxGroupBy, Intl.DateTimeFormatOptions> = {
     day: { day: "numeric", month: "short" },
@@ -119,7 +120,7 @@ function tickFormat(valueFormat: Intl.NumberFormatOptions | undefined, max: numb
  * when reloading. With no points it shows `uax-empty-state`.
  *
  * @element uax-time-series-chart
- * @fires marker-click - The editor clicked a marker's dot, or pressed Enter or Space on it. Bubbles and is composed, not cancelable. `detail` is `{ id }`; a dot standing for several markers raises the earliest one's id.
+ * @fires marker-click - The editor clicked a marker's dot, or pressed Enter or Space on it. Bubbles, not composed or cancelable, like `uax-group-by`'s `change`. `detail` is `{ id }` (`UaxMarkerClickDetail`); a dot standing for several markers raises the earliest one's id.
  * @cssprop --uax-chart-height - Height of the plot, without the legend or padding. Defaults to 260px.
  * @cssprop --uax-chart-padding - Padding around the plot, legend and empty state, as a CSS `padding` value. Defaults to `12px 24px 28px`. The loading bar ignores it and spans the full width at the top edge, so put the chart in a `uui-box` with `--uui-box-default-padding: 0`.
  * @cssprop --uax-series-1 - Colour of the first series. Series 2 to 4 follow, then the colours repeat.
@@ -464,7 +465,7 @@ export class UaxTimeSeriesChartElement extends UmbLitElement {
     #onMarkerClick(e: MouseEvent, bucket: MarkerBucket) {
         // A pointer click leaves focus on the button; only the hover then shows the tooltip, so it goes when the pointer does.
         if (e.detail > 0) this._focusMarker = undefined;
-        this.dispatchEvent(new CustomEvent("marker-click", { bubbles: true, composed: true, detail: { id: bucket.markers[0].id } }));
+        this.dispatchEvent(new CustomEvent<UaxMarkerClickDetail>("marker-click", { bubbles: true, detail: { id: bucket.markers[0].id } }));
     }
 
     /** One button over each dot, in date order so the tab order follows the timeline. */
@@ -603,7 +604,7 @@ export class UaxTimeSeriesChartElement extends UmbLitElement {
         </table>`;
     }
 
-    override render() {
+    override render(): TemplateResult {
         const mode = getLoadingMode(this.loading, this.#hasData);
         const showPlot = this.#hasData && mode !== "skeleton";
         return html`<div

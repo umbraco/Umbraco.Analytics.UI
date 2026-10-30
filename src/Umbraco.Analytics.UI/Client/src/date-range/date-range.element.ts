@@ -1,11 +1,10 @@
-import { css, customElement, html, nothing, property, type CSSResultGroup } from "@umbraco-cms/backoffice/external/lit";
+import { css, customElement, html, nothing, property, type CSSResultGroup, type TemplateResult } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UMB_MODAL_MANAGER_CONTEXT, type UmbModalManagerContext } from "@umbraco-cms/backoffice/modal";
-import type { UaxCompare, UaxDateRange } from "../chart/types.js";
 import { builtInPresetRange, isoToDate, todayIso } from "./date-math.js";
 import { UAX_DATE_RANGE_MODAL } from "./date-range-modal.token.js";
 import { defaultPresets } from "./presets.js";
-import type { UaxDatePreset } from "./types.js";
+import type { UaxCompare, UaxDatePreset, UaxDateRange, UaxDateRangeChangeDetail } from "./types.js";
 
 const defaultValue = (): UaxDateRange => ({
     ...builtInPresetRange("last-30-days", todayIso())!,
@@ -21,7 +20,7 @@ const defaultValue = (): UaxDateRange => ({
  * Like `uax-group-by`, it sets its own `value` when the editor saves, then raises `change`.
  *
  * @element uax-date-range
- * @fires change - The editor saved the dialog. Bubbles, not composed or cancelable, like `uax-group-by`. `detail` is `{ value, compare }`.
+ * @fires change - The editor saved the dialog. Bubbles, not composed or cancelable, like `uax-group-by`. `detail` is `{ value, compare }` (`UaxDateRangeChangeDetail`).
  */
 @customElement("uax-date-range")
 export class UaxDateRangeElement extends UmbLitElement {
@@ -37,11 +36,8 @@ export class UaxDateRangeElement extends UmbLitElement {
     @property({ attribute: false })
     presets: UaxDatePreset[] = defaultPresets();
 
-    /** Whether the dialog offers a comparison. Set the attribute to `false` to turn it off. */
-    @property({
-        attribute: "allow-compare",
-        converter: { fromAttribute: (value) => value !== "false" },
-    })
+    /** Whether the dialog offers a comparison. Defaults to true. A boolean attribute can't say false, so turn it off with the property: `.allowCompare=${false}`. */
+    @property({ type: Boolean, attribute: "allow-compare" })
     allowCompare = true;
 
     /** The latest date the dialog accepts, as an ISO date. Defaults to today. */
@@ -82,14 +78,14 @@ export class UaxDateRangeElement extends UmbLitElement {
         this.value = result.value;
         this.compare = result.compare;
         this.dispatchEvent(
-            new CustomEvent("change", {
+            new CustomEvent<UaxDateRangeChangeDetail>("change", {
                 bubbles: true,
                 detail: { value: this.value, compare: this.compare },
             }),
         );
     }
 
-    override render() {
+    override render(): TemplateResult {
         const range = this.#rangeText(this.value.from, this.value.to);
         const compareRange = this.compare ? this.#rangeText(this.compare.from, this.compare.to) : undefined;
         const compareLine = compareRange

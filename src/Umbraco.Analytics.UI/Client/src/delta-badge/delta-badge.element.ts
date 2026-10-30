@@ -1,9 +1,11 @@
-import { css, customElement, html, nothing, property, type CSSResultGroup } from "@umbraco-cms/backoffice/external/lit";
+import { css, customElement, html, nothing, property, type CSSResultGroup, type TemplateResult } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UaxPaletteStyles } from "../theme/index.js";
 
+/** What a delta is measured in: a percent change, or a change in percentage points. */
 export type UaxDeltaUnit = "percent" | "points";
 
+/** The size of a delta badge. `sm` is for table cells. */
 export type UaxDeltaBadgeSize = "md" | "sm";
 
 /**
@@ -74,7 +76,7 @@ export class UaxDeltaBadgeElement extends UmbLitElement {
         return this.localize.term(`uaxAnalytics_${key}`);
     }
 
-    override render() {
+    override render(): TemplateResult | typeof nothing {
         if (this.value === undefined || this.value === null || Number.isNaN(this.value)) return nothing;
 
         const arrow = { up: "▲", down: "▼", flat: "–" }[this.direction];

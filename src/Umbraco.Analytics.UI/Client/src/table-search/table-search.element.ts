@@ -1,4 +1,4 @@
-import { css, customElement, html, nothing, property, query, type CSSResultGroup } from "@umbraco-cms/backoffice/external/lit";
+import { css, customElement, html, nothing, property, query, type CSSResultGroup, type TemplateResult } from "@umbraco-cms/backoffice/external/lit";
 import type { UUIInputElement, UUIInputEvent } from "@umbraco-cms/backoffice/external/uui";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import type { UaxTableSearchDetail } from "../table/types.js";
@@ -58,7 +58,7 @@ export class UaxTableSearchElement extends UmbLitElement {
         this._input?.focus();
     }
 
-    override render() {
+    override render(): TemplateResult {
         return html`<uui-input
             .value=${this.value}
             label=${this.localize.term("general_search")}
