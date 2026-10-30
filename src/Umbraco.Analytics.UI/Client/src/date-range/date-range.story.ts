@@ -41,5 +41,13 @@ export const OpenDialog: Story = {
     },
 };
 
-/** A saved comparison adds a "Compare to:" line. The dialog's compare controls arrive with DR-2. */
+/** A saved comparison adds a "Compare to:" line under the dates. */
 export const WithCompare: Story = { args: { compare } };
+
+/** The dialog with Compare on and a custom comparison range: the extra row of fields sits under the switch. */
+export const OpenDialogWithCompare: Story = {
+    args: { compare: { mode: "custom" as const, from: "2026-03-01", to: "2026-03-31" } },
+    play: ({ canvasElement }) => {
+        canvasElement.querySelector("uax-date-range")?.shadowRoot?.querySelector("uui-button")?.click();
+    },
+};

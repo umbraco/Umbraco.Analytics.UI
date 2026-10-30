@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { addDays, builtInPresetRange, isoToDate, parseIso, todayIso } from "./date-math.js";
+import { addDays, builtInPresetRange, isoToDate, parseIso, previousPeriodRange, previousYearRange, todayIso } from "./date-math.js";
 
 describe("Feature: date range maths", () => {
     describe("Scenario: today", () => {
@@ -53,6 +53,30 @@ describe("Feature: date range maths", () => {
         });
         it("custom has no dates of its own", () => {
             expect(builtInPresetRange("custom", "2026-06-23")).toBe(undefined);
+        });
+    });
+
+    describe("Scenario: comparison ranges", () => {
+        it("takes the same number of days before the range as the previous period", () => {
+            expect(previousPeriodRange({ from: "2026-05-25", to: "2026-06-23" })).toEqual({ from: "2026-04-25", to: "2026-05-24" });
+        });
+        it("takes one day as the day before", () => {
+            expect(previousPeriodRange({ from: "2026-03-01", to: "2026-03-01" })).toEqual({ from: "2026-02-28", to: "2026-02-28" });
+        });
+        it("has no previous period for a range that ends before it starts", () => {
+            expect(previousPeriodRange({ from: "2026-06-23", to: "2026-05-25" })).toBeUndefined();
+        });
+        it("has no previous period for a half-typed date", () => {
+            expect(previousPeriodRange({ from: "", to: "2026-05-25" })).toBeUndefined();
+        });
+        it("moves both dates back one year for the previous year", () => {
+            expect(previousYearRange({ from: "2026-05-25", to: "2026-06-23" })).toEqual({ from: "2025-05-25", to: "2025-06-23" });
+        });
+        it("moves 29 Feb to 28 Feb in a year without a leap day", () => {
+            expect(previousYearRange({ from: "2028-02-29", to: "2028-03-10" })).toEqual({ from: "2027-02-28", to: "2027-03-10" });
+        });
+        it("keeps dates around a leap day as they are when going back into a leap year", () => {
+            expect(previousYearRange({ from: "2025-02-01", to: "2025-03-01" })).toEqual({ from: "2024-02-01", to: "2024-03-01" });
         });
     });
 });

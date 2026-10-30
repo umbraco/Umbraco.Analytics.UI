@@ -63,3 +63,29 @@ const builtIn: Record<UaxBuiltInPresetId, (today: string) => Range> = {
 export function builtInPresetRange(id: string, today: string): Range | undefined {
     return id in builtIn ? builtIn[id as UaxBuiltInPresetId](today) : undefined;
 }
+
+/** Whole days from `from` to `to`, both inclusive. `undefined` unless both are real dates with `to` on or after `from`. */
+function inclusiveDays(range: Range): number | undefined {
+    const [a, b] = [parseIso(range.from), parseIso(range.to)];
+    if (!a || !b || range.to < range.from) return undefined;
+    const ms = Date.UTC(b.year, b.month - 1, b.day) - Date.UTC(a.year, a.month - 1, a.day);
+    return Math.round(ms / 86_400_000) + 1;
+}
+
+/** The same number of days immediately before `range`. `undefined` when `range` isn't a valid range. */
+export function previousPeriodRange(range: Range): Range | undefined {
+    const days = inclusiveDays(range);
+    return days === undefined ? undefined : { from: addDays(range.from, -days), to: addDays(range.from, -1) };
+}
+
+/** `iso` one year earlier. 29 Feb becomes 28 Feb when the earlier year has no leap day. */
+function oneYearBefore(iso: string): string {
+    const { year, month, day } = parseIso(iso)!;
+    const lastDay = new Date(Date.UTC(year - 1, month, 0)).getUTCDate();
+    return toIso(year - 1, month, Math.min(day, lastDay));
+}
+
+/** The same dates one year earlier. `undefined` when `range` isn't a valid range. */
+export function previousYearRange(range: Range): Range | undefined {
+    return inclusiveDays(range) === undefined ? undefined : { from: oneYearBefore(range.from), to: oneYearBefore(range.to) };
+}
