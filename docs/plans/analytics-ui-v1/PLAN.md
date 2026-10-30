@@ -66,7 +66,7 @@
 
 ## Date range
 
-- [ ] **T13** - story: DR-1 (AC1–AC8). Add `uax-date-range` (the button) and `uax-date-range-modal` with its token `UAX_DATE_RANGE_MODAL` in `src/date-range/`. The button opens the modal through `UMB_MODAL_MANAGER_CONTEXT`. The modal has presets (`presets` property, defaulting per SPEC.md), two date fields, inline validation and Save/Close. Dates and the button label are formatted with `this.localize.date`. Tests provide a modal manager context (see `umbraco-backoffice-testing`).
+- [x] **T13** - story: DR-1 (AC1–AC8). Add `uax-date-range` (the button) and `uax-date-range-modal` with its token `UAX_DATE_RANGE_MODAL` in `src/date-range/`. The button opens the modal through `UMB_MODAL_MANAGER_CONTEXT`. The modal has presets (`presets` property, defaulting per SPEC.md), two date fields, inline validation and Save/Close. Dates and the button label are formatted with `this.localize.date`. Tests provide a modal manager context (see `umbraco-backoffice-testing`).
   Acceptance: DR-1 specs green, axe clean on the button and the open modal. FND-2 AC3 in `src/lang/localization.test.ts` retargeted from the test-only element to `uax-date-range`.
   depends-on: T2. parallel-group: D
 
