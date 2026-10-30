@@ -1,20 +1,22 @@
-import { css, customElement, html, nothing, property, type CSSResultGroup, type PropertyValues } from "@umbraco-cms/backoffice/external/lit";
+import { css, customElement, html, nothing, property, state, type CSSResultGroup, type PropertyValues } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import "../../delta-badge/delta-badge.element.js";
 import { uaxThemeTokens } from "../../internal/theme/tokens.css.js";
 import "../internal/share-bar.element.js";
 import { asNumber, getNumberFormat } from "../internal/number-format.js";
-import type { UaxTableCellElement, UaxTableColumn } from "../types.js";
+import { UAX_TABLE_CONTEXT } from "../table-context.js";
+import "../../internal/loading/skeleton.element.js";
+import type { UaxTableCellElement, UaxTableColumn, UaxTableCompareLookup, UaxTableStats } from "../types.js";
 
 const shareFormatOptions: Intl.NumberFormatOptions = { style: "percent", minimumFractionDigits: 1, maximumFractionDigits: 1 };
 
 /**
  * A table cell that shows its value, its percent of the column `total` and a thin bar scaled to the column's
  * largest value (`max`). With a `compareValue` it adds a change badge after the value.
- * The built-in cell of a `share` column, and usable on its own.
+ * Its name is `UAX_TABLE_CELL.share`, and it is usable on its own.
  *
- * Unlike the other cells it needs numbers the table works out from every row, so the table sets `total`, `max`,
- * `color` and `compareValue` as well as `column`, `item` and `value`.
+ * Inside a `uax-data-table` it reads the column's total and largest value, the bar colour and the compare row from
+ * the table's `UAX_TABLE_CONTEXT`. On its own, or to override the table, set `total`, `max`, `color` and `compareValue`.
  *
  * @element uax-share-cell
  * @cssprop --uax-series-1 - Bar colour of palette slot 1. Also `--uax-series-2` to `--uax-series-4`.
@@ -24,7 +26,7 @@ const shareFormatOptions: Intl.NumberFormatOptions = { style: "percent", minimum
 export class UaxShareCellElement extends UmbLitElement implements UaxTableCellElement {
     /** The column the cell is in. Its `valueFormat` formats the value and `align` aligns it. */
     @property({ attribute: false })
-    column: UaxTableColumn = { key: "value", label: "", type: "share" };
+    column: UaxTableColumn = { key: "value", label: "" };
 
     /** The row the cell is in. */
     @property({ attribute: false })
@@ -34,21 +36,47 @@ export class UaxShareCellElement extends UmbLitElement implements UaxTableCellEl
     @property({ attribute: false })
     value: unknown;
 
-    /** The number the percent is of, usually the column's total. With 0 the percent is 0.0%. */
+    /** The number the percent is of. Defaults to the column's total from the table's context, or 0, which shows 0.0%. */
     @property({ type: Number })
-    total = 0;
+    total?: number;
 
-    /** What a full bar stands for, usually the column's largest value. With 0 the bar is empty. */
+    /** What a full bar stands for. Defaults to the column's largest value from the table's context, or 0, which shows an empty bar. */
     @property({ type: Number })
-    max = 0;
+    max?: number;
 
-    /** The palette slot of the bar, as `UaxSeries.color`. */
+    /** The palette slot of the bar, as `UaxSeries.color`. Defaults to `column.color`, then the cell's position among the table's share columns, then 1. */
     @property({ type: Number })
-    color: 1 | 2 | 3 | 4 = 1;
+    color?: 1 | 2 | 3 | 4;
 
-    /** The same row's value in the comparison period. Shows a change badge, unless it is missing or 0. */
+    /** The same row's value in the comparison period. Shows a change badge, unless it is missing or 0. Defaults to the table's compare row. */
     @property({ type: Number, attribute: "compare-value" })
     compareValue?: number;
+
+    /** Draws a placeholder, a value line and a bar as tall as a loaded cell, instead of the value while the table loads. */
+    @property({ type: Boolean })
+    loading = false;
+
+    @state() private _stats?: UaxTableStats;
+    @state() private _compare?: UaxTableCompareLookup;
+    @state() private _columns: UaxTableColumn[] = [];
+
+    constructor() {
+        super();
+        this.consumeContext(UAX_TABLE_CONTEXT, (context) => {
+            this.observe(context?.stats, (stats) => (this._stats = stats), "_stats");
+            this.observe(context?.compare, (lookup) => (this._compare = lookup), "_compare");
+            this.observe(context?.columns, (columns) => (this._columns = columns ?? []), "_columns");
+        });
+    }
+
+    /** The bar colour: set, else the column's, else the next free slot by position among the table's share columns. */
+    get #color(): 1 | 2 | 3 | 4 {
+        if (this.color) return this.color;
+        if (this.column.color) return this.column.color;
+        const position = this._columns.findIndex((c) => c.key === this.column.key);
+        const before = position < 0 ? 0 : this._columns.slice(0, position).filter(isShareColumn).length;
+        return ((before % 4) + 1) as 1 | 2 | 3 | 4;
+    }
 
     #formats?: { column: UaxTableColumn; lang: string; value: Intl.NumberFormat; percent: Intl.NumberFormat };
 
@@ -66,19 +94,28 @@ export class UaxShareCellElement extends UmbLitElement implements UaxTableCellEl
     }
 
     override render() {
+        if (this.loading) {
+            return html`<div class="share ${this.column.align === "end" ? "end" : ""}">
+                <div class="share-top"><uax-skeleton style="width: var(--_uax-skeleton-width, 40%); height: var(--_uax-skeleton-height, 14px)"></uax-skeleton></div>
+                <uax-skeleton style="width: 100%; height: 4px; min-height: 4px"></uax-skeleton>
+            </div>`;
+        }
         const value = asNumber(this.value);
         if (value === undefined) return nothing;
         const { value: valueFormat, percent: percentFormat } = this.#formats!;
-        const share = this.total ? value / this.total : 0;
-        const compare = asNumber(this.compareValue);
+        const stats = this._stats?.[this.column.key];
+        const total = this.total ?? stats?.total ?? 0;
+        const max = this.max ?? stats?.max ?? 0;
+        const share = total ? value / total : 0;
+        const compare = asNumber(this.compareValue ?? this._compare?.(this.item)?.[this.column.key]);
         const change = compare === undefined || compare === 0 ? undefined : ((value - compare) / Math.abs(compare)) * 100;
-        const width = this.max > 0 ? Math.round(Math.min(Math.max(value / this.max, 0), 1) * 10000) / 100 : 0;
+        const width = max > 0 ? Math.round(Math.min(Math.max(value / max, 0), 1) * 10000) / 100 : 0;
         return html`<div class="share ${this.column.align === "end" ? "end" : ""}">
             <div class="share-top">
                 <span class="share-value">${valueFormat.format(value)}</span> <span class="share-percent">(${percentFormat.format(share)})</span>
                 ${change === undefined ? nothing : html`<uax-delta-badge size="sm" .value=${change}></uax-delta-badge>`}
             </div>
-            <uax-share-bar .percent=${width} .color=${this.color}></uax-share-bar>
+            <uax-share-bar .percent=${width} .color=${this.#color}></uax-share-bar>
         </div>`;
     }
 
@@ -124,4 +161,10 @@ declare global {
     interface HTMLElementTagNameMap {
         "uax-share-cell": UaxShareCellElement;
     }
+}
+
+/** Whether the column's cell element is the share cell, or extends it. */
+function isShareColumn(column: UaxTableColumn): boolean {
+    const element = column.elementName ? customElements.get(column.elementName) : undefined;
+    return element === UaxShareCellElement || element?.prototype instanceof UaxShareCellElement;
 }

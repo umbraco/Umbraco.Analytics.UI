@@ -128,7 +128,7 @@ Storybook gets a "Pane" story showing this recipe, a chart and a table in one `u
 ![Table with share columns](../../design/phase-1/screenshots/an-table.png)
 
 - Properties:
-  - `columns`: `{ key, label, type, hrefKey?, valueFormat?, align?, color?, sortable? }[]`, where `type` is `"text" | "link" | "number" | "percent" | "share"`. `color` (1 to 4) picks a share bar's palette slot, like `UaxSeries.color`. `sortable` arrives with sorting
+  - `columns`: `{ key, label, elementName?, hrefKey?, valueFormat?, align?, width?, color?, sortable?, sortAs?, searchable? }[]`. `elementName` picks the cell (default the text cell; constants in `UAX_TABLE_CELL`). `width` is a CSS width, as in the CMS `umb-table`. `color` (1 to 4) picks a share bar's palette slot.
   - `rows`: `Record<string, unknown>[]`
   - `compare-rows` (matched by a `row-key` property)
   - `value-format` (per column, optional)
@@ -137,16 +137,17 @@ Storybook gets a "Pane" story showing this recipe, a chart and a table in one `u
   - `page`, `page-size`, `total`
   - `loading`
   - `empty-headline`, `empty-description`
-- **Cells are elements**, as in the CMS `umb-table`: each gets `column`, `item` (the row) and `value`. Built-in types are ready-made cell elements (`uax-share-cell` and others, usable on their own). A column's `elementName` uses a product's own cell element instead.
+- **Loading:** cells take an optional `loading` flag and draw their own placeholder, so loading rows match loaded rows. A cell without `loading` gets a generic placeholder.
+- **Cells are elements**, as in the CMS `umb-table`: each gets `column`, `item` (the row) and `value`. A column names its cell with `elementName` (default the text cell); the package ships ready-made cells (`uax-share-cell` and others, with exported name constants). Columns have no `type`: alignment is `align`, sorting is `sortAs` (number, text or a compare function). Cells that need table-wide data (column total and max, compare rows) read it from the table's context, so the table doesn't special-case any cell.
 - Slots: `toolbar`, for the search box and totals above the header.
 - **Padding:** the cells pad themselves. The `toolbar` slot pads itself with the public CSS property `--uax-table-padding` (default `12px 24px`), only when something is slotted. The reload loading bar sits outside it at the element's top edge, full width, so put the table in a `uui-box` with `--uui-box-default-padding: 0`.
-- **`share` columns:** show the value, its percent of the column total, and a thin bar scaled to the column's largest value.
+- **Share cells (`UAX_TABLE_CELL.share`):** show the value, its percent of the column total, and a thin bar scaled to the column's largest value.
   - The first share column uses `--uax-series-1`, the second `--uax-series-2`.
   - When comparing, a small delta badge sits after the value.
-- **`link` columns:** render an anchor. The row's `href` comes from the column's `hrefKey`.
+- **Link cells (`UAX_TABLE_CELL.link`):** render an anchor. The row's `href` comes from the column's `hrefKey`.
 - **Sorting:** clicking a sortable header toggles the direction and raises `sort-change`. In `client` mode the table also sorts itself.
 - **Paging:** the footer has "Show rows" (10, 25, 50, 100) and "1–10 of 272". It raises `page-change` with `{ page, pageSize }`, and in `client` mode it also pages itself. The footer is hidden when the rows fit on one page at the smallest page size the editor could need (row count ≤ the smaller of the current page size and 10), so a table at 50 rows per page can still go back to 10.
-- **Search:** `uax-data-table` exports `uax-table-search` for the toolbar. It raises `search` with `{ query }`, 300ms after typing stops. In `client` mode the table filters rows on any `text` or `link` column.
+- **Search:** `uax-data-table` exports `uax-table-search` for the toolbar. It raises `search` with `{ query }`, 300ms after typing stops. In `client` mode the table filters rows on columns marked `searchable`; if none are marked, on every column's text.
 - **Rows:** a row is clickable only when the product listens for `row-click`. Then it's keyboard-reachable and raises `row-click` with `{ row }`.
 
 ### 8. `uax-empty-state` and loading

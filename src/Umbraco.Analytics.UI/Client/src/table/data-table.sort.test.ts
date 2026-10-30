@@ -10,6 +10,7 @@ import { axeRun } from "../internal/test/a11y.js";
 import { deepQueryAll, deepText, nextEvent, recordEvents, renderElement, shadow, type UaxTestElement } from "../internal/test/pending.js";
 import "./data-table.element.js";
 import { nameColumns } from "./table-fixtures.js";
+import { UAX_TABLE_CELL } from "./cells/cell-names.js";
 
 const rows = [{ name: "Contact", views: 62 }, { name: "Home", views: 210 }];
 const header = (el: Element, label: string) =>
@@ -19,8 +20,8 @@ const names = (el: Element) =>
     [...shadow(el).querySelectorAll("uui-table-row uui-table-cell:first-child")].map((c) => deepText(c).trim());
 const sortButton = (el: Element, label: string) => header(el, label).querySelector("uax-table-sort-button")?.shadowRoot?.querySelector("button") as HTMLButtonElement;
 const textColumns = [
-    { key: "name", label: "Name", type: "text", sortable: true },
-    { key: "views", label: "Views", type: "number", sortable: true },
+    { key: "name", label: "Name", sortable: true },
+    { key: "views", label: "Views", elementName: UAX_TABLE_CELL.number, sortable: true, sortAs: "number", align: "end" },
 ];
 
 describe("Feature: sort by a column", () => {
@@ -239,10 +240,32 @@ describe("Feature: sort by a column", () => {
         });
     });
 
+    describe("Scenario: a column with a compare function in sortAs", () => {
+        it("sorts by that function", async () => {
+            const columns = [{ key: "name", label: "Name", sortable: true, sortAs: (a: unknown, b: unknown) => String(a).length - String(b).length }];
+            const el = await renderElement(
+                html`<uax-data-table .columns=${columns} .rows=${[{ name: "Contact" }, { name: "Home" }]} .sort=${{ key: "name", direction: "asc" }}></uax-data-table>`,
+                "uax-data-table",
+            );
+            expect(names(el)).toEqual(["Home", "Contact"]);
+        });
+    });
+
+    describe("Scenario: a column with no sortAs", () => {
+        it("sorts its values as text", async () => {
+            const columns = [{ key: "name", label: "Name", sortable: true }];
+            const el = await renderElement(
+                html`<uax-data-table .columns=${columns} .rows=${[{ name: "b" }, { name: "A" }]} .sort=${{ key: "name", direction: "asc" }}></uax-data-table>`,
+                "uax-data-table",
+            );
+            expect(names(el)).toEqual(["A", "b"]);
+        });
+    });
+
     describe("Scenario: shares when sorted", () => {
         it("keeps each row's share of the column total", async () => {
             const el = await renderElement(
-                html`<uax-data-table .columns=${[{ key: "name", label: "Name", type: "text" }, { key: "views", label: "Views", type: "share", sortable: true }]} .rows=${rows} .sort=${{ key: "views", direction: "desc" }}></uax-data-table>`,
+                html`<uax-data-table .columns=${[{ key: "name", label: "Name" }, { key: "views", label: "Views", elementName: UAX_TABLE_CELL.share, sortable: true, sortAs: "number" }]} .rows=${rows} .sort=${{ key: "views", direction: "desc" }}></uax-data-table>`,
                 "uax-data-table",
             );
             expect(deepQueryAll(shadow(el), ".share-percent")[0]?.textContent).toBe("(77.2%)");

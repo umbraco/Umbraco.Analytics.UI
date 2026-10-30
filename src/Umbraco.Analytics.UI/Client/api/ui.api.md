@@ -6,10 +6,25 @@
 
 import { CSSResultGroup } from '@umbraco-cms/backoffice/external/lit';
 import { nothing } from '@umbraco-cms/backoffice/external/lit';
+import type { Observable } from '@umbraco-cms/backoffice/external/rxjs';
 import { PropertyValues } from '@umbraco-cms/backoffice/external/lit';
 import { TemplateResult } from 'lit-html';
 import { TemplateResult as TemplateResult_2 } from '@umbraco-cms/backoffice/external/lit';
+import { UmbContextMinimal } from '@umbraco-cms/backoffice/context-api';
+import { UmbContextToken } from '@umbraco-cms/backoffice/context-api';
 import { UmbLitElement } from '@umbraco-cms/backoffice/lit-element';
+
+// @public
+export const UAX_TABLE_CELL: {
+    readonly text: "uax-text-cell";
+    readonly link: "uax-link-cell";
+    readonly number: "uax-number-cell";
+    readonly percent: "uax-percent-cell";
+    readonly share: "uax-share-cell";
+};
+
+// @public
+export const UAX_TABLE_CONTEXT: UmbContextToken<UaxTableContext, UaxTableContext>;
 
 // @public
 export type UaxChartKind = "line" | "area" | "bar" | "stacked-bar";
@@ -143,6 +158,7 @@ export class UaxKpiTileElement extends UmbLitElement {
 export class UaxLinkCellElement extends UmbLitElement implements UaxTableCellElement {
     column: UaxTableColumn;
     item: Record<string, unknown>;
+    loading: boolean;
     // (undocumented)
     render(): TemplateResult<1>;
     // (undocumented)
@@ -162,6 +178,7 @@ export type UaxMarker = {
 export class UaxNumberCellElement extends UmbLitElement implements UaxTableCellElement {
     column: UaxTableColumn;
     item: Record<string, unknown>;
+    loading: boolean;
     // (undocumented)
     render(): TemplateResult<1> | typeof nothing;
     // (undocumented)
@@ -175,6 +192,7 @@ export class UaxNumberCellElement extends UmbLitElement implements UaxTableCellE
 export class UaxPercentCellElement extends UmbLitElement implements UaxTableCellElement {
     column: UaxTableColumn;
     item: Record<string, unknown>;
+    loading: boolean;
     // (undocumented)
     render(): TemplateResult<1> | typeof nothing;
     // (undocumented)
@@ -200,16 +218,18 @@ export type UaxSeries = {
 
 // @public
 export class UaxShareCellElement extends UmbLitElement implements UaxTableCellElement {
-    color: 1 | 2 | 3 | 4;
+    constructor();
+    color?: 1 | 2 | 3 | 4;
     column: UaxTableColumn;
     compareValue?: number;
     item: Record<string, unknown>;
-    max: number;
+    loading: boolean;
+    max?: number;
     // (undocumented)
     render(): TemplateResult<1> | typeof nothing;
     // (undocumented)
     static styles: CSSResultGroup;
-    total: number;
+    total?: number;
     value: unknown;
     // (undocumented)
     protected willUpdate(changed: PropertyValues<this>): void;
@@ -219,6 +239,7 @@ export class UaxShareCellElement extends UmbLitElement implements UaxTableCellEl
 export interface UaxTableCellElement {
     column: UaxTableColumn;
     item: Record<string, unknown>;
+    loading?: boolean;
     value: unknown;
 }
 
@@ -226,17 +247,32 @@ export interface UaxTableCellElement {
 export type UaxTableColumn = {
     key: string;
     label: string;
-    type: UaxTableColumnType;
+    elementName?: string;
     hrefKey?: string;
     valueFormat?: Intl.NumberFormatOptions;
     align?: "start" | "end";
     color?: 1 | 2 | 3 | 4;
+    width?: string;
+    searchable?: boolean;
     sortable?: boolean;
-    elementName?: string;
+    sortAs?: "number" | "text" | ((a: unknown, b: unknown) => number);
 };
 
 // @public
-export type UaxTableColumnType = "text" | "link" | "number" | "percent" | "share";
+export type UaxTableColumnStats = {
+    total: number;
+    max: number;
+};
+
+// @public
+export type UaxTableCompareLookup = (item: Record<string, unknown>) => Record<string, unknown> | undefined;
+
+// @public
+export interface UaxTableContext extends UmbContextMinimal {
+    readonly columns: Observable<UaxTableColumn[]>;
+    readonly compare: Observable<UaxTableCompareLookup>;
+    readonly stats: Observable<UaxTableStats>;
+}
 
 // @public
 export type UaxTableMode = "client" | "server";
@@ -260,9 +296,13 @@ export type UaxTableSortChangeDetail = UaxTableSort;
 export type UaxTableSortDirection = "asc" | "desc";
 
 // @public
+export type UaxTableStats = Readonly<Record<string, UaxTableColumnStats>>;
+
+// @public
 export class UaxTextCellElement extends UmbLitElement implements UaxTableCellElement {
     column: UaxTableColumn;
     item: Record<string, unknown>;
+    loading: boolean;
     // (undocumented)
     render(): TemplateResult<1>;
     value: unknown;

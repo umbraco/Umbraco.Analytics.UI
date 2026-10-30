@@ -11,6 +11,7 @@ import { axeRun } from "../internal/test/a11y.js";
 import { deepQueryAll, deepText, nextEvent, recordEvents, renderElement, settle, shadow, type UaxTestElement } from "../internal/test/pending.js";
 import "./data-table.element.js";
 import { manyRows, nameColumns } from "./table-fixtures.js";
+import { UAX_TABLE_CELL } from "./cells/cell-names.js";
 
 /** The footer is its own element (`uax-table-pager`), so its parts live in that element's shadow root. */
 const pagerElement = (el: Element) => shadow(el).querySelector("uax-table-pager") as (HTMLElement & { updateComplete: Promise<boolean> }) | null;
@@ -327,8 +328,8 @@ describe("Feature: page through rows", () => {
 
     describe("Scenario: share percentages in server mode", () => {
         const columns = [
-            { key: "name", label: "Name", type: "text" },
-            { key: "views", label: "Views", type: "share" },
+            { key: "name", label: "Name" },
+            { key: "views", label: "Views", elementName: UAX_TABLE_CELL.share },
         ];
         const rows = [{ name: "A", views: 50 }, { name: "B", views: 25 }];
 
@@ -374,8 +375,8 @@ describe("Feature: page through rows", () => {
 
     describe("Scenario: share bars in server mode", () => {
         const columns = [
-            { key: "name", label: "Name", type: "text" },
-            { key: "views", label: "Views", type: "share" },
+            { key: "name", label: "Name" },
+            { key: "views", label: "Views", elementName: UAX_TABLE_CELL.share },
         ];
         const rows = [{ name: "A", views: 50 }, { name: "B", views: 25 }];
 
@@ -403,7 +404,7 @@ describe("Feature: page through rows", () => {
 
     describe("Scenario: client mode shares are of all rows, not the page", () => {
         it("keeps each row's share of the whole column on page 2", async () => {
-            const columns = [{ key: "name", label: "Name", type: "text" }, { key: "views", label: "Views", type: "share" }];
+            const columns = [{ key: "name", label: "Name" }, { key: "views", label: "Views", elementName: UAX_TABLE_CELL.share }];
             const rows = Array.from({ length: 20 }, (_, i) => ({ name: `Page ${i + 1}`, views: 10 }));
             const el = await renderElement(html`<uax-data-table .columns=${columns} .rows=${rows} page-size="10"></uax-data-table>`, "uax-data-table");
             await press(el, nextButton(el));

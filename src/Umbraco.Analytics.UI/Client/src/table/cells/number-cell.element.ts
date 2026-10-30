@@ -1,11 +1,12 @@
 import { css, customElement, html, nothing, property, type CSSResultGroup, type PropertyValues } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { asNumber, getNumberFormat } from "../internal/number-format.js";
+import "../internal/table-skeleton-cell.element.js";
 import type { UaxTableCellElement, UaxTableColumn } from "../types.js";
 
 /**
  * A table cell that shows its value as a number in the editor's culture, formatted with the column's `valueFormat`.
- * A missing or non-numeric value shows nothing. The built-in cell of a `number` column, and usable on its own.
+ * A missing or non-numeric value shows nothing. Its name is `UAX_TABLE_CELL.number`, and it is usable on its own.
  *
  * @element uax-number-cell
  */
@@ -13,7 +14,7 @@ import type { UaxTableCellElement, UaxTableColumn } from "../types.js";
 export class UaxNumberCellElement extends UmbLitElement implements UaxTableCellElement {
     /** The column the cell is in. Its `valueFormat` formats the number. */
     @property({ attribute: false })
-    column: UaxTableColumn = { key: "value", label: "", type: "number" };
+    column: UaxTableColumn = { key: "value", label: "" };
 
     /** The row the cell is in. */
     @property({ attribute: false })
@@ -34,7 +35,12 @@ export class UaxNumberCellElement extends UmbLitElement implements UaxTableCellE
         }
     }
 
+    /** Draws a placeholder instead of the value while the table loads. */
+    @property({ type: Boolean })
+    loading = false;
+
     override render() {
+        if (this.loading) return html`<uax-table-skeleton-cell .align=${this.column.align ?? "start"}></uax-table-skeleton-cell>`;
         const value = asNumber(this.value);
         return value === undefined ? nothing : html`${this.#format!.format.format(value)}`;
     }

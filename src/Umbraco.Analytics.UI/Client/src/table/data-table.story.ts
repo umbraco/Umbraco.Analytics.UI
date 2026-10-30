@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from "@storybook/web-components-vite";
 import { css, customElement, html, nothing, property, type TemplateResult } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import "../delta-badge/delta-badge.element.js";
+import { UAX_TABLE_CELL } from "./cells/cell-names.js";
 import type { UaxDataTableElement } from "./data-table.element.js";
 import "./data-table.element.js";
 import type { UaxTableCellElement, UaxTableColumn } from "./types.js";
@@ -9,9 +10,9 @@ import type { UaxTableCellElement, UaxTableColumn } from "./types.js";
 const host = "https://www.example.com";
 
 const pageColumns: UaxTableColumn[] = [
-    { key: "url", label: "Page URL", type: "link", hrefKey: "url" },
-    { key: "pageviews", label: "Pageviews", type: "share" },
-    { key: "sessions", label: "Page sessions", type: "share" },
+    { key: "url", label: "Page URL", elementName: UAX_TABLE_CELL.link, hrefKey: "url" },
+    { key: "pageviews", label: "Pageviews", elementName: UAX_TABLE_CELL.share, width: "27%" },
+    { key: "sessions", label: "Page sessions", elementName: UAX_TABLE_CELL.share, width: "27%" },
 ];
 
 const pageRows = [
@@ -39,9 +40,9 @@ const compareRows = [
 ];
 
 const visitorColumns: UaxTableColumn[] = [
-    { key: "type", label: "User type", type: "text" },
-    { key: "visitors", label: "Visitors", type: "share" },
-    { key: "sessions", label: "Sessions", type: "share" },
+    { key: "type", label: "User type" },
+    { key: "visitors", label: "Visitors", elementName: UAX_TABLE_CELL.share, width: "27%" },
+    { key: "sessions", label: "Sessions", elementName: UAX_TABLE_CELL.share, width: "27%" },
 ];
 
 const visitorRows = [
@@ -50,10 +51,10 @@ const visitorRows = [
 ];
 
 const mixedColumns: UaxTableColumn[] = [
-    { key: "name", label: "Product", type: "text" },
-    { key: "orders", label: "Orders", type: "number" },
-    { key: "revenue", label: "Revenue", type: "share", valueFormat: { style: "currency", currency: "EUR", maximumFractionDigits: 0 } },
-    { key: "refundRate", label: "Refund rate", type: "percent" },
+    { key: "name", label: "Product" },
+    { key: "orders", label: "Orders", elementName: UAX_TABLE_CELL.number, align: "end" },
+    { key: "revenue", label: "Revenue", elementName: UAX_TABLE_CELL.share, width: "27%", valueFormat: { style: "currency", currency: "EUR", maximumFractionDigits: 0 } },
+    { key: "refundRate", label: "Refund rate", elementName: UAX_TABLE_CELL.percent, align: "end" },
 ];
 
 const mixedRows = [
@@ -112,7 +113,7 @@ const toolbarStyles = css`
 /** Story-only: a product's own cell, like Engage's visitor type. It only needs the `column`, `item` and `value` the table sets. */
 @customElement("uax-story-visitor-type-cell")
 class StoryVisitorTypeCellElement extends UmbLitElement implements UaxTableCellElement {
-    @property({ attribute: false }) column: UaxTableColumn = { key: "type", label: "", type: "text" };
+    @property({ attribute: false }) column: UaxTableColumn = { key: "type", label: "" };
     @property({ attribute: false }) item: Record<string, unknown> = {};
     @property({ attribute: false }) value: unknown;
 
@@ -222,7 +223,7 @@ export const NumberAndPercent: Story = {
 /** Click a header to sort: the first click on a number column sorts biggest first, a second click flips it. In `client` mode (the default) the table sorts the rows itself and raises `sort-change`. Shares stay a share of the whole column. */
 export const Sortable: Story = {
     args: {
-        columns: pageColumns.map((c) => (c.type === "share" || c.key === "url" ? { ...c, sortable: true } : c)),
+        columns: pageColumns.map((c) => (c.elementName === UAX_TABLE_CELL.share || c.key === "url" ? { ...c, sortable: true, sortAs: c.elementName === UAX_TABLE_CELL.share ? ("number" as const) : ("text" as const) } : c)),
     },
     render: (args) =>
         html`<uui-box headline="Top pages" style="--uui-box-default-padding: 0">
@@ -241,7 +242,7 @@ const manyPageRows = Array.from({ length: 34 }, (_, i) => ({
 export const PagedClient: Story = {
     name: "Paged (client)",
     args: {
-        columns: pageColumns.map((c) => (c.type === "share" ? { ...c, sortable: true } : c)),
+        columns: pageColumns.map((c) => (c.elementName === UAX_TABLE_CELL.share ? { ...c, sortable: true, sortAs: "number" as const } : c)),
         rows: manyPageRows,
     },
     render: (args) =>
@@ -287,7 +288,7 @@ export const PagedServer: Story = {
             <uax-data-table
                 mode="server"
                 @sort-change=${sortBy}
-                .columns=${pageColumns.map((c) => (c.type === "share" ? { ...c, sortable: true } : c))}
+                .columns=${pageColumns.map((c) => (c.elementName === UAX_TABLE_CELL.share ? { ...c, sortable: true, sortAs: "number" as const } : c))}
                 .rows=${serverRows.slice(0, 10)}
                 .total=${serverRows.length}
                 .totals=${{ pageviews: sum("pageviews"), sessions: sum("sessions") }}

@@ -96,11 +96,15 @@
   Acceptance: all table specs green unchanged; new specs for an `elementName` column (receives column/item/value, element reused across renders) and a built-in cell used on its own; axe ×3; `api/ui.api.md` shows `elementName` and the exported cell elements.
   depends-on: T18
 
-- [ ] **T18c** - story: none (docs). Storybook coverage: a "Components › Data Table › Cells" page with each public cell (`uax-text-cell`, `uax-link-cell`, `uax-number-cell`, `uax-percent-cell`, `uax-share-cell`) used on its own; an "Internal" story for each internal piece (pager, sort button, share bar, skeleton cell), each marked "Not public API". The published Storybook (GitHub Pages build) hides everything under "Internal"; local Storybook shows it.
-  Acceptance: stories render with no errors in light, dark and high contrast; the production Storybook build has no "Internal" entries, the dev server does.
+- [ ] **T18d** - story: TBL-1 (all). Decouple cells from the table API. Remove `type` from `UaxTableColumn`; every column names its cell with `elementName` (default the text cell), with exported constants for the built-in cell names. Alignment stays `align`; sorting gets `sortAs: "number" | "text"` or a compare function. The table provides a context (`UAX_TABLE_CONTEXT`, an Umbraco context) with per-column stats (total, max, honouring `totals`/`maxes`) and the compare-row lookup; `uax-share-cell` reads it instead of being special-cased, and product cells can too. The table no longer references any cell by name except the default. Unreleased, so no deprecation.
+  Acceptance: all table specs green (updated for the new column shape only); a product cell can read column stats from the context (spec); the table source has no share-specific branching; `api/ui.api.md` reflects the new column shape and context.
   depends-on: T18b
 
-- [ ] **T19** - story: TBL-4 (AC1–AC3). Add `uax-table-search`, built like the CMS's own collection search box (find the CMS search input and copy its markup, icon position and spacing; the T15 story's hand-made search box has a misplaced icon, user feedback). Replace the story placeholders with it (300ms debounce, raises `search`). Client mode filters rows on `text` and `link` columns and shows the empty state when nothing matches.
+- [ ] **T18c** - story: none (docs). Storybook structure and coverage. Add an "Examples" section (ordered after Components, like UUI's Storybook) with full worked examples of the table: Top pages (link + share columns, toolbar search and totals, compare badges), Visitors (a custom cell element, e.g. visitor type with a coloured dot), Paged server (totals/maxes, sort resets the page), and a custom cell reading the table context (e.g. a product's own bar cell). Each example shows the product-side code in the docs panel. Move the existing full-table stories out of "Components › Data Table", which keeps only focused stories of the element's options. Also: a "Components › Data Table › Cells" page with each public cell (`uax-text-cell`, `uax-link-cell`, `uax-number-cell`, `uax-percent-cell`, `uax-share-cell`) used on its own; an "Internal" story for each internal piece (pager, sort button, share bar, skeleton cell), each marked "Not public API". The published Storybook (GitHub Pages build) hides everything under "Internal"; local Storybook shows it.
+  Acceptance: stories render with no errors in light, dark and high contrast; the production Storybook build has no "Internal" entries, the dev server does.
+  depends-on: T18d
+
+- [ ] **T19** - story: TBL-4 (AC1–AC3). Add `uax-table-search`, built like the CMS's own collection search box (find the CMS search input and copy its markup, icon position and spacing; the T15 story's hand-made search box has a misplaced icon, user feedback). Replace the story placeholders with it (300ms debounce, raises `search`). Client mode filters rows on columns marked `searchable` (column flag; if none are marked, all columns' text) and shows the empty state when nothing matches.
   Acceptance: TBL-4 specs green.
   depends-on: T18
 
@@ -121,8 +125,12 @@
 
 ## Docs and checks
 
-- [ ] **T22** - story: none (SPEC.md §1, pane recipe). Add a "Pane" story in `src/internal/stories/pane.story.ts`: a `uui-box` with icon headline, `uax-group-by` and `uax-date-range` in `header-actions`, a chart, then an edge-to-edge table with no divider between them.
-  Acceptance: story matches the layout of `cmp-diff.png` with rounded corners, axe clean.
+- [ ] **T22** - story: none (SPEC.md §1 pane recipe, plus page examples). Full page examples under "Examples › Pages" in Storybook, each rebuilding a product's current analytics screen from this package, with realistic fake data (`example.com`, invented products):
+  - **Engage › Analytics › Pageviews and Visitors**: page header with group-by and date range (with compare), a chart pane (area with compare and markers; stacked bars for visitors) flowing into an edge-to-edge table pane (share columns, compare badges, search and totals, paging), matching the Phase 1 design.
+  - **Commerce › Analytics**: a row of KPI tiles (revenue, orders, average order value, carts, conversion), a revenue line chart with compare, top products / top buyers / popular discounts tables, matching today's Commerce widgets in the new look.
+  - **Umbraco AI › Usage**: summary KPI tiles (requests, input/output/total tokens, success rate, average duration), a stacked usage chart with series tabs replaced by selectable KPI tiles, and a breakdown table by model or profile.
+  Each page uses `uui-box` panes with `--uui-box-default-padding: 0`, wires the events between parts (KPI select switches the chart metric, date range and group-by update the data, table sort/page/search), and shows its source in the docs panel. Any gap found (a missing option, an awkward event) is logged as a follow-up task, not patched silently.
+  Acceptance: the three pages render with no errors in light, dark and high contrast; axe clean; each listed interaction works in Storybook.
   depends-on: T8, T12, T14, T20
 
 - [ ] **T23** - story: none (non-functional targets). Measure and record in `BUILD-LOG.md`:

@@ -554,22 +554,22 @@ so that I can read and compare rows quickly.
 
 ```
 AC1 — Number cells
-  Given a column of type "number" and value 1234
+  Given a number column (`UAX_TABLE_CELL.number`) and value 1234
   When  it renders in the en-US culture
   Then  the cell shows "1,234"
 
 AC2 — Share cell
-  Given a "share" column whose values are 210 and 62
+  Given a share column whose values are 210 and 62
   When  it renders
   Then  the first row shows "210 (77.2%)"
 
 AC3 — Second share column colour
-  Given two "share" columns
+  Given two share columns
   When  they render
   Then  the second column's bars use --uax-series-2
 
 AC4 — Link cells
-  Given a "link" column with hrefKey "url"
+  Given a link column with hrefKey "url"
   When  it renders
   Then  each cell is an anchor to that row's url
 
@@ -584,7 +584,7 @@ AC6 — Toolbar slot
   Then  that content sits above the header row
 
 AC7 — Share bar scaled to the largest value
-  Given a "share" column whose values are 210 and 62
+  Given a share column whose values are 210 and 62
   When  it renders
   Then  the 210 row's bar is at full width
 ```

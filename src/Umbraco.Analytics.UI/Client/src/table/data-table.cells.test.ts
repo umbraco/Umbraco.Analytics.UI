@@ -13,11 +13,12 @@ import "./data-table.element.js";
 import "./cells/index.js";
 import type { UaxShareCellElement } from "./cells/share-cell.element.js";
 import type { UaxTableCellElement, UaxTableColumn } from "./types.js";
+import { UAX_TABLE_CELL } from "./cells/cell-names.js";
 
 /** A product's own cell: a dot and the value. Records what the table gave it. */
 @customElement("uax-test-dot-cell")
 class TestDotCellElement extends UmbLitElement implements UaxTableCellElement {
-    @property({ attribute: false }) column: UaxTableColumn = { key: "", label: "", type: "text" };
+    @property({ attribute: false }) column: UaxTableColumn = { key: "", label: "" };
     @property({ attribute: false }) item: Record<string, unknown> = {};
     @property({ attribute: false }) value: unknown;
 
@@ -31,8 +32,8 @@ class TestOtherCellElement extends TestDotCellElement {}
 
 const rows = [{ name: "New visitor", n: 5 }, { name: "Returning visitor", n: 7 }];
 const columns = (elementName?: string): UaxTableColumn[] => [
-    { key: "name", label: "Type", type: "text", elementName },
-    { key: "n", label: "N", type: "number" },
+    { key: "name", label: "Type", elementName },
+    { key: "n", label: "N", elementName: UAX_TABLE_CELL.number, align: "end" },
 ];
 const firstCell = (el: Element) => shadow(el).querySelector("uui-table-row:not([part~='header']) uui-table-cell")!.firstElementChild as TestDotCellElement;
 const table = (el: Element) => el as UaxTestElement & { columns: UaxTableColumn[]; rows: unknown[] };
@@ -98,8 +99,8 @@ describe("Feature: table cells are elements", () => {
         });
     });
 
-    describe("Scenario: a column with a built-in type", () => {
-        it("uses that type's cell element", async () => {
+    describe("Scenario: a column with a built-in cell name", () => {
+        it("uses that cell element", async () => {
             const el = await renderElement(html`<uax-data-table .columns=${columns()} .rows=${rows}></uax-data-table>`, "uax-data-table");
             const cells = [...shadow(el).querySelectorAll("uui-table-row:not([part~='header'])")[0].querySelectorAll("uui-table-cell")];
             expect(cells.map((c) => c.firstElementChild?.tagName.toLowerCase())).toEqual(["uax-text-cell", "uax-number-cell"]);
@@ -137,7 +138,7 @@ describe("Feature: table cells are elements", () => {
         it("links to the item's hrefKey value", async () => {
             const host = render(
                 html`<uax-link-cell
-                    .column=${{ key: "url", label: "", type: "link", hrefKey: "href" }}
+                    .column=${{ key: "url", label: "", elementName: UAX_TABLE_CELL.link, hrefKey: "href" }}
                     .item=${{ href: "https://example.com/" }}
                     .value=${"Home"}></uax-link-cell>`,
             ).container;

@@ -1,6 +1,7 @@
 import { css, customElement, html, nothing, property, type CSSResultGroup, type PropertyValues } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { asNumber, getNumberFormat } from "../internal/number-format.js";
+import "../internal/table-skeleton-cell.element.js";
 import type { UaxTableCellElement, UaxTableColumn } from "../types.js";
 
 const percentFormatOptions: Intl.NumberFormatOptions = { style: "percent", maximumFractionDigits: 1 };
@@ -8,7 +9,7 @@ const percentFormatOptions: Intl.NumberFormatOptions = { style: "percent", maxim
 /**
  * A table cell that shows its value, a fraction (0.25 is "25%"), as a percentage in the editor's culture.
  * The column's `valueFormat` overrides the default of one decimal at most. A missing or non-numeric value shows nothing.
- * The built-in cell of a `percent` column, and usable on its own.
+ * Its name is `UAX_TABLE_CELL.percent`, and it is usable on its own.
  *
  * @element uax-percent-cell
  */
@@ -16,7 +17,7 @@ const percentFormatOptions: Intl.NumberFormatOptions = { style: "percent", maxim
 export class UaxPercentCellElement extends UmbLitElement implements UaxTableCellElement {
     /** The column the cell is in. Its `valueFormat` formats the percentage. */
     @property({ attribute: false })
-    column: UaxTableColumn = { key: "value", label: "", type: "percent" };
+    column: UaxTableColumn = { key: "value", label: "" };
 
     /** The row the cell is in. */
     @property({ attribute: false })
@@ -36,7 +37,12 @@ export class UaxPercentCellElement extends UmbLitElement implements UaxTableCell
         }
     }
 
+    /** Draws a placeholder instead of the value while the table loads. */
+    @property({ type: Boolean })
+    loading = false;
+
     override render() {
+        if (this.loading) return html`<uax-table-skeleton-cell .align=${this.column.align ?? "start"}></uax-table-skeleton-cell>`;
         const value = asNumber(this.value);
         return value === undefined ? nothing : html`${this.#format!.format.format(value)}`;
     }

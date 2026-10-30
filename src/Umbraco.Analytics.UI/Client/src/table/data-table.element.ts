@@ -16,12 +16,20 @@ import "../internal/loading/loading-bar.element.js";
 import "../internal/loading/skeleton.element.js";
 import { uaxThemeTokens } from "../internal/theme/tokens.css.js";
 import "./cells/index.js";
-import type { UaxShareCellElement } from "./cells/share-cell.element.js";
+import { UAX_TABLE_CELL } from "./cells/cell-names.js";
+import { UaxTableContextController } from "./internal/table-context.controller.js";
 import "./internal/table-pager.element.js";
 import "./internal/table-skeleton-cell.element.js";
 import "./internal/table-sort-button.element.js";
 import { asNumber, asText } from "./internal/number-format.js";
-import type { UaxTableCellElement, UaxTableColumn, UaxTableMode, UaxTablePageChangeDetail, UaxTableSort } from "./types.js";
+import type {
+    UaxTableCellElement,
+    UaxTableColumn,
+    UaxTableMode,
+    UaxTablePageChangeDetail,
+    UaxTableSort,
+    UaxTableStats,
+} from "./types.js";
 
 type UaxTableRow = Record<string, unknown>;
 
@@ -29,11 +37,6 @@ type UaxTableRow = Record<string, unknown>;
 interface DerivedColumn {
     column: UaxTableColumn;
     align: "start" | "end";
-    /** `share` columns: the palette slot of the bar. */
-    color: 1 | 2 | 3 | 4;
-    /** `share` columns: the sum and the largest of the column's values. */
-    total: number;
-    max: number;
 }
 
 interface DerivedFrom {
@@ -50,8 +53,9 @@ interface DerivedFrom {
 const PAGE_SIZES = [10, 25, 50, 100];
 const DEFAULT_PAGE_SIZE = PAGE_SIZES[0];
 
-function isNumeric(column: UaxTableColumn): boolean {
-    return column.type === "number" || column.type === "percent" || column.type === "share";
+/** The cell element a column names, the text cell when it names none. */
+function cellElementName(column: UaxTableColumn): string {
+    return column.elementName || UAX_TABLE_CELL.text;
 }
 
 /** A row's identity for matching: strings and numbers only. Anything else never matches. */
@@ -70,35 +74,25 @@ function getCollator(lang: string): Intl.Collator {
     return collator;
 }
 
-/** The cell element of each built-in column type. A column's `elementName` takes its place. */
-const CELL_ELEMENTS: Record<UaxTableColumn["type"], string> = {
-    text: "uax-text-cell",
-    link: "uax-link-cell",
-    number: "uax-number-cell",
-    percent: "uax-percent-cell",
-    share: "uax-share-cell",
-};
-
 const SKELETON_ROWS = 5;
 /** Widths of the skeleton blocks, varied by row so the placeholder doesn't look like a grid of equal bars. */
 const SKELETON_WIDTHS = [72, 54, 83, 47, 65];
 
 /**
- * A table of rows, with columns that show their values as text, links, numbers, percentages or a
- * share of the column total with a bar.
+ * A table of rows. Each column names the cell element that shows its values in `elementName`: the built-in
+ * cells (`UAX_TABLE_CELL`) show text, links, numbers, percentages or a share of the column total with a bar,
+ * and a product can name its own. The default is the text cell.
  *
  * Built on `uui-table`, so it looks like the backoffice's own tables. Put it in a `uui-box` with
  * `--uui-box-default-padding: 0` so it runs edge to edge: the cells pad themselves, and the toolbar
  * slot pads itself with `--uax-table-padding`.
  *
- * Values are raw numbers. They are formatted in the editor's culture, with the column's `valueFormat`.
- * A `share` column shows the value, its percent of the column's total, and a thin bar scaled to the
- * column's largest value. The first share column uses the palette slot `--uax-series-1`, the second
- * `--uax-series-2` and so on, unless the column sets `color`.
+ * Values are raw numbers. The number cells format them in the editor's culture, with the column's `valueFormat`.
+ * The table provides `UAX_TABLE_CONTEXT` to its cells, with each column's total and largest value (so a share
+ * cell can draw a percent and a bar) and the compare-row lookup.
  *
- * Pass last period's rows in `compare-rows` and name the column that identifies a row in `row-key` to
- * show a small change badge after each share value. A row with no matching compare row, or a compare
- * value of zero, shows no badge. Without a `row-key` there are no badges.
+ * Pass last period's rows in `compare-rows` and name the column that identifies a row in `row-key` so cells
+ * can compare a row with its match. A row with no matching compare row shows no badge. Without a `row-key` there is no match.
  *
  * While `loading` is set it shows skeleton rows on first load, or keeps the old rows under a loading
  * bar when reloading. With no rows it shows `uax-empty-state` under the header. Replace `rows` and
@@ -108,7 +102,7 @@ const SKELETON_WIDTHS = [72, 54, 83, 47, 65];
  * with `{ key, direction }`: the first click on a column sorts numbers descending and text ascending, and
  * clicking the sorted column flips it. In `client` mode (the default) the table also sorts the rows it's
  * given, keeping equal rows in their order and empty values last. In `server` mode it never reorders:
- * the product sorts and passes new `rows`. Shares stay a share of the whole column either way.
+ * the product sorts and passes new `rows`. Column totals stay those of the whole column either way.
  *
  * The footer shows "Show rows" (10, 25, 50 or 100), the range ("1–10 of 272") and previous and next
  * buttons, and is hidden when the rows fit the smallest page size. In `client` mode the table pages the
@@ -117,7 +111,7 @@ const SKELETON_WIDTHS = [72, 54, 83, 47, 65];
  * table sets its own `page` and `page-size` when the editor changes them, and goes back to page 1 when a
  * header is clicked. In `server` mode that sort is a `sort-change` for the product to load, not a `page-change`.
  *
- * Shares and bars are worked out from the `rows` the table holds: all of them in `client` mode, but only
+ * Totals and maxes are worked out from the `rows` the table holds: all of them in `client` mode, but only
  * the current page in `server` mode. Pass `totals` (the column's total across every page) so a share is
  * still a share of the whole, and `maxes` (the column's largest value across every page) so bars
  * keep one scale from page to page.
@@ -181,19 +175,21 @@ export class UaxDataTableElement extends UmbLitElement {
     total?: number;
 
     /**
-     * Each `share` column's total across every page, by column `key`: the number a share is a percent of,
+     * Each column's total across every page, by column `key`: the number a share is a percent of,
      * not a total the table shows. Without an entry the total is the sum of the `rows` the table holds.
      */
     @property({ attribute: false })
     totals?: Record<string, number>;
 
     /**
-     * Each `share` column's largest value across every page, by column `key`: what a full bar stands for.
+     * Each column's largest value across every page, by column `key`: what a full bar stands for.
      * Without an entry the largest value in the `rows` the table holds is a full bar.
      */
     @property({ attribute: false })
     maxes?: Record<string, number>;
 
+    /** Provides the columns, stats and compare lookup to the cells, as `UAX_TABLE_CONTEXT`. */
+    #context = new UaxTableContextController(this);
     #derived: DerivedColumn[] = [];
     #sorted?: { rows: UaxTableRow[]; sort: UaxTableSort; column: UaxTableColumn; lang: string; sortedRows: UaxTableRow[] };
     #derivedFrom?: DerivedFrom;
@@ -206,6 +202,7 @@ export class UaxDataTableElement extends UmbLitElement {
         const prev = this.#derivedFrom;
         if (!prev || prev.compareRows !== this.compareRows || prev.rowKey !== this.rowKey) {
             this.#compareByKey = this.#indexCompareRows(this.compareRows, this.rowKey);
+            this.#context.setCompare((item) => this.#compareRowFor(item));
         }
         if (
             !prev ||
@@ -215,7 +212,9 @@ export class UaxDataTableElement extends UmbLitElement {
             prev.maxes !== this.maxes ||
             prev.lang !== lang
         ) {
-            this.#derived = this.#derive(this.columns, this.#statsRows);
+            this.#derived = this.#derive(this.columns);
+            this.#context.setColumns(this.columns);
+            this.#context.setStats(this.#computeStats(this.columns, this.#statsRows));
         }
         this.#derivedFrom = { columns: this.columns, rows: this.rows, compareRows: this.compareRows, rowKey: this.rowKey, totals: this.totals, maxes: this.maxes, lang };
     }
@@ -230,12 +229,11 @@ export class UaxDataTableElement extends UmbLitElement {
         return byKey;
     }
 
-    /** The matching compare row's value for the column, or undefined when there is no `rowKey`, no matching row or no number. */
-    #compareValueFor(column: UaxTableColumn, row: UaxTableRow): number | undefined {
+    /** The compare row that matches the row, or undefined when there is no `rowKey` or no matching row. */
+    #compareRowFor(row: UaxTableRow): UaxTableRow | undefined {
         if (!this.rowKey) return undefined;
         const key = rowIdentity(row[this.rowKey]);
-        const compareRow = key === undefined ? undefined : this.#compareByKey.get(key);
-        return compareRow ? asNumber(compareRow[column.key]) : undefined;
+        return key === undefined ? undefined : this.#compareByKey.get(key);
     }
 
     /**
@@ -308,15 +306,22 @@ export class UaxDataTableElement extends UmbLitElement {
         const lang = this.localize.lang();
         const cached = this.#sorted;
         if (cached && cached.rows === this.rows && cached.sort === sort && cached.lang === lang && cached.column === column) return cached.sortedRows;
-        const numeric = isNumeric(column);
+        const sortAs = column.sortAs ?? "text";
         const collator = getCollator(lang);
         const sign = sort.direction === "desc" ? -1 : 1;
+        const compare =
+            typeof sortAs === "function" ? sortAs : sortAs === "number" ? (x: unknown, y: unknown) => (x as number) - (y as number) : (x: unknown, y: unknown) => collator.compare(String(x), String(y));
+        const sortValue = (row: UaxTableRow): unknown => {
+            const value = row[column.key];
+            if (typeof sortAs === "function") return value ?? undefined;
+            return sortAs === "number" ? asNumber(value) : asText(value) || undefined;
+        };
         const sortedRows = [...this.rows].sort((a, b) => {
-            const x = numeric ? asNumber(a[column.key]) : asText(a[column.key]) || undefined;
-            const y = numeric ? asNumber(b[column.key]) : asText(b[column.key]) || undefined;
+            const x = sortValue(a);
+            const y = sortValue(b);
             // Empty values go last in both directions, so only real values flip with the sign.
             if (x === undefined || y === undefined) return x === y ? 0 : x === undefined ? 1 : -1;
-            return sign * (typeof x === "number" && typeof y === "number" ? x - y : collator.compare(String(x), String(y)));
+            return sign * compare(x, y);
         });
         this.#sorted = { rows: this.rows, sort, lang, column, sortedRows };
         return sortedRows;
@@ -325,7 +330,7 @@ export class UaxDataTableElement extends UmbLitElement {
     /** The first click on a column sorts numbers biggest first and text A to Z. Later clicks flip the direction. */
     #sortBy(column: UaxTableColumn) {
         const current = this.sort;
-        const direction = current?.key === column.key ? (current.direction === "asc" ? "desc" : "asc") : isNumeric(column) ? "desc" : "asc";
+        const direction = current?.key === column.key ? (current.direction === "asc" ? "desc" : "asc") : column.sortAs === "number" ? "desc" : "asc";
         this.sort = { key: column.key, direction };
         this.page = 1;
         this.dispatchEvent(new CustomEvent("sort-change", { bubbles: true, detail: { key: column.key, direction } }));
@@ -341,31 +346,29 @@ export class UaxDataTableElement extends UmbLitElement {
         return SKELETON_ROWS;
     }
 
-    #derive(columns: UaxTableColumn[], rows: UaxTableRow[]): DerivedColumn[] {
-        let shareIndex = 0;
-        return columns.map((column) => {
-            const type = column.type;
-            const derived: DerivedColumn = {
-                column,
-                align: column.align ?? (type === "number" || type === "percent" ? "end" : "start"),
-                color: 1,
-                total: 0,
-                max: 0,
-            };
-            if (type === "share") {
-                derived.color = column.color ?? ((shareIndex % 4) + 1) as 1 | 2 | 3 | 4;
-                shareIndex++;
-                for (const row of rows) {
-                    const value = asNumber(row[column.key]);
-                    if (value === undefined) continue;
-                    derived.total += value;
-                    derived.max = Math.max(derived.max, value);
-                }
-                derived.total = asNumber(this.totals?.[column.key]) ?? derived.total;
-                derived.max = asNumber(this.maxes?.[column.key]) ?? derived.max;
+    #derive(columns: UaxTableColumn[]): DerivedColumn[] {
+        return columns.map((column) => ({ column, align: column.align ?? "start" }));
+    }
+
+    /** Each column's total and largest number, from `totals` and `maxes` where given, else from the rows the table holds. */
+    #computeStats(columns: UaxTableColumn[], rows: UaxTableRow[]): UaxTableStats {
+        const stats: Record<string, { total: number; max: number }> = {};
+        for (const { key } of columns) {
+            let total = 0;
+            let max = 0;
+            let any = false;
+            for (const row of rows) {
+                const value = asNumber(row[key]);
+                if (value === undefined) continue;
+                any = true;
+                total += value;
+                max = Math.max(max, value);
             }
-            return derived;
-        });
+            total = asNumber(this.totals?.[key]) ?? total;
+            max = asNumber(this.maxes?.[key]) ?? max;
+            if (any || this.totals?.[key] !== undefined || this.maxes?.[key] !== undefined) stats[key] = { total, max };
+        }
+        return stats;
     }
 
     /** One cell element per row and column, reused while the column keeps its element name, as the CMS `umb-table` does. */
@@ -373,7 +376,7 @@ export class UaxDataTableElement extends UmbLitElement {
 
     #renderCell(derived: DerivedColumn, row: UaxTableRow): HTMLElement {
         const { column } = derived;
-        const elementName = column.elementName || CELL_ELEMENTS[column.type] || CELL_ELEMENTS.text;
+        const elementName = cellElementName(column);
         let rowCache = this.#cellElements.get(row);
         if (!rowCache) {
             rowCache = new Map();
@@ -384,18 +387,10 @@ export class UaxDataTableElement extends UmbLitElement {
             element = document.createElement(elementName);
             rowCache.set(column.key, element);
         }
-        const cell = element as HTMLElement & Partial<UaxTableCellElement> & Partial<UaxShareCellElement>;
+        const cell = element as HTMLElement & Partial<UaxTableCellElement>;
         cell.column = column;
         cell.item = row;
         cell.value = row[column.key];
-        // Only the built-in share cell takes what the table works out across rows.
-        if (!column.elementName && column.type === "share") {
-            const share = element as UaxShareCellElement;
-            share.total = derived.total;
-            share.max = derived.max;
-            share.color = derived.color;
-            share.compareValue = this.#compareValueFor(column, row);
-        }
         return element;
     }
 
@@ -413,16 +408,6 @@ export class UaxDataTableElement extends UmbLitElement {
         </uui-table-head-cell>`;
     }
 
-    /**
-     * Share columns get an equal slice of at most 27% each (the design's 46 / 27 / 27 split), so the
-     * bars line up between tables and a long URL wraps instead of squeezing them. The other columns share what's left.
-     */
-    #columnWidth(derived: DerivedColumn): string | undefined {
-        if (derived.column.type !== "share") return undefined;
-        const shares = this.#derived.filter((d) => d.column.type === "share").length;
-        return `width: ${Math.min(27, 80 / shares)}%`;
-    }
-
     #cellClass(derived: DerivedColumn): string {
         return derived.align === "end" ? "end" : "start";
     }
@@ -435,13 +420,49 @@ export class UaxDataTableElement extends UmbLitElement {
         </uui-table-row>`;
     }
 
+    /** Skeleton cell elements by row and column key, kept apart from the data rows' cells. */
+    #skeletonElements = new Map<string, HTMLElement>();
+    /** Cell names already waited for, so a late-defined cell re-renders the table once. */
+    #waitingFor = new Set<string>();
+
+    /**
+     * The loading placeholder of a column: its own cell element with `loading` set, when the element is defined
+     * and has a `loading` property, else the generic one-line placeholder. A cell defined later swaps in on its own.
+     */
+    #renderSkeletonCell(derived: DerivedColumn, row: number, column: number): TemplateResult | HTMLElement {
+        const elementName = cellElementName(derived.column);
+        const definition = customElements.get(elementName);
+        if (!definition && !this.#waitingFor.has(elementName)) {
+            this.#waitingFor.add(elementName);
+            void customElements.whenDefined(elementName).then(() => {
+                this.#waitingFor.delete(elementName);
+                this.requestUpdate();
+            });
+        }
+        if (!definition || !("loading" in definition.prototype)) {
+            return html`<uax-table-skeleton-cell .width=${SKELETON_WIDTHS[(row + column) % SKELETON_WIDTHS.length]} .align=${derived.align}></uax-table-skeleton-cell>`;
+        }
+        const id = `${row}:${derived.column.key}`;
+        let element = this.#skeletonElements.get(id);
+        if (!element || element.tagName.toLowerCase() !== elementName.toLowerCase()) {
+            element = document.createElement(elementName);
+            this.#skeletonElements.set(id, element);
+        }
+        const cell = element as HTMLElement & Partial<UaxTableCellElement>;
+        cell.column = derived.column;
+        cell.item = {};
+        cell.value = undefined;
+        cell.loading = true;
+        return element;
+    }
+
     #renderSkeletonRow(index: number): TemplateResult {
         return html`<uui-table-row>
             ${this.#derived.map((derived, column) => {
-                const text = derived.column.type === "text" || derived.column.type === "link";
-                const width = text ? SKELETON_WIDTHS[(index + column) % SKELETON_WIDTHS.length] : 40;
-                return html`<uui-table-cell class=${this.#cellClass(derived)}>
-                    <uax-table-skeleton-cell .width=${width} .align=${derived.align}></uax-table-skeleton-cell>
+                // Numbers sit at the end of their cell and are short, so their block is too.
+                const width = derived.align === "end" ? 40 : SKELETON_WIDTHS[(index + column) % SKELETON_WIDTHS.length];
+                return html`<uui-table-cell class=${this.#cellClass(derived)} style="--_uax-skeleton-width: ${width}%">
+                    ${this.#renderSkeletonCell(derived, index, column)}
                 </uui-table-cell>`;
             })}
         </uui-table-row>`;
@@ -450,12 +471,11 @@ export class UaxDataTableElement extends UmbLitElement {
     override render() {
         const hasData = this.rows.length > 0;
         const mode = getLoadingMode(this.loading, hasData);
-        const hasShare = this.#derived.some((derived) => derived.column.type === "share");
-        return html`<div class="region ${hasShare ? "has-share" : ""} ${this.#hasToolbar ? "has-toolbar" : ""}">
+        return html`<div class="region ${this.#hasToolbar ? "has-toolbar" : ""}">
             ${mode === "reload" ? html`<uax-loading-bar></uax-loading-bar>` : nothing}
             <div class="toolbar"><slot name="toolbar" @slotchange=${() => this.requestUpdate()}></slot></div>
             <uui-table aria-busy=${this.loading ? "true" : "false"}>
-                ${this.#derived.map((derived) => html`<uui-table-column style=${ifDefined(this.#columnWidth(derived))}></uui-table-column>`)}
+                ${this.#derived.map((derived) => html`<uui-table-column style=${ifDefined(derived.column.width ? `width: ${derived.column.width}` : undefined)}></uui-table-column>`)}
                 <uui-table-head>${this.#derived.map((derived) => this.#renderHeaderCell(derived))}</uui-table-head>
                 ${mode === "skeleton"
                     ? Array.from({ length: this.#skeletonRowCount }, (_, index) => this.#renderSkeletonRow(index))
@@ -495,10 +515,6 @@ export class UaxDataTableElement extends UmbLitElement {
                 border-radius: 0 0 var(--uui-box-border-radius, var(--uui-border-radius-3)) var(--uui-box-border-radius, var(--uui-border-radius-3));
                 /* The tallest content a body row holds, so a skeleton row and a loaded row are the same height. */
                 --_uax-table-content-height: var(--_uax-table-line);
-            }
-
-            .region.has-share {
-                --_uax-table-content-height: calc(var(--_uax-table-line) + 5px + 4px);
             }
 
             /* The toolbar pads itself, only when something is slotted, so the loading bar can span the full width. */

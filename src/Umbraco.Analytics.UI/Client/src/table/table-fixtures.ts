@@ -1,8 +1,9 @@
 // Shared rows and columns for the uax-data-table specs.
+import { UAX_TABLE_CELL } from "./cells/cell-names.js";
 export const pageColumns = [
-    { key: "url", label: "Page URL", type: "link", hrefKey: "url" },
-    { key: "pageviews", label: "Pageviews", type: "share", sortable: true },
-    { key: "sessions", label: "Page sessions", type: "share", sortable: true },
+    { key: "url", label: "Page URL", elementName: UAX_TABLE_CELL.link, hrefKey: "url" },
+    { key: "pageviews", label: "Pageviews", elementName: UAX_TABLE_CELL.share, sortable: true, sortAs: "number" },
+    { key: "sessions", label: "Page sessions", elementName: UAX_TABLE_CELL.share, sortable: true, sortAs: "number" },
 ];
 
 export const pageRows = [
@@ -15,6 +16,6 @@ export const manyRows = (count: number) =>
     Array.from({ length: count }, (_, i) => ({ name: `Page ${i + 1}`, views: count - i }));
 
 export const nameColumns = [
-    { key: "name", label: "Name", type: "text" },
-    { key: "views", label: "Views", type: "number", sortable: true },
+    { key: "name", label: "Name" },
+    { key: "views", label: "Views", elementName: UAX_TABLE_CELL.number, sortable: true, sortAs: "number", align: "end" },
 ];

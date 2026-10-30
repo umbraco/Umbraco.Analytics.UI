@@ -10,6 +10,7 @@ import { axeRun } from "../internal/test/a11y.js";
 import { deepQuery, deepQueryAll, deepText, renderElement, shadow, type UaxTestElement } from "../internal/test/pending.js";
 import "./data-table.element.js";
 import { pageColumns, pageRows } from "./table-fixtures.js";
+import { UAX_TABLE_CELL } from "./cells/cell-names.js";
 
 const firstRowCells = (el: Element) => [...shadow(el).querySelector("uui-table-row")!.querySelectorAll("uui-table-cell")];
 const bars = (el: Element, column: number) =>
@@ -22,7 +23,7 @@ describe("Feature: table cells by column type", () => {
         let el: UaxTestElement;
         beforeEach(async () => {
             el = await renderElement(
-                html`<uax-data-table .columns=${[{ key: "n", label: "N", type: "number" }]} .rows=${[{ n: 1234 }]}></uax-data-table>`,
+                html`<uax-data-table .columns=${[{ key: "n", label: "N", elementName: UAX_TABLE_CELL.number, align: "end" }]} .rows=${[{ n: 1234 }]}></uax-data-table>`,
                 "uax-data-table",
             );
         });
@@ -122,7 +123,7 @@ describe("Feature: table cell details", () => {
     describe("Scenario: a number column with a currency format", () => {
         it("shows the value in that format", async () => {
             const el = await render1(
-                [{ key: "n", label: "N", type: "number", valueFormat: { style: "currency", currency: "EUR" } }],
+                [{ key: "n", label: "N", elementName: UAX_TABLE_CELL.number, align: "end", valueFormat: { style: "currency", currency: "EUR" } }],
                 [{ n: 1234.5 }],
             );
             expect(deepText(cell(el)).trim()).toBe("€1,234.50");
@@ -131,31 +132,31 @@ describe("Feature: table cell details", () => {
 
     describe("Scenario: a percent column", () => {
         it("shows a fraction as a percentage", async () => {
-            const el = await render1([{ key: "p", label: "P", type: "percent" }], [{ p: 0.254 }]);
+            const el = await render1([{ key: "p", label: "P", elementName: UAX_TABLE_CELL.percent, align: "end" }], [{ p: 0.254 }]);
             expect(deepText(cell(el)).trim()).toBe("25.4%");
         });
     });
 
-    describe("Scenario: a number column", () => {
+    describe("Scenario: a column with align end", () => {
         it("right-aligns the cell", async () => {
-            const el = await render1([{ key: "n", label: "N", type: "number" }], [{ n: 5 }]);
+            const el = await render1([{ key: "n", label: "N", elementName: UAX_TABLE_CELL.number, align: "end" }], [{ n: 5 }]);
             expect(getComputedStyle(cell(el)).textAlign).toBe("end");
         });
 
         it("uses tabular numerals", async () => {
-            const el = await render1([{ key: "n", label: "N", type: "number" }], [{ n: 5 }]);
+            const el = await render1([{ key: "n", label: "N", elementName: UAX_TABLE_CELL.number, align: "end" }], [{ n: 5 }]);
             expect(getComputedStyle(cell(el).firstElementChild!).fontVariantNumeric).toBe("tabular-nums");
         });
 
         it("right-aligns the header too", async () => {
-            const el = await render1([{ key: "n", label: "N", type: "number" }], [{ n: 5 }]);
+            const el = await render1([{ key: "n", label: "N", elementName: UAX_TABLE_CELL.number, align: "end" }], [{ n: 5 }]);
             expect(getComputedStyle(shadow(el).querySelector("uui-table-head-cell")!).textAlign).toBe("end");
         });
     });
 
     describe("Scenario: a text column with align end", () => {
         it("right-aligns the cell", async () => {
-            const el = await render1([{ key: "t", label: "T", type: "text", align: "end" }], [{ t: "x" }]);
+            const el = await render1([{ key: "t", label: "T", align: "end" }], [{ t: "x" }]);
             expect(getComputedStyle(cell(el)).textAlign).toBe("end");
         });
     });
@@ -164,7 +165,7 @@ describe("Feature: table cell details", () => {
         it("draws the bar in that slot's colour", async () => {
             const el = await renderElement(
                 html`<div style="--uax-series-3: rgb(1, 2, 3)">
-                    <uax-data-table .columns=${[{ key: "n", label: "N", type: "share", color: 3 }]} .rows=${[{ n: 5 }]}></uax-data-table>
+                    <uax-data-table .columns=${[{ key: "n", label: "N", elementName: UAX_TABLE_CELL.share, color: 3 }]} .rows=${[{ n: 5 }]}></uax-data-table>
                 </div>`,
                 "uax-data-table",
             );
@@ -175,7 +176,7 @@ describe("Feature: table cell details", () => {
     describe("Scenario: a share column with a number format", () => {
         it("formats the value but not the percent of total", async () => {
             const el = await render1(
-                [{ key: "n", label: "N", type: "share", valueFormat: { style: "currency", currency: "EUR" } }],
+                [{ key: "n", label: "N", elementName: UAX_TABLE_CELL.share, valueFormat: { style: "currency", currency: "EUR" } }],
                 [{ n: 1000 }, { n: 3000 }],
             );
             expect(deepText(cell(el))).toContain("€1,000.00 (25.0%)");
@@ -184,7 +185,7 @@ describe("Feature: table cell details", () => {
 
     describe("Scenario: a share column where every value is 0", () => {
         it("shows 0.0% and an empty bar", async () => {
-            const el = await render1([{ key: "n", label: "N", type: "share" }], [{ n: 0 }]);
+            const el = await render1([{ key: "n", label: "N", elementName: UAX_TABLE_CELL.share }], [{ n: 0 }]);
             expect(deepText(cell(el))).toContain("0 (0.0%)");
         });
     });
@@ -199,7 +200,7 @@ describe("Feature: table cell details", () => {
     describe("Scenario: a long URL in a link column", () => {
         it("wraps instead of overflowing the cell", async () => {
             const url = "https://example.com/" + "a-very-long-page-name/".repeat(8);
-            const el = await render1([{ key: "url", label: "URL", type: "link", hrefKey: "url" }], [{ url }], "300px");
+            const el = await render1([{ key: "url", label: "URL", elementName: UAX_TABLE_CELL.link, hrefKey: "url" }], [{ url }], "300px");
             expect(cell(el).scrollWidth).toBeLessThanOrEqual(cell(el).clientWidth);
         });
     });
@@ -207,7 +208,7 @@ describe("Feature: table cell details", () => {
     describe("Scenario (sad path): a link with an unsafe URL", () => {
         it("shows the text without a link", async () => {
             const el = await render1(
-                [{ key: "url", label: "URL", type: "link", hrefKey: "url" }],
+                [{ key: "url", label: "URL", elementName: UAX_TABLE_CELL.link, hrefKey: "url" }],
                 [{ url: "javascript:alert(1)" }],
             );
             expect(deepQuery(cell(el), "a")).toBe(null);
@@ -216,14 +217,14 @@ describe("Feature: table cell details", () => {
 
     describe("Scenario (sad path): a link row without a URL", () => {
         it("still shows the text", async () => {
-            const el = await render1([{ key: "name", label: "Name", type: "link", hrefKey: "url" }], [{ name: "Home" }]);
+            const el = await render1([{ key: "name", label: "Name", elementName: UAX_TABLE_CELL.link, hrefKey: "url" }], [{ name: "Home" }]);
             expect(deepText(cell(el)).trim()).toBe("Home");
         });
     });
 
     describe("Scenario (sad path): a number column with a missing value", () => {
         it("leaves the cell empty", async () => {
-            const el = await render1([{ key: "n", label: "N", type: "number" }], [{ n: undefined }]);
+            const el = await render1([{ key: "n", label: "N", elementName: UAX_TABLE_CELL.number, align: "end" }], [{ n: undefined }]);
             expect(deepText(cell(el)).trim()).toBe("");
         });
     });
