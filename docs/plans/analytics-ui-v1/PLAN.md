@@ -116,7 +116,7 @@
   Acceptance: a product element outside our shadow roots renders `--uax-series-1` and `--uax-series-2` with the same colours as our share bars in all three themes (spec); a product override of `--uax-series-1` still reaches both; API report updated.
   depends-on: T18d. Before T22, which needs it.
 
-- [ ] **T20c** - story: TBL-3 (layout only). Pager encapsulation (user feedback). The table owns a footer section (the top border, padding and placement, mirroring the toolbar section above the table); `uax-table-pager` renders only its controls ("Show rows", the range, previous and next) with no border or padding of its own. The footer shows when the pager would (today's `#showPager` rule, not during the skeleton load) or when the public `footer` slot has content, and hides when neither. The footer has a public `footer` slot on the left of the pager (user approved, 30-10-2026).
+- [x] **T20c** - story: TBL-3 (layout only). Pager encapsulation (user feedback). The table owns a footer section (the top border, padding and placement, mirroring the toolbar section above the table); `uax-table-pager` renders only its controls ("Show rows", the range, previous and next) with no border or padding of its own. The footer shows when the pager would (today's `#showPager` rule, not during the skeleton load) or when the public `footer` slot has content, and hides when neither. The footer has a public `footer` slot on the left of the pager (user approved, 30-10-2026).
   Acceptance: TBL-3 specs still green; pager story shows bare controls; table stories look unchanged apart from intended spacing; axe in 3 themes.
   depends-on: T18b
 
