@@ -11,7 +11,7 @@ import type { UaxTableColumn, UaxTableRowClickDetail } from "./types.js";
 const host = "https://www.example.com";
 
 const pageColumns: UaxTableColumn[] = [
-    { key: "url", label: "Page URL", elementName: UAX_TABLE_CELL.link, hrefKey: "url" },
+    { key: "url", label: "Page URL", elementName: UAX_TABLE_CELL.link, meta: { hrefKey: "url" } },
     { key: "pageviews", label: "Pageviews", elementName: UAX_TABLE_CELL.share, width: "27%" },
     { key: "sessions", label: "Page sessions", elementName: UAX_TABLE_CELL.share, width: "27%" },
 ];

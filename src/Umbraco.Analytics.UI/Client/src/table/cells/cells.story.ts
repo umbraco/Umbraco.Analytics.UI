@@ -6,6 +6,7 @@ import "./link-cell.element.js";
 import "./number-cell.element.js";
 import "./percent-cell.element.js";
 import "./share-cell.element.js";
+import "../data-table.element.js";
 
 // Each public cell used on its own, as the table uses it: `column`, `item` and `value` are set, `loading` draws the
 // placeholder. Inside a `uax-data-table` the share cell also reads the column's total and largest value from the
@@ -29,7 +30,7 @@ export default meta;
 type Story = StoryObj;
 
 const textColumn: UaxTableColumn = { key: "name", label: "Name" };
-const linkColumn: UaxTableColumn = { key: "name", label: "Page", hrefKey: "url" };
+const linkColumn: UaxTableColumn = { key: "name", label: "Page", meta: { hrefKey: "url" } };
 const numberColumn: UaxTableColumn = { key: "orders", label: "Orders", align: "end" };
 const currencyColumn: UaxTableColumn = { key: "revenue", label: "Revenue", align: "end", valueFormat: { style: "currency", currency: "EUR", maximumFractionDigits: 0 } };
 const percentColumn: UaxTableColumn = { key: "refundRate", label: "Refund rate", align: "end" };
@@ -41,14 +42,14 @@ export const Text: Story = {
     parameters: { docs: { source: { code: `<uax-text-cell .column=\${column} .item=\${row} .value=\${row.name}></uax-text-cell>`, language: "html" } } },
 };
 
-/** `uax-link-cell` (`UAX_TABLE_CELL.link`): the value as a link to the URL in `item[column.hrefKey]`. A missing or unsafe URL (not http, https, mailto, tel or relative) shows plain text. */
+/** `uax-link-cell` (`UAX_TABLE_CELL.link`): the value as a link to the URL in `item[column.meta.hrefKey]`. A missing or unsafe URL (not http, https, mailto, tel or relative) shows plain text. */
 export const Link: Story = {
     render: () =>
         html`<div style="display: grid; gap: var(--uui-size-space-3)">
             <uax-link-cell .column=${linkColumn} .item=${{ url: "https://www.example.com/contact/" }} .value=${"https://www.example.com/contact/"}></uax-link-cell>
             <uax-link-cell .column=${linkColumn} .item=${{ url: "javascript:alert(1)" }} .value=${"Unsafe URL, shown as text"}></uax-link-cell>
         </div>`,
-    parameters: { docs: { source: { code: `const column = { key: "name", label: "Page", hrefKey: "url" };\n\n<uax-link-cell .column=\${column} .item=\${row} .value=\${row.name}></uax-link-cell>`, language: "html" } } },
+    parameters: { docs: { source: { code: `const column = { key: "name", label: "Page", meta: { hrefKey: "url" } };\n\n<uax-link-cell .column=\${column} .item=\${row} .value=\${row.name}></uax-link-cell>`, language: "html" } } },
 };
 
 /** `uax-number-cell` (`UAX_TABLE_CELL.number`): a number in the editor's culture, formatted with the column's `valueFormat`. Set `align: "end"` on the column for numbers. */
@@ -68,7 +69,32 @@ export const Percent: Story = {
     parameters: { docs: { source: { code: `<uax-percent-cell .column=\${column} .item=\${row} .value=\${row.refundRate}></uax-percent-cell>`, language: "html" } } },
 };
 
-/** `uax-share-cell` (`UAX_TABLE_CELL.share`): the value, its percent of `total` and a bar scaled to `max`. With a `compare-value` it adds a change badge. Inside a table it reads `total`, `max` and the compare row from the table's context. */
+/**
+ * A number or percent cell shows a change badge (`uax-table-compare-badge`) when the table has a compare row for the row. Set
+ * `meta: { lowerIsBetter: true }` on a column where a fall is good: the badge then shows it in green.
+ */
+export const CompareBadge: Story = {
+    name: "Number and percent with compare",
+    render: () => {
+        const columns: UaxTableColumn[] = [
+            { key: "name", label: "Name" },
+            { key: "successRate", label: "Success", elementName: "uax-percent-cell", align: "end" },
+            { key: "avgMs", label: "Avg ms", elementName: "uax-number-cell", align: "end", valueFormat: { maximumFractionDigits: 0 }, meta: { lowerIsBetter: true } },
+        ];
+        const rows = [
+            { name: "A", successRate: 0.97, avgMs: 820 },
+            { name: "B", successRate: 0.91, avgMs: 1430 },
+        ];
+        const compareRows = [
+            { name: "A", successRate: 0.95, avgMs: 1000 },
+            { name: "B", successRate: 0.94, avgMs: 1210 },
+        ];
+        return html`<uax-data-table .columns=${columns} .rows=${rows} .compareRows=${compareRows} row-key="name"></uax-data-table>`;
+    },
+    parameters: { docs: { source: { code: `{ key: "avgMs", label: "Avg duration", elementName: UAX_TABLE_CELL.number, meta: { lowerIsBetter: true } }\n\n<uax-data-table .columns=\${columns} .rows=\${rows} .compareRows=\${compareRows} row-key="name"></uax-data-table>`, language: "html" } } },
+};
+
+/** `uax-share-cell` (`UAX_TABLE_CELL.share`): the value, its percent of `total` and a bar scaled to `max`. With a `compare-value` (or a compare row in a table) it adds a change badge. Inside a table it reads `total`, `max` and the compare row from the table's context. */
 export const Share: Story = {
     render: () =>
         html`<div style="display: grid; gap: var(--uui-size-space-4)">

@@ -96,7 +96,7 @@ describe("Feature: open a row", () => {
     describe("Scenario (sad path): clicking a link in a row", () => {
         it("raises nothing", async () => {
             const clicked: unknown[] = [];
-            const columns = [{ key: "name", label: "Name", elementName: UAX_TABLE_CELL.link, hrefKey: "url" }];
+            const columns = [{ key: "name", label: "Name", elementName: UAX_TABLE_CELL.link, meta: { hrefKey: "url" } }];
             const el = await renderElement(
                 html`<uax-data-table .columns=${columns} .rows=${[{ name: "Home", url: "#home" }]} clickable-rows @row-click=${(e: Event) => clicked.push(e)}></uax-data-table>`,
                 "uax-data-table",
@@ -110,7 +110,7 @@ describe("Feature: open a row", () => {
     describe("Scenario (sad path): pressing Enter on a link in a row", () => {
         it("raises nothing", async () => {
             const clicked: unknown[] = [];
-            const columns = [{ key: "name", label: "Name", elementName: UAX_TABLE_CELL.link, hrefKey: "url" }];
+            const columns = [{ key: "name", label: "Name", elementName: UAX_TABLE_CELL.link, meta: { hrefKey: "url" } }];
             const el = await renderElement(
                 html`<uax-data-table .columns=${columns} .rows=${[{ name: "Home", url: "#home" }]} clickable-rows @row-click=${(e: Event) => clicked.push(e)}></uax-data-table>`,
                 "uax-data-table",

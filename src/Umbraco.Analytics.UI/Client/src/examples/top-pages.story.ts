@@ -17,7 +17,7 @@ const host = "https://www.example.com";
 // The first column is a link. The other two are share columns: the value, its percent of the
 // column total and a bar. A product gives each share column its width.
 const columns: UaxTableColumn[] = [
-    { key: "url", label: "Page URL", elementName: UAX_TABLE_CELL.link, hrefKey: "url", searchable: true },
+    { key: "url", label: "Page URL", elementName: UAX_TABLE_CELL.link, meta: { hrefKey: "url" }, searchable: true },
     { key: "pageviews", label: "Pageviews", elementName: UAX_TABLE_CELL.share, width: "27%" },
     { key: "sessions", label: "Page sessions", elementName: UAX_TABLE_CELL.share, width: "27%" },
 ];

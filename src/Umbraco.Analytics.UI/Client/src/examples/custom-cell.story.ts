@@ -4,6 +4,7 @@ import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { regionSource, sourceDocs } from "../internal/story/source.js";
 import raw from "./custom-cell.story.ts?raw";
 import "../table/data-table.element.js";
+import "../table/table-compare-badge.element.js";
 import { UAX_TABLE_CELL } from "../table/cells/cell-names.js";
 import { UAX_TABLE_CONTEXT } from "../table/table-context.js";
 import { UaxPaletteStyles } from "../theme/index.js";
@@ -18,6 +19,7 @@ import {
     type UaxTableCellElement,
     type UaxTableColumn,
     type UaxTableStats,
+    // Importing the package also registers <uax-table-compare-badge>.
 } from "@umbraco-analytics/ui";`;
 
 // #region cell
@@ -25,7 +27,9 @@ import {
  * A cell that needs a number it can't work out from its own row: the column's largest value. It reads that from
  * the table's context, `UAX_TABLE_CONTEXT`, which the table provides to every cell inside it. The bar takes its colour
  * from the package's palette (`UaxPaletteStyles`), so it matches the share bars in every theme and follows a product's
- * `--uax-series-1`.
+ * `--uax-series-1`. The change against the compare period is the package's `uax-table-compare-badge`: the cell passes it the
+ * three properties it was given, and the badge finds the compare row in the table's context and reads the column's
+ * `meta.lowerIsBetter`. It shows nothing when the row has no compare row.
  */
 @customElement("example-orders-bar-cell")
 class ExampleOrdersBarCellElement extends UmbLitElement implements UaxTableCellElement {
@@ -50,6 +54,7 @@ class ExampleOrdersBarCellElement extends UmbLitElement implements UaxTableCellE
         const width = max > 0 ? Math.round((orders / max) * 100) : 0;
         return html`<div class="bar-cell">
             <span class="orders">${orders.toLocaleString(this.localize.lang())}</span>
+            <uax-table-compare-badge .column=${this.column} .item=${this.item} .value=${this.value}></uax-table-compare-badge>
             <div class="bar"><div class="fill" style="width: ${width}%"></div></div>
         </div>`;
     }
@@ -59,7 +64,7 @@ class ExampleOrdersBarCellElement extends UmbLitElement implements UaxTableCellE
         css`
             .bar-cell {
                 display: grid;
-                grid-template-columns: 4em 1fr;
+                grid-template-columns: 4em 5.5em 1fr; /* a fixed slot for the badge keeps the bars aligned */
                 align-items: center;
                 gap: 8px;
             }
@@ -96,9 +101,16 @@ const rows = [
     { name: "Tote bag", orders: 410, revenue: 5330 },
 ];
 
+// Last period's rows, matched to `rows` by `row-key`.
+const compareRows = [
+    { name: "Umbraco hoodie", orders: 1100 },
+    { name: "Dev mug", orders: 920 },
+    { name: "Sticker pack", orders: 2310 },
+];
+
 const renderProducts = () => html`
     <uui-box headline="Products" style="--uui-box-default-padding: 0">
-        <uax-data-table .columns=${columns} .rows=${rows}></uax-data-table>
+        <uax-data-table .columns=${columns} .rows=${rows} .compareRows=${compareRows} row-key="name"></uax-data-table>
     </uui-box>
 `;
 // #endregion
@@ -118,7 +130,7 @@ export default meta;
 
 /**
  * A product's own bar cell. The table's context gives a cell what it can't know from its own row: every column's
- * total and largest value (`stats`), the columns, and a lookup for the compare-period row. Sort the Orders column:
+ * total and largest value (`stats`), the columns, and a lookup for the compare-period row, which `uax-table-compare-badge` uses. Sort the Orders column:
  * the bars keep one scale. All data is made up.
  */
 export const CustomCellWithTableContext: StoryObj = {

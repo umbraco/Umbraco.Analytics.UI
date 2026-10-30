@@ -64,10 +64,10 @@ const dayValue = (day: Day, id: MetricId): number => {
 };
 
 const productColumns: UaxTableColumn[] = [
-    { key: "name", label: "Product", elementName: UAX_TABLE_CELL.link, hrefKey: "url", searchable: true, sortable: true, sortAs: "text" },
+    { key: "name", label: "Product", elementName: UAX_TABLE_CELL.link, meta: { hrefKey: "url" }, searchable: true, sortable: true, sortAs: "text" },
     { key: "sku", label: "SKU", searchable: true },
     { key: "units", label: "Units sold", elementName: UAX_TABLE_CELL.share, width: "28%", valueFormat: COUNT, sortable: true, sortAs: "number" },
-    { key: "revenue", label: "Revenue", elementName: UAX_TABLE_CELL.share, width: "32%", valueFormat: EUR_WHOLE, color: 2, sortable: true, sortAs: "number" },
+    { key: "revenue", label: "Revenue", elementName: UAX_TABLE_CELL.share, width: "32%", valueFormat: EUR_WHOLE, meta: { color: 2 }, sortable: true, sortAs: "number" },
 ];
 
 // The buyers table is `server` mode: the product sorts, pages and searches, so no `sortAs` here.

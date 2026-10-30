@@ -1,7 +1,7 @@
 // Shared rows and columns for the uax-data-table specs.
 import { UAX_TABLE_CELL } from "./cells/cell-names.js";
 export const pageColumns = [
-    { key: "url", label: "Page URL", elementName: UAX_TABLE_CELL.link, hrefKey: "url" },
+    { key: "url", label: "Page URL", elementName: UAX_TABLE_CELL.link, meta: { hrefKey: "url" } },
     { key: "pageviews", label: "Pageviews", elementName: UAX_TABLE_CELL.share, sortable: true, sortAs: "number" },
     { key: "sessions", label: "Page sessions", elementName: UAX_TABLE_CELL.share, sortable: true, sortAs: "number" },
 ];

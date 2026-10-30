@@ -271,10 +271,9 @@ export type UaxTableColumn = {
     key: string;
     label: string;
     elementName?: string;
-    hrefKey?: string;
+    meta?: UaxTableColumnMeta;
     valueFormat?: Intl.NumberFormatOptions;
     align?: "start" | "end";
-    color?: UaxColorSlot;
     width?: string;
     searchable?: boolean;
     sortable?: boolean;
@@ -282,10 +281,29 @@ export type UaxTableColumn = {
 };
 
 // @public
+export interface UaxTableColumnMeta {
+    color?: UaxColorSlot;
+    hrefKey?: string;
+    lowerIsBetter?: boolean;
+}
+
+// @public
 export type UaxTableColumnStats = {
     total: number;
     max: number;
 };
+
+// @public
+export class UaxTableCompareBadgeElement extends UmbLitElement {
+    constructor();
+    column: UaxTableColumn;
+    compareValue?: number;
+    item: Record<string, unknown>;
+    // (undocumented)
+    render(): TemplateResult | typeof nothing;
+    size: UaxDeltaBadgeSize;
+    value: unknown;
+}
 
 // @public
 export type UaxTableCompareLookup = (item: Record<string, unknown>) => Record<string, unknown> | undefined;

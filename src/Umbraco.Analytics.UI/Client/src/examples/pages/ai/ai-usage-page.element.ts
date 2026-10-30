@@ -75,6 +75,7 @@ const tableColumns = (by: BreakdownBy): UaxTableColumn[] => [
         sortable: true,
         sortAs: "number",
         valueFormat: { style: "unit", unit: "millisecond", maximumFractionDigits: 0 },
+        meta: { lowerIsBetter: true }, // a faster average is the improvement, so the compare badge shows a fall as green
     },
 ];
 

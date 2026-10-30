@@ -6,7 +6,7 @@ import "../internal/table-skeleton-cell.element.js";
 import type { UaxTableCellElement, UaxTableColumn } from "../types.js";
 
 /**
- * A table cell that shows its value as a link. The `href` is the item's `column.hrefKey` value. A missing or unsafe
+ * A table cell that shows its value as a link. The `href` is the item's `column.meta.hrefKey` value. A missing or unsafe
  * URL (anything but `http:`, `https:`, `mailto:`, `tel:` or relative) shows the text without a link.
  * Its name is `UAX_TABLE_CELL.link`, and it is usable on its own.
  *
@@ -14,7 +14,7 @@ import type { UaxTableCellElement, UaxTableColumn } from "../types.js";
  */
 @customElement("uax-link-cell")
 export class UaxLinkCellElement extends UmbLitElement implements UaxTableCellElement {
-    /** The column the cell is in. Its `hrefKey` names the key in `item` that holds the URL. */
+    /** The column the cell is in. Its `meta.hrefKey` names the key in `item` that holds the URL. */
     @property({ attribute: false })
     column: UaxTableColumn = { key: "value", label: "" };
 
@@ -33,7 +33,8 @@ export class UaxLinkCellElement extends UmbLitElement implements UaxTableCellEle
     override render(): TemplateResult {
         if (this.loading) return html`<uax-table-skeleton-cell .align=${this.column.align ?? "start"}></uax-table-skeleton-cell>`;
         const text = asText(this.value);
-        const href = this.column.hrefKey ? safeHref(this.item[this.column.hrefKey]) : undefined;
+        const hrefKey = this.column.meta?.hrefKey;
+        const href = hrefKey ? safeHref(this.item[hrefKey]) : undefined;
         return href ? html`<a href=${href}>${text}</a>` : html`${text}`;
     }
 

@@ -165,7 +165,7 @@ describe("Feature: table cell details", () => {
         it("draws the bar in that slot's colour", async () => {
             const el = await renderElement(
                 html`<div style="--uax-series-3: rgb(1, 2, 3)">
-                    <uax-data-table .columns=${[{ key: "n", label: "N", elementName: UAX_TABLE_CELL.share, color: 3 }]} .rows=${[{ n: 5 }]}></uax-data-table>
+                    <uax-data-table .columns=${[{ key: "n", label: "N", elementName: UAX_TABLE_CELL.share, meta: { color: 3 } }]} .rows=${[{ n: 5 }]}></uax-data-table>
                 </div>`,
                 "uax-data-table",
             );
@@ -200,7 +200,7 @@ describe("Feature: table cell details", () => {
     describe("Scenario: a long URL in a link column", () => {
         it("wraps instead of overflowing the cell", async () => {
             const url = "https://example.com/" + "a-very-long-page-name/".repeat(8);
-            const el = await render1([{ key: "url", label: "URL", elementName: UAX_TABLE_CELL.link, hrefKey: "url" }], [{ url }], "300px");
+            const el = await render1([{ key: "url", label: "URL", elementName: UAX_TABLE_CELL.link, meta: { hrefKey: "url" } }], [{ url }], "300px");
             expect(cell(el).scrollWidth).toBeLessThanOrEqual(cell(el).clientWidth);
         });
     });
@@ -208,7 +208,7 @@ describe("Feature: table cell details", () => {
     describe("Scenario (sad path): a link with an unsafe URL", () => {
         it("shows the text without a link", async () => {
             const el = await render1(
-                [{ key: "url", label: "URL", elementName: UAX_TABLE_CELL.link, hrefKey: "url" }],
+                [{ key: "url", label: "URL", elementName: UAX_TABLE_CELL.link, meta: { hrefKey: "url" } }],
                 [{ url: "javascript:alert(1)" }],
             );
             expect(deepQuery(cell(el), "a")).toBe(null);
@@ -217,7 +217,7 @@ describe("Feature: table cell details", () => {
 
     describe("Scenario (sad path): a link row without a URL", () => {
         it("still shows the text", async () => {
-            const el = await render1([{ key: "name", label: "Name", elementName: UAX_TABLE_CELL.link, hrefKey: "url" }], [{ name: "Home" }]);
+            const el = await render1([{ key: "name", label: "Name", elementName: UAX_TABLE_CELL.link, meta: { hrefKey: "url" } }], [{ name: "Home" }]);
             expect(deepText(cell(el)).trim()).toBe("Home");
         });
     });

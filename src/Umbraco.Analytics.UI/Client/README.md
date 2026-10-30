@@ -117,7 +117,7 @@ Rows and columns. Each column names the cell that shows it. [Storybook](https://
 import { UAX_TABLE_CELL, type UaxTableColumn } from "@umbraco-analytics/ui";
 
 const columns: UaxTableColumn[] = [
-  { key: "title", label: "Page", elementName: UAX_TABLE_CELL.link, hrefKey: "url", searchable: true },
+  { key: "title", label: "Page", elementName: UAX_TABLE_CELL.link, meta: { hrefKey: "url" }, searchable: true },
   { key: "views", label: "Views", elementName: UAX_TABLE_CELL.share, align: "end", sortable: true, sortAs: "number" },
 ];
 const rows = [{ title: "Home", url: "https://example.com/", views: 1240 }];
@@ -133,7 +133,7 @@ html`<uax-data-table
 
 - **Client mode** (default): the table sorts, searches and pages the rows you give it.
 - **Server mode**: set `mode="server"` and `total-rows` (the row count across every page). The table never reorders or filters. Load new rows on `sort-change`, `page-change` and `search`. Pass `.stats` (`{ [columnKey]: { total, max } }` across every page) so shares and bars stay right across pages.
-- **Compare**: pass `.compareRows` and `row-key` to show a change badge on share cells.
+- **Compare**: pass `.compareRows` and `row-key` to show a change badge on number, percent and share cells. Set `meta: { lowerIsBetter: true }` on a column where a fall is good.
 - **Slots**: `toolbar` (above the header) and `footer` (left of the pager).
 - **Rows**: `clickable-rows` makes rows keyboard-reachable and raises `row-click`.
 
@@ -158,7 +158,7 @@ The built-in cells are named in `UAX_TABLE_CELL` and also work on their own. The
 ```ts
 const columns: UaxTableColumn[] = [
   { key: "name", label: "Name" }, // uax-text-cell, the default
-  { key: "page", label: "Page", elementName: UAX_TABLE_CELL.link, hrefKey: "url" }, // uax-link-cell, row: { page: "Home", url: "https://example.com/" }
+  { key: "page", label: "Page", elementName: UAX_TABLE_CELL.link, meta: { hrefKey: "url" } }, // uax-link-cell, row: { page: "Home", url: "https://example.com/" }
   { key: "orders", label: "Orders", elementName: UAX_TABLE_CELL.number, valueFormat: { maximumFractionDigits: 0 } }, // uax-number-cell
   { key: "rate", label: "Rate", elementName: UAX_TABLE_CELL.percent }, // uax-percent-cell, 0.25 is "25%"
   { key: "views", label: "Views", elementName: UAX_TABLE_CELL.share }, // uax-share-cell
@@ -166,12 +166,20 @@ const columns: UaxTableColumn[] = [
 ```
 
 - **`uax-text-cell`**: plain text.
-- **`uax-link-cell`**: a link. The URL is the item's `hrefKey` value. Unsafe URLs show plain text.
-- **`uax-number-cell`**: a number in the editor's culture, formatted with `valueFormat`.
-- **`uax-percent-cell`**: a fraction as a percentage.
-- **`uax-share-cell`**: the value, its percent of the column total and a bar. Reads the column's `total` and `max` from the table's `stats`.
+- **`uax-link-cell`**: a link. The URL is the item's `meta.hrefKey` value. Unsafe URLs show plain text.
+- **`uax-number-cell`**: a number in the editor's culture, formatted with `valueFormat`. Shows a change badge when the table has a compare row.
+- **`uax-percent-cell`**: a fraction as a percentage. Shows a change badge when the table has a compare row.
+- **`uax-share-cell`**: the value, its percent of the column total and a bar. Reads the column's `total` and `max` from the table's `stats`, and shows a change badge when the table has a compare row.
+
+Settings a cell reads live in the column's `meta`: `hrefKey` (link), `color` (share bar) and `lowerIsBetter` (what a good change is, for the badge).
 
 To write your own cell, implement `UaxTableCellElement` and read the table's stats and compare rows from `UAX_TABLE_CONTEXT`. See the [custom cell example](https://umbraco.github.io/Umbraco.Analytics.UI/?path=/docs/examples-custom-cell-with-table-context--docs).
+
+For the change badge, drop `uax-table-compare-badge` into your cell with the three properties the table gave it. It finds the compare row itself and reads `meta.lowerIsBetter`:
+
+```ts
+html`${value}<uax-table-compare-badge .column=${this.column} .item=${this.item} .value=${this.value}></uax-table-compare-badge>`;
+```
 
 ```ts
 import { UAX_TABLE_CONTEXT } from "@umbraco-analytics/ui";

@@ -134,7 +134,7 @@ Storybook gets a "Pane" story showing this recipe, a chart and a table in one `u
 ![Table with share columns](../../design/phase-1/screenshots/an-table.png)
 
 - Properties:
-  - `columns`: `{ key, label, elementName?, hrefKey?, valueFormat?, align?, width?, color?, sortable?, sortAs?, searchable? }[]`. `elementName` picks the cell (default the text cell; constants in `UAX_TABLE_CELL`). `valueFormat` is per column (`Intl.NumberFormatOptions`). `width` is a CSS width, as in the CMS `umb-table`. `color` (1 to 4) picks a share bar's palette slot.
+  - `columns`: `{ key, label, elementName?, meta?, valueFormat?, align?, width?, sortable?, sortAs?, searchable? }[]`. `elementName` picks the cell (default the text cell; constants in `UAX_TABLE_CELL`). `valueFormat` is per column (`Intl.NumberFormatOptions`). `width` is a CSS width, as in the CMS `umb-table`. `meta` holds what cells read: `hrefKey`, `color` (1 to 4, a share bar's palette slot) and `lowerIsBetter` (for compare badges).
   - `rows`: `Record<string, unknown>[]`
   - `compare-rows`, matched to `rows` by the `row-key` property (the key in each row that identifies it). When several compare rows share a key, the last wins
   - `stats`: `{ [columnKey]: { total, max } }` (`UaxTableStats`) across every page, for share percents and bar scales in `server` mode. A column without an entry uses the rows the table holds
@@ -151,8 +151,9 @@ Storybook gets a "Pane" story showing this recipe, a chart and a table in one `u
 - **Padding:** the cells pad themselves. The `toolbar` slot pads itself with the public CSS property `--uax-table-padding` (default `12px 24px`), only when something is slotted. The reload loading bar sits outside it at the element's top edge, full width, so put the table in a `uui-box` with `--uui-box-default-padding: 0`.
 - **Share cells (`UAX_TABLE_CELL.share`):** show the value, its percent of the column total, and a thin bar scaled to the column's largest value.
   - The first share column uses `--uax-series-1`, the second `--uax-series-2`.
-  - When comparing, a small delta badge sits after the value.
-- **Link cells (`UAX_TABLE_CELL.link`):** render an anchor. The row's `href` comes from the column's `hrefKey`.
+  - When comparing, a compare badge sits after the value.
+- **Compare badges:** number, percent and share cells show a change badge when the table has a compare row for the row. `uax-table-compare-badge` is the public piece behind them, and a product's own cell uses it with `column`, `item` and `value`. A column's `meta.lowerIsBetter` makes a fall positive.
+- **Link cells (`UAX_TABLE_CELL.link`):** render an anchor. The row's `href` comes from the column's `meta.hrefKey`.
 - **Sorting:** clicking a sortable header toggles the direction and raises `sort-change`. In `client` mode the table also sorts itself.
 - **Paging:** the footer has "Show rows" (10, 25, 50, 100) and "1–10 of 272". It raises `page-change` with `{ page, pageSize }`, and in `client` mode it also pages itself. The footer is hidden when the rows fit on one page at the smallest page size the editor could need (row count ≤ the smaller of the current page size and 10), so a table at 50 rows per page can still go back to 10.
 - **Search:** `uax-data-table` exports `uax-table-search` for the toolbar. It raises `search` with `{ query }`, 300ms after typing stops. In `client` mode the table filters rows on columns marked `searchable`; if none are marked, on every column's text.

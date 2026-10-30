@@ -1,5 +1,20 @@
 import type { UaxColorSlot } from "../theme/types.js";
 
+/**
+ * Per-column settings that the cells and `uax-table-compare-badge` read, so `UaxTableColumn` doesn't grow a field per cell.
+ * Add your own keys for a custom cell of your own by merging into this interface:
+ * `declare module "@umbraco-analytics/ui" { interface UaxTableColumnMeta { myKey?: string } }`. The block must sit in a file
+ * with a top-level `import` or `export`, or TypeScript treats it as a new module instead of merging.
+ */
+export interface UaxTableColumnMeta {
+    /** `uax-link-cell`: the key in each row that holds the URL. A missing or unsafe URL shows the text without a link. */
+    hrefKey?: string;
+    /** `uax-share-cell`: the palette slot of the bar (the same slots as `UaxSeries.color`). Defaults to the share column's position. */
+    color?: UaxColorSlot;
+    /** Whether a fall in this column is good, e.g. refund rate or duration. A compare badge then shows a fall as an improvement. */
+    lowerIsBetter?: boolean;
+}
+
 /** One column of a `uax-data-table`. */
 export type UaxTableColumn = {
     /** The key in each row that holds this column's value. */
@@ -13,14 +28,12 @@ export type UaxTableColumn = {
      * See `UaxTableCellElement`. Cells that need more than that read the table's `UAX_TABLE_CONTEXT`.
      */
     elementName?: string;
-    /** `uax-link-cell`: the key in each row that holds the URL. A missing or unsafe URL shows the text without a link. */
-    hrefKey?: string;
+    /** Settings the cells read: `hrefKey`, `color`, `lowerIsBetter`. See `UaxTableColumnMeta`. */
+    meta?: UaxTableColumnMeta;
     /** Formats the numbers of the number, percent and share cells, e.g. `{ style: "currency", currency: "EUR" }`. */
     valueFormat?: Intl.NumberFormatOptions;
     /** Text alignment of the header and cells. Defaults to `"start"`: numeric columns usually want `"end"`. */
     align?: "start" | "end";
-    /** `uax-share-cell`: the palette slot of the bar (the same slots as `UaxSeries.color`). Defaults to the share column's position. */
-    color?: UaxColorSlot;
     /** The column's width as a CSS length, e.g. `"27%"` or `"120px"`, as `uui-table-column` takes it. Without it the browser sizes the column. */
     width?: string;
     /** Whether the table's search looks in this column's values. Only text values are searched. */

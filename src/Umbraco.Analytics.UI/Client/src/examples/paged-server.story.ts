@@ -24,7 +24,7 @@ const sumOf = (key: SortKey) => everyPage.reduce((sum, row) => sum + row[key], 0
 const largestOf = (key: SortKey) => Math.max(...everyPage.map((row) => row[key]));
 
 const columns: UaxTableColumn[] = [
-    { key: "url", label: "Page URL", elementName: UAX_TABLE_CELL.link, hrefKey: "url" },
+    { key: "url", label: "Page URL", elementName: UAX_TABLE_CELL.link, meta: { hrefKey: "url" } },
     { key: "pageviews", label: "Pageviews", elementName: UAX_TABLE_CELL.share, width: "27%", sortable: true, sortAs: "number" },
     { key: "sessions", label: "Page sessions", elementName: UAX_TABLE_CELL.share, width: "27%", sortable: true, sortAs: "number" },
 ];

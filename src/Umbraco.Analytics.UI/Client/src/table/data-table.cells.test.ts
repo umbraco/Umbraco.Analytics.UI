@@ -138,7 +138,7 @@ describe("Feature: table cells are elements", () => {
         it("links to the item's hrefKey value", async () => {
             const host = render(
                 html`<uax-link-cell
-                    .column=${{ key: "url", label: "", elementName: UAX_TABLE_CELL.link, hrefKey: "href" }}
+                    .column=${{ key: "url", label: "", elementName: UAX_TABLE_CELL.link, meta: { hrefKey: "href" } }}
                     .item=${{ href: "https://example.com/" }}
                     .value=${"Home"}></uax-link-cell>`,
             ).container;

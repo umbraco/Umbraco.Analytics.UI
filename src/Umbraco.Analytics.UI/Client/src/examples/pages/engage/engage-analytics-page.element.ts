@@ -34,7 +34,7 @@ import { wait } from "../fake-latency.js";
 // #region page
 // A product localizes labels, headlines and column names with this.localize.term(...). The examples keep English for readability.
 const pageColumns: UaxTableColumn[] = [
-    { key: "url", label: "Page URL", elementName: UAX_TABLE_CELL.link, hrefKey: "url", sortable: true },
+    { key: "url", label: "Page URL", elementName: UAX_TABLE_CELL.link, meta: { hrefKey: "url" }, sortable: true },
     { key: "pageviews", label: "Pageviews", elementName: UAX_TABLE_CELL.share, width: "27%", sortable: true, sortAs: "number" },
     { key: "sessions", label: "Page sessions", elementName: UAX_TABLE_CELL.share, width: "27%", sortable: true, sortAs: "number" },
 ];
