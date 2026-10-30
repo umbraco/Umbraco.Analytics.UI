@@ -11,6 +11,24 @@ Shared backoffice charts, tables, KPI tiles and filters for the analytics sectio
 - Components only draw. Products fetch their own data and pass it in.
 - Chart.js is bundled inside and is not part of the public API.
 
+## Elements
+
+Live previews of every element, all states, and full example pages (Commerce, Engage, Umbraco AI) are in [Storybook](https://umbraco.github.io/Umbraco.Analytics.UI/). Usage and API are in the [package README](src/Umbraco.Analytics.UI/Client/README.md).
+
+| Element | What it does |
+|---|---|
+| `uax-kpi-tile` | A headline number as a card, with an icon and a change badge. Can be selectable. |
+| `uax-delta-badge` | The change against a comparison period, e.g. "▲ 12.4%". |
+| `uax-time-series-chart` | Lines, areas, bars or stacked bars over time, with compare, markers and a legend. |
+| `uax-group-by` | Day, week or month switch for a chart. |
+| `uax-date-range` | Button and dialog to pick a date range and a comparison. |
+| `uax-data-table` | Sortable, searchable, pageable table. Client or server mode. |
+| `uax-table-search` | Search box for the table's `toolbar` slot. |
+| `uax-text-cell`, `uax-link-cell`, `uax-number-cell`, `uax-percent-cell`, `uax-share-cell` | Table cells. Name one in a column's `elementName`, or write your own. |
+| `uax-empty-state` | "Nothing to show" message. The chart and table use it too. |
+
+Also public: `UAX_TABLE_CELL` (the cell element names), `UAX_TABLE_CONTEXT` (what a custom cell reads from its table) and `UaxPaletteStyles` (the colour palette for your own elements).
+
 ## Packages
 
 | Package | Feed | Purpose |
@@ -27,6 +45,7 @@ src/Umbraco.Analytics.UI/
   Umbraco.Analytics.UI.csproj   RCL, no C# code
   Client/
     src/<component>/            one folder per component
+    src/examples/               Storybook examples, incl. full pages
     src/index.ts                public API
     public/umbraco-package.json import map registration
     api/                        API Extractor report (committed)
@@ -47,6 +66,8 @@ npm run lint
 ```
 
 Tooling matches Umbraco UI (UUI): Storybook 10 with the light, dark and high-contrast backoffice themes, and Vitest browser mode with Playwright, `vitest-browser-lit` and an axe-core accessibility matcher.
+
+The README test (`src/internal/readme/readme.test.ts`) fails when a public element is missing from either README. Add new elements to both.
 
 Each component lives in its own folder:
 
@@ -72,5 +93,5 @@ The template runs the root `package.json` `ci:*` scripts to install, build and p
 
 | Where | When | What |
 |---|---|---|
-| GitHub Actions (`.github/workflows/storybook.yml`) | Pull requests and pushes to `main` | Lint, build, API check, browser tests. On `main`, also publishes Storybook to GitHub Pages. |
+| GitHub Actions (`.github/workflows/storybook.yml`) | Pull requests into `v19/dev`, `v19/main`, `release/*`, `hotfix/*`, and pushes to `v19/main` | Lint, build, API check, browser tests. On `v19/main`, also publishes Storybook to GitHub Pages at https://umbraco.github.io/Umbraco.Analytics.UI/. |
 | Azure DevOps (`azure-pipelines.yml`) | `release/*`, `hotfix/*`, `release-*` tags | Build, pack, SBOM, client tests, then MyGet / NuGet.org / npm. Storybook is attached to the run as an artifact. |
