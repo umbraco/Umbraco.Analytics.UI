@@ -166,7 +166,7 @@ Run after whole-feature review round B. Each gets a builder, a review and its ow
 - [x] **T29** - Public date helpers: previous period, previous year, range to day/week/month buckets (follow-up 6); page examples drop their own.
 - [x] **T30** - A fixed "today" for the date range (follow-up 7). Presets are already configurable (a product passes its own list, each with an optional `range(today)`), but "today" always comes from the clock.
 - [x] **T31** - Server-mode table helper (follow-up 8): sort, page, page size and query state plus a stale-response guard, so products don't rewrite it.
-- [ ] **T32** - Compare series aligned by date, not position, for week and month buckets (follow-up 9).
+- [x] **T32** - Compare series aligned by date, not position, for week and month buckets (follow-up 9).
 - [x] **T33** - Generic segmented control (follow-up 10); check UUI first; `uax-group-by` built on it.
 - [x] **T34** - Total aligned to its column (follow-up 11).
 - [x] **T35** - Pressing a selected, non-deselectable KPI tile raises nothing (follow-up 12).
