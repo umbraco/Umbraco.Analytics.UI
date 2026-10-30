@@ -80,7 +80,7 @@
   Acceptance: TBL-1 AC1–AC4, AC6 and AC7 specs green. "Share columns" story matches `an-table.png`.
   depends-on: T1, T2, T4, T5. parallel-group: D
 
-- [ ] **T16** - story: TBL-1 (AC5). Add `compare-rows` matched by `row-key`, with a `size="sm"` `uax-delta-badge` after each share value.
+- [x] **T16** - story: TBL-1 (AC5). Add `compare-rows` matched by `row-key`, with a `size="sm"` `uax-delta-badge` after each share value.
   Acceptance: TBL-1 AC5 spec green.
   depends-on: T3, T15
 
