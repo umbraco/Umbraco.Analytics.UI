@@ -1,0 +1,91 @@
+// DR-2 — Pick a comparison range
+import { beforeEach, describe, expect, it } from "vitest";
+import { html } from "@umbraco-cms/backoffice/external/lit";
+import { renderElement, shadow, type UanTestElement } from "../internal/test/pending.js";
+
+const value = { from: "2026-05-25", to: "2026-06-23" };
+
+const openModal = async (el: UanTestElement) => {
+    (shadow(el).querySelector("uui-button, button") as HTMLElement).click();
+    await el.updateComplete;
+    return document.querySelector("uan-date-range-modal") as UanTestElement;
+};
+const field = (modal: Element, name: string) => shadow(modal).querySelector(`[name='${name}']`) as HTMLInputElement | null;
+const setField = async (modal: UanTestElement, name: string, v: string | boolean) => {
+    const input = field(modal, name)!;
+    if (typeof v === "boolean") input.checked = v;
+    else input.value = v;
+    input.dispatchEvent(new Event("change", { bubbles: true, composed: true }));
+    await modal.updateComplete;
+};
+
+describe("Feature: pick a comparison range", () => {
+    describe("Scenario: no comparison yet", () => {
+        let modal: UanTestElement;
+        beforeEach(async () => {
+            const el = await renderElement(html`<uan-date-range .value=${value}></uan-date-range>`, "uan-date-range");
+            modal = await openModal(el);
+        });
+
+        it.skip("has Compare switched off", () => {
+            expect(field(modal, "compare")!.checked).toBe(false);
+        });
+    });
+
+    describe("Scenario: comparing with the previous period", () => {
+        let modal: UanTestElement;
+        beforeEach(async () => {
+            const el = await renderElement(html`<uan-date-range .value=${value}></uan-date-range>`, "uan-date-range");
+            modal = await openModal(el);
+            await setField(modal, "compare", true);
+            await setField(modal, "compare-mode", "previous-period");
+        });
+
+        it.skip("fills the comparison dates with 25 Apr–24 May 2026", () => {
+            expect([field(modal, "compare-from")!.value, field(modal, "compare-to")!.value]).toEqual(["2026-04-25", "2026-05-24"]);
+        });
+    });
+
+    describe("Scenario: a saved comparison", () => {
+        let el: UanTestElement;
+        beforeEach(async () => {
+            el = await renderElement(
+                html`<uan-date-range .value=${value} .compare=${{ mode: "previous-period", from: "2026-04-25", to: "2026-05-24" }}></uan-date-range>`,
+                "uan-date-range",
+            );
+        });
+
+        it.skip("shows a Compare to line on the button", () => {
+            expect(shadow(el).textContent).toContain("Compare to: Apr 25, 2026 to May 24, 2026");
+        });
+    });
+
+    describe("Scenario: comparing isn't allowed", () => {
+        let modal: UanTestElement;
+        beforeEach(async () => {
+            const el = await renderElement(html`<uan-date-range .value=${value} .allowCompare=${false}></uan-date-range>`, "uan-date-range");
+            modal = await openModal(el);
+        });
+
+        it.skip("has no Compare switch", () => {
+            expect(field(modal, "compare")).toBe(null);
+        });
+    });
+
+    describe("Scenario (sad path): custom comparison ending before it starts", () => {
+        let modal: UanTestElement;
+        beforeEach(async () => {
+            const el = await renderElement(html`<uan-date-range .value=${value}></uan-date-range>`, "uan-date-range");
+            modal = await openModal(el);
+            await setField(modal, "compare", true);
+            await setField(modal, "compare-mode", "custom");
+            await setField(modal, "compare-from", "2026-04-20");
+            await setField(modal, "compare-to", "2026-04-01");
+        });
+
+        it.skip("disables Save", () => {
+            const save = [...shadow(modal).querySelectorAll("uui-button")].find((b) => b.getAttribute("label") === "Save") as HTMLElement & { disabled: boolean };
+            expect(save.disabled).toBe(true);
+        });
+    });
+});
