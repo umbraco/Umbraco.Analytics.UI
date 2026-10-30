@@ -133,7 +133,7 @@
 
 ## Docs and checks
 
-- [ ] **T22** - story: none (SPEC.md §1 pane recipe, plus page examples). Full page examples under "Examples › Pages" in Storybook, each rebuilding a product's current analytics screen from this package, with realistic fake data (`example.com`, invented products):
+- [x] **T22** - story: none (SPEC.md §1 pane recipe, plus page examples). Full page examples under "Examples › Pages" in Storybook, each rebuilding a product's current analytics screen from this package, with realistic fake data (`example.com`, invented products):
   - **Engage › Analytics › Pageviews and Visitors**: page header with group-by and date range (with compare), a chart pane (area with compare and markers; stacked bars for visitors) flowing into an edge-to-edge table pane (share columns, compare badges, search and totals, paging), matching the Phase 1 design.
   - **Commerce › Analytics**: a row of KPI tiles (revenue, orders, average order value, carts, conversion), a revenue line chart with compare, top products / top buyers / popular discounts tables, matching today's Commerce widgets in the new look.
   - **Umbraco AI › Usage**: summary KPI tiles (requests, input/output/total tokens, success rate, average duration), a stacked usage chart with series tabs replaced by selectable KPI tiles, and a breakdown table by model or profile.
@@ -153,3 +153,22 @@
 - [ ] **T24** - story: none (docs). Update the repo `README.md` and `Client/README.md` with the element list and a short usage example per element, linking to Storybook.
   Acceptance: every exported element appears in both READMEs.
   depends-on: T21, T22
+
+## Follow-ups from T22 (not scheduled)
+
+Gaps the page examples found. Not part of this plan until the user picks them; each needs a task before it is built.
+
+1. Compare badges on number and percent cells (Commerce top buyers, AI success rate). Today only `uax-share-cell` shows one.
+2. Lower-is-better for table compare badges (AI average duration). The KPI tile has it; cells don't.
+3. KPI tile "no data" state (Commerce, AI). A range with no data shows "0".
+4. Error state element (all three). A failed load has nothing to show for tiles, chart or table.
+5. Compare-label formatter for a `UaxCompare` (all three wrote `formatRange`).
+6. Date helpers: previous period and range-to-buckets (all three wrote their own).
+7. Date range presets with a fixed "today" (demos and tests).
+8. Server-mode wiring helper (all three keep sort, page, pageSize and query state plus a stale-response guard).
+9. Compare series aligned by date, not position, for week and month buckets (Engage, AI).
+10. Generic segmented control; `uax-group-by` is typed to day/week/month (AI breakdown uses a `uui-select`).
+11. Total aligned to a column instead of free layout in the toolbar (Engage).
+12. A non-deselectable tile re-raises `selected` when pressed again (Commerce, AI).
+13. KPI delta for "no change" vs "unknown" on absolute (points) changes (AI success rate).
+14. Shared page header (title plus date range and group-by actions), repeated by all three pages.
