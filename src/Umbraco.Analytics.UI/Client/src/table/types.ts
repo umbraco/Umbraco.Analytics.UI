@@ -23,4 +23,22 @@ export type UaxTableColumn = {
     align?: "start" | "end";
     /** `share` columns: the palette slot of the bar (the same slots as `UaxSeries.color`). Defaults to the share column's position. */
     color?: 1 | 2 | 3 | 4;
+    /** Makes the header a button that sorts by this column. Clicking raises `sort-change`. */
+    sortable?: boolean;
 };
+
+/** The direction of a sort. */
+export type UaxTableSortDirection = "asc" | "desc";
+
+/** The column a table is sorted by, and which way. */
+export type UaxTableSort = {
+    /** The `key` of a column. */
+    key: string;
+    direction: UaxTableSortDirection;
+};
+
+/** How a table handles sorting: `client` sorts the rows it's given, `server` leaves the order to the product. */
+export type UaxTableMode = "client" | "server";
+
+/** The detail of the `sort-change` event: the column the editor chose and the direction to sort it in. */
+export type UaxTableSortChangeDetail = UaxTableSort;

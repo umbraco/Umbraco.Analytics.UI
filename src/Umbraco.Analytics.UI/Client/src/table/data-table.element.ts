@@ -18,7 +18,7 @@ import "../internal/loading/skeleton.element.js";
 import { uaxThemeTokens } from "../internal/theme/tokens.css.js";
 import { asNumber, asText, getNumberFormat } from "./internal/number-format.js";
 import { safeHref } from "./internal/safe-href.js";
-import type { UaxTableColumn } from "./types.js";
+import type { UaxTableColumn, UaxTableMode, UaxTableSort } from "./types.js";
 
 type UaxTableRow = Record<string, unknown>;
 
@@ -45,9 +45,24 @@ interface DerivedFrom {
     lang: string;
 }
 
+function isNumeric(column: UaxTableColumn): boolean {
+    return column.type === "number" || column.type === "percent" || column.type === "share";
+}
+
 /** A row's identity for matching: strings and numbers only. Anything else never matches. */
 function rowIdentity(value: unknown): string | undefined {
     return typeof value === "string" || typeof value === "number" ? String(value) : undefined;
+}
+
+const collators = new Map<string, Intl.Collator>();
+/** A collator for the language, built once: `localeCompare` builds one per comparison, too slow for hundreds of rows. */
+function getCollator(lang: string): Intl.Collator {
+    let collator = collators.get(lang);
+    if (!collator) {
+        collator = new Intl.Collator(lang, { sensitivity: "base" });
+        collators.set(lang, collator);
+    }
+    return collator;
 }
 
 const SKELETON_ROWS = 5;
@@ -78,7 +93,14 @@ const percentFormatOptions: Intl.NumberFormatOptions = { style: "percent", maxim
  * bar when reloading. With no rows it shows `uax-empty-state` under the header. Replace `rows` and
  * `columns` (and `compare-rows`) with new arrays to update the table: changing one in place isn't noticed.
  *
+ * Give a column `sortable` to make its header a button. Clicking it sets `sort` and raises `sort-change`
+ * with `{ key, direction }`: the first click on a column sorts numbers descending and text ascending, and
+ * clicking the sorted column flips it. In `client` mode (the default) the table also sorts the rows it's
+ * given, keeping equal rows in their order and empty values last. In `server` mode it never reorders:
+ * the product sorts and passes new `rows`. Shares stay a share of the whole column either way.
+ *
  * @element uax-data-table
+ * @fires sort-change - A sortable header was clicked, by pointer or keyboard. Bubbles, not composed or cancelable, like `uax-group-by`. `detail` is `{ key, direction }`; the table has already set `sort` to it.
  * @slot toolbar - Content above the header row, such as a search box and totals. It pads itself with `--uax-table-padding`.
  * @cssprop --uax-table-padding - Padding around the `toolbar` slot, as a CSS `padding` value. Defaults to `12px 24px`. The loading bar ignores it and spans the full width at the top edge.
  * @cssprop --uax-series-1 - Bar colour of the first share column. Also `--uax-series-2` to `--uax-series-4` for the other slots.
@@ -114,7 +136,16 @@ export class UaxDataTableElement extends UmbLitElement {
     @property({ type: String, attribute: "empty-description" })
     emptyDescription?: string;
 
+    /** The column the rows are sorted by. Set by the product, and by the table itself when a header is clicked. */
+    @property({ attribute: false })
+    sort?: UaxTableSort;
+
+    /** `client` sorts the rows itself. `server` only raises `sort-change`, and the product passes the sorted rows. */
+    @property({ type: String })
+    mode: UaxTableMode = "client";
+
     #derived: DerivedColumn[] = [];
+    #sorted?: { rows: UaxTableRow[]; sort: UaxTableSort; column: UaxTableColumn; lang: string; sortedRows: UaxTableRow[] };
     #derivedFrom?: DerivedFrom;
     /** The compare rows by their `rowKey` value, rebuilt when `compareRows` or `rowKey` change. */
     #compareByKey = new Map<string, UaxTableRow>();
@@ -159,9 +190,39 @@ export class UaxDataTableElement extends UmbLitElement {
         return this.rows;
     }
 
-    /** The rows to draw. Sorting, searching and paging will narrow this. */
+    /** The rows to draw. Searching and paging will narrow this. */
     get #visibleRows(): UaxTableRow[] {
-        return this.rows;
+        return this.#sortedRows;
+    }
+
+    /** `rows` in the `sort` order in client mode, sorted once per change of rows, sort or language. Never reorders `rows` itself. */
+    get #sortedRows(): UaxTableRow[] {
+        const sort = this.mode === "client" ? this.sort : undefined;
+        const column = sort ? this.columns.find((c) => c.key === sort.key) : undefined;
+        if (!sort || !column) return this.rows;
+        const lang = this.localize.lang();
+        const cached = this.#sorted;
+        if (cached && cached.rows === this.rows && cached.sort === sort && cached.lang === lang && cached.column === column) return cached.sortedRows;
+        const numeric = isNumeric(column);
+        const collator = getCollator(lang);
+        const sign = sort.direction === "desc" ? -1 : 1;
+        const sortedRows = [...this.rows].sort((a, b) => {
+            const x = numeric ? asNumber(a[column.key]) : asText(a[column.key]) || undefined;
+            const y = numeric ? asNumber(b[column.key]) : asText(b[column.key]) || undefined;
+            // Empty values go last in both directions, so only real values flip with the sign.
+            if (x === undefined || y === undefined) return x === y ? 0 : x === undefined ? 1 : -1;
+            return sign * (typeof x === "number" && typeof y === "number" ? x - y : collator.compare(String(x), String(y)));
+        });
+        this.#sorted = { rows: this.rows, sort, lang, column, sortedRows };
+        return sortedRows;
+    }
+
+    /** The first click on a column sorts numbers biggest first and text A to Z. Later clicks flip the direction. */
+    #sortBy(column: UaxTableColumn) {
+        const current = this.sort;
+        const direction = current?.key === column.key ? (current.direction === "asc" ? "desc" : "asc") : isNumeric(column) ? "desc" : "asc";
+        this.sort = { key: column.key, direction };
+        this.dispatchEvent(new CustomEvent("sort-change", { bubbles: true, detail: { key: column.key, direction } }));
     }
 
     /** Whether anything is slotted into `toolbar`. `:host(:has())` can't tell, and a slot can't be styled by its content. */
@@ -244,7 +305,20 @@ export class UaxDataTableElement extends UmbLitElement {
     }
 
     #renderHeaderCell(derived: DerivedColumn): TemplateResult {
-        return html`<uui-table-head-cell class=${this.#cellClass(derived)}>${derived.column.label}</uui-table-head-cell>`;
+        const { column } = derived;
+        if (!column.sortable) return html`<uui-table-head-cell class=${this.#cellClass(derived)}>${column.label}</uui-table-head-cell>`;
+        const active = this.sort?.key === column.key;
+        const descending = this.sort?.direction === "desc";
+        // The click handler is on the cell, so the whole header sorts. The button is what a keyboard reaches.
+        return html`<uui-table-head-cell
+            class="${this.#cellClass(derived)} sortable"
+            aria-sort=${active ? (descending ? "descending" : "ascending") : "none"}
+            @click=${() => this.#sortBy(column)}>
+            <button type="button">
+                <span>${column.label}</span>
+                <uui-symbol-sort ?active=${active} ?descending=${active && descending}></uui-symbol-sort>
+            </button>
+        </uui-table-head-cell>`;
     }
 
     /**
@@ -258,7 +332,7 @@ export class UaxDataTableElement extends UmbLitElement {
     }
 
     #cellClass(derived: DerivedColumn): string {
-        const numeric = derived.column.type === "number" || derived.column.type === "percent" || derived.column.type === "share";
+        const numeric = isNumeric(derived.column);
         return `${derived.align === "end" ? "end" : "start"}${numeric ? " numeric" : ""}`;
     }
 
@@ -345,6 +419,44 @@ export class UaxDataTableElement extends UmbLitElement {
 
             uui-table-head {
                 background-color: var(--uui-color-surface-alt);
+            }
+
+            /* The padding moves into the button, so the whole header is its hit area. Mirrors umb-table's sortable header. */
+            uui-table-head-cell.sortable {
+                --uui-table-cell-padding: 0 var(--uui-size-5);
+                cursor: pointer;
+            }
+
+            uui-table-head-cell.sortable:hover,
+            uui-table-head-cell.sortable:focus-within {
+                --uui-symbol-sort-hover: 1;
+            }
+
+            uui-table-head-cell button {
+                display: inline-flex;
+                align-items: center;
+                justify-content: flex-start;
+                gap: var(--uui-size-1);
+                width: 100%;
+                padding: var(--uui-size-3) 0;
+                border: none;
+                border-radius: var(--uui-border-radius);
+                background: transparent;
+                color: inherit;
+                cursor: pointer;
+                font: inherit;
+                letter-spacing: inherit;
+                text-transform: inherit;
+                text-align: inherit;
+            }
+
+            uui-table-head-cell.end button {
+                justify-content: flex-end;
+            }
+
+            uui-table-head-cell button:focus-visible {
+                outline: calc(2px * var(--uui-show-focus-outline, 1)) solid var(--uui-color-focus);
+                outline-offset: -2px;
             }
 
             .has-toolbar uui-table-head-cell {

@@ -178,6 +178,17 @@ export const NumberAndPercent: Story = {
         </uui-box>`,
 };
 
+/** Click a header to sort: the first click on a number column sorts biggest first, a second click flips it. In `client` mode (the default) the table sorts the rows itself and raises `sort-change`. Shares stay a share of the whole column. */
+export const Sortable: Story = {
+    args: {
+        columns: pageColumns.map((c) => (c.type === "share" || c.key === "url" ? { ...c, sortable: true } : c)),
+    },
+    render: (args) =>
+        html`<uui-box headline="Top pages" style="--uui-box-default-padding: 0">
+            <uax-data-table .columns=${args.columns} .rows=${args.rows} .sort=${{ key: "pageviews", direction: "desc" }}></uax-data-table>
+        </uui-box>`,
+};
+
 /** First load, nothing to show yet: skeleton rows under the header. */
 export const Loading: Story = { args: { rows: [], loading: true } };
 

@@ -28,10 +28,12 @@ export class UaxDataTableElement extends UmbLitElement {
     emptyDescription?: string;
     emptyHeadline?: string;
     loading: boolean;
+    mode: UaxTableMode;
     // (undocumented)
     render(): TemplateResult_2<1>;
     rowKey?: string;
     rows: Record<string, unknown>[];
+    sort?: UaxTableSort;
     // (undocumented)
     static styles: CSSResultGroup;
     // (undocumented)
@@ -163,10 +165,26 @@ export type UaxTableColumn = {
     valueFormat?: Intl.NumberFormatOptions;
     align?: "start" | "end";
     color?: 1 | 2 | 3 | 4;
+    sortable?: boolean;
 };
 
 // @public
 export type UaxTableColumnType = "text" | "link" | "number" | "percent" | "share";
+
+// @public
+export type UaxTableMode = "client" | "server";
+
+// @public
+export type UaxTableSort = {
+    key: string;
+    direction: UaxTableSortDirection;
+};
+
+// @public
+export type UaxTableSortChangeDetail = UaxTableSort;
+
+// @public
+export type UaxTableSortDirection = "asc" | "desc";
 
 // @public
 export class UaxTimeSeriesChartElement extends UmbLitElement {
