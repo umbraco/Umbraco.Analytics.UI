@@ -141,7 +141,7 @@
   Acceptance: the three pages render with no errors in light, dark and high contrast; axe clean; each listed interaction works in Storybook.
   depends-on: T8, T12, T14, T20, T20b
 
-- [ ] **T23** - story: none (non-functional targets). Measure and record in `BUILD-LOG.md`:
+- [x] **T23** - story: none (non-functional targets). Measure and record in `BUILD-LOG.md`:
   - the bundle size, gzipped
   - chart render time for 6 series × 366 points
   - table client-mode sort and page time for 1,000 rows
