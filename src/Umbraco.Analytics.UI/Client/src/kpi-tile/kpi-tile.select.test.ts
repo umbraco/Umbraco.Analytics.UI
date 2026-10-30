@@ -103,16 +103,28 @@ describe("Feature: KPI tiles switch the chart's metric", () => {
 
     describe("Scenario (sad path): a tile that isn't deselectable", () => {
         let el: UaxTestElement;
+        let selectedEvents: Event[];
+        let deselectedEvents: Event[];
         beforeEach(async () => {
             el = await renderElement(
                 html`<uax-kpi-tile label="Orders" value="26" selectable selected .deselectable=${false}></uax-kpi-tile>`,
                 "uax-kpi-tile",
             );
+            selectedEvents = recordEvents(el, "selected");
+            deselectedEvents = recordEvents(el, "deselected");
             button(el).click();
         });
 
         it("keeps selected true", () => {
             expect(el.selected).toBe(true);
+        });
+
+        it("raises no selected event when pressed again", () => {
+            expect(selectedEvents).toHaveLength(0);
+        });
+
+        it("raises no deselected event", () => {
+            expect(deselectedEvents).toHaveLength(0);
         });
     });
 

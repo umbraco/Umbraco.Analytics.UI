@@ -111,7 +111,7 @@ const manyPageRows = Array.from({ length: 34 }, (_, i) => ({
     sessions: Math.max(1, 60 - i),
 }));
 
-/** `client` mode (the default) pages the rows itself: 10 a page, "Show rows" offers 10, 25, 50 and 100, and the footer is hidden when the rows fit one page. Sorting goes back to page 1 and sorts every page. Shares and bars stay of all 34 rows. For `mode="server"`, see Examples › Paged server. */
+/** `client` mode (the default) pages the rows itself: 10 a page, "Per page" offers 10, 25, 50 and 100, and the footer is hidden when the rows fit one page. Sorting goes back to page 1 and sorts every page. Shares and bars stay of all 34 rows. For `mode="server"`, see Examples › Paged server. */
 export const PagedClient: Story = {
     name: "Paged (client)",
     args: {

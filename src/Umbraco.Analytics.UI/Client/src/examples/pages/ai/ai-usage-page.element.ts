@@ -197,6 +197,7 @@ export class ExampleAiUsagePageElement extends UmbLitElement {
             label=${metricLabels[metric]}
             icon=${icon}
             .value=${summary && this.#compact(pick(summary))}
+            ?no-data=${summary !== undefined && !summary.requests}
             .delta=${summary && change(pick(summary), this._usage?.compareSummary && pick(this._usage.compareSummary))}
             ?loading=${this._usageLoading}
             selectable
@@ -221,6 +222,9 @@ export class ExampleAiUsagePageElement extends UmbLitElement {
     #tiles() {
         const now = this._usage?.summary;
         const before = this._usage?.compareSummary;
+        // A period with no requests has no rate or average: unknown, not 0, so there is nothing to compare either.
+        const noData = now !== undefined && !now.requests;
+        const comparable = !!now?.requests && !!before?.requests;
         const successRate = now && this.#successRate(now);
         const duration = now && this.#avgDuration(now);
         return html`<div class="tiles">
@@ -233,7 +237,8 @@ export class ExampleAiUsagePageElement extends UmbLitElement {
                 .value=${successRate === undefined
                     ? undefined
                     : this.localize.number(successRate, { style: "percent", maximumFractionDigits: 1 })}
-                .delta=${now && before ? (this.#successRate(now) - this.#successRate(before)) * 100 : undefined}
+                ?no-data=${noData}
+                .delta=${comparable ? (this.#successRate(now) - this.#successRate(before)) * 100 : undefined}
                 delta-unit="points"
                 ?loading=${this._usageLoading}></uax-kpi-tile>
             <uax-kpi-tile
@@ -242,7 +247,8 @@ export class ExampleAiUsagePageElement extends UmbLitElement {
                 .value=${duration === undefined
                     ? undefined
                     : this.localize.number(duration / 1000, { style: "unit", unit: "second", maximumFractionDigits: 2 })}
-                .delta=${now && before ? change(this.#avgDuration(now), this.#avgDuration(before)) : undefined}
+                ?no-data=${noData}
+                .delta=${comparable ? change(this.#avgDuration(now), this.#avgDuration(before)) : undefined}
                 lower-is-better
                 ?loading=${this._usageLoading}></uax-kpi-tile>
         </div>`;

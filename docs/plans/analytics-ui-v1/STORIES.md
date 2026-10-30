@@ -32,6 +32,7 @@
 
 - [DR-1](#dr-1-pick-a-date-range) Pick a date range, 8 criteria
 - [DR-2](#dr-2-pick-a-comparison-range) Pick a comparison range, 5 criteria
+- [DR-3](#dr-3-the-button-with-a-comparison) The button with a comparison, 5 criteria
 
 **Data table**
 
@@ -531,7 +532,7 @@ AC2 — Previous period
 AC3 — Button shows the comparison
   Given a saved comparison
   When  the button renders
-  Then  it shows a "Compare to:" line with the comparison range
+  Then  it shows a second "vs …" line with the comparison range (see DR-3)
 
 AC4 — Hidden when not allowed
   Given allow-compare is false
@@ -544,6 +545,39 @@ AC5 — Custom compare validated
   Given Compare is on with mode "Custom"
   When  the comparison end date is before its start
   Then  Save is disabled
+```
+
+## DR-3: The button with a comparison
+
+As an editor,
+I want the date range button to show the comparison without growing,
+so that it sits level with the other header controls.
+
+```
+AC1 — Same height
+  Given uax-date-range next to uax-group-by
+  When  the button renders with and without a comparison
+  Then  it is as tall as uax-group-by in both cases
+
+AC2 — Two lines
+  Given a saved comparison of 25 Apr–24 May 2026 and the range 25 May–23 Jun 2026
+  When  the button renders
+  Then  line 2 reads "vs Apr 25 to May 24" (en-US)
+
+AC3 — Year kept across years
+  Given a comparison in a different year from the range
+  When  the button renders
+  Then  line 2 shows the years
+
+AC4 — Name matches what is shown
+  Given a saved comparison
+  When  a screen reader reads the button
+  Then  its name is the purpose, line 1 and line 2 as shown
+
+AC5 — Narrow header
+  Given a header too narrow for the dates
+  When  the button renders
+  Then  the dates are cut short with an ellipsis, inside the button, left to right and right to left
 ```
 
 ## TBL-1: Table cells by column type
@@ -638,7 +672,7 @@ AC2 — Next page
 
 AC3 — Change page size
   Given page-size 10
-  When  the editor picks 25 in "Show rows"
+  When  the editor picks 25 in "Per page"
   Then  it raises page-change with { page: 1, pageSize: 25 }
 
 AC4 — Client mode pages itself

@@ -5,7 +5,7 @@
 The package is a library of custom elements, not a feature hung off one extension point. It touches the backoffice in three places, all declared in `Client/public/umbraco-package.json`:
 
 - **Import map** entry `@umbraco-analytics/ui`. Products import from it and mark it external, so every product on a site shares one loaded copy.
-- **`localization` extension** (`en` first). Ships the package's own UI strings ("No data yet", "Compare to", "Show rows", aria labels).
+- **`localization` extension** (`en` first). Ships the package's own UI strings ("No data yet", "Compare to", "Per page", aria labels).
 - **`modal` extension** for the date range dialog, with `elementName: "uax-date-range-modal"`. The element is in the main bundle, which is always loaded by the time a product renders the picker that opens it.
 
 No dashboard, section, workspace or Management API. The products keep those.

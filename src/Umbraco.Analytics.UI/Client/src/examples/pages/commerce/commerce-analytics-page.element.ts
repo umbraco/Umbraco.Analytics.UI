@@ -186,7 +186,8 @@ export class ExampleCommerceAnalyticsPageElement extends UmbLitElement {
         this.#loadBuyers();
     }
 
-    // The change against last period: a percent change, or points for a rate. Nothing without a comparison.
+    // The change against last period: a percent change, or points for a rate. Undefined (no badge) when there is
+    // nothing to compare with; a real 0 stays 0 and shows "no change".
     #delta(id: MetricId) {
         const current = this._data?.totals;
         const previous = this._compareData?.totals;
@@ -208,6 +209,7 @@ export class ExampleCommerceAnalyticsPageElement extends UmbLitElement {
             label=${metric.label}
             icon=${metric.icon}
             .value=${totals ? this.localize.number(totals[metric.id], metric.format) : undefined}
+            ?no-data=${totals !== undefined && !totals.orders}
             .delta=${this.#delta(metric.id)}
             delta-unit=${metric.id === "conversion" ? "points" : "percent"}
             ?loading=${this._loading}

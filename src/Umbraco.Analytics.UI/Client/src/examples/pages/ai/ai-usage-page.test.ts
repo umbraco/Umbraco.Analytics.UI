@@ -133,6 +133,34 @@ describe("Feature: Umbraco AI usage page", () => {
         });
     });
 
+    describe("Scenario (sad path): the comparison period has no requests", () => {
+        let page: UaxTestElement;
+        beforeEach(async () => {
+            page = await renderPage();
+            await saveDateRange(page, { from: "2026-01-01", to: "2026-01-10" });
+            await expect.poll(() => chart(page).series[0]?.points.length === 10 && !chart(page).loading).toBe(true);
+            await settle(page);
+        });
+
+        it("shows no change badge on the success rate tile", () => {
+            expect(shadow(tile(page, "Success rate")).querySelector("uax-delta-badge")).toBe(null);
+        });
+    });
+
+    describe("Scenario (sad path): the range has no requests", () => {
+        let page: UaxTestElement;
+        beforeEach(async () => {
+            page = await renderPage();
+            await saveDateRange(page, { from: "2025-11-01", to: "2025-11-30", compare: "off" });
+            await expect.poll(() => tile(page, "Success rate").noData).toBe(true);
+            await settle(page);
+        });
+
+        it("shows the success rate tile as having no data", () => {
+            expect(tile(page, "Success rate").noData).toBe(true);
+        });
+    });
+
     describe("Scenario: changing the group by", () => {
         let page: UaxTestElement;
         beforeEach(async () => {
@@ -188,7 +216,7 @@ describe("Feature: Umbraco AI usage page", () => {
     describe("Scenario: paging the table", () => {
         it("loads the second page, with the two models left over", async () => {
             const page = await renderPage();
-            const pager = deepQuery<HTMLElement>(shadow(table(page)), "uax-table-pager")!;
+            const pager = deepQuery<HTMLElement>(shadow(table(page)), "uax-compact-pager")!;
             const next = pager.shadowRoot!.querySelector(".next") as HTMLElement & { updateComplete: Promise<boolean> };
             await next.updateComplete;
             next.click();

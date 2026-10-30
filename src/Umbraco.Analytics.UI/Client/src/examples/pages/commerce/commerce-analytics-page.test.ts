@@ -93,6 +93,10 @@ describe("Feature: the Commerce analytics page", () => {
         it("shows the chart's empty state", () => {
             expect(deepQuery(shadow(chart(page)), "uax-empty-state")).not.toBe(null);
         });
+
+        it("shows the KPI tiles as having no data, not as 0", () => {
+            expect(tile(page, "Revenue").noData).toBe(true);
+        });
     });
 
     describe("Scenario: sorting top buyers", () => {
@@ -121,7 +125,7 @@ describe("Feature: the Commerce analytics page", () => {
         beforeEach(async () => {
             page = await renderPage();
             firstPage = buyerNames(page);
-            const pager = shadow(buyersTable(page)).querySelector("uax-table-pager") as HTMLElement;
+            const pager = shadow(buyersTable(page)).querySelector("uax-compact-pager") as HTMLElement;
             const next = shadow(pager).querySelector(".next") as HTMLElement & { updateComplete: Promise<boolean> };
             await next.updateComplete;
             next.click();

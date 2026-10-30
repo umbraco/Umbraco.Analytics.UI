@@ -10,3 +10,8 @@ export function formatIsoDate(iso: string, format: { format(date: Date): string 
 export function displayIsoDate(iso: string, localize: { date(date: Date, options?: Intl.DateTimeFormatOptions): string }): string {
     return formatIsoDate(iso, { format: (date) => localize.date(date, { dateStyle: "medium" }) });
 }
+
+/** The ISO date as `displayIsoDate` shows it, without the year (for a range whose year is clear from the one beside it), or `iso` as it is when it isn't a real date. */
+export function displayIsoDateWithoutYear(iso: string, localize: { date(date: Date, options?: Intl.DateTimeFormatOptions): string }): string {
+    return formatIsoDate(iso, { format: (date) => localize.date(date, { month: "short", day: "numeric" }) });
+}

@@ -90,7 +90,7 @@ describe("Feature: Engage analytics page example", () => {
     describe("Scenario: going to the next page", () => {
         it("loads rows 11 to 20", async () => {
             const page = await renderPage();
-            const pager = shadow(table(page)).querySelector("uax-table-pager")!;
+            const pager = shadow(table(page)).querySelector("uax-compact-pager")!;
             const next = shadow(pager).querySelector(".next") as HTMLElement & { updateComplete: Promise<boolean> };
             await next.updateComplete;
             next.click();

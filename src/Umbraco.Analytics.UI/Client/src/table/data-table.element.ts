@@ -18,7 +18,7 @@ import { UaxPaletteStyles } from "../theme/index.js";
 import "./cells/index.js";
 import { UAX_TABLE_CELL } from "./cells/cell-names.js";
 import { UaxTableContextController } from "./internal/table-context.controller.js";
-import "./internal/table-pager.element.js";
+import "../internal/pager/compact-pager.element.js";
 import "./internal/table-skeleton-cell.element.js";
 import "./internal/table-sort-button.element.js";
 import { asNumber, asText } from "./internal/cell-values.js";
@@ -114,7 +114,7 @@ const SKELETON_WIDTHS = [72, 54, 83, 47, 65];
  * given, keeping equal rows in their order and empty values last. In `server` mode it never reorders:
  * the product sorts and passes new `rows`. Column totals stay those of the whole column either way.
  *
- * The footer shows "Show rows" (10, 25, 50 or 100), the range ("1–10 of 272") and previous and next
+ * The footer shows "Per page" (10, 25, 50 or 100), the range ("1–10 of 272") and previous and next
  * buttons, and is hidden when the rows fit the smallest page size. In `client` mode the table pages the
  * (sorted) rows itself. In `server` mode it draws the `rows` it's given as the current page, reads the
  * row count from `total-rows`, and the product loads the new page when `page-change` is raised. Either way the
@@ -598,12 +598,12 @@ export class UaxDataTableElement extends UmbLitElement {
         return html`<div class="footer" ?hidden=${!showPager && !this.#hasFooterContent}>
             <slot name="footer" @slotchange=${() => this.requestUpdate()}></slot>
             ${showPager
-                ? html`<uax-table-pager
+                ? html`<uax-compact-pager
                       .page=${this.#currentPage}
                       .pageSize=${this.#pageSize}
                       .total=${this.#totalRows}
                       .pageSizes=${this.#pageSizeOptions}
-                      @page-change=${this.#onPagerChange}></uax-table-pager>`
+                      @page-change=${this.#onPagerChange}></uax-compact-pager>`
                 : nothing}
         </div>`;
     }
@@ -652,7 +652,7 @@ export class UaxDataTableElement extends UmbLitElement {
                 flex: 1;
             }
 
-            uax-table-pager {
+            uax-compact-pager {
                 margin-left: auto;
             }
 

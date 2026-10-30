@@ -130,8 +130,12 @@ function add(a: UsageTotals, b: UsageTotals): UsageTotals {
     };
 }
 
+/** Usage started on this day: ranges before it have no requests at all. */
+export const USAGE_STARTED = "2026-01-01";
+
 /** One model on one day. Quieter at weekends, a little busier as the months go by. */
 function modelDay(model: Model, date: string): UsageTotals {
+    if (date < USAGE_STARTED) return empty();
     const weekday = new Date(utc(date)).getUTCDay();
     const weekend = weekday === 0 || weekday === 6 ? 0.45 : 1;
     const growth = 1 + ((utc(date) - utc("2026-01-01")) / DAY) * 0.0015;

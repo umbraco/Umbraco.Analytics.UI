@@ -62,6 +62,39 @@ describe("UaxDeltaBadgeElement", () => {
         expect(element.shadowRoot!.querySelector(".badge")).toBe(null);
     });
 
+    describe("no change and unknown", () => {
+        it("shows a zero percent change as 0%", async () => {
+            element.value = 0;
+            await element.updateComplete;
+            expect(element.shadowRoot!.querySelector(".badge")!.textContent).toContain("0%");
+        });
+
+        it("shows a zero points change as 0 pp", async () => {
+            element.value = 0;
+            element.unit = "points";
+            await element.updateComplete;
+            expect(element.shadowRoot!.querySelector(".badge")!.textContent).toContain("0 pp");
+        });
+
+        it("is neutral at 0", async () => {
+            element.value = 0;
+            await element.updateComplete;
+            expect(element.sentiment).toBe("neutral");
+        });
+
+        it("reads 0 as no change", async () => {
+            element.value = 0;
+            await element.updateComplete;
+            expect(element.shadowRoot!.querySelector(".visually-hidden")!.textContent).toContain("no change");
+        });
+
+        it("renders nothing for a value that is not finite", async () => {
+            element.value = Number.POSITIVE_INFINITY;
+            await element.updateComplete;
+            expect(element.shadowRoot!.querySelector(".badge")).toBe(null);
+        });
+    });
+
     describe("direction and sentiment", () => {
         it("treats a rise as positive", () => {
             expect(element.direction).toBe("up");

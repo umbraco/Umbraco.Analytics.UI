@@ -37,7 +37,7 @@ export default {
         // Date range
         dateRangeButtonLabel: "Choose date range",
         dateRangeRange: "{0} to {1}",
-        dateRangeCompareTo: "Compare to:",
+        dateRangeCompareShort: "vs {0}",
         dateRangeModalHeadline: "Date range",
         dateRangePreset: "Preset",
         dateRangeLast7Days: "Last 7 days",
@@ -57,12 +57,14 @@ export default {
         dateRangeErrorEndBeforeStart: "The end date must be on or after the start date.",
         dateRangeErrorAfterMaxDate: "The date can't be after {0}.",
 
+        // Compact pager (used by the data table; override these keys to reword it)
+        pagerPageSize: "Per page",
+        pagerLabel: "Pagination",
+        pagerPosition: "{0}–{1} of {2}",
+        pagerPreviousPage: "Previous page",
+        pagerNextPage: "Next page",
+
         // Data table
-        tableShowRows: "Show rows",
-        tablePagination: "Pagination",
-        tablePagerPosition: "{0}–{1} of {2}",
-        tablePreviousPage: "Previous page",
-        tableNextPage: "Next page",
         tableSortAscending: "Sorted ascending",
         tableSortDescending: "Sorted descending",
         tableSortBy: "Sort by {0}",

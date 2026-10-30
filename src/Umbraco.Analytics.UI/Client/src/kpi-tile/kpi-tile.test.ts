@@ -7,8 +7,9 @@ import { html } from "@umbraco-cms/backoffice/external/lit";
 import { render } from "vitest-browser-lit";
 import { axeRun } from "../internal/test/a11y.js";
 import "./kpi-tile.element.js";
+import type { UaxDeltaBadgeElement } from "../delta-badge/delta-badge.element.js";
 import type { UaxKpiTileElement } from "./kpi-tile.element.js";
-import { renderElement, shadow, type UaxTestElement } from "../internal/test/dom.js";
+import { recordEvents, renderElement, shadow, type UaxTestElement } from "../internal/test/dom.js";
 
 describe("Feature: KPI tile shows a headline number", () => {
     describe("Scenario: label, value and icon", () => {
@@ -48,6 +49,102 @@ describe("Feature: KPI tile shows a headline number", () => {
 
         it("shows a change badge for the delta", () => {
             expect((shadow(el).querySelector("uax-delta-badge") as UaxTestElement | null)?.value).toBe(18.7);
+        });
+    });
+
+    describe("Scenario: no change", () => {
+        let badge: UaxDeltaBadgeElement;
+        beforeEach(async () => {
+            const el = await renderElement(
+                html`<uax-kpi-tile label="Success rate" value="98%" .delta=${0} delta-unit="points"></uax-kpi-tile>`,
+                "uax-kpi-tile",
+            );
+            badge = shadow(el).querySelector("uax-delta-badge") as UaxDeltaBadgeElement;
+            await badge.updateComplete;
+        });
+
+        it("still shows a badge for a delta of 0", () => {
+            expect(badge).not.toBe(null);
+        });
+
+        it("shows it as neutral", () => {
+            expect(badge.sentiment).toBe("neutral");
+        });
+
+        it("reads it as no change", () => {
+            expect(badge.shadowRoot!.querySelector(".visually-hidden")!.textContent).toContain("no change");
+        });
+    });
+
+    describe("Scenario (sad path): unknown change", () => {
+        it("shows no badge when the delta is not a number", async () => {
+            const el = await renderElement(html`<uax-kpi-tile label="Orders" value="26" .delta=${Number.NaN}></uax-kpi-tile>`, "uax-kpi-tile");
+            expect(shadow(el).querySelector("uax-delta-badge")).toBe(null);
+        });
+
+        it("shows no badge when the delta is infinite (compared with zero)", async () => {
+            const el = await renderElement(
+                html`<uax-kpi-tile label="Orders" value="26" .delta=${Number.POSITIVE_INFINITY}></uax-kpi-tile>`,
+                "uax-kpi-tile",
+            );
+            expect(shadow(el).querySelector("uax-delta-badge")).toBe(null);
+        });
+    });
+
+    describe("Scenario: no data", () => {
+        let el: UaxTestElement;
+        beforeEach(async () => {
+            el = await renderElement(
+                html`<uax-kpi-tile label="Revenue" value="€ 0" icon="icon-coins" .delta=${5} no-data></uax-kpi-tile>`,
+                "uax-kpi-tile",
+            );
+        });
+
+        it("shows a dash in place of the value", () => {
+            expect(shadow(el).querySelector(".value [aria-hidden='true']")?.textContent).toBe("—");
+        });
+
+        it("does not show the value", () => {
+            expect(shadow(el).textContent).not.toContain("€ 0");
+        });
+
+        it("tells assistive tech there is no data", () => {
+            expect(shadow(el).querySelector(".value .visually-hidden")?.textContent).toBe("No data yet");
+        });
+
+        it("shows no change badge", () => {
+            expect(shadow(el).querySelector("uax-delta-badge")).toBe(null);
+        });
+
+        it("keeps the label", () => {
+            expect(shadow(el).textContent).toContain("Revenue");
+        });
+
+        it("is as tall as a tile with a value, so the row does not jump", async () => {
+            const loaded = await renderElement(html`<uax-kpi-tile label="Revenue" value="1" icon="icon-coins"></uax-kpi-tile>`, "uax-kpi-tile");
+            expect(el.getBoundingClientRect().height).toBe(loaded.getBoundingClientRect().height);
+        });
+
+        it("stays selectable", async () => {
+            const selectable = await renderElement(html`<uax-kpi-tile label="Revenue" no-data selectable></uax-kpi-tile>`, "uax-kpi-tile");
+            const events = recordEvents(selectable, "selected");
+            (shadow(selectable).querySelector("button") as HTMLElement).click();
+            expect(events).toHaveLength(1);
+        });
+    });
+
+    describe("Scenario: no data while loading", () => {
+        let el: UaxTestElement;
+        beforeEach(async () => {
+            el = await renderElement(html`<uax-kpi-tile label="Revenue" no-data loading></uax-kpi-tile>`, "uax-kpi-tile");
+        });
+
+        it("keeps the dash instead of a skeleton", () => {
+            expect(shadow(el).querySelector(".value [aria-hidden='true']")?.textContent).toBe("—");
+        });
+
+        it("marks its content busy", () => {
+            expect(shadow(el).querySelector(".content")?.getAttribute("aria-busy")).toBe("true");
         });
     });
 
@@ -142,6 +239,7 @@ describe("Feature: KPI tile shows a headline number", () => {
                 const host = render(
                     html`<div style="background: var(--uui-color-background); padding: 8px; width: 320px">
                         <uax-kpi-tile label="Revenue" value="€ 4,837.40" icon="icon-coins" .delta=${-3}></uax-kpi-tile>
+                        <uax-kpi-tile label="Orders" icon="icon-inbox" no-data></uax-kpi-tile>
                     </div>`,
                 ).container.querySelector("div")!;
                 await host.querySelector("uax-kpi-tile")!.updateComplete;

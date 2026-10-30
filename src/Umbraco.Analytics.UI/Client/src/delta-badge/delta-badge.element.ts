@@ -1,5 +1,6 @@
 import { css, customElement, html, nothing, property, type CSSResultGroup, type TemplateResult } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
+import { UaxVisuallyHiddenStyles } from "../internal/a11y/visually-hidden.css.js";
 import { UaxPaletteStyles } from "../theme/index.js";
 
 /** What a delta is measured in: a percent change, or a change in percentage points. */
@@ -10,6 +11,9 @@ export type UaxDeltaBadgeSize = "md" | "sm";
 
 /**
  * Shows the change in a value against a comparison period, e.g. "▲ 12.4%".
+ *
+ * A `value` of 0 is "no change": a neutral badge ("0%" or "0 pp", read as "no change"). With no `value` (or one that
+ * is not a finite number) the change is unknown and nothing is drawn.
  *
  * Green means good. For metrics where a drop is good (refund rate, bounce rate), set `lower-is-better`.
  *
@@ -24,7 +28,10 @@ export type UaxDeltaBadgeSize = "md" | "sm";
  */
 @customElement("uax-delta-badge")
 export class UaxDeltaBadgeElement extends UmbLitElement {
-    /** The change. 12.4 means +12.4% (or +12.4 percentage points when `unit` is "points"). */
+    /**
+     * The change. 12.4 means +12.4% (or +12.4 percentage points when `unit` is "points"). 0 is "no change".
+     * Unset means unknown: nothing is drawn.
+     */
     @property({ type: Number })
     value?: number;
 
@@ -77,19 +84,21 @@ export class UaxDeltaBadgeElement extends UmbLitElement {
     }
 
     override render(): TemplateResult | typeof nothing {
-        if (this.value === undefined || this.value === null || Number.isNaN(this.value)) return nothing;
+        const value = this.value;
+        if (value === undefined || !Number.isFinite(value)) return nothing;
 
         const arrow = { up: "▲", down: "▼", flat: "–" }[this.direction];
 
         // The signed number carries the direction for screen readers and the hidden text says whether it is
         // good, so neither the arrow nor the colour has to; the arrow is decoration.
         return html`<span class="badge" data-sentiment=${this.sentiment}
-            ><span class="arrow" aria-hidden="true">${arrow}</span>${this.#format(this.value)}<span class="visually-hidden">${", "}${this.#sentimentLabel()}</span></span
+            ><span class="arrow" aria-hidden="true">${arrow}</span>${this.#format(value)}<span class="visually-hidden">${", "}${this.#sentimentLabel()}</span></span
         >`;
     }
 
     static override styles: CSSResultGroup = [
         UaxPaletteStyles,
+        UaxVisuallyHiddenStyles,
         css`
             :host {
                 display: inline-flex;
@@ -130,15 +139,6 @@ export class UaxDeltaBadgeElement extends UmbLitElement {
             [data-sentiment="neutral"] {
                 color: var(--uax-color-text-neutral);
                 background: var(--uax-color-tint-neutral);
-            }
-
-            .visually-hidden {
-                position: absolute;
-                width: 1px;
-                height: 1px;
-                overflow: hidden;
-                clip-path: inset(50%);
-                white-space: nowrap;
             }
         `,
     ];

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { displayIsoDate, formatIsoDate } from "./format-date.js";
+import { displayIsoDate, displayIsoDateWithoutYear, formatIsoDate } from "./format-date.js";
 
 describe("Feature: formatting an ISO date", () => {
     const format = new Intl.DateTimeFormat("en", { day: "numeric", month: "short", year: "numeric" });
@@ -15,5 +15,17 @@ describe("Feature: formatting an ISO date", () => {
     it("displays a date with the localizer's medium style", () => {
         const localize = { date: (date: Date, options?: Intl.DateTimeFormatOptions) => new Intl.DateTimeFormat("en", options).format(date) };
         expect(displayIsoDate("2026-06-11", localize)).toBe("Jun 11, 2026");
+    });
+
+    describe("Scenario: displaying a date without its year", () => {
+        const localize = { date: (date: Date, options?: Intl.DateTimeFormatOptions) => new Intl.DateTimeFormat("en", options).format(date) };
+
+        it("leaves the year off", () => {
+            expect(displayIsoDateWithoutYear("2026-06-11", localize)).toBe("Jun 11");
+        });
+
+        it("gives back text that isn't a real date as it is", () => {
+            expect(displayIsoDateWithoutYear("2026-02-31", localize)).toBe("2026-02-31");
+        });
     });
 });

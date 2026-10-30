@@ -160,6 +160,7 @@ export class UaxKpiTileElement extends UmbLitElement {
     label: string;
     loading: boolean;
     lowerIsBetter: boolean;
+    noData: boolean;
     // (undocumented)
     render(): TemplateResult;
     selectable: boolean;

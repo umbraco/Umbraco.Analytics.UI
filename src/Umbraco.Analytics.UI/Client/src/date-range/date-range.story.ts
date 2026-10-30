@@ -41,7 +41,7 @@ export const OpenDialog: Story = {
     },
 };
 
-/** A saved comparison adds a "Compare to:" line under the dates. */
+/** A saved comparison adds a second "vs …" line under the dates, in the same button height. */
 export const WithCompare: Story = { args: { compare } };
 
 /** The dialog with Compare on and a custom comparison range: the extra row of fields sits under the switch. */

@@ -1,30 +1,32 @@
 import { css, customElement, html, property, type CSSResultGroup } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
-import type { UaxTablePageChangeDetail } from "../types.js";
-import { getNumberFormat } from "../../internal/format/number-format.js";
+import { getNumberFormat } from "../format/number-format.js";
+
+/** What `page-change` carries: the page (from 1) and page size the editor chose. */
+export type CompactPagerChangeDetail = { page: number; pageSize: number };
 
 /**
- * The table's footer: "Show rows", the range ("1–10 of 272") and previous and next buttons. Internal: not exported.
+ * A compact pager for any paged list: a page size picker ("Per page"), the range ("1–10 of 272") and previous and next buttons. Internal: not exported.
  *
  * It is controlled: it draws `page`, `pageSize` and `total` and raises `page-change` with the page and size the
- * editor chose, without changing them. The table sets them in response. The event doesn't bubble.
+ * editor chose, without changing them. The host sets them in response. The event doesn't bubble.
  * When Next lands on the last page (or Previous on the first) and the focused button becomes disabled, focus moves
  * to the other nav button, so a keyboard user isn't dropped as with `uui-pagination`.
  *
- * @element uax-table-pager
+ * @element uax-compact-pager
  * @fires page-change - The editor picked another page or page size. `detail` is `{ page, pageSize }`. Doesn't bubble.
  */
-@customElement("uax-table-pager")
-export class UaxTablePagerElement extends UmbLitElement {
+@customElement("uax-compact-pager")
+export class UaxCompactPagerElement extends UmbLitElement {
     /** The page shown, starting at 1. */
     @property({ type: Number })
     page = 1;
 
-    /** Rows per page. */
+    /** Items per page. */
     @property({ type: Number, attribute: "page-size" })
     pageSize = 10;
 
-    /** How many rows there are across every page. */
+    /** How many items there are across every page. */
     @property({ type: Number })
     total = 0;
 
@@ -40,7 +42,7 @@ export class UaxTablePagerElement extends UmbLitElement {
     }
 
     #changePage(page: number, pageSize: number) {
-        this.dispatchEvent(new CustomEvent<UaxTablePageChangeDetail>("page-change", { detail: { page, pageSize } }));
+        this.dispatchEvent(new CustomEvent<CompactPagerChangeDetail>("page-change", { detail: { page, pageSize } }));
     }
 
     #step(by: 1 | -1) {
@@ -70,22 +72,22 @@ export class UaxTablePagerElement extends UmbLitElement {
         const format = getNumberFormat(this.localize.lang()).format;
         const from = (page - 1) * size + 1;
         const to = Math.min(total, page * size);
-        return html`<div class="pager" role="navigation" aria-label=${this.localize.term("uaxAnalytics_tablePagination")}>
+        return html`<div class="pager" role="navigation" aria-label=${this.localize.term("uaxAnalytics_pagerLabel")}>
             <div class="page-size">
-                <span aria-hidden="true">${this.localize.term("uaxAnalytics_tableShowRows")}</span>
+                <span aria-hidden="true">${this.localize.term("uaxAnalytics_pagerPageSize")}</span>
                 <uui-select
                     name="page-size"
-                    label=${this.localize.term("uaxAnalytics_tableShowRows")}
+                    label=${this.localize.term("uaxAnalytics_pagerPageSize")}
                     .options=${this.pageSizes.map((option) => ({ name: String(option), value: String(option), selected: option === size }))}
                     .value=${String(size)}
                     @change=${this.#onPageSizeChange}></uui-select>
             </div>
-            <div class="range" aria-live="polite">${this.localize.term("uaxAnalytics_tablePagerPosition", format(from), format(to), format(total))}</div>
+            <div class="range" aria-live="polite">${this.localize.term("uaxAnalytics_pagerPosition", format(from), format(to), format(total))}</div>
             <div class="nav">
                 <uui-button
                     class="previous"
                     compact
-                    label=${this.localize.term("uaxAnalytics_tablePreviousPage")}
+                    label=${this.localize.term("uaxAnalytics_pagerPreviousPage")}
                     ?disabled=${page <= 1}
                     @click=${() => page > 1 && this.#step(-1)}>
                     <uui-icon name="icon-navigation-left"></uui-icon>
@@ -93,7 +95,7 @@ export class UaxTablePagerElement extends UmbLitElement {
                 <uui-button
                     class="next"
                     compact
-                    label=${this.localize.term("uaxAnalytics_tableNextPage")}
+                    label=${this.localize.term("uaxAnalytics_pagerNextPage")}
                     ?disabled=${page >= this.#pageCount}
                     @click=${() => page < this.#pageCount && this.#step(1)}>
                     <uui-icon name="icon-navigation-right"></uui-icon>
@@ -107,7 +109,7 @@ export class UaxTablePagerElement extends UmbLitElement {
             display: block;
         }
 
-        /* Just the controls: "Show rows", the range, then previous and next. The table's footer owns the border and padding. */
+        /* Just the controls: the page size picker, the range, then previous and next. The host owns the border and padding. */
         .pager {
             display: flex;
             align-items: center;
@@ -137,6 +139,6 @@ export class UaxTablePagerElement extends UmbLitElement {
 
 declare global {
     interface HTMLElementTagNameMap {
-        "uax-table-pager": UaxTablePagerElement;
+        "uax-compact-pager": UaxCompactPagerElement;
     }
 }

@@ -33,7 +33,11 @@ export const Increase: Story = {};
 
 export const Decrease: Story = { args: { value: -3 } };
 
+/** A change that rounds to zero is neutral. A `value` of exactly 0 looks the same. */
 export const NoChange: Story = { args: { value: 0.02 } };
+
+/** Percentage points: 0 reads "0 pp", neutral, "no change". With no `value` the change is unknown and nothing is drawn. */
+export const NoChangePoints: Story = { args: { value: 0, unit: "points" } };
 
 /** A fall in refund rate is good, so it shows green. */
 export const LowerIsBetter: Story = { args: { value: -1.2, unit: "points", lowerIsBetter: true } };

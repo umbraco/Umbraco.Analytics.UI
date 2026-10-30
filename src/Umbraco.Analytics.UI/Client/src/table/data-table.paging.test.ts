@@ -13,8 +13,8 @@ import "./data-table.element.js";
 import { manyRows, nameColumns } from "./table-fixtures.js";
 import { UAX_TABLE_CELL } from "./cells/cell-names.js";
 
-/** The controls are their own element (`uax-table-pager`), so their parts live in that element's shadow root. */
-const pagerElement = (el: Element) => shadow(el).querySelector("uax-table-pager") as (HTMLElement & { updateComplete: Promise<boolean> }) | null;
+/** The controls are their own element (`uax-compact-pager`), so their parts live in that element's shadow root. */
+const pagerElement = (el: Element) => shadow(el).querySelector("uax-compact-pager") as (HTMLElement & { updateComplete: Promise<boolean> }) | null;
 const controls = (el: Element) => (pagerElement(el)?.shadowRoot?.querySelector(".pager") ?? null) as HTMLElement | null;
 /** The table's own footer section, which holds the pager. */
 const footer = (el: Element) => shadow(el).querySelector(".footer") as HTMLElement | null;
@@ -69,8 +69,8 @@ describe("Feature: page through rows", () => {
             expect(options).toEqual(["10", "25", "50", "100"]);
         });
 
-        it("labels the page size select with Show rows", () => {
-            expect(pageSizeSelect(el).getAttribute("label")).toBe("Show rows");
+        it("labels the page size select with Per page", () => {
+            expect(pageSizeSelect(el).getAttribute("label")).toBe("Per page");
         });
 
         it("disables previous on the first page", () => {

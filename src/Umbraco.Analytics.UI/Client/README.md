@@ -48,7 +48,14 @@ A headline number as a card. You format the value. [Storybook](https://umbraco.g
 html`<uax-kpi-tile label="Revenue" value="€ 4,837.40" icon="icon-coin-dollar" .delta=${18.7}></uax-kpi-tile>`;
 ```
 
-Add `selectable` (and `selected`, `deselectable`) to make it a metric picker. `lower-is-better` flips the badge colours. `loading` shows a skeleton.
+Add `selectable` (and `selected`, `deselectable`) to make it a metric picker. With `.deselectable=${false}`, pressing the selected tile does nothing (no event). `lower-is-better` flips the badge colours. `loading` shows a skeleton.
+
+Say what the change is:
+
+- `.delta=${0}` is "no change": a neutral badge ("0%" or "0 pp").
+- `delta` unset is "unknown" (no comparison data): no badge.
+
+Add `no-data` when the range has no data. The tile shows a dash and no badge, instead of "0", and says "No data yet" to screen readers (key `uaxAnalytics_emptyHeadline`).
 
 ### uax-delta-badge
 
@@ -58,7 +65,7 @@ The change against a comparison period. `12.4` means +12.4%. [Storybook](https:/
 html`<uax-delta-badge .value=${-3.2} lower-is-better unit="points"></uax-delta-badge>`;
 ```
 
-`unit` is `percent` or `points`. `size` is `md` or `sm`. `max-decimals` defaults to 1.
+`unit` is `percent` or `points`. `size` is `md` or `sm`. `max-decimals` defaults to 1. A `value` of 0 is "no change" (neutral, "0%" or "0 pp"). With no `value` (or one that isn't a finite number) nothing is drawn.
 
 ### uax-time-series-chart
 

@@ -14,6 +14,7 @@ const meta: Meta<UaxKpiTileElement> = {
         deltaUnit: "percent",
         lowerIsBetter: false,
         loading: false,
+        noData: false,
         selectable: false,
         selected: false,
     },
@@ -30,6 +31,7 @@ const meta: Meta<UaxKpiTileElement> = {
                 .deltaUnit=${args.deltaUnit}
                 .lowerIsBetter=${args.lowerIsBetter}
                 .loading=${args.loading}
+                .noData=${args.noData}
                 .selectable=${args.selectable}
                 .selected=${args.selected}></uax-kpi-tile>
         </div>`,
@@ -46,6 +48,15 @@ export const Decrease: Story = { args: { delta: -3.2 } };
 export const LowerIsBetter: Story = {
     args: { label: "Refund rate", value: "2.1%", delta: -1.2, deltaUnit: "points", lowerIsBetter: true },
 };
+
+/** A delta of 0 is a real "no change": a neutral badge, read as "no change". */
+export const NoChange: Story = { args: { label: "Success rate", value: "98%", delta: 0, deltaUnit: "points" } };
+
+/** `delta` unset means unknown (nothing to compare with): no badge. Compare with `NoChange`. */
+export const UnknownChange: Story = { args: { label: "Success rate", value: "98%", delta: undefined, deltaUnit: "points" } };
+
+/** The range has no data: a dash instead of "0", no badge, "No data yet" for screen readers. Still selectable. */
+export const NoData: Story = { args: { value: undefined, delta: undefined, noData: true, selectable: true } };
 
 export const NoDelta: Story = { args: { label: "Orders", value: "26", icon: "icon-inbox", delta: undefined } };
 

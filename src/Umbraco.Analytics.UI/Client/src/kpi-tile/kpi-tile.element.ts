@@ -1,6 +1,7 @@
 import { css, customElement, html, nothing, property, type CSSResultGroup, type TemplateResult } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { getLoadingMode } from "../internal/loading/index.js";
+import { UaxVisuallyHiddenStyles } from "../internal/a11y/visually-hidden.css.js";
 import { UaxPaletteStyles } from "../theme/index.js";
 import type { UaxDeltaUnit } from "../delta-badge/delta-badge.element.js";
 import "../delta-badge/delta-badge.element.js";
@@ -11,6 +12,10 @@ import "../delta-badge/delta-badge.element.js";
  * Put tiles in a CSS grid row and they stay the same height. The badge drops below the value when the tile is
  * too narrow for both. While `loading` with no `value` it shows a skeleton the size of a loaded tile. While
  * loading with a `value` it keeps the value and marks the tile busy, without a loading bar.
+ *
+ * Set `no-data` when the range has no data: the tile shows a dash instead of a number and no change badge.
+ * Leave `delta` unset when there is nothing to compare with (no badge); a `delta` of 0 is "no change" and
+ * shows a neutral badge.
  *
  * @element uax-kpi-tile
  * @fires selected - A selectable, unselected tile was pressed. Cancelable: cancel it to keep the tile unselected.
@@ -29,11 +34,21 @@ export class UaxKpiTileElement extends UmbLitElement {
     @property({ type: String })
     value?: string;
 
+    /**
+     * The range has no data. Shows a dash with the hidden text "No data yet" in place of the value, and no
+     * change badge. Use it instead of showing "0". The tile stays selectable.
+     */
+    @property({ type: Boolean, attribute: "no-data", reflect: true })
+    noData = false;
+
     /** Name of a backoffice icon, shown in the pink square. */
     @property({ type: String })
     icon?: string;
 
-    /** The change against the comparison period. 18.7 means +18.7%. No badge when unset. */
+    /**
+     * The change against the comparison period. 18.7 means +18.7%. 0 is "no change" (a neutral badge).
+     * Unset, or not a finite number, means "unknown" (no comparison data) and shows no badge.
+     */
     @property({ type: Number })
     delta?: number;
 
@@ -63,13 +78,15 @@ export class UaxKpiTileElement extends UmbLitElement {
 
     /**
      * Whether pressing a selected tile deselects it. Set it to false (as a property) when exactly one tile
-     * must stay selected: pressing the selected tile then raises `selected` again and changes nothing.
+     * must stay selected: pressing the selected tile then raises nothing and changes nothing. (`uui-card`
+     * raises `selected` again here.)
      */
     @property({ type: Boolean })
     deselectable = true;
 
     #toggle() {
-        const deselecting = this.selected && this.deselectable;
+        if (this.selected && !this.deselectable) return;
+        const deselecting = this.selected;
         const event = new CustomEvent(deselecting ? "deselected" : "selected", { bubbles: true, cancelable: true, detail: {} });
         this.dispatchEvent(event);
         if (event.defaultPrevented) return;
@@ -78,7 +95,7 @@ export class UaxKpiTileElement extends UmbLitElement {
 
     override render(): TemplateResult {
         const hasValue = this.value !== undefined && this.value !== null && this.value !== "";
-        const mode = getLoadingMode(this.loading, hasValue);
+        const mode = getLoadingMode(this.loading, hasValue || this.noData);
 
         const content = html`${this.icon
                 ? html`<span class="icon" aria-hidden="true"><uui-icon name=${this.icon}></uui-icon></span>`
@@ -89,8 +106,15 @@ export class UaxKpiTileElement extends UmbLitElement {
                     : html`<span class="body">
                           <span class="label">${this.label}</span>
                           <span class="row">
-                              ${hasValue ? html`<span class="value">${this.value}</span>` : nothing}
-                              ${this.delta === undefined || this.delta === null
+                              ${this.noData
+                                  ? html`<span class="value no-data"
+                                        ><span aria-hidden="true">—</span
+                                        ><span class="visually-hidden">${this.localize.term("uaxAnalytics_emptyHeadline")}</span></span
+                                    >`
+                                  : hasValue
+                                    ? html`<span class="value">${this.value}</span>`
+                                    : nothing}
+                              ${this.noData || !Number.isFinite(this.delta)
                                   ? nothing
                                   : html`<uax-delta-badge
                                         .value=${this.delta}
@@ -114,6 +138,7 @@ export class UaxKpiTileElement extends UmbLitElement {
 
     static override styles: CSSResultGroup = [
         UaxPaletteStyles,
+        UaxVisuallyHiddenStyles,
         css`
             :host {
                 display: block;
@@ -280,6 +305,11 @@ export class UaxKpiTileElement extends UmbLitElement {
                 line-height: 1.1;
                 white-space: nowrap;
                 color: var(--uui-color-text);
+            }
+
+            .no-data {
+                position: relative;
+                color: var(--uui-color-text-alt);
             }
         `,
     ];
