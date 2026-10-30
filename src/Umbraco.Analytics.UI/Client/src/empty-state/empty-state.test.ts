@@ -8,6 +8,7 @@ import { render } from "vitest-browser-lit";
 import { axeRun } from "../internal/test/a11y.js";
 import { renderElement, shadow, type UaxTestElement } from "../internal/test/pending.js";
 import "./empty-state.element.js";
+import "../chart/time-series-chart.element.js";
 
 describe("Feature: empty state", () => {
     describe("Scenario: the product's text", () => {
@@ -108,8 +109,7 @@ describe("Feature: empty state", () => {
     });
 
     describe("Scenario: a data element with no data and no text set", () => {
-        // T9 adds uax-time-series-chart and turns this on. The default text itself is covered above.
-        it.skip("shows uax-empty-state with the default text", async () => {
+        it("shows uax-empty-state with the default text", async () => {
             const el = await renderElement(
                 html`<uax-time-series-chart kind="line" .series=${[]}></uax-time-series-chart>`,
                 "uax-time-series-chart",

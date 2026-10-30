@@ -37,7 +37,7 @@ Products wrap each chart and table in the backoffice's own `uui-box`. It already
 - the headline (property or `headline` slot, where the icon goes as a `uui-icon`)
 - `header-actions` for the group-by, notes and date range controls
 - the divider under the header
-- `--uui-box-default-padding: 0` for a table that runs edge to edge
+- `--uui-box-default-padding: 0` for every chart and table, so they run edge to edge. Each pads its own content, and the reload loading bar then sits directly under the header divider, full width
 
 Storybook gets a "Pane" story showing this recipe, a chart and a table in one `uui-box`, so every product builds it the same way. There's no divider between a chart and a table that follows it, which the recipe shows.
 
@@ -91,7 +91,9 @@ Storybook gets a "Pane" story showing this recipe, a chart and a table in one `u
   - Hovering or focusing a dot shows its title and description.
   - Clicking or pressing Enter raises `marker-click` with `{ id }`.
   - Dots are keyboard-focusable, in date order.
-- **Legend:** one entry per series, plus the comparison range when comparing.
+- **Legend:** one entry per series, plus the comparison range when comparing. A single series with no comparison has no legend, as in the design.
+- **Height:** the plot height comes from the public CSS property `--uax-chart-height` (default 260px). The loading skeleton uses the same value.
+- **Padding:** the chart pads its own content with the public CSS property `--uax-chart-padding` (default the design's 12px 24px 28px). The reload loading bar sits outside that padding, at the element's top edge and full width.
 - **Other rules:**
   - The y-axis starts at 0, with about 5 ticks on round numbers.
   - X-axis labels rotate when crowded and never overlap.

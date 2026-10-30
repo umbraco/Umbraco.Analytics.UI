@@ -29,6 +29,10 @@ export default defineConfig({
     },
     test: {
         include: ["src/**/*.test.ts"],
+        // Three browser engines run at once on CI, and a canvas screenshot waits for the chart to settle,
+        // so give a loaded machine more time than the defaults (15s per test, 1s per poll).
+        testTimeout: 30_000,
+        expect: { poll: { timeout: 5_000 } },
         browser: {
             enabled: true,
             provider: playwright(),

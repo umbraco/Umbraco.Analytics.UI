@@ -1,7 +1,8 @@
 // CHT-3 — Bar and stacked bar chart
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect } from "vitest";
 import { page } from "vitest/browser";
 import { html } from "@umbraco-cms/backoffice/external/lit";
+import { screenshotIt } from "../internal/test/screenshot.js";
 import { renderElement, type UaxTestElement } from "../internal/test/pending.js";
 
 const returning = { id: "r", label: "Returning visitor", points: [
@@ -27,11 +28,11 @@ describe("Feature: bar and stacked bar chart", () => {
             el = await chart("bar", [returning]);
         });
 
-        it.skip("draws each point as a bar", async () => {
+        screenshotIt.skip("draws each point as a bar", async () => {
             await expect.element(page.elementLocator(el)).toMatchScreenshot("chart-bar");
         });
 
-        it.skip("draws no curve or line between bars", async () => {
+        screenshotIt.skip("draws no curve or line between bars", async () => {
             await expect.element(page.elementLocator(el)).toMatchScreenshot("chart-bar-no-line");
         });
     });
@@ -42,7 +43,7 @@ describe("Feature: bar and stacked bar chart", () => {
             el = await chart("stacked-bar", [returning, newVisitors]);
         });
 
-        it.skip("stacks both series in one bar per date", async () => {
+        screenshotIt.skip("stacks both series in one bar per date", async () => {
             await expect.element(page.elementLocator(el)).toMatchScreenshot("chart-stacked-bar");
         });
     });
@@ -53,7 +54,7 @@ describe("Feature: bar and stacked bar chart", () => {
             el = await chart("stacked-bar", [returning, newVisitors], [previousTotals]);
         });
 
-        it.skip("draws the compare total behind each current bar", async () => {
+        screenshotIt.skip("draws the compare total behind each current bar", async () => {
             await expect.element(page.elementLocator(el)).toMatchScreenshot("chart-stacked-bar-compare");
         });
     });

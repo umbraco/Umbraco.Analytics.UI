@@ -2,6 +2,7 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { page, userEvent } from "vitest/browser";
 import { html } from "@umbraco-cms/backoffice/external/lit";
+import { screenshotIt } from "../internal/test/screenshot.js";
 import { renderElement, shadow, type UaxTestElement } from "../internal/test/pending.js";
 
 const current = { id: "pv", label: "Pageviews", points: [
@@ -26,11 +27,11 @@ describe("Feature: compare with another period", () => {
             el = await renderChart();
         });
 
-        it.skip("draws the compare series as a dashed --uax-compare line", async () => {
+        screenshotIt.skip("draws the compare series as a dashed --uax-compare line", async () => {
             await expect.element(page.elementLocator(el)).toMatchScreenshot("chart-compare-dashed");
         });
 
-        it.skip("shades the gap between the lines", async () => {
+        screenshotIt.skip("shades the gap between the lines", async () => {
             await expect.element(page.elementLocator(el)).toMatchScreenshot("chart-compare-gap");
         });
 

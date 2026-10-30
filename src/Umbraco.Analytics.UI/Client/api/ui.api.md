@@ -6,8 +6,26 @@
 
 import { CSSResultGroup } from '@umbraco-cms/backoffice/external/lit';
 import { nothing } from '@umbraco-cms/backoffice/external/lit';
+import { PropertyValues } from '@umbraco-cms/backoffice/external/lit';
 import { TemplateResult } from 'lit-html';
 import { UmbLitElement } from '@umbraco-cms/backoffice/lit-element';
+
+// @public
+export type UaxChartKind = "line" | "area" | "bar" | "stacked-bar";
+
+// @public
+export type UaxCompare = {
+    mode: "previous-period" | "previous-year" | "custom";
+    from: string;
+    to: string;
+};
+
+// @public
+export type UaxDateRange = {
+    from: string;
+    to: string;
+    preset?: string;
+};
 
 // @public
 export class UaxDeltaBadgeElement extends UmbLitElement {
@@ -70,6 +88,50 @@ export class UaxKpiTileElement extends UmbLitElement {
     // (undocumented)
     static styles: CSSResultGroup;
     value?: string;
+}
+
+// @public
+export type UaxMarker = {
+    id: string;
+    date: string;
+    title: string;
+    description?: string;
+};
+
+// @public
+export type UaxPoint = {
+    date: string;
+    value: number;
+};
+
+// @public
+export type UaxSeries = {
+    id: string;
+    label: string;
+    points: UaxPoint[];
+};
+
+// @public
+export class UaxTimeSeriesChartElement extends UmbLitElement {
+    // (undocumented)
+    connectedCallback(): void;
+    // (undocumented)
+    disconnectedCallback(): void;
+    emptyDescription?: string;
+    emptyHeadline?: string;
+    groupBy: UaxGroupBy;
+    kind: UaxChartKind;
+    loading: boolean;
+    // (undocumented)
+    render(): TemplateResult<1>;
+    series: UaxSeries[];
+    // (undocumented)
+    static styles: CSSResultGroup;
+    // (undocumented)
+    protected updated(changed: PropertyValues<this>): void;
+    valueFormat?: Intl.NumberFormatOptions;
+    // (undocumented)
+    protected willUpdate(changed: PropertyValues<this>): void;
 }
 
 // (No @packageDocumentation comment for this package)

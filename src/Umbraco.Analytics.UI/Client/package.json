@@ -32,6 +32,8 @@
     "analyze": "web-component-analyzer \"src/**/*.element.ts\" --outFile custom-elements.json",
     "storybook": "npm run analyze && storybook dev -p 6006",
     "storybook:build": "npm run analyze && storybook build",
+    "test:screenshots": "sh ./devops/screenshots/run-in-container.sh",
+    "test:screenshots:update": "sh ./devops/screenshots/run-in-container.sh --update",
     "test:ci": "vitest run --reporter=default --reporter=junit --outputFile.junit=./test-results/junit.xml"
   },
   "peerDependencies": {

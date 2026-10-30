@@ -25,6 +25,12 @@ import { css } from "@umbraco-cms/backoffice/external/lit";
  * Replaced because they fail 3:1: space-cadet (1.15 dark), violet-blue (1.30 dark), spanish-pink
  * (1.17 light), sunglow (1.43 light), deep-saffron (2.15 light; no orange shade passes on white).
  *
+ * Fills (areas, and the bars of T11) use `--_uax-fill-N` at low alpha, not the line colour: the line
+ * tokens are darker so lines clear 3:1, and a pale tint of them looks grey. In light, fill 1 is the
+ * design's violet blue, fill 3 is sunglow, and fill 4 is malibu so it differs from fill 1; fills 2 and
+ * the dark shades match their lines. A product that overrides `--uax-series-N` gets that colour as the fill.
+ * Fills are decoration (the line or bar edge carries the series), so they have no contrast target.
+ *
  * Neutral tint: 20% of `--uui-color-text` over the surface gives a track of 1.59:1 (light and
  * high contrast) and 1.78:1 (dark). The old 40% of `--uui-color-divider` was 1.03:1 / 1.06:1.
  *
@@ -61,6 +67,19 @@ export const uaxThemeTokens = css`
         --_uax-series-4: var(
             --uax-series-4,
             light-dark(var(--uui-palette-violet-blue), var(--uui-palette-jungle-green))
+        );
+        --_uax-fill-1: var(
+            --uax-series-1,
+            light-dark(var(--uui-palette-violet-blue), var(--uui-palette-malibu-light))
+        );
+        --_uax-fill-2: var(
+            --uax-series-2,
+            light-dark(var(--uui-palette-maroon-flush), var(--uui-palette-spanish-pink))
+        );
+        --_uax-fill-3: var(--uax-series-3, var(--uui-palette-sunglow));
+        --_uax-fill-4: var(
+            --uax-series-4,
+            light-dark(var(--uui-palette-malibu), var(--uui-palette-jungle-green))
         );
         --_uax-compare: var(
             --uax-compare,
