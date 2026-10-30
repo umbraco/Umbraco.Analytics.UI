@@ -38,7 +38,7 @@
   Acceptance: KPI-2 specs green, axe clean in both states.
   depends-on: T6
 
-- [ ] **T7b** - story: KPI-2 (AC1–AC9). Align `uan-kpi-tile` selection with UUI's `SelectableMixin` (SPEC.md §2 "Selectable"): cancelable `selected`/`deselected` events, the tile sets its own `selected` unless cancelled, `deselectable` (default true), and `uui-card`'s look (2px `--uui-color-selected` border outside the card with glow; 33%/80% on hover; separate focus outline). Keep the toggle button and `aria-pressed`. Replaces T7's `select` event (unreleased alpha, so no deprecation).
+- [x] **T7b** - story: KPI-2 (AC1–AC9). Align `uan-kpi-tile` selection with UUI's `SelectableMixin` (SPEC.md §2 "Selectable"): cancelable `selected`/`deselected` events, the tile sets its own `selected` unless cancelled, `deselectable` (default true), and `uui-card`'s look (2px `--uui-color-selected` border outside the card with glow; 33%/80% on hover; separate focus outline). Keep the toggle button and `aria-pressed`. Replaces T7's `select` event (unreleased alpha, so no deprecation).
   Acceptance: KPI-2 specs green, axe clean in 3 themes × 2 states, `api/ui.api.md` shows `deselectable` and the events in the JSDoc.
   depends-on: T7
 
