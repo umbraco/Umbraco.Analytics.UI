@@ -84,7 +84,7 @@
   Acceptance: TBL-1 AC5 spec green.
   depends-on: T3, T15
 
-- [ ] **T17** - story: TBL-2 (AC1–AC4). Add sortable headers, the `sort` property, `sort-change`, and `mode` (`client` sorts itself, `server` doesn't).
+- [x] **T17** - story: TBL-2 (AC1–AC4). Add sortable headers, the `sort` property, `sort-change`, and `mode` (`client` sorts itself, `server` doesn't).
   Acceptance: TBL-2 specs green, headers keyboard-operable.
   depends-on: T16
 
