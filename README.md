@@ -62,4 +62,13 @@ To try changes inside a product, reference `src/Umbraco.Analytics.UI/Umbraco.Ana
 
 ## Release
 
-Uses the shared `umbraco/Umbraco.Build` pipeline. Tag `release-{version}` on the release branch. Prereleases go to MyGet, stable releases to NuGet.org and npm.
+Uses the shared `umbraco/Umbraco.Build` pipeline (`azure-pipelines.yml`). Tag `release-{version}` on the release branch. Prereleases go to MyGet, stable releases to NuGet.org and npm.
+
+The template runs the root `package.json` `ci:*` scripts to install, build and pack the client. A `ClientTests` stage then runs lint, the browser tests in Chromium, Firefox and WebKit, and a Storybook build. Publishing waits for it to pass.
+
+## CI and Storybook
+
+| Where | When | What |
+|---|---|---|
+| GitHub Actions (`.github/workflows/storybook.yml`) | Pull requests and pushes to `main` | Lint, build, API check, browser tests. On `main`, also publishes Storybook to GitHub Pages. |
+| Azure DevOps (`azure-pipelines.yml`) | `release/*`, `hotfix/*`, `release-*` tags | Build, pack, SBOM, client tests, then MyGet / NuGet.org / npm. Storybook is attached to the run as an artifact. |

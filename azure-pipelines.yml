@@ -52,7 +52,56 @@ extends:
       release: skip
     ${{ else }}:
       release: ${{ parameters.release }}
-    run_tests: skip # No .NET test projects; client tests run via npm
+    run_tests: skip # No .NET test projects; client tests run in the ClientTests stage below
+    # Client lint, browser tests (Chromium, Firefox, WebKit) and a Storybook build. Prerelease/Release
+    # depend on this stage by name, so a failing test or a broken story blocks publishing.
+    additional_tests:
+      - stage: ClientTests
+        displayName: Client tests
+        dependsOn: BuildAndPack
+        jobs:
+          - job: ClientTests
+            displayName: Lint, test and build Storybook
+            pool:
+              vmImage: ubuntu-latest
+            steps:
+              - checkout: self
+                fetchDepth: 1
+
+              - task: UseNode@1
+                displayName: Use Node $(nodeVersion)
+                inputs:
+                  version: $(nodeVersion)
+
+              - script: npm run ci:install-client
+                displayName: NPM Install
+
+              - script: npm run ci:lint-client
+                displayName: Lint
+
+              # PLAYWRIGHT_BROWSERS_PATH is set by the template
+              - script: cd ./src/Umbraco.Analytics.UI/Client && npx playwright install --with-deps chromium firefox webkit
+                displayName: Install Playwright browsers
+
+              # TF_BUILD makes vite.config.ts run every browser engine, not just Chromium
+              - script: npm run ci:test-client
+                displayName: Run client tests
+
+              - task: PublishTestResults@2
+                displayName: Publish test results
+                condition: succeededOrFailed()
+                inputs:
+                  testResultsFormat: JUnit
+                  testResultsFiles: src/Umbraco.Analytics.UI/Client/test-results/junit.xml
+                  testRunTitle: Client tests
+
+              # Proves every story still builds; the site itself is published to GitHub Pages
+              - script: npm run ci:storybook-client
+                displayName: Build Storybook
+
+              - publish: src/Umbraco.Analytics.UI/Client/storybook-static
+                artifact: storybook
+                displayName: Publish Storybook artifact
     sbom_generate: ${{ parameters.sbom_generate }}
     sbom_upload: ${{ startsWith(variables['Build.SourceBranch'], 'refs/tags/release-') }}
     sbom_dt_variable_group: dependency-track

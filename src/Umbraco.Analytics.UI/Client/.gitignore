@@ -28,3 +28,4 @@ artifacts
 temp
 storybook-static
 custom-elements.json
+test-results

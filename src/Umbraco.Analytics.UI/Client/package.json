@@ -18,7 +18,7 @@
   "scripts": {
     "dev": "vite",
     "build": "npm run build:api && npm run build:app",
-    "build:app": "npm run analyze && tsc -p tsconfig.app.json && vite build",
+    "build:app": "tsc -p tsconfig.app.json && vite build",
     "build:api": "tsc -p tsconfig.api.json && api-extractor run -c api-extractor.json --typescript-compiler-folder ./node_modules/typescript --local",
     "check:api": "tsc -p tsconfig.api.json && api-extractor run -c api-extractor.json --typescript-compiler-folder ./node_modules/typescript",
     "prepack:api": "node ./devops/publish/sync-package-version.js && node ./devops/publish/cleanse-pkg.js && npx mkdirp ./artifacts",
@@ -31,7 +31,8 @@
     "lint": "eslint src .storybook",
     "analyze": "web-component-analyzer \"src/**/*.element.ts\" --outFile custom-elements.json",
     "storybook": "npm run analyze && storybook dev -p 6006",
-    "storybook:build": "npm run analyze && storybook build"
+    "storybook:build": "npm run analyze && storybook build",
+    "test:ci": "vitest run --reporter=default --reporter=junit --outputFile.junit=./test-results/junit.xml"
   },
   "peerDependencies": {
     "@umbraco-cms/backoffice": "^19.0.0-beta1"
