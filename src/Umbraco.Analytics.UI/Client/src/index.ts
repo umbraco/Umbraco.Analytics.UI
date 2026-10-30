@@ -6,4 +6,5 @@ export * from "./delta-badge/index.js";
 export * from "./chart/index.js";
 export * from "./table/index.js";
 export * from "./date-range/index.js";
+export * from "./group-by/index.js";
 export * from "./empty-state/index.js";

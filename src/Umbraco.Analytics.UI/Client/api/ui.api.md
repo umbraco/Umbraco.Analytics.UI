@@ -41,6 +41,19 @@ export class UanEmptyStateElement extends UmbLitElement {
     static styles: CSSResultGroup;
 }
 
+// @public (undocumented)
+export type UanGroupBy = "day" | "week" | "month";
+
+// @public
+export class UanGroupByElement extends UmbLitElement {
+    options: UanGroupBy[];
+    // (undocumented)
+    render(): TemplateResult<1>;
+    // (undocumented)
+    static styles: CSSResultGroup;
+    value: UanGroupBy;
+}
+
 // @public
 export class UanKpiTileElement extends UmbLitElement {
     delta?: number;
