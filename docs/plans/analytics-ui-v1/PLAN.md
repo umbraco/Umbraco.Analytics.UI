@@ -24,7 +24,7 @@
   Acceptance: FND-3 AC1 and AC2 specs green. FND-2 AC1 in `src/lang/localization.test.ts` retargeted from the test-only element to `uan-empty-state`.
   depends-on: T2. parallel-group: B
 
-- [ ] **T5** - story: FND-3 (AC3–AC6). Add internal loading parts in `src/internal/loading/`: a skeleton block sized by its host, and a thin top-edge loading bar. They're not exported. A test host element in `src/internal/loading/loading.test.ts` exercises first-load and reload behaviour, which T9 and T15 then reuse.
+- [x] **T5** - story: FND-3 (AC3–AC6). Add internal loading parts in `src/internal/loading/`: a skeleton block sized by its host, and a thin top-edge loading bar. They're not exported. A test host element in `src/internal/loading/loading.test.ts` exercises first-load and reload behaviour, which T9 and T15 then reuse.
   Acceptance: FND-3 AC3–AC6 specs green against the test host.
   depends-on: T1, T2. parallel-group: B
 
