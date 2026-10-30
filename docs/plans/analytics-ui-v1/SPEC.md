@@ -151,7 +151,7 @@ Storybook gets a "Pane" story showing this recipe, a chart and a table in one `u
 ### 9. Theme and localization
 
 - Products override the `--uan-*` colour names on any parent element. Elements read private `--_uan-*` copies (ARCHITECTURE.md decision 6). Default colours have a light and a dark shade, each at least 3:1 against the surface.
-- Ships `en` translations for every built-in string under `uanAnalytics_*`. Products can override them with their own `localization` extension.
+- Ships `en` translations for its own strings under `uanAnalytics_*`. Generic verbs reuse Umbraco's keys (`buttons_save`, `general_close`, `general_loading`, `general_search`), so they're translated wherever the backoffice is. The package's `localization` extension has weight 200, so a product's own `localization` extension at the default weight (100) always overrides it.
 
 ### The five moments
 

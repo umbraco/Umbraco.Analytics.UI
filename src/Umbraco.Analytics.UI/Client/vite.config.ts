@@ -10,9 +10,13 @@ const browserInstances = isCI
 export default defineConfig({
     build: {
         lib: {
-            entry: "src/index.ts",
+            // The translations are a second entry so the backoffice can load lang/en.js on its own.
+            entry: {
+                "umbraco-analytics-ui": "src/index.ts",
+                "lang/en": "src/lang/en.ts",
+            },
             formats: ["es"],
-            fileName: "umbraco-analytics-ui"
+            fileName: (_format: string, entryName: string) => `${entryName}.js`
         },
         outDir: '../wwwroot/',
         emptyOutDir: true,

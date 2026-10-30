@@ -8,6 +8,8 @@ import "@umbraco-ui/uui/styles/uui-text.css";
 import { html } from "@umbraco-cms/backoffice/external/lit";
 // Registers every uui-* element, as the backoffice does
 import "@umbraco-cms/backoffice/external/uui";
+import { registerUanLocalization } from "../src/internal/localization/register.js";
+import backofficeEn from "../src/internal/test/backoffice-en.js";
 import customElements from "../custom-elements.json";
 
 // Same theme switcher as Umbraco UI's Storybook, so components are checked against every backoffice theme
@@ -62,6 +64,9 @@ const preview: Preview = {
         },
     ],
 };
+
+// Stories show text, not keys: register translations like the backoffice would.
+registerUanLocalization(backofficeEn);
 
 setCustomElementsManifest(customElements);
 

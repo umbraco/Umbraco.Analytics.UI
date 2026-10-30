@@ -21,7 +21,7 @@
   depends-on: T1, T2. parallel-group: B
 
 - [ ] **T4** - story: FND-3 (AC1, AC2). Add `uan-empty-state` in `src/empty-state/` (`headline`, `description`, `icon`), defaulting to the "No data yet" / "Try a wider date range." translations. Remove the now-unused `layout/` and `states/` placeholder folders and their exports from `src/index.ts`.
-  Acceptance: FND-3 AC1 and AC2 specs green.
+  Acceptance: FND-3 AC1 and AC2 specs green. FND-2 AC1 in `src/lang/localization.test.ts` retargeted from the test-only element to `uan-empty-state`.
   depends-on: T2. parallel-group: B
 
 - [ ] **T5** - story: FND-3 (AC3–AC6). Add internal loading parts in `src/internal/loading/`: a skeleton block sized by its host, and a thin top-edge loading bar. They're not exported. A test host element in `src/internal/loading/loading.test.ts` exercises first-load and reload behaviour, which T9 and T15 then reuse.
@@ -63,7 +63,7 @@
 ## Date range
 
 - [ ] **T13** - story: DR-1 (AC1–AC8). Add `uan-date-range` (the button) and `uan-date-range-modal` with its token `UAN_DATE_RANGE_MODAL` in `src/date-range/`. The button opens the modal through `UMB_MODAL_MANAGER_CONTEXT`. The modal has presets (`presets` property, defaulting per SPEC.md), two date fields, inline validation and Save/Close. Dates and the button label are formatted with `this.localize.date`. Tests provide a modal manager context (see `umbraco-backoffice-testing`).
-  Acceptance: DR-1 specs green, axe clean on the button and the open modal.
+  Acceptance: DR-1 specs green, axe clean on the button and the open modal. FND-2 AC3 in `src/lang/localization.test.ts` retargeted from the test-only element to `uan-date-range`.
   depends-on: T2. parallel-group: D
 
 - [ ] **T14** - story: DR-2 (AC1–AC5). Add the Compare switch, compare modes (previous period, previous year, custom), `allow-compare`, the "Compare to:" line on the button, and custom-range validation.
@@ -98,12 +98,13 @@
 
 ## Integration
 
-- [ ] **T21** - **wire: localization and date range modal into `umbraco-package.json`.** story: INT-1 (AC1–AC4). Add a `localization` extension (`culture: "en"`, `js: /App_Plugins/Umbraco.Analytics.UI/lang/en.js`) and a `modal` extension (alias `Uan.Modal.DateRange`, `elementName: "uan-date-range-modal"`) to `public/umbraco-package.json`.
+- [ ] **T21** - **wire: localization and date range modal into `umbraco-package.json`.** story: INT-1 (AC1–AC4). Add a `localization` extension (`culture: "en"`, `weight: 200`, `js: /App_Plugins/Umbraco.Analytics.UI/lang/en.js`) and a `modal` extension (alias `Uan.Modal.DateRange`, `elementName: "uan-date-range-modal"`) to `public/umbraco-package.json`.
   Acceptance (real backoffice, not unit tests):
   - On a CMS 19 site referencing `Umbraco.Analytics.UI.csproj`, `@umbraco-analytics/ui` resolves in the browser.
   - `uanAnalytics_emptyHeadline` translates.
   - A test page using `uan-date-range` opens the modal.
   - `dotnet pack` output's `umbraco-package.json` version equals the package version.
+  - A spec reads the shipped manifest's localization weight and checks it equals `UAN_LOCALIZATION_WEIGHT` (200), so the two can't drift.
   depends-on: T2, T13
 
 ## Docs and checks

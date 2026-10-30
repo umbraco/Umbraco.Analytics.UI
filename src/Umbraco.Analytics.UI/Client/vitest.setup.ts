@@ -1,7 +1,8 @@
 // Adapted from Umbraco UI's vitest.setup.ts so tests read the same across both libraries.
 import "@umbraco-ui/uui/themes/light.css";
 import { type AxeResults } from "axe-core";
-import { expect } from "vitest";
+import { beforeAll, expect } from "vitest";
+import { registerUanTranslations } from "./src/internal/test/localization.js";
 import type { ExpectationResult } from "@vitest/expect";
 
 /**
@@ -38,3 +39,6 @@ declare module "vitest" {
         toHaveNoViolations(): R;
     }
 }
+
+// Every test renders translated text, not keys.
+beforeAll(registerUanTranslations);
