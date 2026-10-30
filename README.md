@@ -38,9 +38,24 @@ src/Umbraco.Analytics.UI/
 ```bash
 cd src/Umbraco.Analytics.UI/Client
 npm install
-npm run build      # types + API report + bundle to ../wwwroot
-npm run watch      # rebuild on change
-npm test
+npx playwright install chromium   # once, for browser tests
+npm run build            # types + API report + bundle to ../wwwroot
+npm run watch            # rebuild on change
+npm run storybook        # component previews on http://localhost:6006
+npm test                 # browser tests (Chromium locally; Chromium, Firefox, WebKit on CI)
+npm run lint
+```
+
+Tooling matches Umbraco UI (UUI): Storybook 10 with the light, dark and high-contrast backoffice themes, and Vitest browser mode with Playwright, `vitest-browser-lit` and an axe-core accessibility matcher.
+
+Each component lives in its own folder:
+
+```
+src/delta-badge/
+  delta-badge.element.ts   the component
+  delta-badge.story.ts     Storybook stories
+  delta-badge.test.ts      browser tests, including an a11y audit
+  index.ts
 ```
 
 To try changes inside a product, reference `src/Umbraco.Analytics.UI/Umbraco.Analytics.UI.csproj` from the product's test site instead of the NuGet package.

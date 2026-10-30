@@ -22,6 +22,9 @@
     "extractorMessageReporting": {
       "ae-internal-missing-underscore": {
         "logLevel": "none"
+      },
+      "ae-missing-release-tag": {
+        "logLevel": "none"
       }
     }
   }

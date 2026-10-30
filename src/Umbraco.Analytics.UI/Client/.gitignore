@@ -26,3 +26,5 @@ artifacts
 *.sln
 *.sw?
 temp
+storybook-static
+custom-elements.json

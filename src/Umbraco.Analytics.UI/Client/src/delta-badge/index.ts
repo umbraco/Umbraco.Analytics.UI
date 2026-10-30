@@ -1,2 +1,1 @@
-// Placeholder. See the proposal for what belongs here.
-export {};
+export * from "./delta-badge.element.js";

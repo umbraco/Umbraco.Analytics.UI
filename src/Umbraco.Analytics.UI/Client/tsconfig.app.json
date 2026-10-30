@@ -3,6 +3,9 @@
   "compilerOptions": {
     "noEmit": true,
     "allowImportingTsExtensions": true,
-    "incremental": false
-  }
+    "incremental": false,
+    "resolveJsonModule": true
+  },
+  "include": [ "src/**/*.ts", ".storybook/**/*.ts", "vitest.setup.ts", "vite.config.ts" ],
+  "exclude": []
 }

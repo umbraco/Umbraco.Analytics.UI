@@ -1,0 +1,64 @@
+name: Test & Storybook
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+      - release/*
+  workflow_dispatch:
+
+defaults:
+  run:
+    working-directory: src/Umbraco.Analytics.UI/Client
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: src/Umbraco.Analytics.UI/Client/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run build
+      # Fails if the public API changed and api/*.api.md was not updated and committed
+      - run: npm run check:api
+      - run: npx playwright install --with-deps chromium firefox webkit
+      - run: npm test
+
+  storybook:
+    # Publishes to GitHub Pages. Needs Settings > Pages > Source set to "GitHub Actions",
+    # and either a public repo or a GitHub plan that allows Pages on private repos.
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: test
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    concurrency:
+      group: pages
+      cancel-in-progress: true
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: src/Umbraco.Analytics.UI/Client/package-lock.json
+      - run: npm ci
+      - run: npm run storybook:build
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: src/Umbraco.Analytics.UI/Client/storybook-static
+      - id: deploy
+        uses: actions/deploy-pages@v4

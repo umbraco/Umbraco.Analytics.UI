@@ -16,3 +16,7 @@ Shared backoffice analytics components (Lit + UUI) consumed by Engage, Commerce 
 - Prerelease suffixes are dot-separated: `-alpha.N`, `-beta.N`, `-rc.N`.
 - Add a component only when at least two products need it.
 - Branching and release process follow the Umbraco Commerce conventions (`topic/{major}.x/{name}`, `release/*`, `release-*` tags).
+- Component folder layout follows UUI: `<name>.element.ts`, `<name>.story.ts`, `<name>.test.ts`, `index.ts`. Element prefix `uan-`.
+- Every component needs a story covering each state and a test that includes `expect(await axeRun(el)).toHaveNoViolations()`.
+- Import Lit only from `@umbraco-cms/backoffice/external/lit` (lint enforced).
+- Before finishing: `npm run lint`, `npm test`, `npm run build` (commit any `api/*.api.md` change deliberately).

@@ -18,7 +18,7 @@
   "scripts": {
     "dev": "vite",
     "build": "npm run build:api && npm run build:app",
-    "build:app": "tsc -p tsconfig.app.json && vite build",
+    "build:app": "npm run analyze && tsc -p tsconfig.app.json && vite build",
     "build:api": "tsc -p tsconfig.api.json && api-extractor run -c api-extractor.json --typescript-compiler-folder ./node_modules/typescript --local",
     "check:api": "tsc -p tsconfig.api.json && api-extractor run -c api-extractor.json --typescript-compiler-folder ./node_modules/typescript",
     "prepack:api": "node ./devops/publish/sync-package-version.js && node ./devops/publish/cleanse-pkg.js && npx mkdirp ./artifacts",
@@ -26,7 +26,12 @@
     "postpack:api": "node ./devops/publish/copy-package-to-output-dir.js",
     "build-and-pack:api": "npm run build:api && npm run pack:api",
     "watch": "vite build --watch",
-    "test": "vitest run --passWithNoTests"
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "eslint src .storybook",
+    "analyze": "web-component-analyzer \"src/**/*.element.ts\" --outFile custom-elements.json",
+    "storybook": "npm run analyze && storybook dev -p 6006",
+    "storybook:build": "npm run analyze && storybook build"
   },
   "peerDependencies": {
     "@umbraco-cms/backoffice": "^19.0.0-beta1"
@@ -36,10 +41,26 @@
   },
   "devDependencies": {
     "@microsoft/api-extractor": "^7.55.1",
+    "@storybook/addon-a11y": "^10.6.5",
+    "@storybook/addon-docs": "^10.6.5",
+    "@storybook/web-components-vite": "^10.6.5",
     "@umbraco-cms/backoffice": "19.0.0-beta1",
+    "@vitest/browser": "^5.0.5",
+    "@vitest/browser-playwright": "^5.0.5",
+    "axe-core": "^4.14.0",
+    "eslint": "^9.39.5",
+    "eslint-plugin-lit": "^2.3.1",
+    "eslint-plugin-lit-a11y": "^5.1.3",
+    "eslint-plugin-storybook": "^10.6.1",
+    "eslint-plugin-wc": "^3.1.0",
     "mkdirp": "^3.0.1",
+    "playwright": "^1.64.1",
+    "storybook": "^10.6.5",
     "typescript": "^5.9.3",
-    "vite": "^7.2.4",
-    "vitest": "^4.1.11"
+    "typescript-eslint": "^8.72.1",
+    "vite": "^8.3.2",
+    "vitest": "^5.0.5",
+    "vitest-browser-lit": "^1.0.1",
+    "web-component-analyzer": "^2.0.0"
   }
 }

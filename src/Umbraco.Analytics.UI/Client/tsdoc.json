@@ -1,0 +1,11 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/tsdoc/v0/tsdoc.schema.json",
+  "extends": ["@microsoft/api-extractor/extends/tsdoc-base.json"],
+  "tagDefinitions": [
+    { "tagName": "@element", "syntaxKind": "block" },
+    { "tagName": "@cssprop", "syntaxKind": "block" },
+    { "tagName": "@fires", "syntaxKind": "block" },
+    { "tagName": "@slot", "syntaxKind": "block" }
+  ],
+  "supportForTags": { "@element": true, "@cssprop": true, "@fires": true, "@slot": true }
+}
