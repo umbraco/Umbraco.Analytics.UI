@@ -21,11 +21,35 @@ export type UaxCompare = {
 };
 
 // @public
+export type UaxDatePreset = {
+    id: string;
+    label?: string;
+    range?: (today: string) => {
+        from: string;
+        to: string;
+    };
+};
+
+// @public
 export type UaxDateRange = {
     from: string;
     to: string;
     preset?: string;
 };
+
+// @public
+export class UaxDateRangeElement extends UmbLitElement {
+    constructor();
+    allowCompare: boolean;
+    compare?: UaxCompare;
+    maxDate?: string;
+    presets: UaxDatePreset[];
+    // (undocumented)
+    render(): TemplateResult<1>;
+    // (undocumented)
+    static styles: CSSResultGroup;
+    value: UaxDateRange;
+}
 
 // @public
 export class UaxDeltaBadgeElement extends UmbLitElement {

@@ -1,0 +1,65 @@
+// Pure date maths for the date range picker. Dates are ISO "yyyy-mm-dd" strings in and out,
+// built from year/month/day parts so a timezone never shifts a day.
+
+const pad = (n: number, width = 2) => String(n).padStart(width, "0");
+
+/** Formats year, month (1-12) and day as an ISO date. */
+const toIso = (year: number, month: number, day: number) => `${pad(year, 4)}-${pad(month)}-${pad(day)}`;
+
+/** The year, month (1-12) and day of an ISO date, or `undefined` when it isn't a real calendar date. */
+export function parseIso(iso: string | undefined): { year: number; month: number; day: number } | undefined {
+    const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso ?? "");
+    if (!match) return undefined;
+    const [year, month, day] = [Number(match[1]), Number(match[2]), Number(match[3])];
+    const check = new Date(Date.UTC(year, month - 1, day));
+    return check.getUTCFullYear() === year && check.getUTCMonth() === month - 1 && check.getUTCDate() === day
+        ? { year, month, day }
+        : undefined;
+}
+
+/** Today's date in the browser's timezone. */
+export function todayIso(now: Date = new Date()): string {
+    return toIso(now.getFullYear(), now.getMonth() + 1, now.getDate());
+}
+
+/** The ISO date `days` after `iso` (negative for before). Returns `iso` unchanged when it isn't a real date. */
+export function addDays(iso: string, days: number): string {
+    const parts = parseIso(iso);
+    if (!parts) return iso;
+    const shifted = new Date(Date.UTC(parts.year, parts.month - 1, parts.day + days));
+    return toIso(shifted.getUTCFullYear(), shifted.getUTCMonth() + 1, shifted.getUTCDate());
+}
+
+/** Local midnight of an ISO date, for `Intl` formatting. `undefined` when it isn't a real date. */
+export function isoToDate(iso: string | undefined): Date | undefined {
+    const parts = parseIso(iso);
+    return parts ? new Date(parts.year, parts.month - 1, parts.day) : undefined;
+}
+
+type Range = { from: string; to: string };
+
+/** The ids of the presets the package knows how to calculate. */
+export type UaxBuiltInPresetId = "last-7-days" | "last-30-days" | "last-month" | "last-year";
+
+const builtIn: Record<UaxBuiltInPresetId, (today: string) => Range> = {
+    // Rolling windows include today.
+    "last-7-days": (today) => ({ from: addDays(today, -6), to: today }),
+    "last-30-days": (today) => ({ from: addDays(today, -29), to: today }),
+    // The previous calendar month and year, whole.
+    "last-month": (today) => {
+        const { year, month } = parseIso(today)!;
+        const firstOfThisMonth = toIso(year, month, 1);
+        const lastOfPrevious = addDays(firstOfThisMonth, -1);
+        const previous = parseIso(lastOfPrevious)!;
+        return { from: toIso(previous.year, previous.month, 1), to: lastOfPrevious };
+    },
+    "last-year": (today) => {
+        const { year } = parseIso(today)!;
+        return { from: toIso(year - 1, 1, 1), to: toIso(year - 1, 12, 31) };
+    },
+};
+
+/** The dates for a built-in preset as of `today`, or `undefined` for any other id (including "custom"). */
+export function builtInPresetRange(id: string, today: string): Range | undefined {
+    return id in builtIn ? builtIn[id as UaxBuiltInPresetId](today) : undefined;
+}

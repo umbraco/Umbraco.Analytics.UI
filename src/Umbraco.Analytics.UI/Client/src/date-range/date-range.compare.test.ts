@@ -1,5 +1,7 @@
 // DR-2 — Pick a comparison range
-import { beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { umbLocalizationManager } from "@umbraco-cms/backoffice/localization-api";
+import "./date-range.element.js";
 import { html } from "@umbraco-cms/backoffice/external/lit";
 import { renderElement, shadow, type UaxTestElement } from "../internal/test/pending.js";
 
@@ -8,7 +10,7 @@ const value = { from: "2026-05-25", to: "2026-06-23" };
 const openModal = async (el: UaxTestElement) => {
     (shadow(el).querySelector("uui-button, button") as HTMLElement).click();
     await el.updateComplete;
-    return document.querySelector("uax-date-range-modal") as UaxTestElement;
+    return document.querySelector<HTMLElement>("uax-date-range-modal") as UaxTestElement;
 };
 const field = (modal: Element, name: string) => shadow(modal).querySelector(`[name='${name}']`) as HTMLInputElement | null;
 const setField = async (modal: UaxTestElement, name: string, v: string | boolean) => {
@@ -48,14 +50,20 @@ describe("Feature: pick a comparison range", () => {
 
     describe("Scenario: a saved comparison", () => {
         let el: UaxTestElement;
+        const previousLanguage = umbLocalizationManager.documentLanguage;
         beforeEach(async () => {
+            umbLocalizationManager.documentLanguage = "en-US";
             el = await renderElement(
                 html`<uax-date-range .value=${value} .compare=${{ mode: "previous-period", from: "2026-04-25", to: "2026-05-24" }}></uax-date-range>`,
                 "uax-date-range",
             );
         });
 
-        it.skip("shows a Compare to line on the button", () => {
+        afterEach(() => {
+            umbLocalizationManager.documentLanguage = previousLanguage;
+        });
+
+        it("shows a Compare to line on the button", () => {
             expect(shadow(el).textContent).toContain("Compare to: Apr 25, 2026 to May 24, 2026");
         });
     });

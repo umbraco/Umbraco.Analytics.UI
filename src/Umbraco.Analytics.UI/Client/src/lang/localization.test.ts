@@ -1,11 +1,13 @@
 // FND-2 — Built-in text is translated
-// The override and aria-label specs render a tiny test element until uax-date-range (T13) exists, then should be pointed at it.
+// The override spec renders a tiny test element; the aria-label spec renders uax-date-range.
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { customElement, html } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { renderElement, shadow, type UaxTestElement } from "../internal/test/pending.js";
 import { umbExtensionsRegistry } from "@umbraco-cms/backoffice/extension-registry";
 import "../empty-state/empty-state.element.js";
+import "../date-range/date-range.element.js";
+import { renderWithModals } from "../internal/test/modal-host.js";
 import { registerUaxLocalization, UAX_EN_ALIAS } from "../internal/localization/register.js";
 import { registerUaxTranslationOverride } from "../internal/test/localization.js";
 
@@ -14,7 +16,6 @@ export class UaxTestLocalizedElement extends UmbLitElement {
     override render() {
         return html`
             <h2>${this.localize.term("uaxAnalytics_emptyHeadline")}</h2>
-            <button aria-label=${this.localize.term("uaxAnalytics_dateRangeButtonLabel")}></button>
         `;
     }
 }
@@ -53,11 +54,11 @@ describe("Feature: built-in text is translated", () => {
     describe("Scenario (sad path): aria labels are translated too", () => {
         let el: UaxTestElement;
         beforeEach(async () => {
-            el = await renderElement(html`<uax-test-localized></uax-test-localized>`, "uax-test-localized");
+            el = await renderWithModals(html`<uax-date-range></uax-date-range>`, "uax-date-range");
         });
 
-        it("gives the icon-only control a translated aria-label", () => {
-            expect(shadow(el).querySelector("[aria-label]")?.getAttribute("aria-label")).toBe("Choose date range");
+        it("gives the icon-led control a translated aria-label", () => {
+            expect(shadow(el).querySelector("uui-button")?.getAttribute("label")).toContain("Choose date range");
         });
     });
 });
