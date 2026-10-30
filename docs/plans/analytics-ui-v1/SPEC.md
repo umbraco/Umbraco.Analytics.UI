@@ -196,6 +196,8 @@ When it comes back, the starting point is [`funnel-final.png`](../../design/phas
 - **Accessibility:** zero axe violations in every story, in light and dark. Every interactive part (KPI tile when selectable, markers, group-by, sort headers, pager, rows) is reachable and usable by keyboard.
 - **Contrast:** text, badges and chart labels are at least 4.5:1 against their background in light, dark and high-contrast.
 - **Public API:** no Chart.js type appears in `api/ui.api.md`.
-- > ASSUMPTION: the chart renders 6 series × 366 daily points in under 100ms on a mid-range laptop.
-- > ASSUMPTION: in `client` mode the table stays responsive (sort or page in under 50ms) up to 1,000 rows. Above that, products use `server` mode.
-- > ASSUMPTION: the built bundle, including Chart.js, is under 120 KB gzipped.
+- **Chart speed:** the chart renders 6 series × 366 daily points in under 100ms on a mid-range laptop.
+- **Table speed:** in `client` mode the table stays responsive (sort or page in under 50ms) up to 1,000 rows. Above that, products use `server` mode.
+- **Bundle size:** the built bundle, including Chart.js, is under 120 KB gzipped.
+
+The last three were agreed by the user on 30-10-2026 after T23 measured them. `test:perf` and `check:size` guard them in CI.

@@ -154,9 +154,31 @@
   Acceptance: every exported element appears in both READMEs.
   depends-on: T21, T22
 
-## Follow-ups from T22 (not scheduled)
 
-Gaps the page examples found. Not part of this plan until the user picks them; each needs a task before it is built.
+## Follow-ups (user picked 30-10-2026)
+
+Run after whole-feature review round B. Each gets a builder, a review and its own commit. Public API changes update `api/ui.api.md`, both READMEs, stories and examples.
+
+- [ ] **T25** - Compare badges by composition (follow-ups 1 and 2). Built-in value cells (number, percent, share) show a compare badge through one shared piece rather than each cell special-casing it, and product cells can use the same piece. The cell doesn't decide what "better" means: the column carries it (e.g. `lowerIsBetter`) and the piece passes it to `uax-delta-badge`. Pending the user's OK on this shape.
+- [ ] **T26** - KPI tile "no data" state (follow-up 3).
+- [ ] **T27** - Error state element for tiles, chart and table (follow-up 4), alongside `uax-empty-state`.
+- [ ] **T28** - Compare-label formatter for a `UaxCompare` (follow-up 5); page examples drop `formatRange`.
+- [ ] **T29** - Public date helpers: previous period, previous year, range to day/week/month buckets (follow-up 6); page examples drop their own.
+- [ ] **T30** - A fixed "today" for the date range (follow-up 7). Presets are already configurable (a product passes its own list, each with an optional `range(today)`), but "today" always comes from the clock.
+- [ ] **T31** - Server-mode table helper (follow-up 8): sort, page, page size and query state plus a stale-response guard, so products don't rewrite it.
+- [ ] **T32** - Compare series aligned by date, not position, for week and month buckets (follow-up 9).
+- [ ] **T33** - Generic segmented control (follow-up 10); check UUI first; `uax-group-by` built on it.
+- [ ] **T34** - Total aligned to its column (follow-up 11).
+- [ ] **T35** - Pressing a selected, non-deselectable KPI tile raises nothing (follow-up 12).
+- [ ] **T36** - KPI delta: "no change" vs "unknown" (follow-up 13).
+- [ ] **T37** - Page examples use the CMS `umb-body-layout` (headline, header and action slots) instead of a hand-made page header (follow-up 14); no new element.
+- [ ] **T38** - Date range button keeps the same height with compare on, without looking cramped. Show options in Storybook for the user to pick before building.
+- [ ] **T39** - The table pager becomes a generic compact pager (internal), and "Show rows" becomes a generic label (e.g. "Per page") under a translation key products can override.
+- [ ] **T40** - Localization audit: every fixed user-facing string (labels, aria-labels, titles, placeholders, sr-only text) goes through a `uaxAnalytics_*` or Umbraco key; a spec fails on new hard-coded text where practical.
+
+## Follow-ups from T22
+
+Gaps the page examples found. The user picked all of them on 30-10-2026 (see T25–T37 above).
 
 1. Compare badges on number and percent cells (Commerce top buyers, AI success rate). Today only `uax-share-cell` shows one.
 2. Lower-is-better for table compare badges (AI average duration). The KPI tile has it; cells don't.
