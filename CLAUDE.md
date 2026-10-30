@@ -20,3 +20,4 @@ Shared backoffice analytics components (Lit + UUI) consumed by Engage, Commerce 
 - Every component needs a story covering each state and a test that includes `expect(await axeRun(el)).toHaveNoViolations()`.
 - Import Lit only from `@umbraco-cms/backoffice/external/lit` (lint enforced).
 - Before finishing: `npm run lint`, `npm test`, `npm run build` (commit any `api/*.api.md` change deliberately).
+- Plan folders: `docs/plans/<feature-slug>/` (devkit feature-* skills). Design references: `docs/design/<name>/`.
