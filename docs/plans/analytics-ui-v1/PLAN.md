@@ -104,13 +104,17 @@
   Acceptance: stories render with no errors in light, dark and high contrast; the production Storybook build has no "Internal" entries, the dev server does.
   depends-on: T18d
 
-- [ ] **T19** - story: TBL-4 (AC1–AC3). Add `uax-table-search`, built like the CMS's own collection search box (find the CMS search input and copy its markup, icon position and spacing; the T15 story's hand-made search box has a misplaced icon, user feedback). Replace the story placeholders with it (300ms debounce, raises `search`). Client mode filters rows on columns marked `searchable` (column flag; if none are marked, all columns' text) and shows the empty state when nothing matches.
+- [x] **T19** - story: TBL-4 (AC1–AC3). Add `uax-table-search`, built like the CMS's own collection search box (find the CMS search input and copy its markup, icon position and spacing; the T15 story's hand-made search box has a misplaced icon, user feedback). Replace the story placeholders with it (300ms debounce, raises `search`). Client mode filters rows on columns marked `searchable` (column flag; if none are marked, all columns' text) and shows the empty state when nothing matches.
   Acceptance: TBL-4 specs green.
   depends-on: T18
 
 - [ ] **T20** - story: TBL-5 (AC1–AC3). Make rows clickable and focusable only when a `row-click` listener is attached. Click or Enter raises `row-click` with the row.
   Acceptance: TBL-5 specs green, axe clean in both modes.
   depends-on: T19
+
+- [ ] **T20b** - story: FND-1 (palette for product elements). Let product elements use the package's palette. Today the real defaults (`--_uax-series-*`, tints, compare, text colours) are set inside our shadow roots, so a product's own cell or legend can't match our series colours in light, dark and high contrast. Expose the palette to product elements, mirroring how UUI ships its tokens (check UUI's own approach first, and copy it). Candidates: an exported `css` token block products add to their `static styles`, or theme-aware defaults on `:root` in the package stylesheet. Public `--uax-*` overrides must keep winning. Update the T18c Custom cell example to use the palette instead of UUI colours, and the README token section.
+  Acceptance: a product element outside our shadow roots renders `--uax-series-1` and `--uax-series-2` with the same colours as our share bars in all three themes (spec); a product override of `--uax-series-1` still reaches both; API report updated.
+  depends-on: T18d. Before T22, which needs it.
 
 ## Integration
 
@@ -131,7 +135,7 @@
   - **Umbraco AI › Usage**: summary KPI tiles (requests, input/output/total tokens, success rate, average duration), a stacked usage chart with series tabs replaced by selectable KPI tiles, and a breakdown table by model or profile.
   Each page uses `uui-box` panes with `--uui-box-default-padding: 0`, wires the events between parts (KPI select switches the chart metric, date range and group-by update the data, table sort/page/search), and shows its source in the docs panel. Any gap found (a missing option, an awkward event) is logged as a follow-up task, not patched silently.
   Acceptance: the three pages render with no errors in light, dark and high contrast; axe clean; each listed interaction works in Storybook.
-  depends-on: T8, T12, T14, T20
+  depends-on: T8, T12, T14, T20, T20b
 
 - [ ] **T23** - story: none (non-functional targets). Measure and record in `BUILD-LOG.md`:
   - the bundle size, gzipped
