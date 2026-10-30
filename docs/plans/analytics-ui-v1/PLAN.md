@@ -30,7 +30,7 @@
 
 ## Small elements
 
-- [ ] **T6** - story: KPI-1 (AC1–AC7). Add `uan-kpi-tile`: `label`, `value` (string, shown as given), `icon`, `delta`, `delta-unit`, `lower-is-better`. Card style with the icon in a `--uan-series-2` square, using `uan-delta-badge`. It has a `loading` property using T5's skeleton. Equal heights come from the host being `display: block; height: 100%` inside a grid row.
+- [x] **T6** - story: KPI-1 (AC1–AC7). Add `uan-kpi-tile`: `label`, `value` (string, shown as given), `icon`, `delta`, `delta-unit`, `lower-is-better`. Card style with the icon in a `--uan-series-2` square, using `uan-delta-badge`. It has a `loading` property using T5's skeleton. Equal heights come from the host being `display: block; height: 100%` inside a grid row.
   Acceptance: KPI-1 specs green. "Row of tiles" story matches `docs/design/phase-1/screenshots/kpi-size.png` apart from rounded corners.
   depends-on: T3, T5. parallel-group: C
 
