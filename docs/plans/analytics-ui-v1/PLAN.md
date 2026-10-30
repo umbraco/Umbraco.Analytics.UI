@@ -16,7 +16,7 @@
   Acceptance: FND-2 AC1 and AC3 specs green. `npm run build` emits `../wwwroot/lang/en.js`.
   depends-on: none. parallel-group: A
 
-- [ ] **T3** - story: BDG-1 (AC1–AC6). Move `uan-delta-badge` to `UmbLitElement` and format with `this.localize.number`. Restyle as the tinted pill (13px bold, `4px 8px`, radius from `--uui-border-radius-*`) using T1's tints. Add `size: "md" | "sm"`. Update its stories and tests.
+- [x] **T3** - story: BDG-1 (AC1–AC6). Move `uan-delta-badge` to `UmbLitElement` and format with `this.localize.number`. Restyle as the tinted pill (13px bold, `4px 8px`, radius from `--uui-border-radius-*`) using T1's tints. Add `size: "md" | "sm"`. Update its stories and tests.
   Acceptance: BDG-1 specs green, existing badge tests still green, axe clean in light and dark.
   depends-on: T1, T2. parallel-group: B
 
