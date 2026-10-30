@@ -1,0 +1,124 @@
+// FND-3 — Empty and loading states (AC2 to AC6 on the table)
+import { beforeEach, describe, expect, it } from "vitest";
+import { html } from "@umbraco-cms/backoffice/external/lit";
+import "@umbraco-cms/backoffice/external/uui";
+import { renderElement, shadow, type UaxTestElement } from "../internal/test/pending.js";
+import "./data-table.element.js";
+import { manyRows, nameColumns, pageColumns, pageRows } from "./table-fixtures.js";
+
+const table = (el: Element) => shadow(el).querySelector("uui-table")!;
+
+describe("Feature: table empty and loading states", () => {
+    describe("Scenario: no rows and no text set", () => {
+        it("shows the empty state with the default text", async () => {
+            const el = await renderElement(html`<uax-data-table .columns=${pageColumns} .rows=${[]}></uax-data-table>`, "uax-data-table");
+            expect(shadow(el).querySelector("uax-empty-state")?.shadowRoot?.textContent).toContain("No data yet");
+        });
+    });
+
+    describe("Scenario: no rows, with the product's text", () => {
+        it("passes the text to the empty state", async () => {
+            const el = await renderElement(
+                html`<uax-data-table .columns=${pageColumns} .rows=${[]} empty-headline="No pages yet"></uax-data-table>`,
+                "uax-data-table",
+            );
+            expect(shadow(el).querySelector("uax-empty-state")?.shadowRoot?.textContent).toContain("No pages yet");
+        });
+    });
+
+    describe("Scenario: no rows", () => {
+        it("keeps the header row", async () => {
+            const el = await renderElement(html`<uax-data-table .columns=${pageColumns} .rows=${[]}></uax-data-table>`, "uax-data-table");
+            expect(shadow(el).querySelectorAll("uui-table-head-cell").length).toBe(3);
+        });
+    });
+
+    describe("Scenario: first load", () => {
+        let el: UaxTestElement;
+        beforeEach(async () => {
+            el = await renderElement(
+                html`<div style="width: 600px"><uax-data-table loading .columns=${nameColumns} .rows=${[]}></uax-data-table></div>`,
+                "uax-data-table",
+            );
+        });
+
+        it("shows a skeleton", () => {
+            expect(shadow(el).querySelector("uax-skeleton")).not.toBe(null);
+        });
+
+        it("shows no empty state", () => {
+            expect(shadow(el).querySelector("uax-empty-state")).toBe(null);
+        });
+
+        it("keeps the header row", () => {
+            expect(shadow(el).querySelectorAll("uui-table-head-cell").length).toBe(2);
+        });
+
+        it("takes the height of the loaded table", async () => {
+            // The skeleton is five rows, so a table of five single-line rows does not jump.
+            const loadingHeight = el.getBoundingClientRect().height;
+            el.rows = manyRows(5);
+            el.loading = false;
+            await el.updateComplete;
+            expect(el.getBoundingClientRect().height).toBe(loadingHeight);
+        });
+
+        it("takes the height of the loaded table when it has share columns", async () => {
+            el.columns = pageColumns;
+            await el.updateComplete;
+            const loadingHeight = el.getBoundingClientRect().height;
+            el.rows = Array.from({ length: 5 }, (_, i) => ({ url: `/p${i}`, pageviews: 5 - i, sessions: 1 }));
+            el.loading = false;
+            await el.updateComplete;
+            expect(el.getBoundingClientRect().height).toBe(loadingHeight);
+        });
+    });
+
+    describe("Scenario: reloading with rows shown", () => {
+        let el: UaxTestElement;
+        beforeEach(async () => {
+            el = await renderElement(
+                html`<uax-data-table .columns=${pageColumns} .rows=${pageRows}></uax-data-table>`,
+                "uax-data-table",
+            );
+            el.loading = true;
+            await el.updateComplete;
+        });
+
+        it("keeps the old rows visible", () => {
+            expect(shadow(el).querySelectorAll("uui-table-row").length).toBe(2);
+        });
+
+        it("shows a loading bar", () => {
+            expect(shadow(el).querySelector("uax-loading-bar")).not.toBe(null);
+        });
+
+        it("shows no skeleton", () => {
+            expect(shadow(el).querySelector("uax-skeleton")).toBe(null);
+        });
+
+        it("puts the loading bar on the top edge", () => {
+            expect(shadow(el).querySelector("uax-loading-bar")!.getBoundingClientRect().top).toBe(el.getBoundingClientRect().top);
+        });
+
+        it("spans the loading bar across the full width", () => {
+            expect(shadow(el).querySelector("uax-loading-bar")!.getBoundingClientRect().width).toBe(el.getBoundingClientRect().width);
+        });
+
+        it("marks the table busy", () => {
+            expect(table(el).getAttribute("aria-busy")).toBe("true");
+        });
+    });
+
+    describe("Scenario: not loading", () => {
+        it("does not mark the table busy", async () => {
+            const el = await renderElement(html`<uax-data-table .columns=${pageColumns} .rows=${pageRows}></uax-data-table>`, "uax-data-table");
+            expect(table(el).getAttribute("aria-busy")).toBe("false");
+        });
+
+        it("shows no loading bar", async () => {
+            const el = await renderElement(html`<uax-data-table .columns=${pageColumns} .rows=${pageRows}></uax-data-table>`, "uax-data-table");
+            expect(shadow(el).querySelector("uax-loading-bar")).toBe(null);
+        });
+    });
+});

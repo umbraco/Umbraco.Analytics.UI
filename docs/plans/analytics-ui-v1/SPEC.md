@@ -128,7 +128,7 @@ Storybook gets a "Pane" story showing this recipe, a chart and a table in one `u
 ![Table with share columns](../../design/phase-1/screenshots/an-table.png)
 
 - Properties:
-  - `columns`: `{ key, label, type, sortable?, align? }[]`, where `type` is `"text" | "link" | "number" | "percent" | "share"`
+  - `columns`: `{ key, label, type, hrefKey?, valueFormat?, align?, color?, sortable? }[]`, where `type` is `"text" | "link" | "number" | "percent" | "share"`. `color` (1 to 4) picks a share bar's palette slot, like `UaxSeries.color`. `sortable` arrives with sorting
   - `rows`: `Record<string, unknown>[]`
   - `compare-rows` (matched by a `row-key` property)
   - `value-format` (per column, optional)
@@ -138,6 +138,7 @@ Storybook gets a "Pane" story showing this recipe, a chart and a table in one `u
   - `loading`
   - `empty-headline`, `empty-description`
 - Slots: `toolbar`, for the search box and totals above the header.
+- **Padding:** the cells pad themselves. The `toolbar` slot pads itself with the public CSS property `--uax-table-padding` (default `12px 24px`), only when something is slotted. The reload loading bar sits outside it at the element's top edge, full width, so put the table in a `uui-box` with `--uui-box-default-padding: 0`.
 - **`share` columns:** show the value, its percent of the column total, and a thin bar scaled to the column's largest value.
   - The first share column uses `--uax-series-1`, the second `--uax-series-2`.
   - When comparing, a small delta badge sits after the value.

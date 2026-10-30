@@ -1,2 +1,2 @@
-// Placeholder. See the proposal for what belongs here.
-export {};
+export * from "./data-table.element.js";
+export type { UaxTableColumn, UaxTableColumnType } from "./types.js";

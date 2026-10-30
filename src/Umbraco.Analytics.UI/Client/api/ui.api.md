@@ -8,6 +8,7 @@ import { CSSResultGroup } from '@umbraco-cms/backoffice/external/lit';
 import { nothing } from '@umbraco-cms/backoffice/external/lit';
 import { PropertyValues } from '@umbraco-cms/backoffice/external/lit';
 import { TemplateResult } from 'lit-html';
+import { TemplateResult as TemplateResult_2 } from '@umbraco-cms/backoffice/external/lit';
 import { UmbLitElement } from '@umbraco-cms/backoffice/lit-element';
 
 // @public
@@ -19,6 +20,21 @@ export type UaxCompare = {
     from: string;
     to: string;
 };
+
+// @public
+export class UaxDataTableElement extends UmbLitElement {
+    columns: UaxTableColumn[];
+    emptyDescription?: string;
+    emptyHeadline?: string;
+    loading: boolean;
+    // (undocumented)
+    render(): TemplateResult_2<1>;
+    rows: Record<string, unknown>[];
+    // (undocumented)
+    static styles: CSSResultGroup;
+    // (undocumented)
+    protected willUpdate(changed: PropertyValues<this>): void;
+}
 
 // @public
 export type UaxDatePreset = {
@@ -135,6 +151,20 @@ export type UaxSeries = {
     color?: 1 | 2 | 3 | 4;
     points: UaxPoint[];
 };
+
+// @public
+export type UaxTableColumn = {
+    key: string;
+    label: string;
+    type: UaxTableColumnType;
+    hrefKey?: string;
+    valueFormat?: Intl.NumberFormatOptions;
+    align?: "start" | "end";
+    color?: 1 | 2 | 3 | 4;
+};
+
+// @public
+export type UaxTableColumnType = "text" | "link" | "number" | "percent" | "share";
 
 // @public
 export class UaxTimeSeriesChartElement extends UmbLitElement {
