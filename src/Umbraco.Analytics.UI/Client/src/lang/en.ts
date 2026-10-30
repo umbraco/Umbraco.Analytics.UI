@@ -15,9 +15,10 @@ export default {
         kpiTileChangeAriaLabel: "{0}: {1}, change {2}",
 
         // Delta badge
-        deltaUp: "Up {0}",
-        deltaDown: "Down {0}",
-        deltaFlat: "No change",
+        deltaPercentagePoints: "{0} pp",
+        deltaImprovement: "improvement",
+        deltaDecline: "decline",
+        deltaNoChange: "no change",
 
         // Group by
         groupByLabel: "Group by",

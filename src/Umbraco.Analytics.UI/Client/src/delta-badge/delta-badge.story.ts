@@ -11,16 +11,19 @@ const meta: Meta<UanDeltaBadgeElement> = {
         unit: "percent",
         lowerIsBetter: false,
         maxDecimals: 1,
+        size: "md",
     },
     argTypes: {
         unit: { control: "inline-radio", options: ["percent", "points"] },
+        size: { control: "inline-radio", options: ["md", "sm"] },
     },
     render: (args) =>
         html`<uan-delta-badge
             .value=${args.value}
             .unit=${args.unit}
             .lowerIsBetter=${args.lowerIsBetter}
-            .maxDecimals=${args.maxDecimals}></uan-delta-badge>`,
+            .maxDecimals=${args.maxDecimals}
+            .size=${args.size}></uan-delta-badge>`,
 };
 
 export default meta;
@@ -35,12 +38,19 @@ export const NoChange: Story = { args: { value: 0.02 } };
 /** A fall in refund rate is good, so it shows green. */
 export const LowerIsBetter: Story = { args: { value: -1.2, unit: "points", lowerIsBetter: true } };
 
+/** The compact size used in table cells. */
+export const Small: Story = { args: { size: "sm" } };
+
 export const AllStates: Story = {
-    render: () => html`<div style="display:flex;gap:16px;flex-wrap:wrap">
-        <uan-delta-badge .value=${12.4}></uan-delta-badge>
-        <uan-delta-badge .value=${-3}></uan-delta-badge>
-        <uan-delta-badge .value=${0}></uan-delta-badge>
-        <uan-delta-badge .value=${-1.2} unit="points" lower-is-better></uan-delta-badge>
-        <uan-delta-badge .value=${4.5} unit="points" lower-is-better></uan-delta-badge>
+    render: () => html`<div style="display:flex;flex-direction:column;gap:12px">
+        ${(["md", "sm"] as const).map(
+            (size) => html`<div style="display:flex;gap:16px;flex-wrap:wrap;align-items:center">
+                <uan-delta-badge .value=${12.4} .size=${size}></uan-delta-badge>
+                <uan-delta-badge .value=${-3} .size=${size}></uan-delta-badge>
+                <uan-delta-badge .value=${0} .size=${size}></uan-delta-badge>
+                <uan-delta-badge .value=${-1.2} unit="points" lower-is-better .size=${size}></uan-delta-badge>
+                <uan-delta-badge .value=${4.5} unit="points" lower-is-better .size=${size}></uan-delta-badge>
+            </div>`,
+        )}
     </div>`,
 };

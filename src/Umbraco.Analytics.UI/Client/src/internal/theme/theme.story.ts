@@ -11,6 +11,9 @@ const tokens = [
     "tint-positive",
     "tint-negative",
     "tint-neutral",
+    "text-positive",
+    "text-negative",
+    "text-neutral",
 ];
 
 /** Story-only element: shows each resolved token, the same way a component sees it. */

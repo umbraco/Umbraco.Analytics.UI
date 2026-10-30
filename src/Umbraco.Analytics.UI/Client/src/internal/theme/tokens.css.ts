@@ -27,6 +27,20 @@ import { css } from "@umbraco-cms/backoffice/external/lit";
  *
  * Neutral tint: 20% of `--uui-color-text` over the surface gives a track of 1.59:1 (light and
  * high contrast) and 1.78:1 (dark). The old 40% of `--uui-color-divider` was 1.03:1 / 1.06:1.
+ *
+ * Text on a tint needs 4.5:1. The semantic tokens can't be used for it: high contrast redefines them
+ * (its `--uui-color-positive-standalone` is 2.37:1 on its tint), and it doesn't set `--uui-color-scheme`
+ * so it takes the light branch. The text colours are palette shades, which are the same in every
+ * theme, picked so the light branch also clears 4.5:1 on the high contrast tints.
+ *
+ * | text on tint       | light                    | high contrast            | dark                       |
+ * | ------------------ | ------------------------ | ------------------------ | -------------------------- |
+ * | text-positive      | forest-green-dark 4.81   | forest-green-dark 4.84   | jungle-green 4.92          |
+ * | text-negative      | maroon-flush-dark 5.46   | maroon-flush-dark 5.19   | spanish-pink 9.93          |
+ * | text-neutral       | text-alt 8.86            | text-alt 8.86            | text-alt 6.14              |
+ *
+ * The tints themselves are decoration (the sign, arrow and hidden text carry the meaning), so they
+ * stay faint: 1.2 to 1.3:1 against the surface in light and high contrast, 1.1 in dark.
  */
 export const uanThemeTokens = css`
     :host {
@@ -52,6 +66,16 @@ export const uanThemeTokens = css`
             --uan-compare,
             light-dark(var(--uui-palette-chamoisee), var(--uui-palette-deep-saffron))
         );
+
+        --_uan-text-positive: var(
+            --uan-text-positive,
+            light-dark(var(--uui-palette-forest-green-dark), var(--uui-palette-jungle-green))
+        );
+        --_uan-text-negative: var(
+            --uan-text-negative,
+            light-dark(var(--uui-palette-maroon-flush-dark), var(--uui-palette-spanish-pink))
+        );
+        --_uan-text-neutral: var(--uan-text-neutral, var(--uui-color-text-alt));
 
         --_uan-tint-positive: var(--uan-tint-positive, color-mix(in srgb, var(--uui-color-positive) 15%, transparent));
         --_uan-tint-negative: var(--uan-tint-negative, color-mix(in srgb, var(--uui-color-danger) 15%, transparent));

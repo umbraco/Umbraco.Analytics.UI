@@ -1,11 +1,13 @@
 // BDG-1 — Change badge matches the design
-import { beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { umbLocalizationManager } from "@umbraco-cms/backoffice/localization-api";
 import { html } from "@umbraco-cms/backoffice/external/lit";
 import { renderElement, shadow, type UanTestElement } from "../internal/test/pending.js";
 import "./delta-badge.element.js";
 
 const pill = (el: Element) => shadow(el).querySelector(".badge") as HTMLElement;
 const bg = (el: Element) => getComputedStyle(pill(el)).backgroundColor;
+// Tints are color-mix()/light-dark() strings, so resolve one through a probe's computed background.
 const tint = (el: Element, name: string) => {
     const probe = document.createElement("span");
     probe.style.background = `var(${name})`;
@@ -22,8 +24,8 @@ describe("Feature: change badge matches the design", () => {
             el = await renderElement(html`<uan-delta-badge .value=${12.4}></uan-delta-badge>`, "uan-delta-badge");
         });
 
-        it.skip("sits on the positive tint", () => {
-            expect(bg(el)).toBe(tint(el, "--uan-tint-positive"));
+        it("sits on the positive tint", () => {
+            expect(bg(el)).toBe(tint(el, "--_uan-tint-positive"));
         });
     });
 
@@ -33,8 +35,8 @@ describe("Feature: change badge matches the design", () => {
             el = await renderElement(html`<uan-delta-badge .value=${-3}></uan-delta-badge>`, "uan-delta-badge");
         });
 
-        it.skip("sits on the danger tint", () => {
-            expect(bg(el)).toBe(tint(el, "--uan-tint-negative"));
+        it("sits on the danger tint", () => {
+            expect(bg(el)).toBe(tint(el, "--_uan-tint-negative"));
         });
     });
 
@@ -44,8 +46,8 @@ describe("Feature: change badge matches the design", () => {
             el = await renderElement(html`<uan-delta-badge .value=${0.02} max-decimals="1"></uan-delta-badge>`, "uan-delta-badge");
         });
 
-        it.skip("sits on the neutral tint", () => {
-            expect(bg(el)).toBe(tint(el, "--uan-tint-neutral"));
+        it("sits on the neutral tint", () => {
+            expect(bg(el)).toBe(tint(el, "--_uan-tint-neutral"));
         });
     });
 
@@ -58,8 +60,8 @@ describe("Feature: change badge matches the design", () => {
             );
         });
 
-        it.skip("shows a fall on the positive tint", () => {
-            expect(bg(el)).toBe(tint(el, "--uan-tint-positive"));
+        it("shows a fall on the positive tint", () => {
+            expect(bg(el)).toBe(tint(el, "--_uan-tint-positive"));
         });
     });
 
@@ -71,20 +73,26 @@ describe("Feature: change badge matches the design", () => {
             sm = await renderElement(html`<uan-delta-badge .value=${5} size="sm"></uan-delta-badge>`, "uan-delta-badge");
         });
 
-        it.skip("uses a smaller font than the default size", () => {
+        it("uses a smaller font than the default size", () => {
             expect(parseFloat(getComputedStyle(pill(sm)).fontSize)).toBeLessThan(parseFloat(getComputedStyle(pill(md)).fontSize));
         });
     });
 
     describe("Scenario: culture-aware number", () => {
         let el: UanTestElement;
+        const previousLanguage = umbLocalizationManager.documentLanguage;
         beforeEach(async () => {
-            // Arrange: backoffice culture da-DK (via the localization context, not document.lang)
+            // The backoffice sets the formatting language from the user's language, not the <html> lang.
+            umbLocalizationManager.documentLanguage = "da-DK";
             el = await renderElement(html`<uan-delta-badge .value=${12.4}></uan-delta-badge>`, "uan-delta-badge");
         });
+        afterEach(() => {
+            umbLocalizationManager.documentLanguage = previousLanguage;
+        });
 
-        it.skip("uses the culture's decimal separator", () => {
-            expect(shadow(el).textContent).toContain("+12,4%");
+        it("formats the percent the way the culture does", () => {
+            // da-DK puts a decimal comma and a (narrow) no-break space before the percent sign
+            expect(shadow(el).textContent).toMatch(/\+12,4[\s\u00a0\u202f]?%/);
         });
     });
 });

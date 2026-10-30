@@ -1,6 +1,6 @@
 # Stories: Analytics UI v1
 
-**19 stories, 94 criteria.** Story ids are used by `PLAN.md` and the spec files, so never renumber them.
+**19 stories, 95 criteria.** Story ids are used by `PLAN.md` and the spec files, so never renumber them.
 
 > [!IMPORTANT]
 > **3 guesses need your OK.**
@@ -16,7 +16,7 @@
 
 **Small elements**
 
-- [BDG-1](#bdg-1-change-badge-matches-the-design) Change badge matches the design, 6 criteria
+- [BDG-1](#bdg-1-change-badge-matches-the-design) Change badge matches the design, 7 criteria
 - [KPI-1](#kpi-1-kpi-tile-shows-a-headline-number) KPI tile shows a headline number, 7 criteria
 - [KPI-2](#kpi-2-kpi-tiles-switch-the-charts-metric) KPI tiles switch the chart's metric, 4 criteria
 - [GRP-1](#grp-1-day--week--month-switch) Day / Week / Month switch, 4 criteria
@@ -188,7 +188,12 @@ AC5 — Small size
 AC6 — Culture-aware number
   Given the backoffice culture is da-DK
   When  uan-delta-badge renders value 12.4
-  Then  it shows "+12,4%"
+  Then  it shows "+12,4 %"
+
+AC7 — Sentiment is not colour only
+  Given uan-delta-badge with value -1.2, unit "points" and lower-is-better
+  When  it renders
+  Then  it has visually hidden text saying "improvement"
 ```
 
 ## KPI-1: KPI tile shows a headline number

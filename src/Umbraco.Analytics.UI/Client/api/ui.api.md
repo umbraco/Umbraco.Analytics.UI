@@ -5,23 +5,27 @@
 ```ts
 
 import { CSSResultGroup } from '@umbraco-cms/backoffice/external/lit';
-import { LitElement } from '@umbraco-cms/backoffice/external/lit';
 import { nothing } from '@umbraco-cms/backoffice/external/lit';
 import { TemplateResult } from 'lit-html';
+import { UmbLitElement } from '@umbraco-cms/backoffice/lit-element';
 
 // @public
-export class UanDeltaBadgeElement extends LitElement {
+export class UanDeltaBadgeElement extends UmbLitElement {
     get direction(): "up" | "down" | "flat";
     lowerIsBetter: boolean;
     maxDecimals: number;
     // (undocumented)
     render(): typeof nothing | TemplateResult<1>;
     get sentiment(): "positive" | "negative" | "neutral";
+    size: UanDeltaBadgeSize;
     // (undocumented)
     static styles: CSSResultGroup;
     unit: UanDeltaUnit;
     value?: number;
 }
+
+// @public (undocumented)
+export type UanDeltaBadgeSize = "md" | "sm";
 
 // @public (undocumented)
 export type UanDeltaUnit = "percent" | "points";

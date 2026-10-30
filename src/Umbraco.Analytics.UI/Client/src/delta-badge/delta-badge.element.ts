@@ -1,7 +1,10 @@
-import { css, customElement, html, nothing, property, LitElement, type CSSResultGroup } from "@umbraco-cms/backoffice/external/lit";
+import { css, customElement, html, nothing, property, type CSSResultGroup } from "@umbraco-cms/backoffice/external/lit";
+import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { uanThemeTokens } from "../internal/theme/tokens.css.js";
 
 export type UanDeltaUnit = "percent" | "points";
+
+export type UanDeltaBadgeSize = "md" | "sm";
 
 /**
  * Shows the change in a value against a comparison period, e.g. "▲ 12.4%".
@@ -9,10 +12,16 @@ export type UanDeltaUnit = "percent" | "points";
  * Green means good. For metrics where a drop is good (refund rate, bounce rate), set `lower-is-better`.
  *
  * @element uan-delta-badge
- * @cssprop --uan-delta-badge-font-size - Font size. Defaults to the UUI small type size.
+ * @cssprop --uan-delta-badge-font-size - Font size. Defaults to 13px ("md") or 11.5px ("sm").
+ * @cssprop --uan-tint-positive - Background of a good change. Defaults to a tint of `--uui-color-positive`.
+ * @cssprop --uan-tint-negative - Background of a bad change. Defaults to a tint of `--uui-color-danger`.
+ * @cssprop --uan-tint-neutral - Background of a change that rounds to zero.
+ * @cssprop --uan-text-positive - Text colour of a good change. Defaults to forest green (dark theme: jungle green), which passes 4.5:1 on the tint.
+ * @cssprop --uan-text-negative - Text colour of a bad change. Defaults to dark maroon (dark theme: spanish pink), which passes 4.5:1 on the tint.
+ * @cssprop --uan-text-neutral - Text colour of a change that rounds to zero. Defaults to `--uui-color-text-alt`.
  */
 @customElement("uan-delta-badge")
-export class UanDeltaBadgeElement extends LitElement {
+export class UanDeltaBadgeElement extends UmbLitElement {
     /** The change. 12.4 means +12.4% (or +12.4 percentage points when `unit` is "points"). */
     @property({ type: Number })
     value?: number;
@@ -28,6 +37,10 @@ export class UanDeltaBadgeElement extends LitElement {
     /** Maximum number of decimals shown. */
     @property({ type: Number, attribute: "max-decimals" })
     maxDecimals = 1;
+
+    /** Pill size. "sm" is for table cells. */
+    @property({ type: String, reflect: true })
+    size: UanDeltaBadgeSize = "md";
 
     /** The direction of the change. "flat" when the value rounds to zero. */
     get direction(): "up" | "down" | "flat" {
@@ -48,11 +61,17 @@ export class UanDeltaBadgeElement extends LitElement {
     }
 
     #format(value: number) {
-        const number = new Intl.NumberFormat(document.documentElement.lang || undefined, {
-            maximumFractionDigits: this.maxDecimals,
-            signDisplay: "exceptZero",
-        }).format(this.#round(value));
-        return this.unit === "points" ? `${number} pp` : `${number}%`;
+        const rounded = this.#round(value);
+        const options = { maximumFractionDigits: this.maxDecimals, signDisplay: "exceptZero" } as const;
+        // Percent style lets the culture place the sign and spacing ("+12.4%" in en, "+12,4 %" in da-DK).
+        return this.unit === "points"
+            ? this.localize.term("uanAnalytics_deltaPercentagePoints", this.localize.number(rounded, options))
+            : this.localize.number(rounded / 100, { ...options, style: "percent" });
+    }
+
+    #sentimentLabel() {
+        const key = { positive: "deltaImprovement", negative: "deltaDecline", neutral: "deltaNoChange" }[this.sentiment];
+        return this.localize.term(`uanAnalytics_${key}`);
     }
 
     override render() {
@@ -60,45 +79,66 @@ export class UanDeltaBadgeElement extends LitElement {
 
         const arrow = { up: "▲", down: "▼", flat: "–" }[this.direction];
 
-        // The signed number carries the direction for screen readers; the arrow is decoration.
+        // The signed number carries the direction for screen readers and the hidden text says whether it is
+        // good, so neither the arrow nor the colour has to; the arrow is decoration.
         return html`<span class="badge" data-sentiment=${this.sentiment}
-            ><span class="arrow" aria-hidden="true">${arrow}</span>${this.#format(this.value)}</span
+            ><span class="arrow" aria-hidden="true">${arrow}</span>${this.#format(this.value)}<span class="visually-hidden">${", "}${this.#sentimentLabel()}</span></span
         >`;
     }
 
     static override styles: CSSResultGroup = [
         uanThemeTokens,
         css`
-        :host {
-            display: inline-flex;
-        }
+            :host {
+                display: inline-flex;
+            }
 
-        .badge {
-            display: inline-flex;
-            align-items: center;
-            gap: var(--uui-size-space-1);
-            font-size: var(--uan-delta-badge-font-size, var(--uui-type-small-size, 12px));
-            font-weight: 700;
-            font-variant-numeric: tabular-nums;
-            white-space: nowrap;
-        }
+            .badge {
+                position: relative;
+                display: inline-flex;
+                align-items: center;
+                gap: var(--uui-size-space-1);
+                padding: 4px 8px;
+                border-radius: var(--uui-border-radius-1);
+                font-size: var(--uan-delta-badge-font-size, 13px);
+                font-weight: 700;
+                font-variant-numeric: tabular-nums;
+                white-space: nowrap;
+            }
 
-        .arrow {
-            font-size: 0.8em;
-        }
+            :host([size="sm"]) .badge {
+                padding: 1px 5px;
+                font-size: var(--uan-delta-badge-font-size, 11.5px);
+            }
 
-        [data-sentiment="positive"] {
-            color: var(--uui-color-positive-standalone);
-        }
+            .arrow {
+                font-size: 0.8em;
+            }
 
-        [data-sentiment="negative"] {
-            color: var(--uui-color-danger-standalone);
-        }
+            [data-sentiment="positive"] {
+                color: var(--_uan-text-positive);
+                background: var(--_uan-tint-positive);
+            }
 
-        [data-sentiment="neutral"] {
-            color: var(--uui-color-text-alt);
-        }
-    `,
+            [data-sentiment="negative"] {
+                color: var(--_uan-text-negative);
+                background: var(--_uan-tint-negative);
+            }
+
+            [data-sentiment="neutral"] {
+                color: var(--_uan-text-neutral);
+                background: var(--_uan-tint-neutral);
+            }
+
+            .visually-hidden {
+                position: absolute;
+                width: 1px;
+                height: 1px;
+                overflow: hidden;
+                clip-path: inset(50%);
+                white-space: nowrap;
+            }
+        `,
     ];
 }
 
