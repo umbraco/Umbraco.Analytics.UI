@@ -4,6 +4,7 @@ import { regionSource, sourceDocs } from "../internal/story/source.js";
 import raw from "./top-pages.story.ts?raw";
 import "../delta-badge/delta-badge.element.js";
 import "../table/data-table.element.js";
+import "../table-search/table-search.element.js";
 import { UAX_TABLE_CELL } from "../table/cells/cell-names.js";
 import type { UaxTableColumn } from "../table/types.js";
 
@@ -46,7 +47,9 @@ const compareRows = [
     { url: `${host}/faq/`, pageviews: 0, sessions: 0 },
 ];
 
-// The toolbar slot is yours: search on the left, a total over each share column.
+// The toolbar slot is yours: search on the left, a total over each share column. The table is in client
+// mode, so the search box filters it with no code: the table reads the `search` event. Only the URL
+// column is `searchable`, so the numbers are not searched.
 const total = (label: string, value: string, change?: number) => html`<div class="total">
     <span class="total-label">${label}</span>
     <span class="total-value">${value}</span>
@@ -91,9 +94,7 @@ const renderTopPages = () => html`
     <uui-box headline="Top pages" style="--uui-box-default-padding: 0">
         <uax-data-table .columns=${columns} .rows=${rows} .compareRows=${compareRows} row-key="url">
             <div slot="toolbar" class="toolbar">
-                <uui-input label="Search" placeholder="Search…" style="width: 200px">
-                    <uui-icon slot="append" name="icon-search"></uui-icon>
-                </uui-input>
+                <uax-table-search></uax-table-search>
                 ${total("Total pageviews", "272", 8.4)} ${total("Total sessions", "52", -3.2)}
             </div>
         </uax-data-table>
@@ -111,8 +112,9 @@ export default meta;
 /**
  * A complete table: a link column, two share columns, compare badges and a toolbar with search and totals.
  * Shares are a share of each column's total, bars are scaled to the column's largest value, and a small change
- * badge follows a value when `compare-rows` has a matching row (matched by `row-key`). The search box here is a
- * placeholder; the product owns the toolbar. All data is made up.
+ * badge follows a value when `compare-rows` has a matching row (matched by `row-key`). Type in the search box to
+ * filter the pages: the table is in `client` mode and only the URL column is `searchable`. The product owns the
+ * rest of the toolbar. All data is made up.
  */
 export const TopPages: StoryObj = {
     name: "Top pages",

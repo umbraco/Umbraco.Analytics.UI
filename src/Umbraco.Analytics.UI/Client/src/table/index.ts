@@ -8,6 +8,7 @@ export type {
     UaxTableCompareLookup,
     UaxTableMode,
     UaxTablePageChangeDetail,
+    UaxTableSearchDetail,
     UaxTableSort,
     UaxTableSortChangeDetail,
     UaxTableSortDirection,

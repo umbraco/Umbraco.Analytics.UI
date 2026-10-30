@@ -27,6 +27,7 @@ import type {
     UaxTableColumn,
     UaxTableMode,
     UaxTablePageChangeDetail,
+    UaxTableSearchDetail,
     UaxTableSort,
     UaxTableStats,
 } from "./types.js";
@@ -74,6 +75,11 @@ function getCollator(lang: string): Intl.Collator {
     return collator;
 }
 
+/** The text of the columns a search looks in: `searchable` columns, or every column when none is marked. Text values only. */
+function searchTextOf(row: UaxTableRow, columns: UaxTableColumn[]): string {
+    return columns.map((column) => (typeof row[column.key] === "string" ? (row[column.key] as string) : "")).join("\n");
+}
+
 const SKELETON_ROWS = 5;
 /** Widths of the skeleton blocks, varied by row so the placeholder doesn't look like a grid of equal bars. */
 const SKELETON_WIDTHS = [72, 54, 83, 47, 65];
@@ -111,6 +117,12 @@ const SKELETON_WIDTHS = [72, 54, 83, 47, 65];
  * table sets its own `page` and `page-size` when the editor changes them, and goes back to page 1 when a
  * header is clicked. In `server` mode that sort is a `sort-change` for the product to load, not a `page-change`.
  *
+ * Set `query` to search. In `client` mode the table keeps the rows that contain it, ignoring case, in the text of
+ * the columns marked `searchable` (every column when none is), shows the empty state when none match, and goes
+ * back to page 1. Put a `uax-table-search` in the `toolbar` slot and the table sets `query` itself from its `search`
+ * event. In `server` mode the table never filters: the product loads the matching rows. Column totals and
+ * bars stay those of all the `rows`, searched or not.
+ *
  * Totals and maxes are worked out from the `rows` the table holds: all of them in `client` mode, but only
  * the current page in `server` mode. Pass `totals` (the column's total across every page) so a share is
  * still a share of the whole, and `maxes` (the column's largest value across every page) so bars
@@ -119,6 +131,7 @@ const SKELETON_WIDTHS = [72, 54, 83, 47, 65];
  * @element uax-data-table
  * @fires sort-change - A sortable header was clicked, by pointer or keyboard. Bubbles, not composed or cancelable, like `uax-group-by`. `detail` is `{ key, direction }`; the table has already set `sort` to it and reset `page` to 1, so a `server` product loads page 1 and resets its own page binding.
  * @fires page-change - The editor picked another page or page size. Bubbles, not composed or cancelable, like `sort-change`. `detail` is `{ page, pageSize }`; the table has already set `page` and `pageSize`. A new page size goes back to page 1.
+ * @fires search - Not raised by the table: the `search` event of a `uax-table-search` in the `toolbar` slot bubbles through it, and the table has already set `query` and gone back to page 1 when a product's listener runs.
  * @slot toolbar - Content above the header row, such as a search box and totals. It pads itself with `--uax-table-padding`.
  * @cssprop --uax-table-padding - Padding around the `toolbar` slot, as a CSS `padding` value. Defaults to `12px 24px`. The loading bar ignores it and spans the full width at the top edge.
  * @cssprop --uax-series-1 - Bar colour of the first share column. Also `--uax-series-2` to `--uax-series-4` for the other slots.
@@ -188,11 +201,19 @@ export class UaxDataTableElement extends UmbLitElement {
     @property({ attribute: false })
     maxes?: Record<string, number>;
 
+    /**
+     * The text to search for. Set by the product, and by the table itself when a `search` event reaches it from a
+     * `uax-table-search` in the `toolbar` slot. `client` mode only keeps the rows that match; `server` mode ignores it.
+     */
+    @property({ type: String })
+    query = "";
+
     /** Provides the columns, stats and compare lookup to the cells, as `UAX_TABLE_CONTEXT`. */
     #context = new UaxTableContextController(this);
     #derived: DerivedColumn[] = [];
     #sorted?: { rows: UaxTableRow[]; sort: UaxTableSort; column: UaxTableColumn; lang: string; sortedRows: UaxTableRow[] };
     #derivedFrom?: DerivedFrom;
+    #searched?: { rows: UaxTableRow[]; columns: UaxTableColumn[]; needle: string; lang: string; searchedRows: UaxTableRow[] };
     /** The compare rows by their `rowKey` value, rebuilt when `compareRows` or `rowKey` change. */
     #compareByKey = new Map<string, UaxTableRow>();
 
@@ -244,7 +265,7 @@ export class UaxDataTableElement extends UmbLitElement {
         return this.rows;
     }
 
-    /** The rows to draw: the sorted rows, cut down to the current page in client mode. Searching will narrow this. */
+    /** The rows to draw: the searched rows, sorted, cut down to the current page in client mode. */
     get #visibleRows(): UaxTableRow[] {
         const rows = this.#sortedRows;
         if (this.mode !== "client") return rows;
@@ -259,9 +280,34 @@ export class UaxDataTableElement extends UmbLitElement {
         return Number.isFinite(size) && size >= 1 ? size : DEFAULT_PAGE_SIZE;
     }
 
+    /** A `search` event came from the toolbar slot: take its query and go back to page 1, since the matches are other rows. */
+    #onSearch = (event: Event) => {
+        const query = (event as CustomEvent<UaxTableSearchDetail>).detail?.query;
+        if (typeof query !== "string") return;
+        this.query = query;
+        this.page = 1;
+    };
+
+    /**
+     * `rows` that contain `query`, in client mode, found once per change of rows, columns, query or language.
+     * Without a query, and in server mode, it is `rows` itself. Never changes `rows`.
+     */
+    get #searchedRows(): UaxTableRow[] {
+        const lang = this.localize.lang();
+        const needle = typeof this.query === "string" ? this.query.trim().toLocaleLowerCase(lang) : "";
+        if (this.mode !== "client" || !needle) return this.rows;
+        const cached = this.#searched;
+        if (cached && cached.rows === this.rows && cached.columns === this.columns && cached.needle === needle && cached.lang === lang) return cached.searchedRows;
+        const marked = this.columns.filter((column) => column.searchable);
+        const searchColumns = marked.length > 0 ? marked : this.columns;
+        const searchedRows = this.rows.filter((row) => searchTextOf(row, searchColumns).toLocaleLowerCase(lang).includes(needle));
+        this.#searched = { rows: this.rows, columns: this.columns, needle, lang, searchedRows };
+        return searchedRows;
+    }
+
     /** How many rows there are across every page. */
     get #totalRows(): number {
-        if (this.mode !== "server") return this.rows.length;
+        if (this.mode !== "server") return this.#searchedRows.length;
         const total = asNumber(this.total);
         return total === undefined ? this.rows.length : Math.max(0, Math.floor(total));
     }
@@ -302,10 +348,11 @@ export class UaxDataTableElement extends UmbLitElement {
     get #sortedRows(): UaxTableRow[] {
         const sort = this.mode === "client" ? this.sort : undefined;
         const column = sort ? this.columns.find((c) => c.key === sort.key) : undefined;
-        if (!sort || !column) return this.rows;
+        const rows = this.#searchedRows;
+        if (!sort || !column) return rows;
         const lang = this.localize.lang();
         const cached = this.#sorted;
-        if (cached && cached.rows === this.rows && cached.sort === sort && cached.lang === lang && cached.column === column) return cached.sortedRows;
+        if (cached && cached.rows === rows && cached.sort === sort && cached.lang === lang && cached.column === column) return cached.sortedRows;
         const sortAs = column.sortAs ?? "text";
         const collator = getCollator(lang);
         const sign = sort.direction === "desc" ? -1 : 1;
@@ -316,14 +363,14 @@ export class UaxDataTableElement extends UmbLitElement {
             if (typeof sortAs === "function") return value ?? undefined;
             return sortAs === "number" ? asNumber(value) : asText(value) || undefined;
         };
-        const sortedRows = [...this.rows].sort((a, b) => {
+        const sortedRows = [...rows].sort((a, b) => {
             const x = sortValue(a);
             const y = sortValue(b);
             // Empty values go last in both directions, so only real values flip with the sign.
             if (x === undefined || y === undefined) return x === y ? 0 : x === undefined ? 1 : -1;
             return sign * compare(x, y);
         });
-        this.#sorted = { rows: this.rows, sort, lang, column, sortedRows };
+        this.#sorted = { rows, sort, lang, column, sortedRows };
         return sortedRows;
     }
 
@@ -473,7 +520,7 @@ export class UaxDataTableElement extends UmbLitElement {
         const mode = getLoadingMode(this.loading, hasData);
         return html`<div class="region ${this.#hasToolbar ? "has-toolbar" : ""}">
             ${mode === "reload" ? html`<uax-loading-bar></uax-loading-bar>` : nothing}
-            <div class="toolbar"><slot name="toolbar" @slotchange=${() => this.requestUpdate()}></slot></div>
+            <div class="toolbar"><slot name="toolbar" @slotchange=${() => this.requestUpdate()} @search=${this.#onSearch}></slot></div>
             <uui-table aria-busy=${this.loading ? "true" : "false"}>
                 ${this.#derived.map((derived) => html`<uui-table-column style=${ifDefined(derived.column.width ? `width: ${derived.column.width}` : undefined)}></uui-table-column>`)}
                 <uui-table-head>${this.#derived.map((derived) => this.#renderHeaderCell(derived))}</uui-table-head>
@@ -481,11 +528,21 @@ export class UaxDataTableElement extends UmbLitElement {
                     ? Array.from({ length: this.#skeletonRowCount }, (_, index) => this.#renderSkeletonRow(index))
                     : this.#visibleRows.map((row) => this.#renderRow(row))}
             </uui-table>
-            ${mode === "idle" && !hasData
-                ? html`<uax-empty-state .headline=${this.emptyHeadline} .description=${this.emptyDescription}></uax-empty-state>`
-                : nothing}
+            ${this.#renderEmptyState(mode, hasData)}
             ${this.#showPager && mode !== "skeleton" ? this.#renderPager() : nothing}
         </div>`;
+    }
+
+    /** "No results" when a query leaves no rows on screen (either mode), else the product's empty state when there are no rows. */
+    #renderEmptyState(mode: ReturnType<typeof getLoadingMode>, hasData: boolean): TemplateResult | typeof nothing {
+        const searching = typeof this.query === "string" && this.query.trim() !== "";
+        if (mode !== "skeleton" && searching && this.#visibleRows.length === 0) {
+            return html`<uax-empty-state .headline=${this.localize.term("general_searchNoResult")} description=""></uax-empty-state>`;
+        }
+        if (mode === "idle" && !hasData) {
+            return html`<uax-empty-state .headline=${this.emptyHeadline} .description=${this.emptyDescription}></uax-empty-state>`;
+        }
+        return nothing;
     }
 
     #renderPager(): TemplateResult {

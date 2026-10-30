@@ -70,9 +70,9 @@ const preview: Preview = {
 
 // Stories show icons, not blanks: the backoffice icon registry is not loaded here, so register
 // just the icons the stories use. Add a line when a story needs another icon.
-const storyIconNames = ["icon-search", "icon-chart", "icon-coins", "icon-inbox", "icon-shopping-basket", "icon-user", "icon-calendar", "icon-navigation-left", "icon-navigation-right"];
+const storyIconNames = ["icon-search", "icon-chart", "icon-coins", "icon-inbox", "icon-shopping-basket", "icon-user", "icon-calendar", "icon-navigation-left", "icon-navigation-right", "icon-delete"];
 const icons = import.meta.glob(
-    "../node_modules/@umbraco-cms/backoffice/dist-cms/packages/core/icon-registry/icons/{icon-search,icon-chart,icon-coins,icon-inbox,icon-shopping-basket,icon-user,icon-calendar,icon-navigation-left,icon-navigation-right}.js",
+    "../node_modules/@umbraco-cms/backoffice/dist-cms/packages/core/icon-registry/icons/{icon-search,icon-chart,icon-coins,icon-inbox,icon-shopping-basket,icon-user,icon-calendar,icon-navigation-left,icon-navigation-right,icon-delete}.js",
 );
 if (Object.keys(icons).length < storyIconNames.length) {
     throw new Error(`Storybook icon glob found ${Object.keys(icons).length} of ${storyIconNames.length} icons`);

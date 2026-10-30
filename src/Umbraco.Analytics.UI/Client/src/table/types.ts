@@ -87,3 +87,8 @@ export type UaxTableStats = Readonly<Record<string, UaxTableColumnStats>>;
 
 /** Finds the compare-period row that matches a row, by the table's `rowKey`. `undefined` when there is none. */
 export type UaxTableCompareLookup = (item: Record<string, unknown>) => Record<string, unknown> | undefined;
+
+/** The detail of the `search` event of `uax-table-search`: what the editor typed. Empty when the box was cleared. */
+export type UaxTableSearchDetail = {
+    query: string;
+};

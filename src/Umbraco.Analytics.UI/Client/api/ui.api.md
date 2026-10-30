@@ -47,6 +47,7 @@ export class UaxDataTableElement extends UmbLitElement {
     mode: UaxTableMode;
     page: number;
     pageSize: number;
+    query: string;
     // (undocumented)
     render(): TemplateResult_2<1>;
     rowKey?: string;
@@ -282,6 +283,24 @@ export type UaxTablePageChangeDetail = {
     page: number;
     pageSize: number;
 };
+
+// @public
+export type UaxTableSearchDetail = {
+    query: string;
+};
+
+// @public
+export class UaxTableSearchElement extends UmbLitElement {
+    // (undocumented)
+    disconnectedCallback(): void;
+    // (undocumented)
+    focus(): void;
+    // (undocumented)
+    render(): TemplateResult<1>;
+    // (undocumented)
+    static styles: CSSResultGroup;
+    value: string;
+}
 
 // @public
 export type UaxTableSort = {

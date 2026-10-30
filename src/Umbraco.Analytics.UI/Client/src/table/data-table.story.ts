@@ -3,6 +3,7 @@ import { html } from "@umbraco-cms/backoffice/external/lit";
 import { UAX_TABLE_CELL } from "./cells/cell-names.js";
 import type { UaxDataTableElement } from "./data-table.element.js";
 import "./data-table.element.js";
+import "../table-search/table-search.element.js";
 import type { UaxTableColumn } from "./types.js";
 
 // Focused stories of the table's options. Complete, worked tables are under "Examples".
@@ -74,7 +75,7 @@ const meta: Meta<UaxDataTableElement> = {
 export default meta;
 type Story = StoryObj<UaxDataTableElement>;
 
-/** Each column names its cell in `elementName`, aligns with `align` and sizes with `width`. Here a link, number, share and percent column: numbers are `align: "end"`, and the share column takes a currency `valueFormat` (its percent stays a percent). */
+/** Each column names its cell in `elementName`, aligns with `align` and sizes with `width`. Here a text, number, share and percent column: numbers are `align: "end"`, and the share column takes a currency `valueFormat` (its percent stays a percent). */
 export const Columns: Story = {
     args: { columns: mixedColumns, rows: mixedRows },
     render: (args) =>
@@ -120,6 +121,20 @@ export const PagedClient: Story = {
     render: (args) =>
         html`<uui-box headline="Top pages" style="--uui-box-default-padding: 0">
             <uax-data-table .columns=${args.columns} .rows=${args.rows}></uax-data-table>
+        </uui-box>`,
+};
+
+/** A `uax-table-search` in the `toolbar` slot. In `client` mode the table filters its rows on the `searchable` columns (here only the URL), goes back to page 1 and shows the empty state when nothing matches. In `server` mode it never filters: listen for `search` and load the matching rows. */
+export const Search: Story = {
+    args: {
+        columns: pageColumns.map((c) => (c.key === "url" ? { ...c, searchable: true } : c)),
+        rows: manyPageRows,
+    },
+    render: (args) =>
+        html`<uui-box headline="Top pages" style="--uui-box-default-padding: 0">
+            <uax-data-table .columns=${args.columns} .rows=${args.rows}>
+                <uax-table-search slot="toolbar"></uax-table-search>
+            </uax-data-table>
         </uui-box>`,
 };
 
