@@ -8,7 +8,7 @@ import darkCss from "@umbraco-ui/uui/themes/dark.css?inline";
 import highContrastCss from "@umbraco-ui/uui/themes/high-contrast.css?inline";
 import { render } from "vitest-browser-lit";
 import { axeRun } from "../internal/test/a11y.js";
-import { deepQuery, deepText, renderElement, settle, shadow, type UaxTestElement } from "../internal/test/pending.js";
+import { deepQuery, deepText, renderElement, settle, shadow, type UaxTestElement } from "../internal/test/dom.js";
 import "./data-table.element.js";
 import "./cells/index.js";
 import type { UaxShareCellElement } from "./cells/share-cell.element.js";

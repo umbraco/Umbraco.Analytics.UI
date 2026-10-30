@@ -7,7 +7,7 @@ import darkCss from "@umbraco-ui/uui/themes/dark.css?inline";
 import highContrastCss from "@umbraco-ui/uui/themes/high-contrast.css?inline";
 import { axeRun } from "../../../internal/test/a11y.js";
 import { renderPageExample, saveDateRange, withTheme } from "../../../internal/test/page-example.js";
-import { deepQuery, deepText, shadow, settle, type UaxTestElement } from "../../../internal/test/pending.js";
+import { deepQuery, deepText, shadow, settle, type UaxTestElement } from "../../../internal/test/dom.js";
 import "./commerce-analytics-page.element.js";
 import type { UaxTimeSeriesChartElement } from "../../../chart/time-series-chart.element.js";
 import type { UaxKpiTileElement } from "../../../kpi-tile/kpi-tile.element.js";

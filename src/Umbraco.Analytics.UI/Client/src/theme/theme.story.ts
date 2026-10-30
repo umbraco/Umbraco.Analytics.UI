@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/web-components-vite";
 import { css, html, LitElement } from "@umbraco-cms/backoffice/external/lit";
-import { UaxPaletteStyles } from "../../theme/index.js";
+import { UaxPaletteStyles } from "./index.js";
 
 const tokens = [
     "series-1",

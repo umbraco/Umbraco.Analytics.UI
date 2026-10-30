@@ -2,11 +2,14 @@ import { css, customElement, html, nothing, type CSSResultGroup } from "@umbraco
 import { umbFocus } from "@umbraco-cms/backoffice/lit-element";
 import { UmbModalBaseElement } from "@umbraco-cms/backoffice/modal";
 import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
-// Registers umb-input-date, the backoffice's date field
-import "@umbraco-cms/backoffice/components";
-import { builtInPresetRange, isoToDate, parseIso, previousPeriodRange, previousYearRange, todayIso } from "./date-math.js";
+import { builtInPresetRange, compareRangeFor, parseIso, todayIso } from "../internal/date/date-math.js";
+import { displayIsoDate } from "../internal/date/format-date.js";
+import "./internal/compare-group.element.js";
+import type { UaxCompareGroupChangeDetail } from "./internal/compare-group.element.js";
+import "./internal/date-field.element.js";
+import type { UaxDateFieldElement } from "./internal/date-field.element.js";
 import { defaultPresets } from "./presets.js";
-import type { UaxCompare, UaxDateRange, UaxDatePreset, UaxDateRangeModalData, UaxDateRangeModalValue } from "./types.js";
+import type { UaxDateRange, UaxDatePreset, UaxDateRangeModalData, UaxDateRangeModalValue } from "./types.js";
 
 const CUSTOM = "custom";
 
@@ -18,20 +21,7 @@ const presetTerms: Record<string, string> = {
     [CUSTOM]: "uaxAnalytics_dateRangeCustom",
 };
 
-const compareModeTerms: Record<UaxCompare["mode"], string> = {
-    "previous-period": "uaxAnalytics_dateRangeComparePreviousPeriod",
-    "previous-year": "uaxAnalytics_dateRangeComparePreviousYear",
-    [CUSTOM]: "uaxAnalytics_dateRangeCompareCustom",
-};
-
 type Field = "from" | "to" | "compare-from" | "compare-to";
-
-/** The dates a non-custom compare mode gives for `range`, or `undefined` when `range` isn't valid yet. */
-function compareDates(mode: UaxCompare["mode"], range: UaxDateRange) {
-    if (mode === "previous-period") return previousPeriodRange(range);
-    if (mode === "previous-year") return previousYearRange(range);
-    return undefined;
-}
 
 /**
  * The dialog behind `uax-date-range`: pick a preset or type two dates, then Save or Close.
@@ -81,27 +71,12 @@ export class UaxDateRangeModalElement extends UmbModalBaseElement<UaxDateRangeMo
         const current = this.value?.value ?? { from: "", to: "" };
         const range = { ...current, ...changes };
         const compare = this.value?.compare;
-        const dates = compare && compareDates(compare.mode, range);
+        const dates = compare && compareRangeFor(compare.mode, range);
         this.updateValue({ value: range, compare: dates ? { mode: compare.mode, ...dates } : compare });
     }
 
-    #onCompareToggle(e: Event) {
-        const on = (e.target as HTMLInputElement).checked;
-        const range = this.value?.value ?? { from: "", to: "" };
-        const mode = "previous-period";
-        this.updateValue({ compare: on ? { mode, from: "", to: "", ...compareDates(mode, range) } : undefined });
-    }
-
-    #onCompareModeChange(e: Event) {
-        const mode = (e.target as HTMLInputElement).value as UaxCompare["mode"];
-        const current = this.value?.compare ?? { from: "", to: "" };
-        const dates = compareDates(mode, this.value?.value ?? { from: "", to: "" });
-        this.updateValue({ compare: { from: current.from, to: current.to, ...dates, mode } });
-    }
-
-    #onCompareDateChange(field: "from" | "to", e: Event) {
-        const current = this.value?.compare ?? { from: "", to: "" };
-        this.updateValue({ compare: { ...current, [field]: (e.target as HTMLInputElement).value, mode: CUSTOM } });
+    #onCompareChange(e: CustomEvent<UaxCompareGroupChangeDetail>) {
+        this.updateValue({ compare: e.detail.compare });
     }
 
     #onPresetChange(e: Event) {
@@ -112,7 +87,7 @@ export class UaxDateRangeModalElement extends UmbModalBaseElement<UaxDateRangeMo
     }
 
     #onDateChange(field: "from" | "to", e: Event) {
-        this.#setRange({ [field]: (e.target as HTMLInputElement).value, preset: CUSTOM });
+        this.#setRange({ [field]: (e.target as UaxDateFieldElement).value, preset: CUSTOM });
     }
 
     /** The message under a field, or `undefined` when it is fine. The end date shows its own range error. */
@@ -120,7 +95,7 @@ export class UaxDateRangeModalElement extends UmbModalBaseElement<UaxDateRangeMo
         const { from, to, date } = this.#dates(field);
         const max = this.#maxDate;
         if (parseIso(date) && date > max) {
-            return this.localize.term("uaxAnalytics_dateRangeErrorAfterMaxDate", this.#formatDate(max));
+            return this.localize.term("uaxAnalytics_dateRangeErrorAfterMaxDate", displayIsoDate(max, this.localize));
         }
         if (field.endsWith("to") && parseIso(from) && parseIso(to) && to < from) {
             return this.localize.term("uaxAnalytics_dateRangeErrorEndBeforeStart");
@@ -135,67 +110,28 @@ export class UaxDateRangeModalElement extends UmbModalBaseElement<UaxDateRangeMo
         return { from: range.from, to: range.to, date: field.endsWith("from") ? range.from : range.to };
     }
 
-    #formatDate(iso: string) {
-        const date = isoToDate(iso);
-        return date ? this.localize.date(date, { dateStyle: "medium" }) : iso;
-    }
-
     /** A date field the editor left empty or half-typed has no value. */
     #isEmpty(field: Field) {
         return !parseIso(this.#dates(field).date);
     }
 
-    #renderDate(field: Field, label: string) {
-        const date = this.#dates(field).date;
-        const error = this.#error(field);
-        const empty = this.#isEmpty(field);
-        return html`<uui-form-layout-item>
-            <umb-input-date
-                type="date"
-                name=${field}
-                label=${label}
-                .value=${date}
-                .max=${this.#maxDate}
-                ?error=${!!error}
-                @change=${(e: Event) =>
-                    field.startsWith("compare")
-                        ? this.#onCompareDateChange(field === "compare-from" ? "from" : "to", e)
-                        : this.#onDateChange(field as "from" | "to", e)}></umb-input-date>
-            ${error
-                ? html`<div slot="message" class="error" data-for=${field} role="alert">${error}</div>`
-                : empty
-                  ? html`<div slot="message" class="error" data-for=${field}>
-                        ${this.localize.term("validation_invalidEmpty")}
-                    </div>`
-                  : nothing}
-        </uui-form-layout-item>`;
+    #renderDate(field: "from" | "to", label: string) {
+        return html`<uax-date-field
+            .name=${field}
+            label=${label}
+            .value=${this.#dates(field).date}
+            .max=${this.#maxDate}
+            .error=${this.#error(field)}
+            @change=${(e: Event) => this.#onDateChange(field, e)}></uax-date-field>`;
     }
 
     #renderCompare() {
-        const compare = this.value?.compare;
-        return html`<uui-toggle
-                name="compare"
-                label=${this.localize.term("uaxAnalytics_dateRangeCompare")}
-                .checked=${!!compare}
-                @change=${this.#onCompareToggle}></uui-toggle>
-            ${compare
-                ? html`<div class="row">
-                      <uui-form-layout-item>
-                          <uui-select
-                              name="compare-mode"
-                              label=${this.localize.term("uaxAnalytics_dateRangeCompareMode")}
-                              .options=${(Object.keys(compareModeTerms) as UaxCompare["mode"][]).map((mode) => ({
-                                  name: this.localize.term(compareModeTerms[mode]),
-                                  value: mode,
-                                  selected: mode === compare.mode,
-                              }))}
-                              .value=${compare.mode}
-                              @change=${this.#onCompareModeChange}></uui-select>
-                      </uui-form-layout-item>
-                      ${this.#renderDate("compare-from", this.localize.term("uaxAnalytics_dateRangeCompareStart"))}
-                      ${this.#renderDate("compare-to", this.localize.term("uaxAnalytics_dateRangeCompareEnd"))}
-                  </div>`
-                : nothing}`;
+        return html`<uax-compare-group
+            .range=${this.value?.value ?? { from: "", to: "" }}
+            .compare=${this.value?.compare}
+            max-date=${this.#maxDate}
+            .errors=${{ from: this.#error("compare-from"), to: this.#error("compare-to") }}
+            @change=${this.#onCompareChange}></uax-compare-group>`;
     }
 
     /** Fixed on first render, so focus never jumps while the editor types. Save when it can be pressed, else the first field. */
@@ -262,24 +198,13 @@ export class UaxDateRangeModalElement extends UmbModalBaseElement<UaxDateRangeMo
                 margin: 0;
             }
 
-            uui-toggle {
-                display: block;
-                margin-block: var(--uui-size-space-4);
-            }
-
-            uui-select,
-            umb-input-date {
+            uui-select {
                 width: 100%;
             }
 
             /* UUI's dark positive button is white-ish text on #347d39, 4.4:1 (below AA); pure white is 5.1:1 */
             .save {
                 --uui-color-positive-contrast: var(--uui-palette-white-light);
-            }
-
-            .error {
-                margin-top: var(--uui-size-space-1);
-                font-size: var(--uui-type-small-size);
             }
         `,
     ];

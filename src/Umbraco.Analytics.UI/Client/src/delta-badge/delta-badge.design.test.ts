@@ -2,7 +2,7 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { umbLocalizationManager } from "@umbraco-cms/backoffice/localization-api";
 import { html } from "@umbraco-cms/backoffice/external/lit";
-import { renderElement, shadow, type UaxTestElement } from "../internal/test/pending.js";
+import { renderElement, shadow, type UaxTestElement } from "../internal/test/dom.js";
 import "./delta-badge.element.js";
 
 const pill = (el: Element) => shadow(el).querySelector(".badge") as HTMLElement;

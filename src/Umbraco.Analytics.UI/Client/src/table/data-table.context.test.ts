@@ -4,7 +4,7 @@ import { customElement, html, property, state } from "@umbraco-cms/backoffice/ex
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import "@umbraco-cms/backoffice/external/uui";
 import { render } from "vitest-browser-lit";
-import { deepText, renderElement, settle, shadow, type UaxTestElement } from "../internal/test/pending.js";
+import { deepText, renderElement, settle, shadow, type UaxTestElement } from "../internal/test/dom.js";
 import "./data-table.element.js";
 import "./cells/index.js";
 import { UAX_TABLE_CELL } from "./cells/cell-names.js";

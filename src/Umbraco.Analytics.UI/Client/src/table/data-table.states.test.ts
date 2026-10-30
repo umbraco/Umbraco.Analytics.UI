@@ -2,7 +2,7 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { html } from "@umbraco-cms/backoffice/external/lit";
 import "@umbraco-cms/backoffice/external/uui";
-import { deepQuery, renderElement, settle, shadow, type UaxTestElement } from "../internal/test/pending.js";
+import { deepQuery, renderElement, settle, shadow, type UaxTestElement } from "../internal/test/dom.js";
 import "./data-table.element.js";
 import { manyRows, nameColumns, pageColumns, pageRows } from "./table-fixtures.js";
 

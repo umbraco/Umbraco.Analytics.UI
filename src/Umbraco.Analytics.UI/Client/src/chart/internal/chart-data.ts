@@ -1,3 +1,4 @@
+import { dateOnly } from "../../internal/date/date-math.js";
 import type { UaxChartKind, UaxSeries } from "../types.js";
 
 export interface UaxChartData {
@@ -19,12 +20,17 @@ export interface UaxChartData {
     }[];
 }
 
+/** The series with each point's date cut to its calendar day, so a date-time point lands on the day it names. */
+const dayPoints = (s: UaxSeries): UaxSeries => ({ ...s, points: s.points.map((p) => ({ ...p, date: dateOnly(p.date) })) });
+
 /**
  * Lines the series up on one shared list of dates. A date a series has no point for is `null`.
  * A compare series is matched to its series by `id`, then point by point: its first point sits on the
  * date of the series' first point, and so on. Compare points beyond the series' last point are dropped.
  */
-export function buildChartData(series: UaxSeries[], compareSeries: UaxSeries[] = []): UaxChartData {
+export function buildChartData(rawSeries: UaxSeries[], rawCompareSeries: UaxSeries[] = []): UaxChartData {
+    const series = rawSeries.map(dayPoints);
+    const compareSeries = rawCompareSeries.map(dayPoints);
     const dates = [...new Set(series.flatMap((s) => s.points.map((p) => p.date)))].sort();
     const indexOfDate = new Map(dates.map((d, i) => [d, i]));
     return {
@@ -94,10 +100,4 @@ export function maxValue(data: UaxChartData, kind: UaxChartKind = "line"): numbe
         0,
         ...data.series.flatMap((s) => [...s.values, ...(s.compare ?? [])].filter((v): v is number => v !== null)),
     );
-}
-
-/** Parses "2026-06-11" as a local date, so formatting it can't shift it to the day before. */
-export function parseIsoDate(iso: string): Date {
-    const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso);
-    return match ? new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3])) : new Date(iso);
 }

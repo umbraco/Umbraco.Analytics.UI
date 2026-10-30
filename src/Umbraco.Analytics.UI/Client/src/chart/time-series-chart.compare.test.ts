@@ -8,7 +8,7 @@ import { html } from "@umbraco-cms/backoffice/external/lit";
 import darkCss from "@umbraco-ui/uui/themes/dark.css?inline";
 import { render } from "vitest-browser-lit";
 import { screenshotIt } from "../internal/test/screenshot.js";
-import { renderElement, shadow, type UaxTestElement } from "../internal/test/pending.js";
+import { deepQuery, deepText, renderElement, shadow, type UaxTestElement } from "../internal/test/dom.js";
 import type { UaxDeltaBadgeElement } from "../delta-badge/delta-badge.element.js";
 import "./time-series-chart.element.js";
 
@@ -27,7 +27,8 @@ const renderChart = (kind = "line") =>
         "uax-time-series-chart",
     );
 
-const tooltip = (el: Element) => shadow(el).querySelector(".tooltip") as HTMLElement;
+const legendText = (el: Element) => deepText(deepQuery(shadow(el), "uax-chart-legend")!);
+const tooltip = (el: Element) => shadow(el).querySelector("uax-chart-tooltip") as HTMLElement;
 
 describe("Feature: compare with another period", () => {
     describe("Scenario: a line chart with a compare series", () => {
@@ -41,15 +42,15 @@ describe("Feature: compare with another period", () => {
         });
 
         it("puts the first compare point under the first current point", () => {
-            expect(shadow(el).querySelector("table")!.tBodies[0].rows[0].textContent).toMatch(/60[\s\S]*50/);
+            expect(deepQuery<HTMLTableElement>(shadow(el), "table")!.tBodies[0].rows[0].textContent).toMatch(/60[\s\S]*50/);
         });
 
         it("shows the compare range in the legend", () => {
-            expect(shadow(el).querySelector(".legend")?.textContent).toContain(compareLabel);
+            expect(legendText(el)).toContain(compareLabel);
         });
 
         it("names the compare column in the hidden table", () => {
-            expect(shadow(el).querySelector("table thead")?.textContent).toContain("Pageviews (compare)");
+            expect(deepQuery(shadow(el), "table thead")?.textContent).toContain("Pageviews (compare)");
         });
     });
 
@@ -97,19 +98,19 @@ describe("Feature: compare with another period", () => {
         });
 
         it("shows the current value", () => {
-            expect(tooltip(el).querySelector(".tooltip-value")?.textContent).toBe("120");
+            expect(deepQuery(tooltip(el).shadowRoot!, ".tooltip-value")?.textContent).toBe("120");
         });
 
         it("shows the compare value", () => {
-            expect(tooltip(el).querySelector(".tooltip-compare .tooltip-value")?.textContent).toBe("110");
+            expect(deepQuery(tooltip(el).shadowRoot!, ".tooltip-compare .tooltip-value")?.textContent).toBe("110");
         });
 
         it("names the compare point by its own date", () => {
-            expect(tooltip(el).querySelector(".tooltip-compare .tooltip-sub")?.textContent).toMatch(/Apr.*27|27.*Apr/);
+            expect(deepQuery(tooltip(el).shadowRoot!, ".tooltip-compare .tooltip-sub")?.textContent).toMatch(/Apr.*27|27.*Apr/);
         });
 
         it("shows the change as a badge", () => {
-            const badge = tooltip(el).querySelector("uax-delta-badge") as UaxDeltaBadgeElement;
+            const badge = deepQuery(tooltip(el).shadowRoot!, "uax-delta-badge") as UaxDeltaBadgeElement;
             expect(badge.value).toBeCloseTo(9.09, 1);
         });
     });
@@ -126,7 +127,7 @@ describe("Feature: compare with another period", () => {
             const x = Chart.getChart(canvas)!.getDatasetMeta(0).data[2].x;
             await userEvent.hover(page.elementLocator(canvas), { position: { x, y: canvas.getBoundingClientRect().height / 2 } });
             await expect.poll(() => tooltip(el)?.style.visibility).toBe("visible");
-            const label = tooltip(el).querySelector(".tooltip-label")!.getBoundingClientRect();
+            const label = deepQuery(tooltip(el).shadowRoot!, ".tooltip-label")!.getBoundingClientRect();
             expect(label.right).toBeLessThanOrEqual(tooltip(el).getBoundingClientRect().right);
         });
     });

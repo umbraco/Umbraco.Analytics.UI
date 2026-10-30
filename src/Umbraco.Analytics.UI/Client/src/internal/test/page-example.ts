@@ -1,7 +1,7 @@
 import { html, type TemplateResult } from "@umbraco-cms/backoffice/external/lit";
 import { expect } from "vitest";
-import { queryDeep, renderWithModals } from "./modal-host.js";
-import type { UaxTestElement } from "./pending.js";
+import { renderWithModals } from "./modal-host.js";
+import { deepQuery, settle, type UaxTestElement } from "./dom.js";
 
 /**
  * Renders a page example under a modal host (the date range dialog needs one), 1200px wide like a
@@ -39,15 +39,16 @@ export async function withTheme<T>(themeCss: string | undefined, run: () => Prom
 export async function saveDateRange(page: Element, fields: Record<string, string>): Promise<void> {
     const dateRange = page.shadowRoot!.querySelector("uax-date-range")!;
     (dateRange.shadowRoot!.querySelector("uui-button") as HTMLElement).click();
-    await expect.poll(() => queryDeep("uax-date-range-modal")).not.toBe(null);
-    const modal = queryDeep("uax-date-range-modal")!;
+    await expect.poll(() => deepQuery<UaxTestElement>(document, "uax-date-range-modal")).not.toBe(null);
+    const modal = deepQuery<UaxTestElement>(document, "uax-date-range-modal")!;
     await modal.updateComplete;
     for (const [name, value] of Object.entries(fields)) {
-        const field = modal.shadowRoot!.querySelector(`[name='${name}']`) as HTMLInputElement;
+        const field = deepQuery<HTMLInputElement>(modal.shadowRoot!, `[name='${name}']`);
+        if (!field) throw new Error(`saveDateRange: the date range dialog has no field named "${name}"`);
         if (name === "compare") field.checked = value !== "off";
         else field.value = value;
         field.dispatchEvent(new Event("change", { bubbles: true, composed: true }));
-        await modal.updateComplete;
+        await settle(modal);
     }
     const save = [...modal.shadowRoot!.querySelectorAll("uui-button")].find((b) => b.getAttribute("label") === "Save") as HTMLElement;
     save.click();

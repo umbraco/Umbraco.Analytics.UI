@@ -1,3 +1,4 @@
+import { addDays, dateOnly, firstOfNextMonth } from "../../internal/date/date-math.js";
 import type { UaxGroupBy } from "../../group-by/group-by.element.js";
 import type { UaxMarker } from "../types.js";
 
@@ -8,14 +9,12 @@ export interface MarkerBucket {
     markers: UaxMarker[];
 }
 
-const dayOf = (marker: UaxMarker) => marker.date.slice(0, 10);
-const isoOf = (date: Date) => date.toISOString().slice(0, 10);
+const dayOf = (marker: UaxMarker) => dateOnly(marker.date);
 
 /** The first day after the bucket that starts on `start`: the next day, the day a week on, or the 1st of the next month. */
 function bucketEnd(start: string, groupBy: UaxGroupBy): string {
-    const [y, m, d] = start.split("-").map(Number);
-    if (groupBy === "month") return isoOf(new Date(Date.UTC(y, m, 1)));
-    return isoOf(new Date(Date.UTC(y, m - 1, d + (groupBy === "week" ? 7 : 1))));
+    if (groupBy === "month") return firstOfNextMonth(start);
+    return addDays(start, groupBy === "week" ? 7 : 1);
 }
 
 /**

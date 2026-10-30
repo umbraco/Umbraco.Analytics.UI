@@ -10,11 +10,11 @@ import darkCss from "@umbraco-ui/uui/themes/dark.css?inline";
 import highContrastCss from "@umbraco-ui/uui/themes/high-contrast.css?inline";
 import { page, userEvent } from "vitest/browser";
 import { Chart } from "chart.js";
-import { renderElement, shadow, type UaxTestElement } from "../test/pending.js";
-import "../../delta-badge/delta-badge.element.js";
-import "../../chart/time-series-chart.element.js";
-import "../../group-by/group-by.element.js";
-import "../../kpi-tile/kpi-tile.element.js";
+import { deepQuery, renderElement, shadow, type UaxTestElement } from "../internal/test/dom.js";
+import "../delta-badge/delta-badge.element.js";
+import "../chart/time-series-chart.element.js";
+import "../group-by/group-by.element.js";
+import "../kpi-tile/kpi-tile.element.js";
 
 type Rgba = [r: number, g: number, b: number, a: number];
 
@@ -149,14 +149,14 @@ describe("Feature: contrast in every theme", () => {
 
             describe("the chart tooltip, as rendered", () => {
                 let chart: UaxTestElement;
-                const tooltip = () => shadow(chart).querySelector(".tooltip") as HTMLElement;
+                const tooltip = () => shadow(chart).querySelector("uax-chart-tooltip") as HTMLElement;
                 const hoverDate = async (index: number) => {
                     const canvas = shadow(chart).querySelector("canvas")!;
                     const x = Chart.getChart(canvas)!.getDatasetMeta(0).data[index].x;
                     await userEvent.hover(page.elementLocator(canvas), { position: { x, y: canvas.getBoundingClientRect().height / 2 } });
                     await expect.poll(() => tooltip().style.visibility).toBe("visible");
                     // The badge shows this date's change, once the tooltip has rendered it.
-                    await expect.poll(() => tooltip().querySelector("uax-delta-badge")?.shadowRoot?.querySelector(".badge")).not.toBeNull();
+                    await expect.poll(() => deepQuery(tooltip().shadowRoot!, "uax-delta-badge")?.shadowRoot?.querySelector(".badge")).not.toBeNull();
                 };
                 beforeEach(async () => {
                     chart = await renderElement(
@@ -169,14 +169,14 @@ describe("Feature: contrast in every theme", () => {
                     await hoverDate(0);
                     const back = computed(tooltip(), "backgroundColor");
                     for (const selector of [".tooltip-date", ".tooltip-value", ".tooltip-sub"]) {
-                        check("text", `tooltip ${selector}`, between(computed(tooltip().querySelector(selector)!, "color"), back, surface()));
+                        check("text", `tooltip ${selector}`, between(computed(deepQuery(tooltip().shadowRoot!, selector)!, "color"), back, surface()));
                     }
                 });
 
                 for (const [index, sentiment] of [[0, "positive"], [1, "negative"], [2, "neutral"]] as const) {
                     it(`gives the ${sentiment} badge in the tooltip at least 4.5:1`, async () => {
                         await hoverDate(index);
-                        const badge = tooltip().querySelector("uax-delta-badge")!.shadowRoot!.querySelector(".badge")!;
+                        const badge = deepQuery(tooltip().shadowRoot!, "uax-delta-badge")!.shadowRoot!.querySelector(".badge")!;
                         expect(badge.getAttribute("data-sentiment")).toBe(sentiment);
                         const back = over(computed(tooltip(), "backgroundColor"), surface());
                         check("text", `tooltip ${sentiment} badge`, between(computed(badge, "color"), computed(badge, "backgroundColor"), back));

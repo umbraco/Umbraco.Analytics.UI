@@ -6,7 +6,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { page, userEvent } from "vitest/browser";
 import { html } from "@umbraco-cms/backoffice/external/lit";
 import { screenshotIt } from "../internal/test/screenshot.js";
-import { renderElement, shadow, type UaxTestElement } from "../internal/test/pending.js";
+import { deepQuery, deepText, renderElement, settle, shadow, type UaxTestElement } from "../internal/test/dom.js";
 import "./time-series-chart.element.js";
 
 const pageviews = { id: "pv", label: "Pageviews", points: [
@@ -16,8 +16,9 @@ const sessions = { id: "s", label: "Sessions", points: [
     { date: "2026-06-01", value: 12 }, { date: "2026-06-02", value: 30 }, { date: "2026-06-03", value: 61 },
 ] };
 
-const hiddenTable = (el: Element) => shadow(el).querySelector("table") as HTMLTableElement;
-const tooltip = (el: Element) => shadow(el).querySelector(".tooltip") as HTMLElement;
+const hiddenTable = (el: Element) => deepQuery<HTMLTableElement>(shadow(el), "table")!;
+const legendText = (el: Element) => deepText(deepQuery(shadow(el), "uax-chart-legend")!);
+const tooltip = (el: Element) => shadow(el).querySelector("uax-chart-tooltip") as HTMLElement;
 // Moves the pointer onto the nth date, at the x Chart.js drew that point.
 const hoverDate = async (el: Element, index: number) => {
     const canvas = shadow(el).querySelector("canvas")!;
@@ -40,7 +41,7 @@ describe("Feature: line and area chart", () => {
         });
 
         it("lists both series in the legend", () => {
-            expect(shadow(el).querySelector(".legend")?.textContent).toMatch(/Pageviews[\s\S]*Sessions/);
+            expect(legendText(el)).toMatch(/Pageviews[\s\S]*Sessions/);
         });
 
         it("lists every date and value in a visually hidden table", () => {
@@ -89,7 +90,7 @@ describe("Feature: line and area chart", () => {
         });
 
         it("shows euros in the tooltip", () => {
-            expect(tooltip(el).textContent).toContain("€");
+            expect(deepText(tooltip(el))).toContain("€");
         });
     });
 
@@ -105,8 +106,19 @@ describe("Feature: line and area chart", () => {
         });
 
         it("shows the date and each series' value", () => {
-            expect(tooltip(el).textContent).toMatch(/Jun[\s\S]*280[\s\S]*61/);
+            expect(deepText(tooltip(el))).toMatch(/Jun[\s\S]*280[\s\S]*61/);
         });
+    });
+});
+
+describe("Feature: point dates that carry a time", () => {
+    it("labels a point dated 2026-06-11T00:00:00Z as 11 Jun in the hidden table", async () => {
+        const el = await renderElement(
+            html`<uax-time-series-chart kind="line" .series=${[{ id: "pv", label: "Pageviews", points: [{ date: "2026-06-11T00:00:00Z", value: 5 }] }]} style="width:400px"></uax-time-series-chart>`,
+            "uax-time-series-chart",
+        );
+        await settle(el);
+        expect(hiddenTable(el).tBodies[0].rows[0].cells[0].textContent).toMatch(/11.*Jun|Jun.*11/);
     });
 });
 

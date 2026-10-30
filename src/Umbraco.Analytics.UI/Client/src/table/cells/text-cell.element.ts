@@ -1,6 +1,6 @@
 import { customElement, html, property, type TemplateResult } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
-import { asText } from "../internal/number-format.js";
+import { asText } from "../internal/cell-values.js";
 import "../internal/table-skeleton-cell.element.js";
 import type { UaxTableCellElement, UaxTableColumn } from "../types.js";
 

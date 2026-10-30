@@ -1,4 +1,4 @@
-// Pure date maths for the date range picker. Dates are ISO "yyyy-mm-dd" strings in and out,
+// Pure date maths shared by the date range picker and the chart. Dates are ISO "yyyy-mm-dd" strings in and out,
 // built from year/month/day parts so a timezone never shifts a day.
 
 const pad = (n: number, width = 2) => String(n).padStart(width, "0");
@@ -17,6 +17,14 @@ export function parseIso(iso: string | undefined): { year: number; month: number
         : undefined;
 }
 
+/**
+ * The calendar day of an ISO date or date-time: the leading `yyyy-mm-dd` ("2026-06-11T00:00:00Z" gives "2026-06-11"),
+ * read as written so no timezone shifts it. Text that doesn't start with one is returned as it is.
+ */
+export function dateOnly(iso: string): string {
+    return /^\d{4}-\d{2}-\d{2}/.exec(iso)?.[0] ?? iso;
+}
+
 /** Today's date in the browser's timezone. */
 export function todayIso(now: Date = new Date()): string {
     return toIso(now.getFullYear(), now.getMonth() + 1, now.getDate());
@@ -29,6 +37,14 @@ export function addDays(iso: string, days: number): string {
     const shifted = new Date(Date.UTC(parts.year, parts.month - 1, parts.day + days));
     return toIso(shifted.getUTCFullYear(), shifted.getUTCMonth() + 1, shifted.getUTCDate());
 }
+
+/** The first day of the month after `iso`. Returns `iso` unchanged when it isn't a real date. */
+export function firstOfNextMonth(iso: string): string {
+    const parts = parseIso(iso);
+    return parts ? addDays(toIso(parts.year, parts.month, 1), daysInMonth(parts.year, parts.month)) : iso;
+}
+
+const daysInMonth = (year: number, month: number) => new Date(Date.UTC(year, month, 0)).getUTCDate();
 
 /** Local midnight of an ISO date, for `Intl` formatting. `undefined` when it isn't a real date. */
 export function isoToDate(iso: string | undefined): Date | undefined {
@@ -88,4 +104,11 @@ function oneYearBefore(iso: string): string {
 /** The same dates one year earlier. `undefined` when `range` isn't a valid range. */
 export function previousYearRange(range: Range): Range | undefined {
     return inclusiveDays(range) === undefined ? undefined : { from: oneYearBefore(range.from), to: oneYearBefore(range.to) };
+}
+
+/** The dates a compare mode gives for `range`: `undefined` for a custom comparison, or when `range` isn't a valid range. */
+export function compareRangeFor(mode: "previous-period" | "previous-year" | "custom", range: Range): Range | undefined {
+    if (mode === "previous-period") return previousPeriodRange(range);
+    if (mode === "previous-year") return previousYearRange(range);
+    return undefined;
 }

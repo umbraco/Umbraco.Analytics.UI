@@ -1,7 +1,8 @@
 import { css, customElement, html, nothing, property, type CSSResultGroup, type TemplateResult } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UMB_MODAL_MANAGER_CONTEXT, type UmbModalManagerContext } from "@umbraco-cms/backoffice/modal";
-import { builtInPresetRange, isoToDate, todayIso } from "./date-math.js";
+import { builtInPresetRange, todayIso } from "../internal/date/date-math.js";
+import { displayIsoDate } from "../internal/date/format-date.js";
 import { UAX_DATE_RANGE_MODAL } from "./date-range-modal.token.js";
 import { defaultPresets } from "./presets.js";
 import type { UaxCompare, UaxDatePreset, UaxDateRange, UaxDateRangeChangeDetail } from "./types.js";
@@ -53,13 +54,8 @@ export class UaxDateRangeElement extends UmbLitElement {
         });
     }
 
-    #format(iso: string) {
-        const date = isoToDate(iso);
-        return date ? this.localize.date(date, { dateStyle: "medium" }) : iso;
-    }
-
     #rangeText(from: string, to: string) {
-        return this.localize.term("uaxAnalytics_dateRangeRange", this.#format(from), this.#format(to));
+        return this.localize.term("uaxAnalytics_dateRangeRange", displayIsoDate(from, this.localize), displayIsoDate(to, this.localize));
     }
 
     async #open() {

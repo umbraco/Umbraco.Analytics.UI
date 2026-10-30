@@ -1,7 +1,6 @@
 import {
     css,
     customElement,
-    guard,
     html,
     nothing,
     property,
@@ -12,16 +11,24 @@ import {
     type TemplateResult,
 } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
-import "../delta-badge/delta-badge.element.js";
 import "../empty-state/empty-state.element.js";
 import type { UaxGroupBy } from "../group-by/group-by.element.js";
+import { dateOnly } from "../internal/date/date-math.js";
+import { formatIsoDate } from "../internal/date/format-date.js";
+import { getNumberFormat } from "../internal/format/number-format.js";
 import { getLoadingMode } from "../internal/loading/loading-mode.js";
 import "../internal/loading/loading-bar.element.js";
 import "../internal/loading/skeleton.element.js";
 import { UaxPaletteStyles } from "../theme/index.js";
 import { bucketMarkers, type MarkerBucket } from "./internal/marker-buckets.js";
 import type { UaxMarkerPlacement } from "./internal/markers-plugin.js";
-import { allWhole, buildChartData, maxValue, parseIsoDate, seriesTotals, type UaxChartData } from "./internal/chart-data.js";
+import { allWhole, buildChartData, maxValue, seriesTotals, type UaxChartData } from "./internal/chart-data.js";
+import "./internal/chart-data-table.element.js";
+import "./internal/chart-legend.element.js";
+import "./internal/chart-marker-tooltip.element.js";
+import "./internal/chart-tooltip.element.js";
+import type { UaxChartMarkerTooltipElement } from "./internal/chart-marker-tooltip.element.js";
+import type { UaxChartTooltipCompare, UaxChartTooltipElement, UaxChartTooltipRow } from "./internal/chart-tooltip.element.js";
 import { colorsDiffer, resolveChartColors, type UaxChartColors } from "./internal/chart-colors.js";
 import { UaxChartRenderer, type UaxChartHover } from "./internal/chart-renderer.js";
 import { niceScale } from "./internal/nice-scale.js";
@@ -80,7 +87,7 @@ const emptyDerived: Derived = {
     compareDateLabels: [],
     totals: [],
     compareTotalDateLabels: [],
-    numberFormat: new Intl.NumberFormat("en"),
+    numberFormat: getNumberFormat("en"),
     markerDate: new Intl.DateTimeFormat("en", tooltipDateFormat.day),
     lang: "en",
 };
@@ -206,8 +213,6 @@ export class UaxTimeSeriesChartElement extends UmbLitElement {
     #derived: Derived = emptyDerived;
     /** What `#derived` was built from. Hovering re-renders the element but changes none of these. */
     #derivedFrom?: DerivedFrom;
-    /** Bumped when `#derived` changes; keys the cached data table. */
-    #derivedVersion = 0;
     #markerBuckets: MarkerBucket[] = [];
     #markersFrom?: MarkersFrom;
     /** The chart needs drawing: the derived data or the kind changed. */
@@ -251,7 +256,6 @@ export class UaxTimeSeriesChartElement extends UmbLitElement {
         if (!prev || (Object.keys(next) as (keyof typeof next)[]).some((key) => prev[key] !== next[key])) {
             this.#derivedFrom = next;
             this.#derived = this.#derive(next);
-            this.#derivedVersion++;
             this.#dirty = true;
         }
         if (changed.has("kind")) this.#dirty = true;
@@ -272,8 +276,8 @@ export class UaxTimeSeriesChartElement extends UmbLitElement {
         super.updated(changed);
         this.#syncChart();
         this.#renderer?.setActiveMarker(this.#activeMarker);
-        if (this._hover) this.#placeTooltip();
-        if (this.#activeMarker !== undefined) this.#placeMarkerTooltip();
+        if (this._hover) void this.#placeTooltip();
+        if (this.#activeMarker !== undefined) void this.#placeMarkerTooltip();
     }
 
     get #hasData() {
@@ -298,22 +302,18 @@ export class UaxTimeSeriesChartElement extends UmbLitElement {
         const data = buildChartData(series, compareSeries);
         const axisDate = new Intl.DateTimeFormat(lang, axisDateFormat[groupBy] ?? axisDateFormat.day);
         const tooltipDate = new Intl.DateTimeFormat(lang, tooltipDateFormat[groupBy] ?? tooltipDateFormat.day);
-        const dates = data.dates.map(parseIsoDate);
+        const tooltipLabel = (iso: string | null) => (iso ? formatIsoDate(iso, tooltipDate) : "");
         return {
             data,
-            axisLabels: dates.map((d) => axisDate.format(d)),
-            dateLabels: dates.map((d) => tooltipDate.format(d)),
-            compareDateLabels: data.series.map((s) => (s.compareDates ?? []).map((d) => (d ? tooltipDate.format(parseIsoDate(d)) : ""))),
+            axisLabels: data.dates.map((d) => formatIsoDate(d, axisDate)),
+            dateLabels: data.dates.map(tooltipLabel),
+            compareDateLabels: data.series.map((s) => (s.compareDates ?? []).map(tooltipLabel)),
             totals: seriesTotals(data),
-            compareTotalDateLabels: (data.compareTotal?.dates ?? []).map((d) => (d ? tooltipDate.format(parseIsoDate(d)) : "")),
-            numberFormat: new Intl.NumberFormat(lang, valueFormat),
+            compareTotalDateLabels: (data.compareTotal?.dates ?? []).map(tooltipLabel),
+            numberFormat: getNumberFormat(lang, valueFormat),
             markerDate: new Intl.DateTimeFormat(lang, tooltipDateFormat.day),
             lang,
         };
-    }
-
-    #formatValue(value: number) {
-        return this.#derived.numberFormat.format(value);
     }
 
     get #slots() {
@@ -377,7 +377,7 @@ export class UaxTimeSeriesChartElement extends UmbLitElement {
         if (!this.#renderer || !this.#colors) return;
         const { data, axisLabels, lang } = this.#derived;
         const scale = niceScale(maxValue(data, this.kind), 5, allWhole(data));
-        const tick = new Intl.NumberFormat(lang, tickFormat(this.valueFormat, scale.max, scale.step));
+        const tick = getNumberFormat(lang, tickFormat(this.valueFormat, scale.max, scale.step));
         this.#renderer.update({
             kind: this.kind,
             labels: axisLabels,
@@ -402,11 +402,14 @@ export class UaxTimeSeriesChartElement extends UmbLitElement {
     }
 
     /** Puts the tooltip beside the hovered point, on the side with room, kept inside the plot. */
-    #placeTooltip() {
-        const tip = this.shadowRoot?.querySelector<HTMLElement>(".tooltip");
+    async #placeTooltip() {
+        const tip = this.shadowRoot?.querySelector<UaxChartTooltipElement>("uax-chart-tooltip");
         const plot = this.shadowRoot?.querySelector<HTMLElement>(".plot");
+        if (!tip || !plot) return;
+        // The tooltip draws its rows a microtask after this render, and its size depends on them.
+        await tip.updateComplete;
         const hover = this._hover;
-        if (!tip || !plot || !hover) return;
+        if (!hover || !tip.isConnected) return;
         const gap = 14;
         const left = hover.x + gap + tip.offsetWidth > plot.clientWidth ? hover.x - gap - tip.offsetWidth : hover.x + gap;
         const top = Math.min(Math.max(hover.y - tip.offsetHeight - 8, 0), Math.max(plot.clientHeight - tip.offsetHeight, 0));
@@ -415,26 +418,41 @@ export class UaxTimeSeriesChartElement extends UmbLitElement {
         tip.style.visibility = "visible";
     }
 
+    /** One row per series with a point at the hovered date, and for the bar kinds the total and the compare total. */
     #renderTooltip() {
         const hover = this._hover;
-        const { data, dateLabels } = this.#derived;
+        const { data, dateLabels, compareDateLabels, compareTotalDateLabels, totals, numberFormat } = this.#derived;
         if (!hover || this._hoverDismissed || !dateLabels[hover.index] || this.#activeMarker !== undefined) return nothing;
-        const values = data.series.map((s, i) => ({ s, i, value: s.values[hover.index] })).filter((v) => v.value !== null);
+        const { index } = hover;
         const bars = this.#isBars;
-        const swatch = bars ? "swatch swatch-square" : "swatch";
-        const token = bars ? "bar" : "series";
-        return html`<div class="tooltip" style="visibility:hidden" aria-hidden="true">
-            <div class="tooltip-date">${dateLabels[hover.index]}</div>
-            ${values.map(
-                ({ s, i, value }) => html`<div class="tooltip-row tooltip-series">
-                        <span class=${swatch} style="--swatch: var(--uax-color-${token}-${slotOf(this.series[i], i)})"></span>
-                        <span class="tooltip-value">${this.#formatValue(value!)}</span>
-                        ${data.series.length > 1 ? html`<span class="tooltip-label">${s.label}</span>` : nothing}
-                    </div>
-                    ${bars ? nothing : this.#renderTooltipCompare(value!, s.compare?.[hover.index], this.#derived.compareDateLabels[i][hover.index], false)}`,
-            )}
-            ${bars ? this.#renderBarTooltipTotals(hover.index) : nothing}
-        </div>`;
+        const rows = data.series.flatMap((s, i): UaxChartTooltipRow[] => {
+            const value = s.values[index];
+            if (value === null) return [];
+            const compare = bars ? null : s.compare?.[index];
+            return [
+                {
+                    slot: slotOf(this.series[i], i),
+                    value,
+                    label: data.series.length > 1 ? s.label : undefined,
+                    compare: compare === null || compare === undefined ? undefined : { value: compare, date: compareDateLabels[i][index], current: value },
+                },
+            ];
+        });
+        const total = totals[index];
+        const compareTotalValue = bars ? data.compareTotal?.values[index] : null;
+        const compareTotal: UaxChartTooltipCompare | undefined =
+            compareTotalValue === null || compareTotalValue === undefined
+                ? undefined
+                : { value: compareTotalValue, date: compareTotalDateLabels[index], current: total };
+        return html`<uax-chart-tooltip
+            style="visibility:hidden"
+            aria-hidden="true"
+            .date=${dateLabels[index]}
+            .rows=${rows}
+            .bars=${bars}
+            .total=${bars && this.#showsTotal && total !== null ? { value: total, label: this.#totalText } : undefined}
+            .compareTotal=${compareTotal}
+            .numberFormat=${numberFormat}></uax-chart-tooltip>`;
     }
 
     /** The hovered or focused dot, only while it has a bucket and a placement. */
@@ -446,19 +464,26 @@ export class UaxTimeSeriesChartElement extends UmbLitElement {
     }
 
     /** Puts the marker tooltip over its dot, centred, kept inside the plot. */
-    #placeMarkerTooltip() {
-        const tip = this.shadowRoot?.querySelector<HTMLElement>(".marker-tooltip");
+    async #placeMarkerTooltip() {
+        const tip = this.shadowRoot?.querySelector<UaxChartMarkerTooltipElement>("uax-chart-marker-tooltip");
         const plot = this.shadowRoot?.querySelector<HTMLElement>(".plot");
+        if (!tip || !plot) return;
+        // The tooltip draws its entries a microtask after this render, and its width depends on them.
+        await tip.updateComplete;
         const placement = this._markerPlacements.find((p) => p.index === this.#activeMarker);
-        if (!tip || !plot || !placement) return;
+        if (!placement || !tip.isConnected) return;
         const left = Math.min(Math.max(placement.x - tip.offsetWidth / 2, 0), Math.max(plot.clientWidth - tip.offsetWidth, 0));
         tip.style.left = `${left}px`;
         tip.style.visibility = "visible";
     }
 
+    /** The marker's date, whatever time of day it carries. */
+    #markerDateText(marker: UaxMarker) {
+        return formatIsoDate(dateOnly(marker.date), this.#derived.markerDate);
+    }
+
     #markerLabel(bucket: MarkerBucket) {
-        const { markerDate } = this.#derived;
-        const text = bucket.markers.map((m) => `${m.title} (${markerDate.format(parseIsoDate(m.date))})`).join("; ");
+        const text = bucket.markers.map((m) => `${m.title} (${this.#markerDateText(m)})`).join("; ");
         return this.localize.term("uaxAnalytics_chartMarkerAriaLabel", text);
     }
 
@@ -497,111 +522,35 @@ export class UaxTimeSeriesChartElement extends UmbLitElement {
     #renderMarkerTooltip() {
         const bucket = this.#markerBuckets.find((b) => b.index === this.#activeMarker);
         if (!bucket || !this._markerPlacements.some((p) => p.index === bucket.index)) return nothing;
-        const { markerDate } = this.#derived;
         const shown = bucket.markers.slice(0, MAX_MARKERS_IN_TOOLTIP);
-        const more = bucket.markers.length - shown.length;
-        return html`<div class="marker-tooltip" id="marker-tooltip" style="visibility:hidden">
-            ${shown.map(
-                (m) => html`<div class="marker-entry">
-                    <div class="tooltip-date">${markerDate.format(parseIsoDate(m.date))}</div>
-                    <div class="marker-title">${m.title}</div>
-                    ${m.description ? html`<div class="marker-note">${m.description}</div>` : nothing}
-                </div>`,
-            )}
-            ${more > 0 ? html`<div class="marker-more">${this.localize.term("uaxAnalytics_chartMarkersMore", more)}</div>` : nothing}
-        </div>`;
-    }
-
-    /** Bar kinds: the total of the series (stacked only), then the compare total with the change from the current total. */
-    #renderBarTooltipTotals(index: number) {
-        const { data, compareTotalDateLabels } = this.#derived;
-        const total = this.#derived.totals[index];
-        return html`${this.#showsTotal && total !== null
-            ? html`<div class="tooltip-row tooltip-total">
-                  <span class="tooltip-value">${this.#formatValue(total)}</span>
-                  <span class="tooltip-label">${this.#totalText}</span>
-              </div>`
-            : nothing}
-        ${this.#renderTooltipCompare(total, data.compareTotal?.values[index], compareTotalDateLabels[index], true)}`;
-    }
-
-    /** The compare value, with the change from it to the current value. No badge when there is nothing to divide by. */
-    #renderTooltipCompare(value: number | null, compare: number | null | undefined, compareDate: string, square: boolean) {
-        if (compare === null || compare === undefined) return nothing;
-        return html`<div class="tooltip-compare">
-            <div class="tooltip-row">
-                <span class=${square ? "swatch swatch-compare swatch-square" : "swatch swatch-compare"}></span>
-                <span class="tooltip-value">${this.#formatValue(compare)}</span>
-                ${compare !== 0 && value !== null
-                    ? html`<uax-delta-badge size="sm" .value=${((value! - compare) / Math.abs(compare)) * 100}></uax-delta-badge>`
-                    : nothing}
-            </div>
-            <div class="tooltip-sub">${compareDate}</div>
-        </div>`;
+        return html`<uax-chart-marker-tooltip
+            id="marker-tooltip"
+            style="visibility:hidden"
+            .entries=${shown.map((m) => ({ date: this.#markerDateText(m), title: m.title, description: m.description }))}
+            .more=${bucket.markers.length - shown.length}></uax-chart-marker-tooltip>`;
     }
 
     #renderLegend() {
         if (this.series.length < 2 && !this.#isComparing) return nothing;
-        const bars = this.#isBars;
-        return html`<ul class="legend" aria-label=${this.localize.term("uaxAnalytics_chartLegendLabel")}>
-            ${repeat(
-                this.series,
-                (s) => s.id,
-                (s, i) => html`<li>
-                    <span
-                        class=${bars ? "legend-swatch" : "legend-line"}
-                        style="--swatch: var(--uax-color-${bars ? "bar" : "series"}-${slotOf(this.series[i], i)})"
-                        aria-hidden="true"></span>
-                    ${s.label}
-                </li>`,
-            )}
-            ${this.#isComparing
-                ? html`<li>
-                      <span class=${bars ? "legend-swatch legend-compare-swatch" : "legend-line legend-compare"} aria-hidden="true"></span>
-                      ${this.#compareText}
-                  </li>`
-                : nothing}
-        </ul>`;
+        const entries = this.series.map((s, i) => ({ id: s.id, label: s.label, slot: slotOf(s, i) }));
+        return html`<uax-chart-legend
+            .entries=${entries}
+            .bars=${this.#isBars}
+            .compareLabel=${this.#isComparing ? this.#compareText : undefined}></uax-chart-legend>`;
     }
 
-    /** Built from `#derived`, so it is the same template until the data changes (see `guard` in `render`). */
+    /** The same data for screen readers. Every input is stable until the data changes, so it re-renders only then. */
     #renderTable() {
-        const { data, dateLabels } = this.#derived;
+        const { data, dateLabels, totals, numberFormat } = this.#derived;
         const bars = this.#isBars;
-        const totals = this.#showsTotal ? this.#derived.totals : undefined;
-        const compareTotal = bars ? data.compareTotal : undefined;
-        const cell = (value: number | null | undefined) => html`<td>${value === null || value === undefined ? "" : this.#formatValue(value)}</td>`;
-        return html`<table class="visually-hidden">
-            <caption>
-                ${this.localize.term("uaxAnalytics_chartTableCaption")}
-            </caption>
-            <thead>
-                <tr>
-                    <th scope="col">${this.localize.term("uaxAnalytics_chartTableDateHeader")}</th>
-                    ${data.series.map(
-                        (s) => html`<th scope="col">${s.label}</th>
-                            ${s.compare && !bars
-                                ? html`<th scope="col">${this.localize.term("uaxAnalytics_chartTableCompareHeader", s.label)}</th>`
-                                : nothing}`,
-                    )}
-                    ${totals ? html`<th scope="col">${this.#totalText}</th>` : nothing}
-                    ${compareTotal
-                        ? html`<th scope="col">${this.localize.term("uaxAnalytics_chartTableCompareHeader", this.#totalText)}</th>`
-                        : nothing}
-                </tr>
-            </thead>
-            <tbody>
-                ${data.dates.map(
-                    (_, row) => html`<tr>
-                        <th scope="row">${dateLabels[row]}</th>
-                        ${data.series.map(
-                            (s) => html`${cell(s.values[row])}${s.compare && !bars ? cell(s.compare[row]) : nothing}`,
-                        )}
-                        ${totals ? cell(totals[row]) : nothing} ${compareTotal ? cell(compareTotal.values[row]) : nothing}
-                    </tr>`,
-                )}
-            </tbody>
-        </table>`;
+        return html`<uax-chart-data-table
+            .dates=${dateLabels}
+            .series=${data.series}
+            .bars=${bars}
+            .totals=${this.#showsTotal ? totals : undefined}
+            .totalLabel=${this.#totalText}
+            .compareTotal=${bars ? data.compareTotal?.values : undefined}
+            .numberFormat=${numberFormat}></uax-chart-data-table>`;
     }
 
     override render(): TemplateResult {
@@ -628,20 +577,7 @@ export class UaxTimeSeriesChartElement extends UmbLitElement {
                 ${this.#renderTooltip()}
                 ${showPlot ? this.#renderMarkers() : nothing} ${showPlot ? this.#renderMarkerTooltip() : nothing}
             </div>
-            ${showPlot ? this.#renderLegend() : nothing}
-            ${showPlot
-                ? guard(
-                      [
-                          this.#derivedVersion,
-                          this.kind,
-                          this.localize.term("uaxAnalytics_chartTotalLabel"),
-                          this.localize.term("uaxAnalytics_chartTableCaption"),
-                          this.localize.term("uaxAnalytics_chartTableDateHeader"),
-                          this.localize.term("uaxAnalytics_chartTableCompareHeader", "{0}"),
-                      ],
-                      () => this.#renderTable(),
-                  )
-                : nothing}
+            ${showPlot ? this.#renderLegend() : nothing} ${showPlot ? this.#renderTable() : nothing}
             </div>
             <span class="probe" hidden></span>
         </div>`;
@@ -680,55 +616,6 @@ export class UaxTimeSeriesChartElement extends UmbLitElement {
                 width: 100%;
             }
 
-            .tooltip,
-            .marker-tooltip {
-                position: absolute;
-                z-index: 2;
-                box-sizing: border-box;
-                min-width: 96px;
-                max-width: 260px;
-                padding: var(--uui-size-space-2) var(--uui-size-space-3);
-                border: 1px solid color-mix(in srgb, var(--uui-palette-white) 18%, transparent);
-                border-radius: var(--uui-border-radius);
-                background: var(--uui-palette-space-cadet);
-                box-shadow: var(--uui-shadow-depth-3);
-                color: var(--uui-palette-white);
-                /* A dark surface in every theme, so the series colours take their light-on-dark shade. */
-                color-scheme: dark;
-                font-size: 12px;
-                pointer-events: none;
-            }
-
-            .marker-tooltip {
-                top: 6px;
-                max-width: 240px;
-                padding: 9px 12px;
-            }
-
-            .marker-entry + .marker-entry {
-                margin-top: var(--uui-size-space-2);
-                padding-top: var(--uui-size-space-2);
-                border-top: 1px solid color-mix(in srgb, var(--uui-palette-white) 18%, transparent);
-            }
-
-            .marker-title {
-                font-size: 13px;
-                font-weight: 700;
-                line-height: 1.3;
-            }
-
-            .marker-note {
-                margin-top: 3px;
-                line-height: 1.45;
-                color: color-mix(in srgb, var(--uui-palette-white) 82%, transparent);
-            }
-
-            .marker-more {
-                margin-top: var(--uui-size-space-2);
-                font-size: 11px;
-                color: color-mix(in srgb, var(--uui-palette-white) 70%, transparent);
-            }
-
             /* The canvas draws the dot; this transparent button over it is the hover and focus target. */
             .marker {
                 position: absolute;
@@ -746,140 +633,6 @@ export class UaxTimeSeriesChartElement extends UmbLitElement {
             .marker:focus-visible {
                 outline: 2px solid var(--uui-color-focus);
                 outline-offset: 0;
-            }
-
-            .tooltip-date {
-                margin-bottom: 2px;
-                font-size: 11px;
-                font-weight: 700;
-                color: var(--uui-palette-spanish-pink);
-            }
-
-            .tooltip-row {
-                display: flex;
-                align-items: center;
-                gap: var(--uui-size-space-2);
-                line-height: 1.6;
-            }
-
-            .swatch {
-                flex: none;
-                width: 8px;
-                height: 8px;
-                border-radius: 50%;
-                background: var(--swatch);
-            }
-
-            .tooltip-value {
-                font-size: 13px;
-                font-weight: 700;
-            }
-
-            /* The tooltip is dark in every theme: the badge reads its dark branch and ignores product overrides here.
-               The tints are 15%: jungle green on a 20% tint of itself over space cadet is 4.47:1, under 4.5:1. */
-            .tooltip uax-delta-badge {
-                margin-left: auto;
-                --_uax-tooltip-tint: 15%;
-                --uui-color-scheme: dark;
-                --uax-text-positive: initial;
-                --uax-text-negative: initial;
-                --uax-text-neutral: var(--uui-palette-white);
-                --uax-tint-positive: color-mix(in srgb, var(--uui-palette-jungle-green) var(--_uax-tooltip-tint), transparent);
-                --uax-tint-negative: color-mix(in srgb, var(--uui-palette-spanish-pink) var(--_uax-tooltip-tint), transparent);
-                --uax-tint-neutral: color-mix(in srgb, var(--uui-palette-white) var(--_uax-tooltip-tint), transparent);
-            }
-
-            .tooltip-value,
-            .tooltip uax-delta-badge {
-                white-space: nowrap;
-            }
-
-            /* Indented under the value, past the swatch and its gap. */
-            .tooltip-sub {
-                margin: -2px 0 2px calc(8px + var(--uui-size-space-2));
-                font-size: 11px;
-                white-space: nowrap;
-                color: color-mix(in srgb, var(--uui-palette-white) 70%, transparent);
-            }
-
-            .swatch-square {
-                border-radius: 2px;
-            }
-
-            .swatch-compare {
-                background: var(--uax-color-compare);
-            }
-
-            .swatch-compare.swatch-square {
-                background: var(--uax-color-compare-bar);
-            }
-
-            /* Indented under the swatch column, with a hairline above, so it reads as the sum of the rows. */
-            .tooltip-total {
-                margin-top: 2px;
-                padding: 2px 0 0 calc(8px + var(--uui-size-space-2));
-                border-top: 1px solid color-mix(in srgb, var(--uui-palette-white) 18%, transparent);
-            }
-
-            .tooltip-label {
-                min-width: 0;
-                overflow-wrap: anywhere;
-                color: color-mix(in srgb, var(--uui-palette-white) 82%, transparent);
-            }
-
-            .legend {
-                display: flex;
-                flex-wrap: wrap;
-                align-items: center;
-                justify-content: center;
-                gap: var(--uui-size-space-2) var(--uui-size-space-6);
-                margin: var(--uui-size-space-3) 0 0;
-                padding: 0;
-                list-style: none;
-                font-size: 12.5px;
-                color: var(--uui-color-text);
-            }
-
-            .legend li {
-                display: inline-flex;
-                align-items: center;
-                gap: 7px;
-            }
-
-            .legend-line {
-                width: 18px;
-                border-top: 3px solid var(--swatch);
-                border-radius: 2px;
-            }
-
-            .legend-swatch {
-                flex: none;
-                width: 10px;
-                height: 10px;
-                border-radius: 2px;
-                background: var(--swatch);
-            }
-
-            .legend-compare-swatch {
-                background: var(--uax-color-compare-bar);
-            }
-
-            .legend-compare {
-                border-top-style: dashed;
-                border-top-width: 2px;
-                border-top-color: var(--uax-color-compare);
-            }
-
-            .visually-hidden {
-                position: absolute;
-                width: 1px;
-                height: 1px;
-                margin: -1px;
-                padding: 0;
-                overflow: hidden;
-                clip-path: inset(50%);
-                white-space: nowrap;
-                border: 0;
             }
         `,
     ];

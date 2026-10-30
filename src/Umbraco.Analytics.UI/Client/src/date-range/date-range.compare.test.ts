@@ -6,8 +6,8 @@ import { umbLocalizationManager } from "@umbraco-cms/backoffice/localization-api
 import darkCss from "@umbraco-ui/uui/themes/dark.css?inline";
 import highContrastCss from "@umbraco-ui/uui/themes/high-contrast.css?inline";
 import { axeRun } from "../internal/test/a11y.js";
-import { queryDeep, renderWithModals } from "../internal/test/modal-host.js";
-import { recordEvents, shadow, type UaxTestElement } from "../internal/test/pending.js";
+import { renderWithModals } from "../internal/test/modal-host.js";
+import { deepQuery, recordEvents, settle, shadow, type UaxTestElement } from "../internal/test/dom.js";
 import "./date-range.element.js";
 import "./date-range-modal.element.js";
 
@@ -16,25 +16,25 @@ const value = { from: "2026-05-25", to: "2026-06-23" };
 const render = (template = html`<uax-date-range .value=${value}></uax-date-range>`) => renderWithModals(template, "uax-date-range");
 const openModal = async (el: UaxTestElement) => {
     (shadow(el).querySelector("uui-button") as HTMLElement).click();
-    await expect.poll(() => queryDeep("uax-date-range-modal")).not.toBe(null);
-    const modal = queryDeep("uax-date-range-modal")!;
+    await expect.poll(() => deepQuery<UaxTestElement>(document, "uax-date-range-modal")).not.toBe(null);
+    const modal = deepQuery<UaxTestElement>(document, "uax-date-range-modal")!;
     await modal.updateComplete;
     return modal;
 };
-const field = (modal: Element, name: string) => shadow(modal).querySelector(`[name='${name}']`) as HTMLInputElement | null;
+const field = (modal: Element, name: string) => deepQuery<HTMLInputElement>(shadow(modal), `[name='${name}']`);
 const setField = async (modal: UaxTestElement, name: string, v: string | boolean) => {
     const input = field(modal, name)!;
     if (typeof v === "boolean") input.checked = v;
     else input.value = v;
     input.dispatchEvent(new Event("change", { bubbles: true, composed: true }));
-    await modal.updateComplete;
+    await settle(modal);
 };
 const button = (modal: Element, label: string) =>
     [...shadow(modal).querySelectorAll("uui-button")].find((b) => b.getAttribute("label") === label) as HTMLElement & {
         disabled: boolean;
     };
 const comparison = (modal: Element) => [field(modal, "compare-from")!.value, field(modal, "compare-to")!.value];
-const errorFor = (modal: Element, name: string) => shadow(modal).querySelector(`[data-for='${name}']`)?.textContent?.trim();
+const errorFor = (modal: Element, name: string) => deepQuery(shadow(modal), `[data-for='${name}']`)?.textContent?.trim();
 
 describe("Feature: pick a comparison range", () => {
     // The backoffice sets the formatting language from the user's language, so pin it rather than use the browser's.

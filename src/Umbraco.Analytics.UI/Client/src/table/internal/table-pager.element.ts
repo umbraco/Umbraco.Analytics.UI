@@ -1,7 +1,7 @@
 import { css, customElement, html, property, type CSSResultGroup } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import type { UaxTablePageChangeDetail } from "../types.js";
-import { getNumberFormat } from "./number-format.js";
+import { getNumberFormat } from "../../internal/format/number-format.js";
 
 /**
  * The table's footer: "Show rows", the range ("1–10 of 272") and previous and next buttons. Internal: not exported.

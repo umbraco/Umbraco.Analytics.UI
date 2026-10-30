@@ -8,8 +8,8 @@ import { umbLocalizationManager } from "@umbraco-cms/backoffice/localization-api
 import darkCss from "@umbraco-ui/uui/themes/dark.css?inline";
 import highContrastCss from "@umbraco-ui/uui/themes/high-contrast.css?inline";
 import { axeRun } from "../internal/test/a11y.js";
-import { queryDeep, renderWithModals } from "../internal/test/modal-host.js";
-import { recordEvents, shadow, type UaxTestElement } from "../internal/test/pending.js";
+import { renderWithModals } from "../internal/test/modal-host.js";
+import { deepQuery, recordEvents, settle, shadow, type UaxTestElement } from "../internal/test/dom.js";
 import "./date-range.element.js";
 import "./date-range-modal.element.js";
 
@@ -17,17 +17,17 @@ const value = { from: "2026-05-25", to: "2026-06-23" };
 
 const openModal = async (el: UaxTestElement) => {
     (shadow(el).querySelector("uui-button") as HTMLElement).click();
-    await expect.poll(() => queryDeep("uax-date-range-modal")).not.toBe(null);
-    const modal = queryDeep("uax-date-range-modal")!;
+    await expect.poll(() => deepQuery<UaxTestElement>(document, "uax-date-range-modal")).not.toBe(null);
+    const modal = deepQuery<UaxTestElement>(document, "uax-date-range-modal")!;
     await modal.updateComplete;
     return modal;
 };
-const field = (modal: Element, name: string) => shadow(modal).querySelector(`[name='${name}']`) as HTMLInputElement;
+const field = (modal: Element, name: string) => deepQuery<HTMLInputElement>(shadow(modal), `[name='${name}']`)!;
 const setField = async (modal: UaxTestElement, name: string, v: string) => {
     const input = field(modal, name);
     input.value = v;
     input.dispatchEvent(new Event("change", { bubbles: true, composed: true }));
-    await modal.updateComplete;
+    await settle(modal);
 };
 const button = (modal: Element, label: string) =>
     [...shadow(modal).querySelectorAll("uui-button")].find((b) => b.getAttribute("label") === label) as HTMLElement & {
@@ -182,7 +182,7 @@ describe("Feature: pick a date range", () => {
             await setField(modal, "from", "2026-06-01");
             button(modal, "Close").click();
             // The dialog is gone once the modal manager has dropped it.
-            await expect.poll(() => queryDeep("uax-date-range-modal")).toBe(null);
+            await expect.poll(() => deepQuery<UaxTestElement>(document, "uax-date-range-modal")).toBe(null);
         });
 
         it("raises no change event", () => {
@@ -203,7 +203,7 @@ describe("Feature: pick a date range", () => {
         });
 
         it("shows an error under the end date", () => {
-            expect(shadow(modal).querySelector(".error[data-for='to']")?.textContent).toContain(
+            expect(deepQuery(shadow(modal), ".error[data-for='to']")?.textContent).toContain(
                 "The end date must be on or after the start date.",
             );
         });
@@ -225,7 +225,7 @@ describe("Feature: pick a date range", () => {
         });
 
         it("names the latest allowed date under the field", () => {
-            expect(shadow(modal).querySelector(".error[data-for='to']")?.textContent).toContain(
+            expect(deepQuery(shadow(modal), ".error[data-for='to']")?.textContent).toContain(
                 "The date can't be after Jun 30, 2026.",
             );
         });

@@ -9,7 +9,7 @@ import highContrastCss from "@umbraco-ui/uui/themes/high-contrast.css?inline";
 import { render } from "vitest-browser-lit";
 import { axeRun } from "../internal/test/a11y.js";
 import { screenshotIt } from "../internal/test/screenshot.js";
-import { renderElement, shadow, type UaxTestElement } from "../internal/test/pending.js";
+import { deepQuery, deepQueryAll, deepText, renderElement, shadow, type UaxTestElement } from "../internal/test/dom.js";
 import type { UaxDeltaBadgeElement } from "../delta-badge/delta-badge.element.js";
 import "./time-series-chart.element.js";
 
@@ -36,8 +36,9 @@ const chart = (kind: string, series: unknown[], compare?: unknown[]) =>
         "uax-time-series-chart",
     );
 
-const tooltip = (el: Element) => shadow(el).querySelector(".tooltip") as HTMLElement;
-const hiddenTable = (el: Element) => shadow(el).querySelector("table") as HTMLTableElement;
+const legendText = (el: Element) => deepText(deepQuery(shadow(el), "uax-chart-legend")!);
+const tooltip = (el: Element) => shadow(el).querySelector("uax-chart-tooltip") as HTMLElement;
+const hiddenTable = (el: Element) => deepQuery<HTMLTableElement>(shadow(el), "table")!;
 const chartOf = (el: Element) => Chart.getChart(shadow(el).querySelector("canvas")!)!;
 // Moves the pointer onto the nth date, at the x Chart.js drew that bar.
 const hoverDate = async (el: Element, index: number) => {
@@ -76,18 +77,18 @@ describe("Feature: bar and stacked bar chart", () => {
         });
 
         it("labels the series in the legend with square swatches", () => {
-            expect(shadow(el).querySelectorAll(".legend .legend-swatch")).toHaveLength(2);
+            expect(deepQueryAll(shadow(el), ".legend-swatch")).toHaveLength(2);
         });
 
         it("draws no legend line for a bar series", () => {
-            expect(shadow(el).querySelector(".legend .legend-line")).toBeNull();
+            expect(deepQuery(shadow(el), ".legend-line")).toBeNull();
         });
     });
 
     describe("Scenario: a series with a palette slot", () => {
         const swatchColors = async (series: unknown[]) => {
             const el = await chart("bar", series);
-            return [...shadow(el).querySelectorAll(".legend .legend-swatch")].map((s) => getComputedStyle(s).backgroundColor);
+            return [...deepQueryAll(shadow(el), ".legend-swatch")].map((s) => getComputedStyle(s).backgroundColor);
         };
         const a = { ...returning, id: "a" };
         const b = { ...returning, id: "b" };
@@ -130,11 +131,11 @@ describe("Feature: bar and stacked bar chart", () => {
             });
 
             it("shows the total the compare total is compared against", () => {
-                expect(tooltip(el).querySelector(".tooltip-total .tooltip-value")?.textContent).toBe("4");
+                expect(deepQuery(tooltip(el).shadowRoot!, ".tooltip-total .tooltip-value")?.textContent).toBe("4");
             });
 
             it("shows the change from the compare total to that total", () => {
-                const badge = tooltip(el).querySelector("uax-delta-badge") as UaxDeltaBadgeElement;
+                const badge = deepQuery(tooltip(el).shadowRoot!, "uax-delta-badge") as UaxDeltaBadgeElement;
                 expect(badge.value).toBeCloseTo(100, 5);
             });
         });
@@ -184,12 +185,12 @@ describe("Feature: bar and stacked bar chart", () => {
             });
 
             it("shows each series value", () => {
-                const values = [...tooltip(el).querySelectorAll(".tooltip-series .tooltip-value")].map((v) => v.textContent);
+                const values = [...deepQueryAll(tooltip(el).shadowRoot!, ".tooltip-series .tooltip-value")].map((v) => v.textContent);
                 expect(values).toEqual(["2", "1"]);
             });
 
             it("shows the total", () => {
-                expect(tooltip(el).querySelector(".tooltip-total .tooltip-value")?.textContent).toBe("3");
+                expect(deepQuery(tooltip(el).shadowRoot!, ".tooltip-total .tooltip-value")?.textContent).toBe("3");
             });
         });
     });
@@ -214,7 +215,7 @@ describe("Feature: bar and stacked bar chart", () => {
         });
 
         it("names the compare range in the legend", () => {
-            expect(shadow(el).querySelector(".legend")?.textContent).toContain("Comparison");
+            expect(legendText(el)).toContain("Comparison");
         });
     });
 
@@ -239,11 +240,11 @@ describe("Feature: bar and stacked bar chart", () => {
             });
 
             it("shows the compare total", () => {
-                expect(tooltip(el).querySelector(".tooltip-compare .tooltip-value")?.textContent).toBe("3");
+                expect(deepQuery(tooltip(el).shadowRoot!, ".tooltip-compare .tooltip-value")?.textContent).toBe("3");
             });
 
             it("shows the change from the compare total to the current total", () => {
-                const badge = tooltip(el).querySelector("uax-delta-badge") as UaxDeltaBadgeElement;
+                const badge = deepQuery(tooltip(el).shadowRoot!, "uax-delta-badge") as UaxDeltaBadgeElement;
                 expect(badge.value).toBeCloseTo(0, 5);
             });
         });

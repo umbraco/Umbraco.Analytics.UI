@@ -4,9 +4,9 @@ import { css, html, LitElement } from "@umbraco-cms/backoffice/external/lit";
 import lightCss from "@umbraco-ui/uui/themes/light.css?inline";
 import darkCss from "@umbraco-ui/uui/themes/dark.css?inline";
 import highContrastCss from "@umbraco-ui/uui/themes/high-contrast.css?inline";
-import { UaxPaletteStyles } from "../../index.js";
-import { deepQuery, renderElement, settle, type UaxTestElement } from "../test/pending.js";
-import "../../table/cells/share-cell.element.js";
+import { UaxPaletteStyles } from "../index.js";
+import { deepQuery, renderElement, settle, type UaxTestElement } from "../internal/test/dom.js";
+import "../table/cells/share-cell.element.js";
 
 /** A product's own element: it adds the palette and paints two swatches, outside any of our shadow roots. */
 class TestProductLegendElement extends LitElement {

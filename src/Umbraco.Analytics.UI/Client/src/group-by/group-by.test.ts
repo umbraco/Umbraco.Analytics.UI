@@ -9,7 +9,7 @@ import { axeRun } from "../internal/test/a11y.js";
 import { userEvent } from "vitest/browser";
 import "./group-by.element.js";
 import type { UaxGroupByElement } from "./group-by.element.js";
-import { nextEvent, renderElement, shadow, type UaxTestElement } from "../internal/test/pending.js";
+import { nextEvent, renderElement, shadow, type UaxTestElement } from "../internal/test/dom.js";
 
 const option = (el: Element, label: string) =>
     [...shadow(el).querySelectorAll("[role='radio']")].find((o) => o.textContent?.trim() === label) as HTMLElement;

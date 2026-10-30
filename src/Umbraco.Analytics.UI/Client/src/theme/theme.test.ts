@@ -1,8 +1,8 @@
 // FND-1 — Theme tokens products can override
 import { beforeEach, describe, expect, it } from "vitest";
 import { html } from "@umbraco-cms/backoffice/external/lit";
-import { renderElement, type UaxTestElement } from "../test/pending.js";
-import "../../delta-badge/delta-badge.element.js";
+import { renderElement, type UaxTestElement } from "../internal/test/dom.js";
+import "../delta-badge/delta-badge.element.js";
 
 /**
  * The colour `value` resolves to on `el`. A custom property that holds `light-dark()` isn't

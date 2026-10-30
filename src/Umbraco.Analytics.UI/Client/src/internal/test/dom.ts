@@ -1,7 +1,5 @@
-// Helpers for specs written before their element exists (bdd-specs, pending by default).
-// They render elements by tag name, so a spec file compiles before the element module does.
-// When a builder implements the element, it adds the element's static import to the spec
-// file and turns `it.skip` into `it`.
+// DOM helpers shared by the specs: render an element by tag name, query through shadow roots, wait for nested
+// elements to settle, and record events.
 import { render } from "vitest-browser-lit";
 import type { TemplateResult } from "@umbraco-cms/backoffice/external/lit";
 

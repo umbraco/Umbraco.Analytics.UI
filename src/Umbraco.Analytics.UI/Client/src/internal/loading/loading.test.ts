@@ -8,7 +8,7 @@ import darkCss from "@umbraco-ui/uui/themes/dark.css?inline";
 import highContrastCss from "@umbraco-ui/uui/themes/high-contrast.css?inline";
 import { render } from "vitest-browser-lit";
 import { axeRun } from "../test/a11y.js";
-import { renderElement, shadow, type UaxTestElement } from "../test/pending.js";
+import { renderElement, shadow, type UaxTestElement } from "../test/dom.js";
 import { getLoadingMode } from "./loading-mode.js";
 import "./skeleton.element.js";
 import "./loading-bar.element.js";

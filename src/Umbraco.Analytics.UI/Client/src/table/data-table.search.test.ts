@@ -1,8 +1,8 @@
 // TBL-4 — Search rows
-import { beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { html } from "@umbraco-cms/backoffice/external/lit";
 import { userEvent } from "vitest/browser";
-import { nextEvent, renderElement, shadow, type UaxTestElement } from "../internal/test/pending.js";
+import { nextEvent, renderElement, shadow, type UaxTestElement } from "../internal/test/dom.js";
 import "../table-search/table-search.element.js";
 import "./data-table.element.js";
 import { pageColumns, pageRows } from "./table-fixtures.js";
@@ -15,9 +15,17 @@ describe("Feature: search rows", () => {
         beforeEach(async () => {
             const search = await renderElement(html`<uax-table-search></uax-table-search>`, "uax-table-search");
             const event = nextEvent(search, "search");
-            (shadow(search).querySelector("input, uui-input") as HTMLElement).focus();
-            await userEvent.keyboard("contact");
+            // Only the timers are faked, after render, so the debounce is driven by the test and not by the machine's speed.
+            vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+            const field = shadow(search).querySelector("uui-input") as HTMLElement & { value: string };
+            field.value = "contact";
+            field.dispatchEvent(new Event("input", { bubbles: true, composed: true }));
+            vi.advanceTimersByTime(450);
             detail = (await event).detail;
+        });
+
+        afterEach(() => {
+            vi.useRealTimers();
         });
 
         it("raises search with the query once typing stops", () => {

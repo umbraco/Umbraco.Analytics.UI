@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { allWhole, buildChartData, maxValue, parseIsoDate, seriesTotals } from "./chart-data.js";
+import { allWhole, buildChartData, maxValue, seriesTotals } from "./chart-data.js";
 import { bucketMarkers } from "./marker-buckets.js";
 import { niceScale } from "./nice-scale.js";
 
@@ -47,12 +47,6 @@ describe("buildChartData", () => {
 
     it("finds the largest value", () => {
         expect(maxValue(buildChartData([a, b]))).toBe(30);
-    });
-});
-
-describe("parseIsoDate", () => {
-    it("keeps the calendar day in the local time zone", () => {
-        expect(parseIsoDate("2026-06-11").getDate()).toBe(11);
     });
 });
 

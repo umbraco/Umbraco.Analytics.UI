@@ -7,7 +7,7 @@ import darkCss from "@umbraco-ui/uui/themes/dark.css?inline";
 import highContrastCss from "@umbraco-ui/uui/themes/high-contrast.css?inline";
 import { render } from "vitest-browser-lit";
 import { axeRun } from "../internal/test/a11y.js";
-import { recordEvents, renderElement, shadow, type UaxTestElement } from "../internal/test/pending.js";
+import { recordEvents, renderElement, shadow, type UaxTestElement } from "../internal/test/dom.js";
 import "./table-search.element.js";
 import type { UaxTableSearchElement } from "./table-search.element.js";
 

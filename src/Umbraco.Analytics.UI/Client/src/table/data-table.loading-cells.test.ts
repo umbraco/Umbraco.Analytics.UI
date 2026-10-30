@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { customElement, html, property } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import "@umbraco-cms/backoffice/external/uui";
-import { deepQueryAll, renderElement, settle, shadow } from "../internal/test/pending.js";
+import { deepQueryAll, renderElement, settle, shadow } from "../internal/test/dom.js";
 import "./data-table.element.js";
 import "./cells/index.js";
 import type { UaxTableCellElement, UaxTableColumn } from "./types.js";

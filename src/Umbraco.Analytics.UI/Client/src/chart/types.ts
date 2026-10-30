@@ -2,7 +2,7 @@ import type { UaxColorSlot } from "../theme/types.js";
 
 /** One value on one day. */
 export type UaxPoint = {
-    /** ISO date, e.g. "2026-06-11". */
+    /** ISO date, e.g. "2026-06-11". A date-time such as "2026-06-11T00:00:00Z" is read as the day it starts with, with no timezone shift. */
     date: string;
     value: number;
 };
@@ -21,7 +21,7 @@ export type UaxSeries = {
 /** An event shown on the chart's timeline, such as a campaign launch. */
 export type UaxMarker = {
     id: string;
-    /** ISO date, e.g. "2026-06-11". */
+    /** ISO date, e.g. "2026-06-11". A date-time is read as the day it starts with, with no timezone shift. */
     date: string;
     title: string;
     description?: string;

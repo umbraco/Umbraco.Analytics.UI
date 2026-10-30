@@ -21,7 +21,7 @@ import { UaxTableContextController } from "./internal/table-context.controller.j
 import "./internal/table-pager.element.js";
 import "./internal/table-skeleton-cell.element.js";
 import "./internal/table-sort-button.element.js";
-import { asNumber, asText } from "./internal/number-format.js";
+import { asNumber, asText } from "./internal/cell-values.js";
 import type {
     UaxTableCellElement,
     UaxTableColumn,

@@ -9,7 +9,7 @@ import lightCss from "@umbraco-ui/uui/themes/light.css?inline";
 import highContrastCss from "@umbraco-ui/uui/themes/high-contrast.css?inline";
 import { axeRun } from "../internal/test/a11y.js";
 import "./kpi-tile.element.js";
-import { recordEvents, renderElement, shadow, type UaxTestElement } from "../internal/test/pending.js";
+import { recordEvents, renderElement, shadow, type UaxTestElement } from "../internal/test/dom.js";
 
 describe("Feature: KPI tiles switch the chart's metric", () => {
     const button = (el: Element) => shadow(el).querySelector("button") as HTMLElement;

@@ -3,7 +3,7 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { customElement, html } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
-import { renderElement, shadow, type UaxTestElement } from "../internal/test/pending.js";
+import { renderElement, shadow, type UaxTestElement } from "../internal/test/dom.js";
 import { umbExtensionsRegistry } from "@umbraco-cms/backoffice/extension-registry";
 import "../empty-state/empty-state.element.js";
 import "../date-range/date-range.element.js";

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { addDays, builtInPresetRange, isoToDate, parseIso, previousPeriodRange, previousYearRange, todayIso } from "./date-math.js";
+import { addDays, builtInPresetRange, dateOnly, compareRangeFor, firstOfNextMonth, isoToDate, parseIso, previousPeriodRange, previousYearRange, todayIso } from "./date-math.js";
 
 describe("Feature: date range maths", () => {
     describe("Scenario: today", () => {
@@ -78,5 +78,49 @@ describe("Feature: date range maths", () => {
         it("keeps dates around a leap day as they are when going back into a leap year", () => {
             expect(previousYearRange({ from: "2025-02-01", to: "2025-03-01" })).toEqual({ from: "2024-02-01", to: "2024-03-01" });
         });
+    });
+});
+
+describe("firstOfNextMonth", () => {
+    it("is the 1st of the next month", () => {
+        expect(firstOfNextMonth("2026-06-11")).toBe("2026-07-01");
+    });
+
+    it("rolls over the year", () => {
+        expect(firstOfNextMonth("2026-12-31")).toBe("2027-01-01");
+    });
+
+    it("leaves a date that isn't real as it is", () => {
+        expect(firstOfNextMonth("nope")).toBe("nope");
+    });
+});
+
+describe("compareRangeFor", () => {
+    const range = { from: "2026-05-25", to: "2026-06-23" };
+
+    it("gives the previous period", () => {
+        expect(compareRangeFor("previous-period", range)).toEqual(previousPeriodRange(range));
+    });
+
+    it("gives the previous year", () => {
+        expect(compareRangeFor("previous-year", range)).toEqual(previousYearRange(range));
+    });
+
+    it("gives nothing for a custom comparison", () => {
+        expect(compareRangeFor("custom", range)).toBeUndefined();
+    });
+});
+
+describe("dateOnly", () => {
+    it("keeps the day of a date-time as written, with no timezone shift", () => {
+        expect(dateOnly("2026-06-11T00:00:00Z")).toBe("2026-06-11");
+    });
+
+    it("leaves a plain date as it is", () => {
+        expect(dateOnly("2026-06-11")).toBe("2026-06-11");
+    });
+
+    it("leaves text that doesn't start with a date as it is", () => {
+        expect(dateOnly("June")).toBe("June");
     });
 });

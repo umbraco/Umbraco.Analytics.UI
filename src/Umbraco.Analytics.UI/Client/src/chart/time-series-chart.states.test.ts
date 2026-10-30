@@ -8,7 +8,7 @@ import darkCss from "@umbraco-ui/uui/themes/dark.css?inline";
 import highContrastCss from "@umbraco-ui/uui/themes/high-contrast.css?inline";
 import { render } from "vitest-browser-lit";
 import { axeRun } from "../internal/test/a11y.js";
-import { renderElement, shadow, type UaxTestElement } from "../internal/test/pending.js";
+import { deepQuery, renderElement, shadow, type UaxTestElement } from "../internal/test/dom.js";
 import "./time-series-chart.element.js";
 
 const series = [
@@ -129,7 +129,7 @@ describe("Feature: chart accessibility and cleanup", () => {
     });
 
     it("captions the data table", () => {
-        expect(shadow(el).querySelector("caption")!.textContent!.trim()).toBe("Chart data");
+        expect(deepQuery(shadow(el), "caption")!.textContent!.trim()).toBe("Chart data");
     });
 
     it("destroys the chart when disconnected", () => {

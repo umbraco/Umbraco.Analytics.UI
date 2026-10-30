@@ -8,7 +8,7 @@ import { render } from "vitest-browser-lit";
 import { axeRun } from "../internal/test/a11y.js";
 import "./kpi-tile.element.js";
 import type { UaxKpiTileElement } from "./kpi-tile.element.js";
-import { renderElement, shadow, type UaxTestElement } from "../internal/test/pending.js";
+import { renderElement, shadow, type UaxTestElement } from "../internal/test/dom.js";
 
 describe("Feature: KPI tile shows a headline number", () => {
     describe("Scenario: label, value and icon", () => {

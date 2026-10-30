@@ -9,7 +9,7 @@ import darkCss from "@umbraco-ui/uui/themes/dark.css?inline";
 import highContrastCss from "@umbraco-ui/uui/themes/high-contrast.css?inline";
 import { render } from "vitest-browser-lit";
 import { axeRun } from "../internal/test/a11y.js";
-import { nextEvent, renderElement, shadow, type UaxTestElement } from "../internal/test/pending.js";
+import { deepText, nextEvent, renderElement, shadow, type UaxTestElement } from "../internal/test/dom.js";
 import { screenshotIt } from "../internal/test/screenshot.js";
 import type { UaxMarker } from "./types.js";
 import "./time-series-chart.element.js";
@@ -26,7 +26,11 @@ const sameDay = { id: "m2", date: "2026-06-11", title: "Paid push" };
 const outside = { id: "m9", date: "2026-07-01", title: "Summer sale" };
 
 const markers = (el: Element) => [...shadow(el).querySelectorAll(".marker")] as HTMLElement[];
-const markerTooltip = (el: Element) => shadow(el).querySelector(".marker-tooltip") as HTMLElement | null;
+const markerTooltip = (el: Element) => shadow(el).querySelector("uax-chart-marker-tooltip") as HTMLElement | null;
+const markerTooltipText = (el: Element) => {
+    const tip = markerTooltip(el);
+    return tip ? deepText(tip) : undefined;
+};
 // The pointer stays where the last spec left it, which could be over a dot: put it in the corner before a screenshot.
 const parkPointer = (el: Element) => userEvent.hover(page.elementLocator(el), { position: { x: 1, y: 1 } });
 // Moves the pointer onto the canvas at the nth date.
@@ -78,7 +82,7 @@ describe("Feature: event markers", () => {
         });
 
         it("shows the date, title and description", () => {
-            expect(markerTooltip(el)?.textContent).toMatch(/11[\s\S]*Spring product launch[\s\S]*Homepage hero/);
+            expect(markerTooltipText(el)).toMatch(/11[\s\S]*Spring product launch[\s\S]*Homepage hero/);
         });
 
         it("hides the tooltip again when the pointer leaves", async () => {
@@ -91,7 +95,7 @@ describe("Feature: event markers", () => {
         it("shows the same tooltip as hovering", async () => {
             const el = await chart([launch]);
             markers(el)[0].focus();
-            await expect.poll(() => markerTooltip(el)?.textContent).toMatch(/Spring product launch/);
+            await expect.poll(() => markerTooltipText(el)).toMatch(/Spring product launch/);
         });
     });
 
@@ -168,7 +172,7 @@ describe("Feature: event markers", () => {
 
         it("lists both in the tooltip", async () => {
             await userEvent.hover(page.elementLocator(markers(el)[0]));
-            await expect.poll(() => markerTooltip(el)?.textContent).toMatch(/Spring product launch[\s\S]*Paid push/);
+            await expect.poll(() => markerTooltipText(el)).toMatch(/Spring product launch[\s\S]*Paid push/);
         });
 
         it("names the dot after both markers", () => {
@@ -224,7 +228,7 @@ describe("Feature: event markers", () => {
         });
 
         it("shows the date tooltip again", async () => {
-            await expect.poll(() => shadow(el).querySelector<HTMLElement>(".tooltip")?.style.visibility).toBe("visible");
+            await expect.poll(() => shadow(el).querySelector<HTMLElement>("uax-chart-tooltip")?.style.visibility).toBe("visible");
         });
 
         it("doesn't open a tooltip for a new marker on the same date", async () => {
@@ -256,9 +260,9 @@ describe("Feature: event markers", () => {
         it("hides the date tooltip", async () => {
             const el = await chart([]);
             await hoverDate(el, 1);
-            await expect.poll(() => shadow(el).querySelector<HTMLElement>(".tooltip")?.style.visibility).toBe("visible");
+            await expect.poll(() => shadow(el).querySelector<HTMLElement>("uax-chart-tooltip")?.style.visibility).toBe("visible");
             await userEvent.keyboard("{Escape}");
-            await expect.poll(() => shadow(el).querySelector(".tooltip")).toBeNull();
+            await expect.poll(() => shadow(el).querySelector("uax-chart-tooltip")).toBeNull();
         });
     });
 

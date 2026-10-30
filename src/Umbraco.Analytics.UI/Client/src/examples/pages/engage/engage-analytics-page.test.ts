@@ -7,7 +7,7 @@ import highContrastCss from "@umbraco-ui/uui/themes/high-contrast.css?inline";
 import { userEvent } from "vitest/browser";
 import { axeRun } from "../../../internal/test/a11y.js";
 import { renderPageExample, saveDateRange, withTheme } from "../../../internal/test/page-example.js";
-import { deepQueryAll, deepText, settle, shadow, type UaxTestElement } from "../../../internal/test/pending.js";
+import { deepQueryAll, deepText, settle, shadow, type UaxTestElement } from "../../../internal/test/dom.js";
 import "./engage-analytics-page.element.js";
 
 type Series = { points: unknown[] }[];

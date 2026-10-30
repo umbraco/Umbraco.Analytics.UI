@@ -8,7 +8,7 @@ import highContrastCss from "@umbraco-ui/uui/themes/high-contrast.css?inline";
 import { render } from "vitest-browser-lit";
 import { userEvent } from "vitest/browser";
 import { axeRun } from "../internal/test/a11y.js";
-import { deepQueryAll, deepText, nextEvent, recordEvents, renderElement, settle, shadow, type UaxTestElement } from "../internal/test/pending.js";
+import { deepQueryAll, deepText, nextEvent, recordEvents, renderElement, settle, shadow, type UaxTestElement } from "../internal/test/dom.js";
 import "./data-table.element.js";
 import { manyRows, nameColumns } from "./table-fixtures.js";
 import { UAX_TABLE_CELL } from "./cells/cell-names.js";

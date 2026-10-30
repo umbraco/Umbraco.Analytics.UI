@@ -8,7 +8,7 @@ import "@umbraco-cms/backoffice/external/uui";
 import "../../chart/time-series-chart.element.js";
 import "../../table/data-table.element.js";
 import { UAX_TABLE_CELL } from "../../table/cells/cell-names.js";
-import { settle, type UaxTestElement } from "../test/pending.js";
+import { settle, type UaxTestElement } from "../test/dom.js";
 import type { UaxSeries } from "../../chart/types.js";
 
 const RUNS = 7;
