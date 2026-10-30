@@ -159,7 +159,7 @@
 
 Run after whole-feature review round B. Each gets a builder, a review and its own commit. Public API changes update `api/ui.api.md`, both READMEs, stories and examples.
 
-- [ ] **T25** - Compare badges by composition (follow-ups 1 and 2). Built-in value cells (number, percent, share) show a compare badge through one shared piece instead of each cell special-casing it, and product cells can use the same piece. What "better" means is column metadata, not cell logic: `UaxTableColumn` gets a metadata bag (e.g. `meta`) that cells and the badge piece read, holding `lowerIsBetter`. Consider moving the cell-specific fields (`hrefKey`, `color`) into the same bag so the column type stops growing per cell; check the CMS `umb-table` column shape first and log the choice. User approved the shape 30-10-2026.
+- [x] **T25** - Compare badges by composition (follow-ups 1 and 2). Built-in value cells (number, percent, share) show a compare badge through one shared piece instead of each cell special-casing it, and product cells can use the same piece. What "better" means is column metadata, not cell logic: `UaxTableColumn` gets a metadata bag (e.g. `meta`) that cells and the badge piece read, holding `lowerIsBetter`. Consider moving the cell-specific fields (`hrefKey`, `color`) into the same bag so the column type stops growing per cell; check the CMS `umb-table` column shape first and log the choice. User approved the shape 30-10-2026.
 - [ ] **T26** - KPI tile "no data" state (follow-up 3).
 - [ ] **T27** - Error state element for tiles, chart and table (follow-up 4), alongside `uax-empty-state`.
 - [ ] **T28** - Compare-label formatter for a `UaxCompare` (follow-up 5); page examples drop `formatRange`.
