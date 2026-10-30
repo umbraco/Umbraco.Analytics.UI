@@ -62,6 +62,8 @@ To try changes inside a product, reference `src/Umbraco.Analytics.UI/Umbraco.Ana
 
 ## Release
 
+Versions follow the CMS major (19.x is for CMS 19). Branches: `v19/dev` for development, `v19/main` for releases, feature work on `v19/feature/<name>`.
+
 Uses the shared `umbraco/Umbraco.Build` pipeline (`azure-pipelines.yml`). Tag `release-{version}` on the release branch. Prereleases go to MyGet, stable releases to NuGet.org and npm.
 
 The template runs the root `package.json` `ci:*` scripts to install, build and pack the client. A `ClientTests` stage then runs lint, the browser tests in Chromium, Firefox and WebKit, and a Storybook build. Publishing waits for it to pass.

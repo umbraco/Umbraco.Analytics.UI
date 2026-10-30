@@ -16,7 +16,8 @@ Shared backoffice analytics components (Lit + UUI) consumed by Engage, Commerce 
 - Prerelease suffixes are dot-separated: `-alpha.N`, `-beta.N`, `-rc.N`.
 - Add a component only when at least two products need it.
 - Consistency with UUI is a goal. Where UUI already has the pattern (property/attribute names, events and their cancelability, states like selectable/selected/disabled, focus, hover and selection visuals, sizes), mirror it. Read the UUI source in node_modules/@umbraco-ui/uui first. Deviate only to close a gap UUI has (e.g. accessibility) and log the deviation in the plan's DECISION-LOG.md. Don't import from `@umbraco-ui/uui/internal/*`: it isn't re-exported by the backoffice, so it would bundle a second UUI copy.
-- Branching and release process follow the Umbraco Commerce conventions (`topic/{major}.x/{name}`, `release/*`, `release-*` tags).
+- Versioning: package major = CMS major (19.x for CMS 19); minor and patch are this package's own. Only breaking changes at a CMS major, since one version is shared by every product on a site.
+- Branching: `v{major}/main` = latest release on that major (code only via release/hotfix merges); `v{major}/dev` = integration branch; work on `v{major}/feature/<name>` (or bugfix/task) and PR into `v{major}/dev`. Releases: `release/{semver}` off `v{major}/dev`, tag `release-{version}` on it, merge to `v{major}/main` after the build succeeds. Hotfixes: `hotfix/{semver}` off `v{major}/main`. Only `v19` exists for now.
 - Component folder layout follows UUI: `<name>.element.ts`, `<name>.story.ts`, `<name>.test.ts`, `index.ts`. Element prefix `uax-`.
 - Every component needs a story covering each state and a test that includes `expect(await axeRun(el)).toHaveNoViolations()`.
 - Import Lit only from `@umbraco-cms/backoffice/external/lit` (lint enforced).
