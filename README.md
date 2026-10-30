@@ -62,7 +62,7 @@ To try changes inside a product, reference `src/Umbraco.Analytics.UI/Umbraco.Ana
 
 ## Release
 
-Versions follow the CMS major (19.x is for CMS 19). Branches: `v19/dev` for development, `v19/main` for releases, feature work on `v19/feature/<name>`.
+Versions follow the CMS major (19.x is for CMS 19). Branches: `v19/dev` for development, `v19/main` for releases, work on `v19/topic/<name>`.
 
 Uses the shared `umbraco/Umbraco.Build` pipeline (`azure-pipelines.yml`). Tag `release-{version}` on the release branch. Prereleases go to MyGet, stable releases to NuGet.org and npm.
 
