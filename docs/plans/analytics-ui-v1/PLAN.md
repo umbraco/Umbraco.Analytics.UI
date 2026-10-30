@@ -34,7 +34,7 @@
   Acceptance: KPI-1 specs green. "Row of tiles" story matches `docs/design/phase-1/screenshots/kpi-size.png` apart from rounded corners.
   depends-on: T3, T5. parallel-group: C
 
-- [ ] **T7** - story: KPI-2 (AC1–AC4). Add `selectable` and `selected` to `uan-kpi-tile`. When selectable, the tile renders as a `button` with `aria-pressed` and raises `select`.
+- [x] **T7** - story: KPI-2 (AC1–AC4). Add `selectable` and `selected` to `uan-kpi-tile`. When selectable, the tile renders as a `button` with `aria-pressed` and raises `select`.
   Acceptance: KPI-2 specs green, axe clean in both states.
   depends-on: T6
 
