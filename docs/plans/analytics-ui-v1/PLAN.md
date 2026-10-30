@@ -70,7 +70,7 @@
   Acceptance: DR-1 specs green, axe clean on the button and the open modal. FND-2 AC3 in `src/lang/localization.test.ts` retargeted from the test-only element to `uax-date-range`.
   depends-on: T2. parallel-group: D
 
-- [ ] **T14** - story: DR-2 (AC1–AC5). Add the Compare switch, compare modes (previous period, previous year, custom), `allow-compare`, the "Compare to:" line on the button, and custom-range validation.
+- [x] **T14** - story: DR-2 (AC1–AC5). Add the Compare switch, compare modes (previous period, previous year, custom), `allow-compare`, the "Compare to:" line on the button, and custom-range validation.
   Acceptance: DR-2 specs green. Button story matches the date box in `cmp-diff.png`.
   depends-on: T13
 
