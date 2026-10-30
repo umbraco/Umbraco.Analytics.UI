@@ -1,7 +1,13 @@
+/// <reference types="vite/client" />
 // KPI-2 — KPI tiles switch the chart's metric
 import { beforeEach, describe, expect, it } from "vitest";
 import { html } from "@umbraco-cms/backoffice/external/lit";
 import { userEvent } from "vitest/browser";
+import { render } from "vitest-browser-lit";
+import darkCss from "@umbraco-ui/uui/themes/dark.css?inline";
+import highContrastCss from "@umbraco-ui/uui/themes/high-contrast.css?inline";
+import { axeRun } from "../internal/test/a11y.js";
+import "./kpi-tile.element.js";
 import { recordEvents, renderElement, shadow, type UanTestElement } from "../internal/test/pending.js";
 
 describe("Feature: KPI tiles switch the chart's metric", () => {
@@ -13,7 +19,7 @@ describe("Feature: KPI tiles switch the chart's metric", () => {
             (shadow(el).querySelector("button") as HTMLElement).click();
         });
 
-        it.skip("raises select", () => {
+        it("raises select", () => {
             expect(events).toHaveLength(1);
         });
     });
@@ -27,7 +33,7 @@ describe("Feature: KPI tiles switch the chart's metric", () => {
             await userEvent.keyboard("{Enter}");
         });
 
-        it.skip("raises select", () => {
+        it("raises select", () => {
             expect(events).toHaveLength(1);
         });
     });
@@ -38,7 +44,7 @@ describe("Feature: KPI tiles switch the chart's metric", () => {
             el = await renderElement(html`<uan-kpi-tile label="Orders" value="26" selectable selected></uan-kpi-tile>`, "uan-kpi-tile");
         });
 
-        it.skip("reports aria-pressed true", () => {
+        it("reports aria-pressed true", () => {
             expect(shadow(el).querySelector("button")?.getAttribute("aria-pressed")).toBe("true");
         });
     });
@@ -51,8 +57,56 @@ describe("Feature: KPI tiles switch the chart's metric", () => {
             el.click();
         });
 
-        it.skip("raises no select event", () => {
+        it("raises no select event", () => {
             expect(events).toHaveLength(0);
         });
+    });
+
+    describe("Scenario: tile height as a button", () => {
+        it("fills the row like a plain tile", async () => {
+            const { container } = render(html`<div style="display:grid;grid-template-columns:repeat(2,160px)">
+                <uan-kpi-tile label="Carts created this period" value="1"></uan-kpi-tile>
+                <uan-kpi-tile label="Orders" value="2" selectable></uan-kpi-tile>
+            </div>`);
+            const tiles = [...container.querySelectorAll("uan-kpi-tile")];
+            await Promise.all(tiles.map((t) => t.updateComplete));
+            const card = (t: Element) => t.shadowRoot!.querySelector(".tile")!.getBoundingClientRect();
+            expect(card(tiles[1]!).height).toBe(card(tiles[0]!).height);
+            expect(card(tiles[1]!).width).toBe(card(tiles[0]!).width);
+        });
+    });
+
+    describe("Scenario: accessibility", () => {
+        async function audit(selected: boolean, themeCss?: string) {
+            const theme = document.createElement("style");
+            if (themeCss) {
+                theme.textContent = themeCss;
+                document.head.appendChild(theme);
+            }
+            try {
+                const host = render(
+                    html`<div style="background: var(--uui-color-background); padding: 8px; width: 320px">
+                        <uan-kpi-tile label="Revenue" value="€ 4,837.40" icon="icon-coins" .delta=${-3} selectable ?selected=${selected}></uan-kpi-tile>
+                    </div>`,
+                ).container.querySelector("div")!;
+                await host.querySelector("uan-kpi-tile")!.updateComplete;
+                return await axeRun(host);
+            } finally {
+                theme.remove();
+            }
+        }
+
+        for (const selected of [false, true]) {
+            const state = selected ? "selected" : "unselected";
+            it(`passes the a11y audit unthemed (${state})`, async () => {
+                expect(await audit(selected)).toHaveNoViolations();
+            });
+            it(`passes the a11y audit in dark (${state})`, async () => {
+                expect(await audit(selected, darkCss)).toHaveNoViolations();
+            });
+            it(`passes the a11y audit in high contrast (${state})`, async () => {
+                expect(await audit(selected, highContrastCss)).toHaveNoViolations();
+            });
+        }
     });
 });

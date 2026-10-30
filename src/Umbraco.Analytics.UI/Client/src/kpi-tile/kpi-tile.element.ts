@@ -46,12 +46,23 @@ export class UanKpiTileElement extends UmbLitElement {
     @property({ type: Boolean, reflect: true })
     loading = false;
 
+    /** Makes the tile a button that raises `select` when pressed, so a row of tiles can switch a chart's metric. */
+    @property({ type: Boolean, reflect: true })
+    selectable = false;
+
+    /** Draws the active state and reports `aria-pressed="true"`. Only has an effect while `selectable`. */
+    @property({ type: Boolean, reflect: true })
+    selected = false;
+
+    #select() {
+        this.dispatchEvent(new CustomEvent("select", { bubbles: true, composed: true, detail: {} }));
+    }
+
     override render() {
         const hasValue = this.value !== undefined && this.value !== null && this.value !== "";
         const mode = getLoadingMode(this.loading, hasValue);
 
-        return html`<div class="tile">
-            ${this.icon
+        const content = html`${this.icon
                 ? html`<div class="icon" aria-hidden="true"><uui-icon name=${this.icon}></uui-icon></div>`
                 : nothing}
             <div class="content" aria-busy=${this.loading ? "true" : "false"}>
@@ -69,8 +80,18 @@ export class UanKpiTileElement extends UmbLitElement {
                                         .lowerIsBetter=${this.lowerIsBetter}></uan-delta-badge>`}
                           </div>
                       </div>`}
-            </div>
-        </div>`;
+            </div>`;
+
+        // A native button gives Enter and Space for free, and both arrive as one click.
+        return this.selectable
+            ? html`<button
+                  type="button"
+                  class="tile selectable"
+                  aria-pressed=${this.selected ? "true" : "false"}
+                  @click=${this.#select}>
+                  ${content}
+              </button>`
+            : html`<div class="tile">${content}</div>`;
     }
 
     static override styles: CSSResultGroup = [
@@ -99,6 +120,36 @@ export class UanKpiTileElement extends UmbLitElement {
                 border: 1px solid var(--uui-color-border);
                 border-radius: var(--uui-border-radius-3);
                 box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+            }
+
+            button.tile {
+                /* Reset the button so it fills the row like the div card does. */
+                appearance: none;
+                margin: 0;
+                width: 100%;
+                text-align: inherit;
+                font: inherit;
+                color: inherit;
+                cursor: pointer;
+                transition:
+                    border-color 120ms,
+                    box-shadow 120ms;
+            }
+
+            button.tile:hover {
+                border-color: var(--uui-color-interactive);
+                box-shadow: 0 0 0 1px var(--uui-color-interactive);
+            }
+
+            /* Selected is a thicker ring (3px against 1px), so it reads without relying on colour. */
+            button.tile[aria-pressed="true"] {
+                border-color: var(--uui-color-interactive);
+                box-shadow: 0 0 0 2px var(--uui-color-interactive);
+            }
+
+            button.tile:focus-visible {
+                outline: 2px solid var(--uui-color-focus);
+                outline-offset: 3px;
             }
 
             .icon {

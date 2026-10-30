@@ -14,6 +14,8 @@ const meta: Meta<UanKpiTileElement> = {
         deltaUnit: "percent",
         lowerIsBetter: false,
         loading: false,
+        selectable: false,
+        selected: false,
     },
     argTypes: {
         deltaUnit: { control: "inline-radio", options: ["percent", "points"] },
@@ -27,7 +29,9 @@ const meta: Meta<UanKpiTileElement> = {
                 .delta=${args.delta}
                 .deltaUnit=${args.deltaUnit}
                 .lowerIsBetter=${args.lowerIsBetter}
-                .loading=${args.loading}></uan-kpi-tile>
+                .loading=${args.loading}
+                .selectable=${args.selectable}
+                .selected=${args.selected}></uan-kpi-tile>
         </div>`,
 };
 
@@ -59,5 +63,24 @@ export const RowOfTiles: Story = {
             <uan-kpi-tile label="Orders" value="26" icon="icon-inbox" .delta=${8.1}></uan-kpi-tile>
             <uan-kpi-tile label="Carts created" value="64" icon="icon-shopping-basket" .delta=${12.4}></uan-kpi-tile>
             <uan-kpi-tile label="New customers" value="13" icon="icon-user" .delta=${4.8}></uan-kpi-tile>
+        </div>`,
+};
+
+/** A button: hover, focus and press with the mouse or Enter / Space. It raises `select`. */
+export const Selectable: Story = { args: { selectable: true } };
+
+/** A row of selectable tiles where one drives the chart. The selected one has a thicker ring. Click to move it. */
+export const SelectableRow: Story = {
+    render: () =>
+        html`<div
+            style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; width: 880px"
+            @select=${(e: Event) => {
+                const row = e.currentTarget as HTMLElement;
+                for (const tile of row.querySelectorAll("uan-kpi-tile")) tile.selected = tile === e.target;
+            }}>
+            <uan-kpi-tile label="Revenue" value="€ 4,837.40" icon="icon-coins" .delta=${18.7} selectable selected></uan-kpi-tile>
+            <uan-kpi-tile label="Orders" value="26" icon="icon-inbox" .delta=${8.1} selectable></uan-kpi-tile>
+            <uan-kpi-tile label="Carts created" value="64" icon="icon-shopping-basket" .delta=${12.4} selectable></uan-kpi-tile>
+            <uan-kpi-tile label="New customers" value="13" icon="icon-user" .delta=${4.8} selectable></uan-kpi-tile>
         </div>`,
 };

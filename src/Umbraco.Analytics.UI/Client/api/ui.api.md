@@ -51,6 +51,8 @@ export class UanKpiTileElement extends UmbLitElement {
     lowerIsBetter: boolean;
     // (undocumented)
     render(): TemplateResult<1>;
+    selectable: boolean;
+    selected: boolean;
     // (undocumented)
     static styles: CSSResultGroup;
     value?: string;
