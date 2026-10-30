@@ -24,9 +24,9 @@ export interface UaxChartColors {
  * Chart.js draws to a canvas, which can't read CSS custom properties. The series tokens are also
  * `light-dark(...)` strings, not colours. So each colour is applied to a probe element in the
  * chart's shadow root and read back as a computed `color`, which is a real colour in the
- * element's current theme. The fill is a base colour at low alpha (`--_uax-fill-N`, declared by the
+ * element's current theme. The fill is a base colour at low alpha (`--uax-color-fill-N`, declared by the
  * element): the livelier design colour by default, the product's colour when it overrides a series token. Bars use
- * `--_uax-bar-N`, opaque.
+ * `--uax-color-bar-N`, opaque.
  */
 export function resolveChartColors(probe: HTMLElement, slots: number[]): UaxChartColors {
     const colorOf = (expression: string): string => {
@@ -36,25 +36,25 @@ export function resolveChartColors(probe: HTMLElement, slots: number[]): UaxChar
     };
     const series = slots.map((n) => {
         return {
-            line: colorOf(`var(--_uax-series-${n})`),
-            fill: colorOf(`color-mix(in srgb, var(--_uax-fill-${n}) 12%, transparent)`),
-            bar: colorOf(`var(--_uax-bar-${n})`),
+            line: colorOf(`var(--uax-color-series-${n})`),
+            fill: colorOf(`color-mix(in srgb, var(--uax-color-fill-${n}) 12%, transparent)`),
+            bar: colorOf(`var(--uax-color-bar-${n})`),
         };
     });
     return {
         series,
-        compare: colorOf("var(--_uax-compare)"),
-        compareBar: colorOf("var(--_uax-compare-bar)"),
-        gapAbove: colorOf("var(--_uax-gap-positive)"),
-        gapBelow: colorOf("var(--_uax-gap-negative)"),
+        compare: colorOf("var(--uax-color-compare)"),
+        compareBar: colorOf("var(--uax-color-compare-bar)"),
+        gapAbove: colorOf("var(--uax-color-gap-positive)"),
+        gapBelow: colorOf("var(--uax-color-gap-negative)"),
         grid: colorOf("var(--uui-color-divider-standalone)"),
         tick: colorOf("var(--uui-color-text-alt)"),
         surface: colorOf("var(--uui-color-surface)"),
         hoverLine: colorOf("color-mix(in srgb, var(--uui-color-text) 35%, transparent)"),
-        marker: colorOf("var(--_uax-marker)"),
-        markerHover: colorOf("var(--_uax-marker-hover)"),
-        markerLine: colorOf("color-mix(in srgb, var(--_uax-marker) 26%, transparent)"),
-        markerLineActive: colorOf("color-mix(in srgb, var(--_uax-marker-hover) 60%, transparent)"),
+        marker: colorOf("var(--uax-color-marker)"),
+        markerHover: colorOf("var(--uax-color-marker-hover)"),
+        markerLine: colorOf("color-mix(in srgb, var(--uax-color-marker) 26%, transparent)"),
+        markerLineActive: colorOf("color-mix(in srgb, var(--uax-color-marker-hover) 60%, transparent)"),
         fontFamily: getComputedStyle(probe).fontFamily,
     };
 }

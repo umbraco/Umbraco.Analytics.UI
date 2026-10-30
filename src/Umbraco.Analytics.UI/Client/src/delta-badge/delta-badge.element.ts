@@ -1,6 +1,6 @@
 import { css, customElement, html, nothing, property, type CSSResultGroup } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
-import { uaxThemeTokens } from "../internal/theme/tokens.css.js";
+import { UaxPaletteStyles } from "../theme/index.js";
 
 export type UaxDeltaUnit = "percent" | "points";
 
@@ -87,7 +87,7 @@ export class UaxDeltaBadgeElement extends UmbLitElement {
     }
 
     static override styles: CSSResultGroup = [
-        uaxThemeTokens,
+        UaxPaletteStyles,
         css`
             :host {
                 display: inline-flex;
@@ -116,18 +116,18 @@ export class UaxDeltaBadgeElement extends UmbLitElement {
             }
 
             [data-sentiment="positive"] {
-                color: var(--_uax-text-positive);
-                background: var(--_uax-tint-positive);
+                color: var(--uax-color-text-positive);
+                background: var(--uax-color-tint-positive);
             }
 
             [data-sentiment="negative"] {
-                color: var(--_uax-text-negative);
-                background: var(--_uax-tint-negative);
+                color: var(--uax-color-text-negative);
+                background: var(--uax-color-tint-negative);
             }
 
             [data-sentiment="neutral"] {
-                color: var(--_uax-text-neutral);
-                background: var(--_uax-tint-neutral);
+                color: var(--uax-color-text-neutral);
+                background: var(--uax-color-tint-neutral);
             }
 
             .visually-hidden {

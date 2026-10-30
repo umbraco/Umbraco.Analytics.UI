@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/web-components-vite";
 import { css, html, LitElement } from "@umbraco-cms/backoffice/external/lit";
-import { uaxThemeTokens } from "./tokens.css.js";
+import { UaxPaletteStyles } from "../../theme/index.js";
 
 const tokens = [
     "series-1",
@@ -22,7 +22,7 @@ class UaxThemeSwatchesElement extends LitElement {
         return html`<div class="grid">
             ${tokens.map(
                 (name) => html`<div class="item">
-                    <div class="swatch" style="background: var(--_uax-${name})"></div>
+                    <div class="swatch" style="background: var(--uax-color-${name})"></div>
                     <code>--uax-${name}</code>
                 </div>`,
             )}
@@ -30,7 +30,7 @@ class UaxThemeSwatchesElement extends LitElement {
     }
 
     static override styles = [
-        uaxThemeTokens,
+        UaxPaletteStyles,
         css`
             .grid {
                 display: grid;

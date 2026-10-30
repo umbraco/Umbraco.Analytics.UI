@@ -1,6 +1,6 @@
 import { css, customElement, html, property, repeat, type CSSResultGroup } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
-import { uaxThemeTokens } from "../internal/theme/tokens.css.js";
+import { UaxPaletteStyles } from "../theme/index.js";
 
 export type UaxGroupBy = "day" | "week" | "month";
 
@@ -70,7 +70,7 @@ export class UaxGroupByElement extends UmbLitElement {
     }
 
     static override styles: CSSResultGroup = [
-        uaxThemeTokens,
+        UaxPaletteStyles,
         css`
             :host {
                 display: inline-flex;

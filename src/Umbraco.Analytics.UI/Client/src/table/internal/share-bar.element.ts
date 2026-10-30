@@ -1,6 +1,6 @@
 import { css, customElement, html, property, type CSSResultGroup } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
-import { uaxThemeTokens } from "../../internal/theme/tokens.css.js";
+import { UaxPaletteStyles } from "../../theme/index.js";
 
 /**
  * The thin bar under a share value: a filled part on a neutral track. Decorative, so hidden from assistive
@@ -20,12 +20,12 @@ export class UaxShareBarElement extends UmbLitElement {
 
     override render() {
         return html`<div class="track" aria-hidden="true">
-            <div class="share-bar" style="width: ${this.percent}%; background-color: var(--_uax-series-${this.color})"></div>
+            <div class="share-bar" style="width: ${this.percent}%; background-color: var(--uax-color-series-${this.color})"></div>
         </div>`;
     }
 
     static override styles: CSSResultGroup = [
-        uaxThemeTokens,
+        UaxPaletteStyles,
         css`
             :host {
                 display: block;
@@ -34,7 +34,7 @@ export class UaxShareBarElement extends UmbLitElement {
             .track {
                 height: 4px;
                 border-radius: 999px;
-                background-color: var(--_uax-tint-neutral);
+                background-color: var(--uax-color-tint-neutral);
                 overflow: hidden;
             }
 

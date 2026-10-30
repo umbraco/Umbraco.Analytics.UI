@@ -1,7 +1,7 @@
 import { css, customElement, html, nothing, property, state, type CSSResultGroup, type PropertyValues } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import "../../delta-badge/delta-badge.element.js";
-import { uaxThemeTokens } from "../../internal/theme/tokens.css.js";
+import { UaxPaletteStyles } from "../../theme/index.js";
 import "../internal/share-bar.element.js";
 import { asNumber, getNumberFormat } from "../internal/number-format.js";
 import { UAX_TABLE_CONTEXT } from "../table-context.js";
@@ -120,7 +120,7 @@ export class UaxShareCellElement extends UmbLitElement implements UaxTableCellEl
     }
 
     static override styles: CSSResultGroup = [
-        uaxThemeTokens,
+        UaxPaletteStyles,
         css`
             :host {
                 display: block;

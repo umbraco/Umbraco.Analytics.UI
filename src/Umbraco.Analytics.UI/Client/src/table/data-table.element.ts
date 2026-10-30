@@ -14,7 +14,7 @@ import "../empty-state/empty-state.element.js";
 import { getLoadingMode } from "../internal/loading/loading-mode.js";
 import "../internal/loading/loading-bar.element.js";
 import "../internal/loading/skeleton.element.js";
-import { uaxThemeTokens } from "../internal/theme/tokens.css.js";
+import { UaxPaletteStyles } from "../theme/index.js";
 import "./cells/index.js";
 import { UAX_TABLE_CELL } from "./cells/cell-names.js";
 import { UaxTableContextController } from "./internal/table-context.controller.js";
@@ -603,7 +603,7 @@ export class UaxDataTableElement extends UmbLitElement {
     }
 
     static override styles: CSSResultGroup = [
-        uaxThemeTokens,
+        UaxPaletteStyles,
         css`
             :host {
                 display: block;

@@ -1,6 +1,6 @@
 import { css, customElement, html, type CSSResultGroup } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
-import { uaxThemeTokens } from "../theme/tokens.css.js";
+import { UaxPaletteStyles } from "../../theme/index.js";
 
 /**
  * A grey placeholder block shown while a data element loads for the first time. Internal: not exported.
@@ -26,7 +26,7 @@ export class UaxSkeletonElement extends UmbLitElement {
     }
 
     static override styles: CSSResultGroup = [
-        uaxThemeTokens,
+        UaxPaletteStyles,
         css`
             :host {
                 display: block;
@@ -38,7 +38,7 @@ export class UaxSkeletonElement extends UmbLitElement {
             .block {
                 height: 100%;
                 border-radius: var(--uui-border-radius);
-                background-color: var(--_uax-tint-neutral);
+                background-color: var(--uax-color-tint-neutral);
                 background-image: linear-gradient(
                     90deg,
                     transparent 0%,

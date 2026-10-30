@@ -1,7 +1,7 @@
 import { css, customElement, html, nothing, property, type CSSResultGroup } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { getLoadingMode } from "../internal/loading/index.js";
-import { uaxThemeTokens } from "../internal/theme/tokens.css.js";
+import { UaxPaletteStyles } from "../theme/index.js";
 import type { UaxDeltaUnit } from "../delta-badge/delta-badge.element.js";
 import "../delta-badge/delta-badge.element.js";
 
@@ -113,7 +113,7 @@ export class UaxKpiTileElement extends UmbLitElement {
     }
 
     static override styles: CSSResultGroup = [
-        uaxThemeTokens,
+        UaxPaletteStyles,
         css`
             :host {
                 display: block;

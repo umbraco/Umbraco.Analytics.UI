@@ -4,6 +4,7 @@
 
 ```ts
 
+import { CSSResult } from '@umbraco-cms/backoffice/external/lit';
 import { CSSResultGroup } from '@umbraco-cms/backoffice/external/lit';
 import { nothing } from '@umbraco-cms/backoffice/external/lit';
 import type { Observable } from '@umbraco-cms/backoffice/external/rxjs';
@@ -189,6 +190,9 @@ export class UaxNumberCellElement extends UmbLitElement implements UaxTableCellE
     // (undocumented)
     protected willUpdate(changed: PropertyValues<this>): void;
 }
+
+// @public
+export const UaxPaletteStyles: CSSResult;
 
 // @public
 export class UaxPercentCellElement extends UmbLitElement implements UaxTableCellElement {

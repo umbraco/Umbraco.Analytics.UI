@@ -25,7 +25,7 @@ describe("Feature: change badge matches the design", () => {
         });
 
         it("sits on the positive tint", () => {
-            expect(bg(el)).toBe(tint(el, "--_uax-tint-positive"));
+            expect(bg(el)).toBe(tint(el, "--uax-color-tint-positive"));
         });
     });
 
@@ -36,7 +36,7 @@ describe("Feature: change badge matches the design", () => {
         });
 
         it("sits on the danger tint", () => {
-            expect(bg(el)).toBe(tint(el, "--_uax-tint-negative"));
+            expect(bg(el)).toBe(tint(el, "--uax-color-tint-negative"));
         });
     });
 
@@ -47,7 +47,7 @@ describe("Feature: change badge matches the design", () => {
         });
 
         it("sits on the neutral tint", () => {
-            expect(bg(el)).toBe(tint(el, "--_uax-tint-neutral"));
+            expect(bg(el)).toBe(tint(el, "--uax-color-tint-neutral"));
         });
     });
 
@@ -61,7 +61,7 @@ describe("Feature: change badge matches the design", () => {
         });
 
         it("shows a fall on the positive tint", () => {
-            expect(bg(el)).toBe(tint(el, "--_uax-tint-positive"));
+            expect(bg(el)).toBe(tint(el, "--uax-color-tint-positive"));
         });
     });
 

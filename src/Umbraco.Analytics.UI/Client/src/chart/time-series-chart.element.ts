@@ -17,7 +17,7 @@ import type { UaxGroupBy } from "../group-by/group-by.element.js";
 import { getLoadingMode } from "../internal/loading/loading-mode.js";
 import "../internal/loading/loading-bar.element.js";
 import "../internal/loading/skeleton.element.js";
-import { uaxThemeTokens } from "../internal/theme/tokens.css.js";
+import { UaxPaletteStyles } from "../theme/index.js";
 import { bucketMarkers, type MarkerBucket } from "./internal/marker-buckets.js";
 import type { UaxMarkerPlacement } from "./internal/markers-plugin.js";
 import { allWhole, buildChartData, maxValue, parseIsoDate, seriesTotals, type UaxChartData } from "./internal/chart-data.js";
@@ -426,7 +426,7 @@ export class UaxTimeSeriesChartElement extends UmbLitElement {
             <div class="tooltip-date">${dateLabels[hover.index]}</div>
             ${values.map(
                 ({ s, i, value }) => html`<div class="tooltip-row tooltip-series">
-                        <span class=${swatch} style="--swatch: var(--_uax-${token}-${slotOf(this.series[i], i)})"></span>
+                        <span class=${swatch} style="--swatch: var(--uax-color-${token}-${slotOf(this.series[i], i)})"></span>
                         <span class="tooltip-value">${this.#formatValue(value!)}</span>
                         ${data.series.length > 1 ? html`<span class="tooltip-label">${s.label}</span>` : nothing}
                     </div>
@@ -549,7 +549,7 @@ export class UaxTimeSeriesChartElement extends UmbLitElement {
                 (s, i) => html`<li>
                     <span
                         class=${bars ? "legend-swatch" : "legend-line"}
-                        style="--swatch: var(--_uax-${bars ? "bar" : "series"}-${slotOf(this.series[i], i)})"
+                        style="--swatch: var(--uax-color-${bars ? "bar" : "series"}-${slotOf(this.series[i], i)})"
                         aria-hidden="true"></span>
                     ${s.label}
                 </li>`,
@@ -647,7 +647,7 @@ export class UaxTimeSeriesChartElement extends UmbLitElement {
     }
 
     static override styles: CSSResultGroup = [
-        uaxThemeTokens,
+        UaxPaletteStyles,
         css`
             :host {
                 display: block;
@@ -804,11 +804,11 @@ export class UaxTimeSeriesChartElement extends UmbLitElement {
             }
 
             .swatch-compare {
-                background: var(--_uax-compare);
+                background: var(--uax-color-compare);
             }
 
             .swatch-compare.swatch-square {
-                background: var(--_uax-compare-bar);
+                background: var(--uax-color-compare-bar);
             }
 
             /* Indented under the swatch column, with a hairline above, so it reads as the sum of the rows. */
@@ -858,13 +858,13 @@ export class UaxTimeSeriesChartElement extends UmbLitElement {
             }
 
             .legend-compare-swatch {
-                background: var(--_uax-compare-bar);
+                background: var(--uax-color-compare-bar);
             }
 
             .legend-compare {
                 border-top-style: dashed;
                 border-top-width: 2px;
-                border-top-color: var(--_uax-compare);
+                border-top-color: var(--uax-color-compare);
             }
 
             .visually-hidden {

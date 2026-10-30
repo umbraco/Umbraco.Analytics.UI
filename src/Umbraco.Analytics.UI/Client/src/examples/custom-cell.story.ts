@@ -6,6 +6,7 @@ import raw from "./custom-cell.story.ts?raw";
 import "../table/data-table.element.js";
 import { UAX_TABLE_CELL } from "../table/cells/cell-names.js";
 import { UAX_TABLE_CONTEXT } from "../table/table-context.js";
+import { UaxPaletteStyles } from "../theme/index.js";
 import type { UaxTableCellElement, UaxTableColumn, UaxTableStats } from "../table/types.js";
 
 const imports = `import { css, customElement, html, nothing, property, state } from "@umbraco-cms/backoffice/external/lit";
@@ -13,6 +14,7 @@ import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import {
     UAX_TABLE_CELL,
     UAX_TABLE_CONTEXT,
+    UaxPaletteStyles,
     type UaxTableCellElement,
     type UaxTableColumn,
     type UaxTableStats,
@@ -21,7 +23,9 @@ import {
 // #region cell
 /**
  * A cell that needs a number it can't work out from its own row: the column's largest value. It reads that from
- * the table's context, `UAX_TABLE_CONTEXT`, which the table provides to every cell inside it.
+ * the table's context, `UAX_TABLE_CONTEXT`, which the table provides to every cell inside it. The bar takes its colour
+ * from the package's palette (`UaxPaletteStyles`), so it matches the share bars in every theme and follows a product's
+ * `--uax-series-1`.
  */
 @customElement("example-orders-bar-cell")
 class ExampleOrdersBarCellElement extends UmbLitElement implements UaxTableCellElement {
@@ -50,28 +54,31 @@ class ExampleOrdersBarCellElement extends UmbLitElement implements UaxTableCellE
         </div>`;
     }
 
-    static override styles = css`
-        .bar-cell {
-            display: grid;
-            grid-template-columns: 4em 1fr;
-            align-items: center;
-            gap: 8px;
-        }
-        .orders {
-            text-align: end;
-            font-variant-numeric: tabular-nums;
-        }
-        .bar {
-            height: 8px;
-            border-radius: 4px;
-            background-color: var(--uui-color-surface-alt);
-            overflow: hidden;
-        }
-        .fill {
-            height: 100%;
-            background-color: var(--uui-color-positive-standalone);
-        }
-    `;
+    static override styles = [
+        UaxPaletteStyles,
+        css`
+            .bar-cell {
+                display: grid;
+                grid-template-columns: 4em 1fr;
+                align-items: center;
+                gap: 8px;
+            }
+            .orders {
+                text-align: end;
+                font-variant-numeric: tabular-nums;
+            }
+            .bar {
+                height: 8px;
+                border-radius: 4px;
+                background-color: var(--uax-color-tint-neutral);
+                overflow: hidden;
+            }
+            .fill {
+                height: 100%;
+                background-color: var(--uax-color-series-1);
+            }
+        `,
+    ];
 }
 // #endregion
 

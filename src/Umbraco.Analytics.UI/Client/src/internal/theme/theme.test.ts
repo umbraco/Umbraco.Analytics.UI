@@ -23,8 +23,8 @@ describe("Feature: theme tokens products can override", () => {
             el = await renderElement(html`<uax-delta-badge .value=${1}></uax-delta-badge>`, "uax-delta-badge");
         });
 
-        it("resolves --_uax-series-1 to --uui-palette-space-cadet in the light theme", () => {
-            expect(colourOf(el, "var(--_uax-series-1)")).toBe(colourOf(el, "var(--uui-palette-space-cadet)"));
+        it("resolves --uax-color-series-1 to --uui-palette-space-cadet in the light theme", () => {
+            expect(colourOf(el, "var(--uax-color-series-1)")).toBe(colourOf(el, "var(--uui-palette-space-cadet)"));
         });
     });
 
@@ -37,8 +37,8 @@ describe("Feature: theme tokens products can override", () => {
             );
         });
 
-        it("resolves --_uax-series-1 to the parent's colour", () => {
-            expect(colourOf(el, "var(--_uax-series-1)")).toBe("rgb(1, 2, 3)");
+        it("resolves --uax-color-series-1 to the parent's colour", () => {
+            expect(colourOf(el, "var(--uax-color-series-1)")).toBe("rgb(1, 2, 3)");
         });
     });
 
@@ -54,8 +54,8 @@ describe("Feature: theme tokens products can override", () => {
             );
         });
 
-        it("derives --_uax-tint-positive from the parent's --uui-color-positive", () => {
-            const value = getComputedStyle(el).getPropertyValue("--_uax-tint-positive");
+        it("derives --uax-color-tint-positive from the parent's --uui-color-positive", () => {
+            const value = getComputedStyle(el).getPropertyValue("--uax-color-tint-positive");
             expect(value).toMatch(/rgb\(\s*1\s*,\s*2\s*,\s*3\s*\)/);
         });
     });
@@ -69,8 +69,8 @@ describe("Feature: theme tokens products can override", () => {
             );
         });
 
-        it("resolves --_uax-series-1 to --uui-palette-malibu-light", () => {
-            expect(colourOf(el, "var(--_uax-series-1)")).toBe(colourOf(el, "var(--uui-palette-malibu-light)"));
+        it("resolves --uax-color-series-1 to --uui-palette-malibu-light", () => {
+            expect(colourOf(el, "var(--uax-color-series-1)")).toBe(colourOf(el, "var(--uui-palette-malibu-light)"));
         });
     });
 });
