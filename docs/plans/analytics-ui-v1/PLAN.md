@@ -108,7 +108,7 @@
   Acceptance: TBL-4 specs green.
   depends-on: T18
 
-- [ ] **T20** - story: TBL-5 (AC1–AC3). Make rows clickable and focusable only when a `row-click` listener is attached. Click or Enter raises `row-click` with the row.
+- [x] **T20** - story: TBL-5 (AC1–AC3). Make rows clickable and focusable only when a `row-click` listener is attached. Click or Enter raises `row-click` with the row.
   Acceptance: TBL-5 specs green, axe clean in both modes.
   depends-on: T19
 
