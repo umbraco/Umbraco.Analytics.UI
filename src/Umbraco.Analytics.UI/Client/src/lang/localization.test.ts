@@ -1,11 +1,11 @@
 // FND-2 — Built-in text is translated
-// The specs render a tiny test element until uan-empty-state (T4) and uan-date-range (T13) exist,
-// then should be pointed at those elements.
+// The override and aria-label specs render a tiny test element until uan-date-range (T13) exists, then should be pointed at it.
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { customElement, html } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { renderElement, shadow, type UanTestElement } from "../internal/test/pending.js";
 import { umbExtensionsRegistry } from "@umbraco-cms/backoffice/extension-registry";
+import "../empty-state/empty-state.element.js";
 import { registerUanLocalization, UAN_EN_ALIAS } from "../internal/localization/register.js";
 import { registerUanTranslationOverride } from "../internal/test/localization.js";
 
@@ -23,11 +23,11 @@ describe("Feature: built-in text is translated", () => {
     describe("Scenario: strings come from localization keys", () => {
         let el: UanTestElement;
         beforeEach(async () => {
-            el = await renderElement(html`<uan-test-localized></uan-test-localized>`, "uan-test-localized");
+            el = await renderElement(html`<uan-empty-state></uan-empty-state>`, "uan-empty-state");
         });
 
         it("shows the English translation, not the raw key", () => {
-            expect(shadow(el).querySelector("h2")?.textContent).toBe("No data yet");
+            expect(shadow(el).querySelector(".headline")?.textContent).toBe("No data yet");
         });
     });
 

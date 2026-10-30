@@ -8,6 +8,7 @@ import "@umbraco-ui/uui/styles/uui-text.css";
 import { html } from "@umbraco-cms/backoffice/external/lit";
 // Registers every uui-* element, as the backoffice does
 import "@umbraco-cms/backoffice/external/uui";
+import { UmbIconRegistry } from "@umbraco-cms/backoffice/icon";
 import { registerUanLocalization } from "../src/internal/localization/register.js";
 import backofficeEn from "../src/internal/test/backoffice-en.js";
 import customElements from "../custom-elements.json";
@@ -64,6 +65,24 @@ const preview: Preview = {
         },
     ],
 };
+
+// Stories show icons, not blanks: the backoffice icon registry is not loaded here, so register
+// just the icons the stories use. Add a line when a story needs another icon.
+const storyIconNames = ["icon-search", "icon-chart"];
+const icons = import.meta.glob(
+    "../node_modules/@umbraco-cms/backoffice/dist-cms/packages/core/icon-registry/icons/{icon-search,icon-chart}.js",
+);
+if (Object.keys(icons).length < storyIconNames.length) {
+    throw new Error(`Storybook icon glob found ${Object.keys(icons).length} of ${storyIconNames.length} icons`);
+}
+const iconRegistry = new UmbIconRegistry();
+iconRegistry.setIcons(
+    Object.entries(icons).map(([path, load]) => ({
+        name: path.split("/").pop()!.replace(".js", ""),
+        path: load as () => Promise<{ default: string }>,
+    })),
+);
+iconRegistry.attach(document.body);
 
 // Stories show text, not keys: register translations like the backoffice would.
 registerUanLocalization(backofficeEn);

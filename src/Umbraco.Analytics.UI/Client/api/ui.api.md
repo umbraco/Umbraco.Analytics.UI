@@ -30,6 +30,17 @@ export type UanDeltaBadgeSize = "md" | "sm";
 // @public (undocumented)
 export type UanDeltaUnit = "percent" | "points";
 
+// @public
+export class UanEmptyStateElement extends UmbLitElement {
+    description?: string;
+    headline?: string;
+    icon: string;
+    // (undocumented)
+    render(): TemplateResult<1>;
+    // (undocumented)
+    static styles: CSSResultGroup;
+}
+
 // (No @packageDocumentation comment for this package)
 
 ```
