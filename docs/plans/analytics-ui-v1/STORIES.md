@@ -685,19 +685,19 @@ so that I can drill into one item.
 
 ```
 AC1 — Click raises row-click
-  Given the product listens for row-click
+  Given the table has clickable-rows and the product listens for row-click
   When  the editor clicks a row
   Then  it raises row-click with that row
 
 AC2 — Keyboard opens a row
-  Given the product listens for row-click and a row has focus
+  Given the table has clickable-rows, the product listens for row-click and a row has focus
   When  the editor presses Enter
   Then  it raises row-click with that row
 
 Sad path
 
 AC3 — Rows not clickable without a listener
-  Given no row-click listener
+  Given the table does not have clickable-rows
   When  the table renders
   Then  rows are not focusable
 ```

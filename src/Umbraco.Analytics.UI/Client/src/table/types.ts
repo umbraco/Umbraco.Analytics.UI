@@ -74,6 +74,11 @@ export type UaxTablePageChangeDetail = {
     pageSize: number;
 };
 
+/** The detail of the `row-click` event: the row the editor opened, the same object the table was given in `rows`. */
+export type UaxTableRowClickDetail = {
+    row: Record<string, unknown>;
+};
+
 /** What `UAX_TABLE_CONTEXT` knows about one column's numbers. */
 export type UaxTableColumnStats = {
     /** The sum of the column's values, or the table's `totals` entry for it. What a share is a percent of. */

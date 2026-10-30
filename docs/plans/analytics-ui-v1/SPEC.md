@@ -148,7 +148,7 @@ Storybook gets a "Pane" story showing this recipe, a chart and a table in one `u
 - **Sorting:** clicking a sortable header toggles the direction and raises `sort-change`. In `client` mode the table also sorts itself.
 - **Paging:** the footer has "Show rows" (10, 25, 50, 100) and "1–10 of 272". It raises `page-change` with `{ page, pageSize }`, and in `client` mode it also pages itself. The footer is hidden when the rows fit on one page at the smallest page size the editor could need (row count ≤ the smaller of the current page size and 10), so a table at 50 rows per page can still go back to 10.
 - **Search:** `uax-data-table` exports `uax-table-search` for the toolbar. It raises `search` with `{ query }`, 300ms after typing stops. In `client` mode the table filters rows on columns marked `searchable`; if none are marked, on every column's text.
-- **Rows:** a row is clickable only when the product listens for `row-click`. Then it's keyboard-reachable and raises `row-click` with `{ row }`.
+- **Rows:** a row is clickable only when the product sets `clickable-rows` (an element can't tell whether `row-click` has a listener). Then it's keyboard-reachable (Enter or Space) and raises `row-click` with `{ row }`. Clicks on links and buttons inside a row stay with them.
 
 ### 8. `uax-empty-state` and loading
 

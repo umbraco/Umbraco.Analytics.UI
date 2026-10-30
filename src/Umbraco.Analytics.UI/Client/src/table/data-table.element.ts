@@ -27,6 +27,7 @@ import type {
     UaxTableColumn,
     UaxTableMode,
     UaxTablePageChangeDetail,
+    UaxTableRowClickDetail,
     UaxTableSearchDetail,
     UaxTableSort,
     UaxTableStats,
@@ -49,6 +50,9 @@ interface DerivedFrom {
     maxes?: Record<string, number>;
     lang: string;
 }
+
+/** Native controls that keep a click or key press to themselves, as in `uui-table-row`'s `selectable`. */
+const INTERACTIVE_TAGS = new Set(["A", "BUTTON", "INPUT", "TEXTAREA", "SELECT"]);
 
 /** The page sizes the footer offers. The first is also the size under which a table never needs a footer. */
 const PAGE_SIZES = [10, 25, 50, 100];
@@ -123,6 +127,11 @@ const SKELETON_WIDTHS = [72, 54, 83, 47, 65];
  * event. In `server` mode the table never filters: the product loads the matching rows. Column totals and
  * bars stay those of all the `rows`, searched or not.
  *
+ * Set `clickable-rows` to make rows openable. Clicking a row, or pressing Enter or Space on a focused row, raises
+ * `row-click` with `{ row }`. Rows are then keyboard-reachable and show a pointer and a hover tint. A click or key press
+ * on a link, button or form control inside a row is that control's own and raises nothing. Without `clickable-rows` rows
+ * are plain, even when something listens for `row-click`, because an element can't tell that it has a listener.
+ *
  * Totals and maxes are worked out from the `rows` the table holds: all of them in `client` mode, but only
  * the current page in `server` mode. Pass `totals` (the column's total across every page) so a share is
  * still a share of the whole, and `maxes` (the column's largest value across every page) so bars
@@ -131,6 +140,7 @@ const SKELETON_WIDTHS = [72, 54, 83, 47, 65];
  * @element uax-data-table
  * @fires sort-change - A sortable header was clicked, by pointer or keyboard. Bubbles, not composed or cancelable, like `uax-group-by`. `detail` is `{ key, direction }`; the table has already set `sort` to it and reset `page` to 1, so a `server` product loads page 1 and resets its own page binding.
  * @fires page-change - The editor picked another page or page size. Bubbles, not composed or cancelable, like `sort-change`. `detail` is `{ page, pageSize }`; the table has already set `page` and `pageSize`. A new page size goes back to page 1.
+ * @fires row-click - A row was clicked, or Enter or Space was pressed on it, while `clickable-rows` is set. Bubbles, not composed or cancelable, like `sort-change`. `detail` is `{ row }`: the object from `rows`.
  * @fires search - Not raised by the table: the `search` event of a `uax-table-search` in the `toolbar` slot bubbles through it, and the table has already set `query` and gone back to page 1 when a product's listener runs.
  * @slot toolbar - Content above the header row, such as a search box and totals. It pads itself with `--uax-table-padding`.
  * @cssprop --uax-table-padding - Padding around the `toolbar` slot, as a CSS `padding` value. Defaults to `12px 24px`. The loading bar ignores it and spans the full width at the top edge.
@@ -207,6 +217,13 @@ export class UaxDataTableElement extends UmbLitElement {
      */
     @property({ type: String })
     query = "";
+
+    /**
+     * Makes rows clickable and keyboard-reachable, and raises `row-click`. Set it when the product listens for
+     * `row-click`: the table can't tell, so rows are plain until it's set.
+     */
+    @property({ type: Boolean, attribute: "clickable-rows" })
+    clickableRows = false;
 
     /** Provides the columns, stats and compare lookup to the cells, as `UAX_TABLE_CONTEXT`. */
     #context = new UaxTableContextController(this);
@@ -459,8 +476,39 @@ export class UaxDataTableElement extends UmbLitElement {
         return derived.align === "end" ? "end" : "start";
     }
 
+    /** A click on a link, button or form control inside the row belongs to that control. */
+    #isOnInteractive(event: Event, row: EventTarget | null): boolean {
+        for (const target of event.composedPath()) {
+            if (target === row) return false;
+            if (target instanceof Element && INTERACTIVE_TAGS.has(target.tagName)) return true;
+        }
+        return false;
+    }
+
+    #raiseRowClick(row: UaxTableRow) {
+        this.dispatchEvent(new CustomEvent<UaxTableRowClickDetail>("row-click", { bubbles: true, detail: { row } }));
+    }
+
+    #onRowClick(event: MouseEvent, row: UaxTableRow) {
+        if (this.#isOnInteractive(event, event.currentTarget)) return;
+        this.#raiseRowClick(row);
+    }
+
+    /** Enter or Space on the row itself, not on something inside it. Space is held back from scrolling the page. */
+    #onRowKeydown(event: KeyboardEvent, row: UaxTableRow) {
+        if (event.code !== "Enter" && event.code !== "Space") return;
+        if (event.composedPath()[0] !== event.currentTarget) return;
+        event.preventDefault();
+        this.#raiseRowClick(row);
+    }
+
     #renderRow(row: UaxTableRow): TemplateResult {
-        return html`<uui-table-row>
+        const clickable = this.clickableRows;
+        return html`<uui-table-row
+            class=${clickable ? "clickable" : ""}
+            tabindex=${ifDefined(clickable ? "0" : undefined)}
+            @click=${clickable ? (event: MouseEvent) => this.#onRowClick(event, row) : undefined}
+            @keydown=${clickable ? (event: KeyboardEvent) => this.#onRowKeydown(event, row) : undefined}>
             ${this.#derived.map(
                 (derived) => html`<uui-table-cell class=${this.#cellClass(derived)}>${this.#renderCell(derived, row)}</uui-table-cell>`,
             )}
@@ -625,6 +673,15 @@ export class UaxDataTableElement extends UmbLitElement {
                 color: var(--uui-color-text);
                 /* Long URLs wrap anywhere rather than stretch the column. */
                 overflow-wrap: anywhere;
+            }
+
+            /* Mirrors uui-table-row[selectable]'s pointer. Its own :focus-visible outline is the focus ring. */
+            uui-table-row.clickable {
+                cursor: pointer;
+            }
+
+            uui-table-row.clickable:hover {
+                background-color: var(--uui-color-surface-emphasis);
             }
 
             .start {

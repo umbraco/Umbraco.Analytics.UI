@@ -4,7 +4,7 @@ import { UAX_TABLE_CELL } from "./cells/cell-names.js";
 import type { UaxDataTableElement } from "./data-table.element.js";
 import "./data-table.element.js";
 import "../table-search/table-search.element.js";
-import type { UaxTableColumn } from "./types.js";
+import type { UaxTableColumn, UaxTableRowClickDetail } from "./types.js";
 
 // Focused stories of the table's options. Complete, worked tables are under "Examples".
 
@@ -136,6 +136,24 @@ export const Search: Story = {
                 <uax-table-search slot="toolbar"></uax-table-search>
             </uax-data-table>
         </uui-box>`,
+};
+
+/** Set `clickable-rows` when the product listens for `row-click` (an element can't tell it has a listener). Rows then show a pointer and hover tint, take focus with Tab, and raise `row-click` with `{ row }` on a click, Enter or Space. The link in the first column keeps its own click. This story logs the clicked URL below the table. */
+export const ClickableRows: Story = {
+    render: (args) => {
+        const log = document.createElement("p");
+        log.textContent = "Click a row, or Tab to one and press Enter.";
+        return html`<uui-box headline="Top pages" style="--uui-box-default-padding: 0">
+                <uax-data-table
+                    .columns=${args.columns}
+                    .rows=${args.rows}
+                    clickable-rows
+                    @row-click=${(event: CustomEvent<UaxTableRowClickDetail>) => {
+                        log.textContent = `row-click: ${String(event.detail.row.url)}`;
+                    }}></uax-data-table>
+            </uui-box>
+            ${log}`;
+    },
 };
 
 /** First load, nothing to show yet: skeleton rows under the header. */

@@ -38,6 +38,7 @@ export type UaxCompare = {
 
 // @public
 export class UaxDataTableElement extends UmbLitElement {
+    clickableRows: boolean;
     columns: UaxTableColumn[];
     compareRows: Record<string, unknown>[];
     emptyDescription?: string;
@@ -282,6 +283,11 @@ export type UaxTableMode = "client" | "server";
 export type UaxTablePageChangeDetail = {
     page: number;
     pageSize: number;
+};
+
+// @public
+export type UaxTableRowClickDetail = {
+    row: Record<string, unknown>;
 };
 
 // @public
