@@ -29,7 +29,10 @@ function applyTheme(theme: string) {
         document.head.appendChild(themeStyleEl);
     }
     themeStyleEl.textContent = themes[theme] ?? lightCss;
+    // The backoffice sets both on its body. Without the colour, text outside a component (a page's own
+    // headings, a uui-box headline) falls back to the browser's black, unreadable on the dark themes.
     document.body.style.background = "var(--uui-color-background)";
+    document.body.style.color = "var(--uui-color-text)";
 }
 
 export const globalTypes = {
@@ -70,9 +73,9 @@ const preview: Preview = {
 
 // Stories show icons, not blanks: the backoffice icon registry is not loaded here, so register
 // just the icons the stories use. Add a line when a story needs another icon.
-const storyIconNames = ["icon-search", "icon-chart", "icon-coins", "icon-inbox", "icon-shopping-basket", "icon-user", "icon-calendar", "icon-navigation-left", "icon-navigation-right", "icon-delete"];
+const storyIconNames = ["icon-search", "icon-chart", "icon-coins", "icon-inbox", "icon-shopping-basket", "icon-user", "icon-calendar", "icon-navigation-left", "icon-navigation-right", "icon-delete", "icon-check", "icon-time", "icon-receipt-dollar", "icon-calculator", "icon-trending-up-down"];
 const icons = import.meta.glob(
-    "../node_modules/@umbraco-cms/backoffice/dist-cms/packages/core/icon-registry/icons/{icon-search,icon-chart,icon-coins,icon-inbox,icon-shopping-basket,icon-user,icon-calendar,icon-navigation-left,icon-navigation-right,icon-delete}.js",
+    "../node_modules/@umbraco-cms/backoffice/dist-cms/packages/core/icon-registry/icons/{icon-search,icon-chart,icon-coins,icon-inbox,icon-shopping-basket,icon-user,icon-calendar,icon-navigation-left,icon-navigation-right,icon-delete,icon-check,icon-time,icon-receipt-dollar,icon-calculator,icon-trending-up-down}.js",
 );
 if (Object.keys(icons).length < storyIconNames.length) {
     throw new Error(`Storybook icon glob found ${Object.keys(icons).length} of ${storyIconNames.length} icons`);

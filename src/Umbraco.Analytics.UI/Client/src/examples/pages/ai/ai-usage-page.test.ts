@@ -1,0 +1,226 @@
+/// <reference types="vite/client" />
+// T22 — Umbraco AI > Usage page example: every part is wired to the one page, in every theme.
+import { beforeEach, describe, expect, it } from "vitest";
+import { html } from "@umbraco-cms/backoffice/external/lit";
+import { umbLocalizationManager } from "@umbraco-cms/backoffice/localization-api";
+import darkCss from "@umbraco-ui/uui/themes/dark.css?inline";
+import highContrastCss from "@umbraco-ui/uui/themes/high-contrast.css?inline";
+import { axeRun } from "../../../internal/test/a11y.js";
+import { renderPageExample, saveDateRange, withTheme } from "../../../internal/test/page-example.js";
+import { deepQuery, deepQueryAll, deepText, settle, shadow, type UaxTestElement } from "../../../internal/test/pending.js";
+import "./ai-usage-page.element.js";
+import type { UaxKpiTileElement } from "../../../kpi-tile/kpi-tile.element.js";
+import type { UaxTimeSeriesChartElement } from "../../../chart/time-series-chart.element.js";
+import type { UaxDataTableElement } from "../../../table/data-table.element.js";
+
+const tiles = (page: Element) => [...shadow(page).querySelectorAll<UaxKpiTileElement>("uax-kpi-tile")];
+const tile = (page: Element, label: string) => tiles(page).find((t) => t.label === label)!;
+const chart = (page: Element) => shadow(page).querySelector("uax-time-series-chart") as UaxTimeSeriesChartElement;
+const table = (page: Element) => shadow(page).querySelector("uax-data-table") as UaxDataTableElement;
+const rowNames = (page: Element) =>
+    [...shadow(table(page)).querySelectorAll("uui-table-row:not([part~='header']) uui-table-cell:first-child")].map((c) => deepText(c).trim());
+const press = async (t: UaxKpiTileElement) => {
+    await t.updateComplete;
+    (t.shadowRoot!.querySelector("button") as HTMLButtonElement).click();
+};
+
+/** Renders the page and waits until its first load has landed in the tiles, the chart and the table. */
+async function renderPage(): Promise<UaxTestElement> {
+    const page = await renderPageExample(html`<example-ai-usage-page .latency=${0}></example-ai-usage-page>`, "example-ai-usage-page");
+    await expect.poll(() => tile(page, "Requests").value).toBeTruthy();
+    await expect.poll(() => rowNames(page).length).toBeGreaterThan(0);
+    await settle(page);
+    return page;
+}
+
+describe("Feature: Umbraco AI usage page", () => {
+    // Pin the formatting language so the numbers read the same on every machine.
+    const previousLanguage = umbLocalizationManager.documentLanguage;
+    beforeEach(() => {
+        umbLocalizationManager.documentLanguage = "en-US";
+        return () => {
+            umbLocalizationManager.documentLanguage = previousLanguage;
+        };
+    });
+
+    describe("Scenario: accessibility", () => {
+        const audit = (themeCss?: string) =>
+            withTheme(themeCss, async () => {
+                const page = await renderPage();
+                // Let the chart paint, as it does a frame after the data lands.
+                await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+                return axeRun(page);
+            });
+
+        it("passes the a11y audit in the light theme", async () => {
+            expect(await audit()).toHaveNoViolations();
+        });
+
+        it("passes the a11y audit in the dark theme", async () => {
+            expect(await audit(darkCss)).toHaveNoViolations();
+        });
+
+        it("passes the a11y audit in the high contrast theme", async () => {
+            expect(await audit(highContrastCss)).toHaveNoViolations();
+        });
+    });
+
+    describe("Scenario: first load", () => {
+        let page: UaxTestElement;
+        beforeEach(async () => {
+            page = await renderPage();
+        });
+
+        it("shows six KPI tiles", () => {
+            expect(tiles(page).map((t) => t.label)).toEqual(["Requests", "Input tokens", "Output tokens", "Total tokens", "Success rate", "Avg duration"]);
+        });
+
+        it("shows a change badge on the requests tile, from the comparison period", () => {
+            expect(tile(page, "Requests").delta).toBeTypeOf("number");
+        });
+
+        it("stacks succeeded and failed requests on the chart", () => {
+            expect(chart(page).series.map((s) => s.id)).toEqual(["succeeded", "failed"]);
+        });
+
+        it("draws the chart as stacked bars", () => {
+            expect(chart(page).kind).toBe("stacked-bar");
+        });
+
+        it("shows one page of the breakdown table", () => {
+            expect(rowNames(page)).toHaveLength(5);
+        });
+    });
+
+    describe("Scenario: pressing a KPI tile", () => {
+        let page: UaxTestElement;
+        beforeEach(async () => {
+            page = await renderPage();
+            await press(tile(page, "Total tokens"));
+            await settle(page);
+        });
+
+        it("switches the chart to that metric", () => {
+            expect(chart(page).series.map((s) => s.id)).toEqual(["input", "output"]);
+        });
+
+        it("marks the pressed tile as selected", () => {
+            expect(tile(page, "Total tokens").selected).toBe(true);
+        });
+
+        it("clears the tile that was selected before", () => {
+            expect(tile(page, "Requests").selected).toBe(false);
+        });
+
+        it("renames the chart pane after the metric", () => {
+            expect(shadow(page).querySelector("uui-box")?.getAttribute("headline")).toBe("Total tokens over time");
+        });
+    });
+
+    describe("Scenario: pressing the selected KPI tile", () => {
+        it("keeps it selected, since the chart always plots one metric", async () => {
+            const page = await renderPage();
+            await press(tile(page, "Requests"));
+            await settle(page);
+            expect(tile(page, "Requests").selected).toBe(true);
+        });
+    });
+
+    describe("Scenario: success rate and average duration", () => {
+        it("are not buttons, since they can't be stacked by day", async () => {
+            const page = await renderPage();
+            expect(tile(page, "Success rate").selectable).toBe(false);
+        });
+    });
+
+    describe("Scenario: changing the group by", () => {
+        let page: UaxTestElement;
+        beforeEach(async () => {
+            page = await renderPage();
+            const before = chart(page).series[0].points.length;
+            const week = shadow(shadow(page).querySelector("uax-group-by")!).querySelector<HTMLElement>("[data-value='week']")!;
+            week.click();
+            await expect.poll(() => chart(page).series[0].points.length).toBeLessThan(before);
+        });
+
+        it("buckets the chart by week", () => {
+            expect(chart(page).groupBy).toBe("week");
+        });
+
+        it("finishes loading the KPI tiles", () => {
+            expect(tile(page, "Requests").loading).toBe(false);
+        });
+    });
+
+    describe("Scenario: changing the date range", () => {
+        let page: UaxTestElement;
+        let requestsBefore: string | undefined;
+        beforeEach(async () => {
+            page = await renderPage();
+            requestsBefore = tile(page, "Requests").value;
+            await saveDateRange(page, { preset: "last-7-days" });
+            await expect.poll(() => chart(page).series[0].points.length).toBe(7);
+            await settle(page);
+        });
+
+        it("reloads the chart for the new range", () => {
+            expect(chart(page).series[0].points).toHaveLength(7);
+        });
+
+        it("reloads the KPI tiles", () => {
+            expect(tile(page, "Requests").value).not.toBe(requestsBefore);
+        });
+
+        it("reloads the table", () => {
+            expect(table(page).rows).toHaveLength(5);
+        });
+    });
+
+    describe("Scenario: sorting the table", () => {
+        it("loads the rows in the new order", async () => {
+            const page = await renderPage();
+            const header = [...shadow(table(page)).querySelectorAll<HTMLElement>("uui-table-head-cell")].find((h) => h.textContent?.includes("Model"))!;
+            header.click();
+            await expect.poll(() => rowNames(page)[0]).toBe("atlas-large");
+        });
+    });
+
+    describe("Scenario: paging the table", () => {
+        it("loads the second page, with the two models left over", async () => {
+            const page = await renderPage();
+            const pager = deepQuery<HTMLElement>(shadow(table(page)), "uax-table-pager")!;
+            const next = pager.shadowRoot!.querySelector(".next") as HTMLElement & { updateComplete: Promise<boolean> };
+            await next.updateComplete;
+            next.click();
+            await expect.poll(() => rowNames(page)).toHaveLength(2);
+        });
+    });
+
+    describe("Scenario: searching the table", () => {
+        it("loads only the rows whose name matches", async () => {
+            const page = await renderPage();
+            const search = shadow(page).querySelector("uax-table-search");
+            const input = search!.shadowRoot!.querySelector("uui-input") as HTMLElement & { value: string };
+            input.value = "atlas";
+            input.dispatchEvent(new Event("input", { bubbles: true, composed: true }));
+            await expect.poll(() => rowNames(page).sort(), { timeout: 3_000 }).toEqual(["atlas-large", "atlas-small"]);
+        });
+    });
+
+    describe("Scenario: breaking down by profile", () => {
+        it("swaps the name column to Profile", async () => {
+            const page = await renderPage();
+            const select = shadow(page).querySelector("uui-select") as HTMLElement & { value: string };
+            select.value = "profile";
+            select.dispatchEvent(new Event("change", { bubbles: true }));
+            await expect.poll(() => table(page).columns[0].label).toBe("Profile");
+        });
+    });
+
+    describe("Scenario: once the first load is back", () => {
+        it("shows no loading skeletons", async () => {
+            const page = await renderPage();
+            expect(deepQueryAll(shadow(page), "uax-skeleton")).toHaveLength(0);
+        });
+    });
+});
