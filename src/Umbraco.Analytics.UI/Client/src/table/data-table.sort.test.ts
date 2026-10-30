@@ -7,17 +7,17 @@ import darkCss from "@umbraco-ui/uui/themes/dark.css?inline";
 import highContrastCss from "@umbraco-ui/uui/themes/high-contrast.css?inline";
 import { render } from "vitest-browser-lit";
 import { axeRun } from "../internal/test/a11y.js";
-import { nextEvent, recordEvents, renderElement, shadow, type UaxTestElement } from "../internal/test/pending.js";
+import { deepQueryAll, deepText, nextEvent, recordEvents, renderElement, shadow, type UaxTestElement } from "../internal/test/pending.js";
 import "./data-table.element.js";
 import { nameColumns } from "./table-fixtures.js";
 
 const rows = [{ name: "Contact", views: 62 }, { name: "Home", views: 210 }];
 const header = (el: Element, label: string) =>
     [...shadow(el).querySelectorAll("uui-table-head-cell")].find((h) => h.textContent?.includes(label)) as HTMLElement;
-const firstName = (el: Element) => shadow(el).querySelector("uui-table-row:not([part~='header']) uui-table-cell")?.textContent?.trim();
+const firstName = (el: Element) => deepText(shadow(el).querySelector("uui-table-row:not([part~='header']) uui-table-cell")!).trim();
 const names = (el: Element) =>
-    [...shadow(el).querySelectorAll("uui-table-row uui-table-cell:first-child")].map((c) => c.textContent?.trim());
-const sortButton = (el: Element, label: string) => header(el, label).querySelector("button") as HTMLButtonElement;
+    [...shadow(el).querySelectorAll("uui-table-row uui-table-cell:first-child")].map((c) => deepText(c).trim());
+const sortButton = (el: Element, label: string) => header(el, label).querySelector("uax-table-sort-button")?.shadowRoot?.querySelector("button") as HTMLButtonElement;
 const textColumns = [
     { key: "name", label: "Name", type: "text", sortable: true },
     { key: "views", label: "Views", type: "number", sortable: true },
@@ -133,12 +133,20 @@ describe("Feature: sort by a column", () => {
         it("can be focused", async () => {
             const el = await renderElement(html`<uax-data-table .columns=${nameColumns} .rows=${rows}></uax-data-table>`, "uax-data-table");
             sortButton(el, "Views").focus();
-            expect(shadow(el).activeElement).toBe(sortButton(el, "Views"));
+            expect(header(el, "Views").querySelector("uax-table-sort-button")!.shadowRoot!.activeElement).toBe(sortButton(el, "Views"));
+        });
+
+        it("centres the sort symbol on the label", async () => {
+            const el = await renderElement(html`<uax-data-table .columns=${nameColumns} .rows=${rows} .sort=${{ key: "views", direction: "asc" }}></uax-data-table>`, "uax-data-table");
+            const root = header(el, "Views").querySelector("uax-table-sort-button")!.shadowRoot!;
+            const label = root.querySelector(".label")!.getBoundingClientRect();
+            const symbol = root.querySelector("uui-symbol-sort")!.getBoundingClientRect();
+            expect(Math.abs(symbol.top + symbol.height / 2 - (label.top + label.height / 2))).toBeLessThanOrEqual(2);
         });
 
         it("has no button in a header that isn't sortable", async () => {
             const el = await renderElement(html`<uax-data-table .columns=${nameColumns} .rows=${rows}></uax-data-table>`, "uax-data-table");
-            expect(header(el, "Name").querySelector("button")).toBeNull();
+            expect(deepQueryAll(header(el, "Name"), "button")).toHaveLength(0);
         });
     });
 
@@ -237,7 +245,7 @@ describe("Feature: sort by a column", () => {
                 html`<uax-data-table .columns=${[{ key: "name", label: "Name", type: "text" }, { key: "views", label: "Views", type: "share", sortable: true }]} .rows=${rows} .sort=${{ key: "views", direction: "desc" }}></uax-data-table>`,
                 "uax-data-table",
             );
-            expect(shadow(el).querySelector(".share-percent")?.textContent).toBe("(77.2%)");
+            expect(deepQueryAll(shadow(el), ".share-percent")[0]?.textContent).toBe("(77.2%)");
         });
     });
 

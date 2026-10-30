@@ -2,7 +2,7 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { html } from "@umbraco-cms/backoffice/external/lit";
 import "@umbraco-cms/backoffice/external/uui";
-import { renderElement, shadow, type UaxTestElement } from "../internal/test/pending.js";
+import { deepQuery, renderElement, settle, shadow, type UaxTestElement } from "../internal/test/pending.js";
 import "./data-table.element.js";
 import { manyRows, nameColumns, pageColumns, pageRows } from "./table-fixtures.js";
 
@@ -43,7 +43,7 @@ describe("Feature: table empty and loading states", () => {
         });
 
         it("shows a skeleton", () => {
-            expect(shadow(el).querySelector("uax-skeleton")).not.toBe(null);
+            expect(deepQuery(shadow(el), "uax-skeleton")).not.toBe(null);
         });
 
         it("shows no empty state", () => {
@@ -59,7 +59,7 @@ describe("Feature: table empty and loading states", () => {
             const loadingHeight = el.getBoundingClientRect().height;
             el.rows = manyRows(5);
             el.loading = false;
-            await el.updateComplete;
+            await settle(el);
             expect(el.getBoundingClientRect().height).toBe(loadingHeight);
         });
 
@@ -69,7 +69,7 @@ describe("Feature: table empty and loading states", () => {
             const loadingHeight = el.getBoundingClientRect().height;
             el.rows = Array.from({ length: 5 }, (_, i) => ({ url: `/p${i}`, pageviews: 5 - i, sessions: 1 }));
             el.loading = false;
-            await el.updateComplete;
+            await settle(el);
             expect(el.getBoundingClientRect().height).toBe(loadingHeight);
         });
     });
@@ -94,7 +94,7 @@ describe("Feature: table empty and loading states", () => {
         });
 
         it("shows no skeleton", () => {
-            expect(shadow(el).querySelector("uax-skeleton")).toBe(null);
+            expect(deepQuery(shadow(el), "uax-skeleton")).toBe(null);
         });
 
         it("puts the loading bar on the top edge", () => {

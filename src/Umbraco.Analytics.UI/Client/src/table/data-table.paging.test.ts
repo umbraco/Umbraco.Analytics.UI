@@ -8,11 +8,13 @@ import highContrastCss from "@umbraco-ui/uui/themes/high-contrast.css?inline";
 import { render } from "vitest-browser-lit";
 import { userEvent } from "vitest/browser";
 import { axeRun } from "../internal/test/a11y.js";
-import { nextEvent, recordEvents, renderElement, shadow, type UaxTestElement } from "../internal/test/pending.js";
+import { deepQueryAll, deepText, nextEvent, recordEvents, renderElement, settle, shadow, type UaxTestElement } from "../internal/test/pending.js";
 import "./data-table.element.js";
 import { manyRows, nameColumns } from "./table-fixtures.js";
 
-const footer = (el: Element) => shadow(el).querySelector(".pager") as HTMLElement | null;
+/** The footer is its own element (`uax-table-pager`), so its parts live in that element's shadow root. */
+const pagerElement = (el: Element) => shadow(el).querySelector("uax-table-pager") as (HTMLElement & { updateComplete: Promise<boolean> }) | null;
+const footer = (el: Element) => (pagerElement(el)?.shadowRoot?.querySelector(".pager") ?? null) as HTMLElement | null;
 const pageSizeSelect = (el: Element) => footer(el)!.querySelector("uui-select[name='page-size']") as HTMLElement & {
         value: string;
         options: { value: string }[];
@@ -24,12 +26,12 @@ const previousButton = (el: Element) => footer(el)!.querySelector(".previous") a
 const press = async (el: UaxTestElement, button: HTMLElement) => {
     await (button as HTMLElement & { updateComplete: Promise<boolean> }).updateComplete;
     button.click();
-    await el.updateComplete;
+    await settle(el);
 };
 const innerButton = (button: HTMLElement) => button.shadowRoot!.querySelector("button") as HTMLButtonElement;
-const rowNames = (el: Element) => [...shadow(el).querySelectorAll("uui-table-row uui-table-cell:first-child")].map((c) => c.textContent?.trim());
-const shares = (el: Element) => [...shadow(el).querySelectorAll(".share-percent")].map((c) => c.textContent);
-const barWidths = (el: Element) => [...shadow(el).querySelectorAll<HTMLElement>(".share-bar")].map((b) => b.style.width);
+const rowNames = (el: Element) => [...shadow(el).querySelectorAll("uui-table-row uui-table-cell:first-child")].map((c) => deepText(c).trim());
+const shares = (el: Element) => deepQueryAll(shadow(el), ".share-percent").map((c) => c.textContent);
+const barWidths = (el: Element) => deepQueryAll<HTMLElement>(shadow(el), ".share-bar").map((b) => b.style.width);
 
 const serverTable = (attrs: { page?: number; pageSize?: number; total?: number } = {}) =>
     renderElement(
@@ -272,7 +274,7 @@ describe("Feature: page through rows", () => {
             await pageSizeSelect(el).updateComplete;
             pageSizeSelect(el).shadowRoot!.querySelector("select")!.focus();
             await userEvent.tab();
-            expect(shadow(el).activeElement).toBe(nextButton(el));
+            expect(pagerElement(el)!.shadowRoot!.activeElement).toBe(nextButton(el));
         });
     });
 
@@ -285,7 +287,7 @@ describe("Feature: page through rows", () => {
             await userEvent.keyboard("{Enter}");
             await el.updateComplete;
             await new Promise((r) => setTimeout(r));
-            expect(shadow(el).activeElement).toBe(previousButton(el));
+            expect(pagerElement(el)!.shadowRoot!.activeElement).toBe(previousButton(el));
         });
 
         it("moves focus to next when previous lands on the first page", async () => {
@@ -296,7 +298,7 @@ describe("Feature: page through rows", () => {
             await userEvent.keyboard("{Enter}");
             await el.updateComplete;
             await new Promise((r) => setTimeout(r));
-            expect(shadow(el).activeElement).toBe(nextButton(el));
+            expect(pagerElement(el)!.shadowRoot!.activeElement).toBe(nextButton(el));
         });
     });
 

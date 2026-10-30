@@ -10,15 +10,18 @@ import {
     type TemplateResult,
 } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
-import "../delta-badge/delta-badge.element.js";
 import "../empty-state/empty-state.element.js";
 import { getLoadingMode } from "../internal/loading/loading-mode.js";
 import "../internal/loading/loading-bar.element.js";
 import "../internal/loading/skeleton.element.js";
 import { uaxThemeTokens } from "../internal/theme/tokens.css.js";
-import { asNumber, asText, getNumberFormat } from "./internal/number-format.js";
-import { safeHref } from "./internal/safe-href.js";
-import type { UaxTableColumn, UaxTableMode, UaxTablePageChangeDetail, UaxTableSort } from "./types.js";
+import "./cells/index.js";
+import type { UaxShareCellElement } from "./cells/share-cell.element.js";
+import "./internal/table-pager.element.js";
+import "./internal/table-skeleton-cell.element.js";
+import "./internal/table-sort-button.element.js";
+import { asNumber, asText } from "./internal/number-format.js";
+import type { UaxTableCellElement, UaxTableColumn, UaxTableMode, UaxTablePageChangeDetail, UaxTableSort } from "./types.js";
 
 type UaxTableRow = Record<string, unknown>;
 
@@ -26,10 +29,6 @@ type UaxTableRow = Record<string, unknown>;
 interface DerivedColumn {
     column: UaxTableColumn;
     align: "start" | "end";
-    /** `number`, `percent` and `share` columns: the value. */
-    format?: Intl.NumberFormat;
-    /** `share` columns: the percent of the column total. */
-    shareFormat?: Intl.NumberFormat;
     /** `share` columns: the palette slot of the bar. */
     color: 1 | 2 | 3 | 4;
     /** `share` columns: the sum and the largest of the column's values. */
@@ -71,12 +70,18 @@ function getCollator(lang: string): Intl.Collator {
     return collator;
 }
 
+/** The cell element of each built-in column type. A column's `elementName` takes its place. */
+const CELL_ELEMENTS: Record<UaxTableColumn["type"], string> = {
+    text: "uax-text-cell",
+    link: "uax-link-cell",
+    number: "uax-number-cell",
+    percent: "uax-percent-cell",
+    share: "uax-share-cell",
+};
+
 const SKELETON_ROWS = 5;
 /** Widths of the skeleton blocks, varied by row so the placeholder doesn't look like a grid of equal bars. */
 const SKELETON_WIDTHS = [72, 54, 83, 47, 65];
-
-const shareFormatOptions: Intl.NumberFormatOptions = { style: "percent", minimumFractionDigits: 1, maximumFractionDigits: 1 };
-const percentFormatOptions: Intl.NumberFormatOptions = { style: "percent", maximumFractionDigits: 1 };
 
 /**
  * A table of rows, with columns that show their values as text, links, numbers, percentages or a
@@ -210,7 +215,7 @@ export class UaxDataTableElement extends UmbLitElement {
             prev.maxes !== this.maxes ||
             prev.lang !== lang
         ) {
-            this.#derived = this.#derive(this.columns, this.#statsRows, lang);
+            this.#derived = this.#derive(this.columns, this.#statsRows);
         }
         this.#derivedFrom = { columns: this.columns, rows: this.rows, compareRows: this.compareRows, rowKey: this.rowKey, totals: this.totals, maxes: this.maxes, lang };
     }
@@ -225,13 +230,12 @@ export class UaxDataTableElement extends UmbLitElement {
         return byKey;
     }
 
-    /** The percent change from the matching compare row's value, or undefined when there is nothing to compare or divide by. */
-    #changeFor(column: UaxTableColumn, row: UaxTableRow, value: number): number | undefined {
+    /** The matching compare row's value for the column, or undefined when there is no `rowKey`, no matching row or no number. */
+    #compareValueFor(column: UaxTableColumn, row: UaxTableRow): number | undefined {
         if (!this.rowKey) return undefined;
         const key = rowIdentity(row[this.rowKey]);
         const compareRow = key === undefined ? undefined : this.#compareByKey.get(key);
-        const compare = compareRow ? asNumber(compareRow[column.key]) : undefined;
-        return compare === undefined || compare === 0 ? undefined : ((value - compare) / Math.abs(compare)) * 100;
+        return compareRow ? asNumber(compareRow[column.key]) : undefined;
     }
 
     /**
@@ -292,24 +296,8 @@ export class UaxDataTableElement extends UmbLitElement {
         this.dispatchEvent(new CustomEvent<UaxTablePageChangeDetail>("page-change", { bubbles: true, detail: { page, pageSize } }));
     }
 
-    /**
-     * Moves one page. When that disables the button that has focus (the last or first page), focus moves to the
-     * other nav button so a keyboard user isn't dropped. `uui-pagination` loses focus there.
-     */
-    async #step(by: 1 | -1) {
-        const button = this.renderRoot.querySelector<HTMLElement>(by === 1 ? ".next" : ".previous");
-        const hadFocus = !!button?.matches(":focus-within");
-        this.#changePage(this.#currentPage + by, this.#pageSize);
-        if (!hadFocus) return;
-        await this.updateComplete;
-        const atEnd = by === 1 ? this.#currentPage >= this.#pageCount : this.#currentPage <= 1;
-        if (atEnd) this.renderRoot.querySelector<HTMLElement>(by === 1 ? ".previous" : ".next")?.focus();
-    }
-
-    #onPageSizeChange(event: Event) {
-        const size = Number((event.target as HTMLElement & { value: string }).value);
-        if (!Number.isInteger(size) || size < 1 || size === this.#pageSize) return;
-        this.#changePage(1, size);
+    #onPagerChange(event: CustomEvent<UaxTablePageChangeDetail>) {
+        this.#changePage(event.detail.page, event.detail.pageSize);
     }
 
     /** `rows` in the `sort` order in client mode, sorted once per change of rows, sort or language. Never reorders `rows` itself. */
@@ -353,7 +341,7 @@ export class UaxDataTableElement extends UmbLitElement {
         return SKELETON_ROWS;
     }
 
-    #derive(columns: UaxTableColumn[], rows: UaxTableRow[], lang: string): DerivedColumn[] {
+    #derive(columns: UaxTableColumn[], rows: UaxTableRow[]): DerivedColumn[] {
         let shareIndex = 0;
         return columns.map((column) => {
             const type = column.type;
@@ -364,11 +352,7 @@ export class UaxDataTableElement extends UmbLitElement {
                 total: 0,
                 max: 0,
             };
-            if (type === "number") derived.format = getNumberFormat(lang, column.valueFormat);
-            if (type === "percent") derived.format = getNumberFormat(lang, { ...percentFormatOptions, ...column.valueFormat });
             if (type === "share") {
-                derived.format = getNumberFormat(lang, column.valueFormat);
-                derived.shareFormat = getNumberFormat(lang, shareFormatOptions);
                 derived.color = column.color ?? ((shareIndex % 4) + 1) as 1 | 2 | 3 | 4;
                 shareIndex++;
                 for (const row of rows) {
@@ -384,44 +368,35 @@ export class UaxDataTableElement extends UmbLitElement {
         });
     }
 
-    #renderCell(derived: DerivedColumn, row: UaxTableRow): TemplateResult | typeof nothing | string {
+    /** One cell element per row and column, reused while the column keeps its element name, as the CMS `umb-table` does. */
+    #cellElements = new WeakMap<UaxTableRow, Map<string, HTMLElement>>();
+
+    #renderCell(derived: DerivedColumn, row: UaxTableRow): HTMLElement {
         const { column } = derived;
-        switch (column.type) {
-            case "link":
-                return this.#renderLink(column, row);
-            case "number":
-            case "percent": {
-                const value = asNumber(row[column.key]);
-                return value === undefined ? "" : derived.format!.format(value);
-            }
-            case "share":
-                return this.#renderShare(derived, row);
-            default:
-                return asText(row[column.key]);
+        const elementName = column.elementName || CELL_ELEMENTS[column.type] || CELL_ELEMENTS.text;
+        let rowCache = this.#cellElements.get(row);
+        if (!rowCache) {
+            rowCache = new Map();
+            this.#cellElements.set(row, rowCache);
         }
-    }
-
-    #renderLink(column: UaxTableColumn, row: UaxTableRow): TemplateResult | string {
-        const text = asText(row[column.key]);
-        const href = column.hrefKey ? safeHref(row[column.hrefKey]) : undefined;
-        return href ? html`<a href=${href}>${text}</a>` : text;
-    }
-
-    #renderShare(derived: DerivedColumn, row: UaxTableRow): TemplateResult | typeof nothing {
-        const value = asNumber(row[derived.column.key]);
-        if (value === undefined) return nothing;
-        const share = derived.total ? value / derived.total : 0;
-        const change = this.#changeFor(derived.column, row, value);
-        const width = derived.max > 0 ? Math.round(Math.min(Math.max(value / derived.max, 0), 1) * 10000) / 100 : 0;
-        return html`<div class="share">
-            <div class="share-top">
-                <span class="share-value">${derived.format!.format(value)}</span> <span class="share-percent">(${derived.shareFormat!.format(share)})</span>
-                ${change === undefined ? nothing : html`<uax-delta-badge size="sm" .value=${change}></uax-delta-badge>`}
-            </div>
-            <div class="share-track" aria-hidden="true">
-                <div class="share-bar" style="width: ${width}%; background-color: var(--_uax-series-${derived.color})"></div>
-            </div>
-        </div>`;
+        let element = rowCache.get(column.key);
+        if (!element || element.tagName.toLowerCase() !== elementName.toLowerCase()) {
+            element = document.createElement(elementName);
+            rowCache.set(column.key, element);
+        }
+        const cell = element as HTMLElement & Partial<UaxTableCellElement> & Partial<UaxShareCellElement>;
+        cell.column = column;
+        cell.item = row;
+        cell.value = row[column.key];
+        // Only the built-in share cell takes what the table works out across rows.
+        if (!column.elementName && column.type === "share") {
+            const share = element as UaxShareCellElement;
+            share.total = derived.total;
+            share.max = derived.max;
+            share.color = derived.color;
+            share.compareValue = this.#compareValueFor(column, row);
+        }
+        return element;
     }
 
     #renderHeaderCell(derived: DerivedColumn): TemplateResult {
@@ -434,10 +409,7 @@ export class UaxDataTableElement extends UmbLitElement {
             class="${this.#cellClass(derived)} sortable"
             aria-sort=${active ? (descending ? "descending" : "ascending") : "none"}
             @click=${() => this.#sortBy(column)}>
-            <button type="button">
-                <span>${column.label}</span>
-                <uui-symbol-sort ?active=${active} ?descending=${active && descending}></uui-symbol-sort>
-            </button>
+            <uax-table-sort-button .active=${active} .descending=${descending} .align=${derived.align}>${column.label}</uax-table-sort-button>
         </uui-table-head-cell>`;
     }
 
@@ -452,8 +424,7 @@ export class UaxDataTableElement extends UmbLitElement {
     }
 
     #cellClass(derived: DerivedColumn): string {
-        const numeric = isNumeric(derived.column);
-        return `${derived.align === "end" ? "end" : "start"}${numeric ? " numeric" : ""}`;
+        return derived.align === "end" ? "end" : "start";
     }
 
     #renderRow(row: UaxTableRow): TemplateResult {
@@ -470,9 +441,7 @@ export class UaxDataTableElement extends UmbLitElement {
                 const text = derived.column.type === "text" || derived.column.type === "link";
                 const width = text ? SKELETON_WIDTHS[(index + column) % SKELETON_WIDTHS.length] : 40;
                 return html`<uui-table-cell class=${this.#cellClass(derived)}>
-                    <div class="skeleton-cell">
-                        <uax-skeleton style="width: ${width}%; height: var(--_uax-skeleton-height)"></uax-skeleton>
-                    </div>
+                    <uax-table-skeleton-cell .width=${width} .align=${derived.align}></uax-table-skeleton-cell>
                 </uui-table-cell>`;
             })}
         </uui-table-row>`;
@@ -500,42 +469,12 @@ export class UaxDataTableElement extends UmbLitElement {
     }
 
     #renderPager(): TemplateResult {
-        const size = this.#pageSize;
-        const page = this.#currentPage;
-        const total = this.#totalRows;
-        const format = getNumberFormat(this.localize.lang()).format;
-        const from = (page - 1) * size + 1;
-        const to = Math.min(total, page * size);
-        return html`<div class="pager" role="navigation" aria-label=${this.localize.term("uaxAnalytics_tablePagination")}>
-            <div class="page-size">
-                <span aria-hidden="true">${this.localize.term("uaxAnalytics_tableShowRows")}</span>
-                <uui-select
-                    name="page-size"
-                    label=${this.localize.term("uaxAnalytics_tableShowRows")}
-                    .options=${this.#pageSizeOptions.map((option) => ({ name: String(option), value: String(option), selected: option === size }))}
-                    .value=${String(size)}
-                    @change=${this.#onPageSizeChange}></uui-select>
-            </div>
-            <div class="range" aria-live="polite">${this.localize.term("uaxAnalytics_tablePagerPosition", format(from), format(to), format(total))}</div>
-            <div class="nav">
-                <uui-button
-                    class="previous"
-                    compact
-                    label=${this.localize.term("uaxAnalytics_tablePreviousPage")}
-                    ?disabled=${page <= 1}
-                    @click=${() => page > 1 && this.#step(-1)}>
-                    <uui-icon name="icon-navigation-left"></uui-icon>
-                </uui-button>
-                <uui-button
-                    class="next"
-                    compact
-                    label=${this.localize.term("uaxAnalytics_tableNextPage")}
-                    ?disabled=${page >= this.#pageCount}
-                    @click=${() => page < this.#pageCount && this.#step(1)}>
-                    <uui-icon name="icon-navigation-right"></uui-icon>
-                </uui-button>
-            </div>
-        </div>`;
+        return html`<uax-table-pager
+            .page=${this.#currentPage}
+            .pageSize=${this.#pageSize}
+            .total=${this.#totalRows}
+            .pageSizes=${this.#pageSizeOptions}
+            @page-change=${this.#onPagerChange}></uax-table-pager>`;
     }
 
     static override styles: CSSResultGroup = [
@@ -592,33 +531,6 @@ export class UaxDataTableElement extends UmbLitElement {
                 --uui-symbol-sort-hover: 1;
             }
 
-            uui-table-head-cell button {
-                display: inline-flex;
-                align-items: center;
-                justify-content: flex-start;
-                gap: var(--uui-size-1);
-                width: 100%;
-                padding: var(--uui-size-3) 0;
-                border: none;
-                border-radius: var(--uui-border-radius);
-                background: transparent;
-                color: inherit;
-                cursor: pointer;
-                font: inherit;
-                letter-spacing: inherit;
-                text-transform: inherit;
-                text-align: inherit;
-            }
-
-            uui-table-head-cell.end button {
-                justify-content: flex-end;
-            }
-
-            uui-table-head-cell button:focus-visible {
-                outline: calc(2px * var(--uui-show-focus-outline, 1)) solid var(--uui-color-focus);
-                outline-offset: -2px;
-            }
-
             .has-toolbar uui-table-head-cell {
                 border-top: 1px solid var(--uui-color-border);
             }
@@ -648,103 +560,6 @@ export class UaxDataTableElement extends UmbLitElement {
 
             .end {
                 text-align: end;
-            }
-
-            .numeric {
-                font-variant-numeric: tabular-nums;
-            }
-
-            a {
-                color: var(--uui-color-interactive);
-                text-decoration: none;
-                border-radius: var(--uui-border-radius);
-            }
-
-            a:hover {
-                color: var(--uui-color-interactive-emphasis);
-                text-decoration: underline;
-            }
-
-            a:focus-visible {
-                outline: calc(2px * var(--uui-show-focus-outline, 1)) solid var(--uui-color-focus);
-                outline-offset: 2px;
-            }
-
-            .share {
-                display: flex;
-                flex-direction: column;
-                gap: 5px;
-                min-width: 92px;
-            }
-
-            .share-top {
-                display: flex;
-                align-items: baseline;
-                gap: 6px;
-                height: var(--_uax-table-line);
-            }
-
-            .end .share-top {
-                justify-content: flex-end;
-            }
-
-            .share-value {
-                font-weight: 700;
-            }
-
-            .share-percent {
-                font-size: 12px;
-                color: var(--uui-color-text-alt);
-            }
-
-            .share-track {
-                height: 4px;
-                border-radius: 999px;
-                background-color: var(--_uax-tint-neutral);
-                overflow: hidden;
-            }
-
-            .share-bar {
-                height: 100%;
-                border-radius: 999px;
-            }
-
-            .skeleton-cell {
-                display: flex;
-                align-items: center;
-                min-height: var(--_uax-table-content-height);
-            }
-
-            .end .skeleton-cell {
-                justify-content: flex-end;
-            }
-
-            /* The design's footer: right-aligned, "Show rows", the range, then previous and next. */
-            .pager {
-                display: flex;
-                align-items: center;
-                justify-content: flex-end;
-                flex-wrap: wrap;
-                gap: var(--uui-size-space-4);
-                padding: var(--uax-table-padding, var(--uui-size-space-4) var(--uui-size-space-6));
-                border-top: 1px solid var(--uui-color-border);
-                font-size: 12px;
-                color: var(--uui-color-text-alt);
-            }
-
-            .page-size,
-            .nav {
-                display: inline-flex;
-                align-items: center;
-                gap: var(--uui-size-space-2);
-            }
-
-            .range {
-                font-variant-numeric: tabular-nums;
-            }
-
-            uui-select {
-                font-size: inherit;
             }
 
             uax-empty-state {

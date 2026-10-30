@@ -7,13 +7,15 @@ import darkCss from "@umbraco-ui/uui/themes/dark.css?inline";
 import highContrastCss from "@umbraco-ui/uui/themes/high-contrast.css?inline";
 import { render } from "vitest-browser-lit";
 import { axeRun } from "../internal/test/a11y.js";
-import { renderElement, shadow, type UaxTestElement } from "../internal/test/pending.js";
+import { deepQuery, deepQueryAll, deepText, renderElement, shadow, type UaxTestElement } from "../internal/test/pending.js";
 import "./data-table.element.js";
 import { pageColumns, pageRows } from "./table-fixtures.js";
 
 const firstRowCells = (el: Element) => [...shadow(el).querySelector("uui-table-row")!.querySelectorAll("uui-table-cell")];
 const bars = (el: Element, column: number) =>
-    [...shadow(el).querySelectorAll(`uui-table-row uui-table-cell:nth-child(${column + 1}) .share-bar`)] as HTMLElement[];
+    [...shadow(el).querySelectorAll(`uui-table-row uui-table-cell:nth-child(${column + 1})`)].flatMap((cell) =>
+        deepQueryAll<HTMLElement>(cell, ".share-bar"),
+    );
 
 describe("Feature: table cells by column type", () => {
     describe("Scenario: a number column in en-US", () => {
@@ -26,7 +28,7 @@ describe("Feature: table cells by column type", () => {
         });
 
         it("shows 1,234", () => {
-            expect(firstRowCells(el)[0].textContent?.trim()).toBe("1,234");
+            expect(deepText(firstRowCells(el)[0]).trim()).toBe("1,234");
         });
     });
 
@@ -42,7 +44,7 @@ describe("Feature: table cells by column type", () => {
         });
 
         it("shows the value and its percent of the column total", () => {
-            expect(firstRowCells(el)[1].textContent).toContain("210 (77.2%)");
+            expect(deepText(firstRowCells(el)[1])).toContain("210 (77.2%)");
         });
 
         it("draws the largest value's bar at full width", () => {
@@ -54,7 +56,7 @@ describe("Feature: table cells by column type", () => {
         });
 
         it("renders link cells as anchors to the row's url", () => {
-            expect(firstRowCells(el)[0].querySelector("a")?.getAttribute("href")).toBe("https://example.com/");
+            expect(deepQuery(firstRowCells(el)[0], "a")?.getAttribute("href")).toBe("https://example.com/");
         });
     });
 
@@ -69,7 +71,7 @@ describe("Feature: table cells by column type", () => {
         });
 
         it("puts a small change badge after the share value", () => {
-            expect(firstRowCells(el)[1].querySelector("uax-delta-badge[size='sm']")).not.toBe(null);
+            expect(deepQuery(firstRowCells(el)[1], "uax-delta-badge[size='sm']")).not.toBe(null);
         });
     });
 
@@ -123,14 +125,14 @@ describe("Feature: table cell details", () => {
                 [{ key: "n", label: "N", type: "number", valueFormat: { style: "currency", currency: "EUR" } }],
                 [{ n: 1234.5 }],
             );
-            expect(cell(el).textContent?.trim()).toBe("€1,234.50");
+            expect(deepText(cell(el)).trim()).toBe("€1,234.50");
         });
     });
 
     describe("Scenario: a percent column", () => {
         it("shows a fraction as a percentage", async () => {
             const el = await render1([{ key: "p", label: "P", type: "percent" }], [{ p: 0.254 }]);
-            expect(cell(el).textContent?.trim()).toBe("25.4%");
+            expect(deepText(cell(el)).trim()).toBe("25.4%");
         });
     });
 
@@ -142,7 +144,7 @@ describe("Feature: table cell details", () => {
 
         it("uses tabular numerals", async () => {
             const el = await render1([{ key: "n", label: "N", type: "number" }], [{ n: 5 }]);
-            expect(getComputedStyle(cell(el)).fontVariantNumeric).toBe("tabular-nums");
+            expect(getComputedStyle(cell(el).firstElementChild!).fontVariantNumeric).toBe("tabular-nums");
         });
 
         it("right-aligns the header too", async () => {
@@ -176,14 +178,14 @@ describe("Feature: table cell details", () => {
                 [{ key: "n", label: "N", type: "share", valueFormat: { style: "currency", currency: "EUR" } }],
                 [{ n: 1000 }, { n: 3000 }],
             );
-            expect(cell(el).textContent).toContain("€1,000.00 (25.0%)");
+            expect(deepText(cell(el))).toContain("€1,000.00 (25.0%)");
         });
     });
 
     describe("Scenario: a share column where every value is 0", () => {
         it("shows 0.0% and an empty bar", async () => {
             const el = await render1([{ key: "n", label: "N", type: "share" }], [{ n: 0 }]);
-            expect(cell(el).textContent).toContain("0 (0.0%)");
+            expect(deepText(cell(el))).toContain("0 (0.0%)");
         });
     });
 
@@ -208,21 +210,21 @@ describe("Feature: table cell details", () => {
                 [{ key: "url", label: "URL", type: "link", hrefKey: "url" }],
                 [{ url: "javascript:alert(1)" }],
             );
-            expect(cell(el).querySelector("a")).toBe(null);
+            expect(deepQuery(cell(el), "a")).toBe(null);
         });
     });
 
     describe("Scenario (sad path): a link row without a URL", () => {
         it("still shows the text", async () => {
             const el = await render1([{ key: "name", label: "Name", type: "link", hrefKey: "url" }], [{ name: "Home" }]);
-            expect(cell(el).textContent?.trim()).toBe("Home");
+            expect(deepText(cell(el)).trim()).toBe("Home");
         });
     });
 
     describe("Scenario (sad path): a number column with a missing value", () => {
         it("leaves the cell empty", async () => {
             const el = await render1([{ key: "n", label: "N", type: "number" }], [{ n: undefined }]);
-            expect(cell(el).textContent?.trim()).toBe("");
+            expect(deepText(cell(el)).trim()).toBe("");
         });
     });
 

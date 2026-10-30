@@ -1,9 +1,10 @@
 import type { Meta, StoryObj } from "@storybook/web-components-vite";
-import { css, html, nothing, type TemplateResult } from "@umbraco-cms/backoffice/external/lit";
+import { css, customElement, html, nothing, property, type TemplateResult } from "@umbraco-cms/backoffice/external/lit";
+import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import "../delta-badge/delta-badge.element.js";
 import type { UaxDataTableElement } from "./data-table.element.js";
 import "./data-table.element.js";
-import type { UaxTableColumn } from "./types.js";
+import type { UaxTableCellElement, UaxTableColumn } from "./types.js";
 
 const host = "https://www.example.com";
 
@@ -108,6 +109,33 @@ const toolbarStyles = css`
     }
 `;
 
+/** Story-only: a product's own cell, like Engage's visitor type. It only needs the `column`, `item` and `value` the table sets. */
+@customElement("uax-story-visitor-type-cell")
+class StoryVisitorTypeCellElement extends UmbLitElement implements UaxTableCellElement {
+    @property({ attribute: false }) column: UaxTableColumn = { key: "type", label: "", type: "text" };
+    @property({ attribute: false }) item: Record<string, unknown> = {};
+    @property({ attribute: false }) value: unknown;
+
+    override render() {
+        const returning = this.value === "Returning visitor";
+        return html`<span class="dot ${returning ? "returning" : ""}"></span>${String(this.value ?? "")}`;
+    }
+
+    static override styles = css`
+        .dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            margin-inline-end: 8px;
+            border-radius: 50%;
+            background-color: var(--uax-series-1, var(--uui-color-interactive));
+        }
+        .dot.returning {
+            background-color: var(--uax-series-2, var(--uui-color-danger));
+        }
+    `;
+}
+
 const meta: Meta<UaxDataTableElement> = {
     title: "Components/Data Table",
     component: "uax-data-table",
@@ -166,6 +194,19 @@ export const Visitors: Story = {
                     <div slot="toolbar" class="toolbar">${searchPlaceholder}${total("Total visitors", "25", 4.2)}${total("Total sessions", "35", -2.1)}</div>
                 </uax-data-table>
             </uui-box>`,
+};
+
+/** A column with `elementName` shows a product's own element in its cells. Here a coloured dot and label, as in Engage's visitor type. The table sets `column`, `item` and `value` on it, and reuses the element while the name stays the same. */
+export const CustomCell: Story = {
+    name: "Custom cell",
+    args: {
+        columns: [{ ...visitorColumns[0], elementName: "uax-story-visitor-type-cell" }, ...visitorColumns.slice(1)],
+        rows: visitorRows,
+    },
+    render: (args) =>
+        html`<uui-box headline="Visitors" style="--uui-box-default-padding: 0">
+            <uax-data-table .columns=${args.columns} .rows=${args.rows}></uax-data-table>
+        </uui-box>`,
 };
 
 /** Number, share with a currency `value-format` (the percent stays a percent) and percent columns. Number and percent are right-aligned. */
@@ -266,3 +307,9 @@ export const Reloading: Story = { args: { loading: true } };
 export const Empty: Story = {
     args: { rows: [], emptyHeadline: "No pages yet", emptyDescription: "Pages appear here once visitors arrive." },
 };
+
+declare global {
+    interface HTMLElementTagNameMap {
+        "uax-story-visitor-type-cell": StoryVisitorTypeCellElement;
+    }
+}

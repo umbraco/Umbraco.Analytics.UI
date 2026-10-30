@@ -25,7 +25,26 @@ export type UaxTableColumn = {
     color?: 1 | 2 | 3 | 4;
     /** Makes the header a button that sorts by this column. Clicking raises `sort-change`. */
     sortable?: boolean;
+    /**
+     * The tag name of your own cell element, used instead of the built-in one for `type`. Like the CMS
+     * `umb-table`, the table creates one element per cell (and reuses it while the name stays the same) and
+     * sets `column`, `item` and `value` on it. See `UaxTableCellElement`. `type` still decides alignment and sorting.
+     */
+    elementName?: string;
 };
+
+/**
+ * What a table cell element receives, as in the CMS `umb-table`: the table sets these three properties on every
+ * cell element, a built-in one (`uax-text-cell` and the others) or the one a column names in `elementName`.
+ */
+export interface UaxTableCellElement {
+    /** The column the cell is in. */
+    column: UaxTableColumn;
+    /** The row the cell is in. */
+    item: Record<string, unknown>;
+    /** The row's value for the column: `item[column.key]`. */
+    value: unknown;
+}
 
 /** The direction of a sort. */
 export type UaxTableSortDirection = "asc" | "desc";

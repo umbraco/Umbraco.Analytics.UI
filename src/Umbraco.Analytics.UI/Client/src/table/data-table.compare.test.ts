@@ -7,7 +7,7 @@ import darkCss from "@umbraco-ui/uui/themes/dark.css?inline";
 import highContrastCss from "@umbraco-ui/uui/themes/high-contrast.css?inline";
 import { render } from "vitest-browser-lit";
 import { axeRun } from "../internal/test/a11y.js";
-import { renderElement, shadow } from "../internal/test/pending.js";
+import { deepQueryAll, renderElement, shadow } from "../internal/test/pending.js";
 import "./data-table.element.js";
 import { pageColumns, pageRows } from "./table-fixtures.js";
 
@@ -20,12 +20,9 @@ const withCompare = () =>
     );
 
 const badges = (el: Element, row: number, column: number) =>
-    [
-        ...shadow(el)
-            .querySelectorAll("uui-table-row")
-            [row].querySelectorAll("uui-table-cell")
-            [column].querySelectorAll("uax-delta-badge"),
-    ] as (HTMLElement & { value?: number })[];
+    deepQueryAll(shadow(el).querySelectorAll("uui-table-row")[row].querySelectorAll("uui-table-cell")[column], "uax-delta-badge") as (HTMLElement & {
+        value?: number;
+    })[];
 
 describe("Feature: table compare rows", () => {
     describe("Scenario: a row with a matching compare row", () => {

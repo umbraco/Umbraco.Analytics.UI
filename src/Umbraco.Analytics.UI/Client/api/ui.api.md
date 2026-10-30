@@ -140,12 +140,49 @@ export class UaxKpiTileElement extends UmbLitElement {
 }
 
 // @public
+export class UaxLinkCellElement extends UmbLitElement implements UaxTableCellElement {
+    column: UaxTableColumn;
+    item: Record<string, unknown>;
+    // (undocumented)
+    render(): TemplateResult<1>;
+    // (undocumented)
+    static styles: CSSResultGroup;
+    value: unknown;
+}
+
+// @public
 export type UaxMarker = {
     id: string;
     date: string;
     title: string;
     description?: string;
 };
+
+// @public
+export class UaxNumberCellElement extends UmbLitElement implements UaxTableCellElement {
+    column: UaxTableColumn;
+    item: Record<string, unknown>;
+    // (undocumented)
+    render(): TemplateResult<1> | typeof nothing;
+    // (undocumented)
+    static styles: CSSResultGroup;
+    value: unknown;
+    // (undocumented)
+    protected willUpdate(changed: PropertyValues<this>): void;
+}
+
+// @public
+export class UaxPercentCellElement extends UmbLitElement implements UaxTableCellElement {
+    column: UaxTableColumn;
+    item: Record<string, unknown>;
+    // (undocumented)
+    render(): TemplateResult<1> | typeof nothing;
+    // (undocumented)
+    static styles: CSSResultGroup;
+    value: unknown;
+    // (undocumented)
+    protected willUpdate(changed: PropertyValues<this>): void;
+}
 
 // @public
 export type UaxPoint = {
@@ -162,6 +199,30 @@ export type UaxSeries = {
 };
 
 // @public
+export class UaxShareCellElement extends UmbLitElement implements UaxTableCellElement {
+    color: 1 | 2 | 3 | 4;
+    column: UaxTableColumn;
+    compareValue?: number;
+    item: Record<string, unknown>;
+    max: number;
+    // (undocumented)
+    render(): TemplateResult<1> | typeof nothing;
+    // (undocumented)
+    static styles: CSSResultGroup;
+    total: number;
+    value: unknown;
+    // (undocumented)
+    protected willUpdate(changed: PropertyValues<this>): void;
+}
+
+// @public
+export interface UaxTableCellElement {
+    column: UaxTableColumn;
+    item: Record<string, unknown>;
+    value: unknown;
+}
+
+// @public
 export type UaxTableColumn = {
     key: string;
     label: string;
@@ -171,6 +232,7 @@ export type UaxTableColumn = {
     align?: "start" | "end";
     color?: 1 | 2 | 3 | 4;
     sortable?: boolean;
+    elementName?: string;
 };
 
 // @public
@@ -196,6 +258,15 @@ export type UaxTableSortChangeDetail = UaxTableSort;
 
 // @public
 export type UaxTableSortDirection = "asc" | "desc";
+
+// @public
+export class UaxTextCellElement extends UmbLitElement implements UaxTableCellElement {
+    column: UaxTableColumn;
+    item: Record<string, unknown>;
+    // (undocumented)
+    render(): TemplateResult<1>;
+    value: unknown;
+}
 
 // @public
 export class UaxTimeSeriesChartElement extends UmbLitElement {
