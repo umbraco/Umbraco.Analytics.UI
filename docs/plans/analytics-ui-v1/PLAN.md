@@ -52,7 +52,7 @@
   Acceptance: CHT-1 specs green. `api/ui.api.md` has no `chart.js` import. The "Line" and "Area" stories match `an-pin-tip.png` apart from markers.
   depends-on: T1, T2, T3, T4, T5
 
-- [ ] **T10** - story: CHT-2 (AC1–AC5). Add `compare-series` and `compare-label` for `line` and `area`: a dashed `--uax-compare` line, the gap filled between the lines, points matched by position, and the tooltip showing compare value and badge.
+- [x] **T10** - story: CHT-2 (AC1–AC5). Add `compare-series` and `compare-label` for `line` and `area`: a dashed `--uax-compare` line, the gap filled between the lines, points matched by position, and the tooltip showing compare value and badge.
   Acceptance: CHT-2 specs green. "Compare" story matches `cmp-diff.png`.
   depends-on: T9
 
