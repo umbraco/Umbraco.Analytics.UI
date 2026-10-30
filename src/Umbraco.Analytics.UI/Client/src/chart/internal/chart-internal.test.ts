@@ -50,6 +50,100 @@ describe("buildChartData", () => {
     });
 });
 
+describe("buildChartData compare alignment", () => {
+    const pts = (...items: [string, number][]) => items.map(([date, value]) => ({ date, value }));
+    const main = (...items: [string, number][]) => ({ id: "a", label: "A", points: pts(...items) });
+    const compare = (...items: [string, number][]) => [main(...items)];
+
+    it("aligns week buckets by offset when the calendar weeks are offset", () => {
+        // Main weeks start Mon 1 Jun; compare weeks start Mon 4 May with a gap week (11 May) between.
+        const data = buildChartData(
+            [main(["2026-06-01", 1], ["2026-06-08", 2], ["2026-06-15", 3])],
+            compare(["2026-05-04", 10], ["2026-05-18", 30]),
+            "week",
+        );
+        expect(data.series[0].compare).toEqual([10, null, 30]);
+    });
+
+    it("reads a mid-week compare start as the week it falls in", () => {
+        const data = buildChartData([main(["2026-06-01", 1], ["2026-06-08", 2])], compare(["2026-05-06", 10], ["2026-05-11", 20]), "week");
+        expect(data.series[0].compare).toEqual([10, 20]);
+    });
+
+    it("aligns month buckets of different lengths by offset", () => {
+        const data = buildChartData(
+            [main(["2026-03-01", 1], ["2026-04-01", 2], ["2026-05-01", 3])],
+            compare(["2025-12-01", 10], ["2026-01-01", 20], ["2026-02-01", 30]),
+            "month",
+        );
+        expect(data.series[0].compare).toEqual([10, 20, 30]);
+    });
+
+    it("leaves the trailing points empty when the compare period is shorter", () => {
+        const data = buildChartData([main(["2026-06-01", 1], ["2026-06-02", 2], ["2026-06-03", 3])], compare(["2026-05-01", 10]));
+        expect(data.series[0].compare).toEqual([10, null, null]);
+    });
+
+    it("drops compare points past the last current date", () => {
+        const data = buildChartData([main(["2026-06-01", 1])], compare(["2026-05-01", 10], ["2026-05-02", 20]));
+        expect(data.series[0].compare).toEqual([10]);
+    });
+
+    it("gives each compare point the date it really has", () => {
+        const data = buildChartData([main(["2026-06-01", 1], ["2026-06-08", 2])], compare(["2026-05-04", 10], ["2026-05-11", 20]), "week");
+        expect(data.series[0].compareDates).toEqual(["2026-05-04", "2026-05-11"]);
+    });
+
+    it("adds up points on the same date in a series", () => {
+        expect(buildChartData([main(["2026-06-01", 1], ["2026-06-01", 4])]).series[0].values).toEqual([5]);
+    });
+
+    it("adds up compare points on the same date", () => {
+        const data = buildChartData([main(["2026-06-01", 1])], compare(["2026-05-01", 10], ["2026-05-01", 5]));
+        expect(data.series[0].compare).toEqual([15]);
+    });
+
+    it("adds up the compare total on the same offset", () => {
+        const other = { id: "b", label: "B", points: pts(["2026-05-01", 5], ["2026-05-01", 1]) };
+        const data = buildChartData([main(["2026-06-01", 1])], [...compare(["2026-05-01", 10]), other]);
+        expect(data.compareTotal?.values).toEqual([16]);
+    });
+});
+
+describe("buildChartData with the periods' ranges", () => {
+    const pts = (...items: [string, number][]) => items.map(([date, value]) => ({ date, value }));
+    const main = (...items: [string, number][]) => [{ id: "a", label: "A", points: pts(...items) }];
+    // Current period: weeks of 1, 8 and 15 Jun, with the first week missing from the data.
+    const sparseMain = main(["2026-06-08", 2], ["2026-06-15", 3]);
+    const fullMain = main(["2026-06-01", 1], ["2026-06-08", 2], ["2026-06-15", 3]);
+    const compare = main(["2026-05-04", 10], ["2026-05-11", 20], ["2026-05-18", 30]);
+
+    it("misaligns when the current data misses its first week and no range is given", () => {
+        expect(buildChartData(sparseMain, compare, "week").series[0].compare).toEqual([10, 20]);
+    });
+
+    it("aligns current data that misses its first week when the range is given", () => {
+        const data = buildChartData(sparseMain, compare, "week", { from: "2026-06-01", compareFrom: "2026-05-04" });
+        expect(data.series[0].compare).toEqual([20, 30]);
+    });
+
+    it("aligns compare data that starts late when the compare range is given", () => {
+        const lateCompare = main(["2026-05-11", 20], ["2026-05-18", 30]);
+        const data = buildChartData(fullMain, lateCompare, "week", { from: "2026-06-01", compareFrom: "2026-05-04" });
+        expect(data.series[0].compare).toEqual([null, 20, 30]);
+    });
+
+    it("starts each side at its first date without a range", () => {
+        const data = buildChartData(fullMain, compare, "week");
+        expect(data.series[0].compare).toEqual([10, 20, 30]);
+    });
+
+    it("reads a mid-week range start as the week it falls in", () => {
+        const data = buildChartData(fullMain, compare, "week", { from: "2026-06-03", compareFrom: "2026-05-06" });
+        expect(data.series[0].compare).toEqual([10, 20, 30]);
+    });
+});
+
 describe("seriesTotals and allWhole", () => {
     const a = { id: "a", label: "A", points: [{ date: "2026-06-01", value: 1 }] };
     const b = { id: "b", label: "B", points: [{ date: "2026-06-01", value: 2 }, { date: "2026-06-02", value: 0.5 }] };

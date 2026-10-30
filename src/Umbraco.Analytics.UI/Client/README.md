@@ -81,7 +81,7 @@ const series: UaxSeries[] = [
 html`<uax-time-series-chart kind="area" group-by="day" .series=${series}></uax-time-series-chart>`;
 ```
 
-`kind` is `line`, `area`, `bar` or `stacked-bar`. Add `.compareSeries` for last period's points and `.markers` (`{ id, date, title }`) for events on the x-axis. Set `.valueFormat` to `Intl.NumberFormat` options. Listen for `marker-click` (`UaxMarkerClickDetail`).
+`kind` is `line`, `area`, `bar` or `stacked-bar`. Add `.compareSeries` for last period's points, plus `.range` and `.compare` (the `{ from, to }` that `uax-date-range` emits) so they line up by bucket: compare points sit under the same bucket number of the current period, counted from each range's first bucket. Pass both: without them each side starts at its first point, so sparse data that omits a period's first days (or weeks, or months) shifts the compare out of line. Points on one date are added, so aggregate rates and averages first. Add `.markers` (`{ id, date, title }`) for events on the x-axis. Set `.valueFormat` to `Intl.NumberFormat` options. Listen for `marker-click` (`UaxMarkerClickDetail`).
 
 ### uax-segmented
 

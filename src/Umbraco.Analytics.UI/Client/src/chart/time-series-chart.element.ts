@@ -33,6 +33,7 @@ import { colorsDiffer, resolveChartColors, type UaxChartColors } from "./interna
 import { UaxChartRenderer, type UaxChartHover } from "./internal/chart-renderer.js";
 import { niceScale } from "./internal/nice-scale.js";
 import { watchTheme } from "./internal/theme-watch.js";
+import type { UaxCompare, UaxDateRange } from "../date-range/types.js";
 import type { UaxChartKind, UaxMarker, UaxMarkerClickDetail, UaxSeries } from "./types.js";
 
 const axisDateFormat: Record<UaxGroupBy, Intl.DateTimeFormatOptions> = {
@@ -50,6 +51,8 @@ const tooltipDateFormat: Record<UaxGroupBy, Intl.DateTimeFormatOptions> = {
 interface DerivedFrom {
     series: UaxSeries[];
     compareSeries: UaxSeries[];
+    range?: UaxDateRange;
+    compare?: UaxCompare;
     groupBy: UaxGroupBy;
     valueFormat?: Intl.NumberFormatOptions;
     lang: string;
@@ -114,7 +117,9 @@ function tickFormat(valueFormat: Intl.NumberFormatOptions | undefined, max: numb
  * hidden table of the same data for screen readers.
  *
  * Draws only: pass the points in `series`. Pass last period's points in `compare-series` to draw them as a
- * dashed line with the gap shaded. Series are matched by `id`, points by position (not by date).
+ * dashed line with the gap shaded. Series are matched by `id`. Compare points are matched by bucket (`group-by`) offset from the first compare date, not
+ * by calendar date: the 2nd week or month of the compare period sits under the 2nd of the current one. A shorter compare
+ * period leaves the trailing dates empty. Points on the same date add up.
  * The bar kinds draw each date's compare series, added together, as one bar behind the current bar or bars
  * (so there `compare-series` needn't match the `id`s of `series`). `stacked-bar` stacks the series per date and
  * adds a total to the tooltip and the hidden table.
@@ -155,10 +160,26 @@ export class UaxTimeSeriesChartElement extends UmbLitElement {
 
     /**
      * The same metrics for another period, drawn as a dashed line. Each is matched to the series with the same `id`,
-     * and its points to that series' points by position (first with first), so the two periods can cover different dates.
+     * and its points to that series' dates by bucket offset (the Nth `group-by` bucket from its first date under the Nth
+     * from the series' first date), so the two periods can cover different dates. Points on one date add up.
      */
     @property({ attribute: false })
     compareSeries: UaxSeries[] = [];
+
+    /**
+     * The period the series cover, as `uax-date-range` emits it. Optional but recommended with `compare`: compare
+     * points are aligned from the start of this range's first bucket. Without it, from the first point of the
+     * series, which misaligns the compare when sparse data omits the period's first days (or weeks, or months).
+     */
+    @property({ attribute: false })
+    range?: UaxDateRange;
+
+    /**
+     * The period `compareSeries` covers, as `uax-date-range` emits it. Optional but recommended with `range`: see
+     * `range`. Without it, the compare period starts at the first point of `compareSeries`.
+     */
+    @property({ attribute: false })
+    compare?: UaxCompare;
 
     /** Names the compared period in the legend and tooltip, e.g. "Apr 25, 2026 – May 24, 2026". Defaults to the translation of "Comparison". */
     @property({ type: String, attribute: "compare-label" })
@@ -168,7 +189,7 @@ export class UaxTimeSeriesChartElement extends UmbLitElement {
     @property({ attribute: false })
     markers: UaxMarker[] = [];
 
-    /** Sets the format of the x-axis labels. The points themselves are not grouped: pass them already grouped. */
+    /** Sets the format of the x-axis labels, and the bucket unit (day, Monday week, month) that compare points are aligned in. The points themselves are not grouped: pass them already grouped, with each bucket at its first day. */
     @property({ type: String, attribute: "group-by" })
     groupBy: UaxGroupBy = "day";
 
@@ -251,7 +272,7 @@ export class UaxTimeSeriesChartElement extends UmbLitElement {
 
     protected override willUpdate(changed: PropertyValues<this>) {
         super.willUpdate(changed);
-        const next = { series: this.series, compareSeries: this.compareSeries, groupBy: this.groupBy, valueFormat: this.valueFormat, lang: this.localize.lang() };
+        const next = { series: this.series, compareSeries: this.compareSeries, range: this.range, compare: this.compare, groupBy: this.groupBy, valueFormat: this.valueFormat, lang: this.localize.lang() };
         const prev = this.#derivedFrom;
         if (!prev || (Object.keys(next) as (keyof typeof next)[]).some((key) => prev[key] !== next[key])) {
             this.#derivedFrom = next;
@@ -298,8 +319,8 @@ export class UaxTimeSeriesChartElement extends UmbLitElement {
      * too slow for the hundreds of labels and table cells of a long chart. These formatters use the
      * same language `localize` does.
      */
-    #derive({ series, compareSeries, groupBy, valueFormat, lang }: DerivedFrom): Derived {
-        const data = buildChartData(series, compareSeries);
+    #derive({ series, compareSeries, range, compare, groupBy, valueFormat, lang }: DerivedFrom): Derived {
+        const data = buildChartData(series, compareSeries, groupBy, { from: range?.from, compareFrom: compare?.from });
         const axisDate = new Intl.DateTimeFormat(lang, axisDateFormat[groupBy] ?? axisDateFormat.day);
         const tooltipDate = new Intl.DateTimeFormat(lang, tooltipDateFormat[groupBy] ?? tooltipDateFormat.day);
         const tooltipLabel = (iso: string | null) => (iso ? formatIsoDate(iso, tooltipDate) : "");

@@ -383,10 +383,12 @@ AC2 — Gap shaded
   When  it renders
   Then  the space between the two lines is shaded
 
-AC3 — Matched by position
+AC3 — Matched by bucket offset
   Given a series for 25 May–23 Jun and a compare series for 25 Apr–24 May
   When  it renders
   Then  the first compare point sits under the first series point
+  And   with week or month grouping, the Nth compare bucket sits under the Nth series bucket, even when calendar weeks or months do not line up
+  And   when the chart is given `range` and `compare`, buckets count from the start of each range, so sparse data missing a range's first buckets stays aligned
 
 AC4 — Tooltip shows both
   Given a chart with a compare series

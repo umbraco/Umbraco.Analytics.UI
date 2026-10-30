@@ -478,6 +478,7 @@ export class UaxTextCellElement extends UmbLitElement implements UaxTableCellEle
 
 // @public
 export class UaxTimeSeriesChartElement extends UmbLitElement {
+    compare?: UaxCompare;
     compareLabel?: string;
     compareSeries: UaxSeries[];
     // (undocumented)
@@ -490,6 +491,7 @@ export class UaxTimeSeriesChartElement extends UmbLitElement {
     kind: UaxChartKind;
     loading: boolean;
     markers: UaxMarker[];
+    range?: UaxDateRange;
     // (undocumented)
     render(): TemplateResult;
     series: UaxSeries[];

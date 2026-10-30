@@ -90,8 +90,8 @@ Storybook gets a "Pane" story showing this recipe, a chart and a table in one `u
   - `empty-headline`, `empty-description`
 - **Comparison, by kind:**
   - `line` and `area`: a dashed `--uax-compare` line, with the gap between the two lines shaded.
-  - `bar` and `stacked-bar`: the comparison total is drawn as a bar behind each date's bars. For bar kinds, all compare series are summed per date and paired by position (no `id` matching), and the current total for that date is shown in the tooltip and hidden table whenever it's compared against two or more series.
-  - Comparison points line up by position (day 1 with day 1), not by date. The two ranges are different dates.
+  - `bar` and `stacked-bar`: the comparison total is drawn as a bar behind each date's bars. For bar kinds, all compare series are summed per date and aligned by bucket offset like any compare series (no `id` matching), and the current total for that date is shown in the tooltip and hidden table whenever it's compared against two or more series.
+  - Comparison points line up by bucket offset, not by date: the Nth day, week or month (per `group-by`) from the compare range start sits under the Nth from the current range start. The chart takes optional `range` (`UaxDateRange`) and `compare` (`UaxCompare`) for those starts, as `uax-date-range` emits them; without them each side starts at its first point, which misaligns when sparse data omits the first buckets. A shorter compare leaves trailing dates empty. Points on the same date add up (series, compare and compare total alike).
 - **Tooltip:** hovering a point shows a dark tooltip with the date, each series' value and, when comparing, the comparison value and a delta.
 - **Markers:** each marker shows as a dot on the x-axis, with a dashed line up the chart.
   - Hovering or focusing a dot shows its title and description.

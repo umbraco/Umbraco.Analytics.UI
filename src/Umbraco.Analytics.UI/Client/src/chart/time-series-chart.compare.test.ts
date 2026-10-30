@@ -131,4 +131,20 @@ describe("Feature: compare with another period", () => {
             expect(label.right).toBeLessThanOrEqual(tooltip(el).getBoundingClientRect().right);
         });
     });
+    describe("Scenario: hovering a week while the compare weeks are offset", () => {
+        it("shows the matched compare date", async () => {
+            const weeks = { id: "pv", label: "Pageviews", points: [{ date: "2026-06-01", value: 1 }, { date: "2026-06-08", value: 2 }] };
+            const before = { id: "pv", label: "Pageviews", points: [{ date: "2026-05-06", value: 5 }, { date: "2026-05-11", value: 6 }] };
+            const el = await renderElement(
+                html`<uax-time-series-chart kind="line" group-by="week" .series=${[weeks]} .compareSeries=${[before]}
+                    style="width:400px"></uax-time-series-chart>`,
+                "uax-time-series-chart",
+            );
+            const canvas = shadow(el).querySelector("canvas")!;
+            const x = Chart.getChart(canvas)!.getDatasetMeta(0).data[1].x;
+            await userEvent.hover(page.elementLocator(canvas), { position: { x, y: canvas.getBoundingClientRect().height / 2 } });
+            await expect.poll(() => tooltip(el)?.style.visibility).toBe("visible");
+            expect(deepQuery(tooltip(el).shadowRoot!, ".tooltip-compare .tooltip-sub")?.textContent).toMatch(/May.*11|11.*May/);
+        });
+    });
 });

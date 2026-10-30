@@ -131,6 +131,18 @@ export function bucketStart(iso: string, unit: BucketUnit): string {
     return addDays(iso, -sinceMonday);
 }
 
+/**
+ * How many buckets (days, weeks or months) the bucket `iso` falls in is after the bucket `from` falls in; negative when before.
+ * `undefined` when either is not a real date.
+ */
+export function bucketOffset(from: string, iso: string, unit: BucketUnit): number | undefined {
+    const [a, b] = [parseIso(bucketStart(from, unit)), parseIso(bucketStart(iso, unit))];
+    if (!a || !b) return undefined;
+    if (unit === "month") return (b.year - a.year) * 12 + (b.month - a.month);
+    const days = Math.round((Date.UTC(b.year, b.month - 1, b.day) - Date.UTC(a.year, a.month - 1, a.day)) / 86_400_000);
+    return unit === "week" ? days / 7 : days;
+}
+
 /** The first day after the bucket that starts on `start`: the next day, the day a week on, or the 1st of the next month. */
 export function bucketEnd(start: string, unit: BucketUnit): string {
     if (unit === "month") return firstOfNextMonth(start);

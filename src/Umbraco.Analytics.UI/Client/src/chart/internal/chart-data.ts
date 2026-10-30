@@ -1,11 +1,11 @@
-import { dateOnly } from "../../internal/date/date-math.js";
+import { bucketOffset, dateOnly, type BucketUnit } from "../../internal/date/date-math.js";
 import type { UaxChartKind, UaxSeries } from "../types.js";
 
 export interface UaxChartData {
     /** Every date in any series, ascending. */
     dates: string[];
     /**
-     * For the bar kinds: the compare series added up into one total per date, matched to `dates` by position.
+     * For the bar kinds: the compare series added up into one total per date, matched to `dates` by bucket offset.
      * Absent when there is no compare series.
      */
     compareTotal?: { values: (number | null)[]; dates: (string | null)[] };
@@ -13,7 +13,7 @@ export interface UaxChartData {
         id: string;
         label: string;
         values: (number | null)[];
-        /** The compare series' values on the same dates, matched by position. Absent when it has no compare series. */
+        /** The compare series' values on the same dates, matched by bucket offset. Absent when it has no compare series. */
         compare?: (number | null)[];
         /** The ISO date of each compare value, on the same indexes as `compare`. */
         compareDates?: (string | null)[];
@@ -23,53 +23,82 @@ export interface UaxChartData {
 /** The series with each point's date cut to its calendar day, so a date-time point lands on the day it names. */
 const dayPoints = (s: UaxSeries): UaxSeries => ({ ...s, points: s.points.map((p) => ({ ...p, date: dateOnly(p.date) })) });
 
-/**
- * Lines the series up on one shared list of dates. A date a series has no point for is `null`.
- * A compare series is matched to its series by `id`, then point by point: its first point sits on the
- * date of the series' first point, and so on. Compare points beyond the series' last point are dropped.
- */
-export function buildChartData(rawSeries: UaxSeries[], rawCompareSeries: UaxSeries[] = []): UaxChartData {
-    const series = rawSeries.map(dayPoints);
-    const compareSeries = rawCompareSeries.map(dayPoints);
-    const dates = [...new Set(series.flatMap((s) => s.points.map((p) => p.date)))].sort();
-    const indexOfDate = new Map(dates.map((d, i) => [d, i]));
-    return {
-        dates,
-        compareTotal: buildCompareTotal(dates, compareSeries),
-        series: series.map((s) => {
-            const byDate = new Map(s.points.map((p) => [p.date, p.value]));
-            const values = dates.map((d) => byDate.get(d) ?? null);
-            const match = compareSeries.find((c) => c.id === s.id);
-            if (!match) return { id: s.id, label: s.label, values };
+/** The sorted dates of the series' points, each once. */
+const sortedDates = (series: UaxSeries[]) => [...new Set(series.flatMap((s) => s.points.map((p) => p.date)))].sort();
 
-            const ownDates = [...byDate.keys()].sort();
-            const compare = dates.map(() => null as number | null);
-            const compareDates = dates.map(() => null as string | null);
-            [...match.points]
-                .sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0))
-                .slice(0, ownDates.length)
-                .forEach((p, position) => {
-                    const index = indexOfDate.get(ownDates[position])!;
-                    compare[index] = p.value;
-                    compareDates[index] = p.date;
-                });
-            return { id: s.id, label: s.label, values, compare, compareDates };
-        }),
-    };
+/**
+ * The bucket number of each date, counted from the bucket of `anchor` (the first date when there is none). A date
+ * that isn't a real calendar date takes its position in the list instead.
+ */
+function offsetsOf(dates: string[], unit: BucketUnit, anchor = dates[0]): number[] {
+    return dates.map((d, i) => bucketOffset(anchor, d, unit) ?? i);
+}
+
+/** The first day of each side's period, when the product knows it. Without one a side starts at its first point. */
+export interface UaxChartAnchors {
+    from?: string;
+    compareFrom?: string;
+}
+
+/** Points on the same date add up, whichever series the rule is applied to. */
+function sumByDate(points: UaxSeries["points"]): Map<string, number> {
+    const sums = new Map<string, number>();
+    for (const p of points) sums.set(p.date, (sums.get(p.date) ?? 0) + p.value);
+    return sums;
+}
+
+/** Compare values added up per bucket offset, with the earliest real date seen in each. */
+function compareByOffset(points: UaxSeries["points"], unit: BucketUnit, start: string) {
+    const byOffset = new Map<number, { value: number; date: string }>();
+    const position = new Map([...new Set(points.map((p) => p.date))].sort().map((d, i) => [d, i]));
+    [...points]
+        .sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0))
+        .forEach((p) => {
+            const offset = bucketOffset(start, p.date, unit) ?? position.get(p.date)!;
+            const entry = byOffset.get(offset);
+            if (entry) entry.value += p.value;
+            else byOffset.set(offset, { value: p.value, date: p.date });
+        });
+    return byOffset;
 }
 
 /**
- * Adds the compare series together, date by date. Like a series' compare points, the compare dates line up
- * with the current dates by position (first with first), whichever series they belong to.
+ * Lines the series up on one shared list of dates. A date a series has no point for is `null`; points on the
+ * same date add up. A compare series is matched to its series by `id`, then by bucket offset: its point in the
+ * Nth bucket (`groupBy` unit) from the compare period's start sits under the Nth bucket from the current period's
+ * start. A start is `anchors.from` or `anchors.compareFrom` when given, else the first date of that side. Compare
+ * points whose offset has no current date are dropped, and current dates with no compare point stay `null`.
  */
-function buildCompareTotal(dates: string[], compareSeries: UaxSeries[]): UaxChartData["compareTotal"] {
-    const compareDates = [...new Set(compareSeries.flatMap((s) => s.points.map((p) => p.date)))].sort().slice(0, dates.length);
-    if (compareDates.length === 0) return undefined;
-    const totals = new Map<string, number>();
-    for (const s of compareSeries) for (const p of s.points) totals.set(p.date, (totals.get(p.date) ?? 0) + p.value);
+export function buildChartData(rawSeries: UaxSeries[], rawCompareSeries: UaxSeries[] = [], groupBy: BucketUnit = "day", anchors: UaxChartAnchors = {}): UaxChartData {
+    const series = rawSeries.map(dayPoints);
+    const compareSeries = rawCompareSeries.map(dayPoints);
+    const dates = sortedDates(series);
+    const indexOfOffset = new Map(offsetsOf(dates, groupBy, anchors.from ? dateOnly(anchors.from) : undefined).map((offset, i) => [offset, i]));
+    const compareStart = anchors.compareFrom ? dateOnly(anchors.compareFrom) : sortedDates(compareSeries)[0];
+    const place = (byOffset: Map<number, { value: number; date: string }>) => {
+        const values = dates.map(() => null as number | null);
+        const compareDates = dates.map(() => null as string | null);
+        for (const [offset, entry] of byOffset) {
+            const index = indexOfOffset.get(offset);
+            if (index === undefined) continue;
+            values[index] = entry.value;
+            compareDates[index] = entry.date;
+        }
+        return { values, compareDates };
+    };
+    const allCompare = compareByOffset(compareSeries.flatMap((s) => s.points), groupBy, compareStart);
+    const total = place(allCompare);
     return {
-        values: dates.map((_, i) => (i < compareDates.length ? totals.get(compareDates[i])! : null)),
-        dates: dates.map((_, i) => compareDates[i] ?? null),
+        dates,
+        compareTotal: allCompare.size === 0 ? undefined : { values: total.values, dates: total.compareDates },
+        series: series.map((s) => {
+            const sums = sumByDate(s.points);
+            const values = dates.map((d) => sums.get(d) ?? null);
+            const match = compareSeries.find((c) => c.id === s.id);
+            if (!match) return { id: s.id, label: s.label, values };
+            const { values: compare, compareDates } = place(compareByOffset(match.points, groupBy, compareStart));
+            return { id: s.id, label: s.label, values, compare, compareDates };
+        }),
     };
 }
 

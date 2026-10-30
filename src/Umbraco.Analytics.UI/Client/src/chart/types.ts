@@ -1,6 +1,6 @@
 import type { UaxColorSlot } from "../theme/types.js";
 
-/** One value on one day. */
+/** One value on one day. Two points of a series on the same date are added, so aggregate rates and averages before passing them. */
 export type UaxPoint = {
     /** ISO date, e.g. "2026-06-11". A date-time such as "2026-06-11T00:00:00Z" is read as the day it starts with, with no timezone shift. */
     date: string;
@@ -15,6 +15,10 @@ export type UaxSeries = {
     label: string;
     /** Palette slot (series/bar/fill colour). Defaults to the series' position. */
     color?: UaxColorSlot;
+    /**
+     * The chart does not aggregate: points on the same date are added, which is wrong for rates and averages, so
+     * aggregate those first. With `group-by` week or month pass one point per bucket, not daily data.
+     */
     points: UaxPoint[];
 };
 

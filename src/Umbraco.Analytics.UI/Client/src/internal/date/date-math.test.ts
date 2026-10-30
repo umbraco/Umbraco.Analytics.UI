@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { addDays, builtInPresetRange, dateOnly, compareRangeFor, firstOfNextMonth, isoToDate, parseIso, previousPeriodRange, previousYearRange, todayIso } from "./date-math.js";
+import { addDays, bucketOffset, builtInPresetRange, dateOnly, compareRangeFor, firstOfNextMonth, isoToDate, parseIso, previousPeriodRange, previousYearRange, todayIso } from "./date-math.js";
 
 describe("Feature: date range maths", () => {
     describe("Scenario: today", () => {
@@ -122,5 +122,23 @@ describe("dateOnly", () => {
 
     it("leaves text that doesn't start with a date as it is", () => {
         expect(dateOnly("June")).toBe("June");
+    });
+});
+
+describe("bucketOffset", () => {
+    it("counts weeks between the Mondays of two dates", () => {
+        expect(bucketOffset("2026-04-29", "2026-05-13", "week")).toBe(2);
+    });
+
+    it("counts months across a year end", () => {
+        expect(bucketOffset("2025-11-20", "2026-02-01", "month")).toBe(3);
+    });
+
+    it("counts days", () => {
+        expect(bucketOffset("2026-02-27", "2026-03-02", "day")).toBe(3);
+    });
+
+    it("gives nothing for a date that isn't real", () => {
+        expect(bucketOffset("2026-02-27", "June", "day")).toBeUndefined();
     });
 });
