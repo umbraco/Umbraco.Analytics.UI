@@ -150,7 +150,7 @@
   Acceptance: every SPEC.md non-functional target met or explicitly changed.
   depends-on: T12, T20
 
-- [ ] **T24** - story: none (docs). Update the repo `README.md` and `Client/README.md` with the element list and a short usage example per element, linking to Storybook.
+- [x] **T24** - story: none (docs). Update the repo `README.md` and `Client/README.md` with the element list and a short usage example per element, linking to Storybook.
   Acceptance: every exported element appears in both READMEs.
   depends-on: T21, T22
 
