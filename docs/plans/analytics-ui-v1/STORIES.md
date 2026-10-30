@@ -75,7 +75,7 @@ AC1 — Default series colours
   Then  its series 1 colour resolves to --uui-palette-space-cadet
 
 AC2 — Override from a parent
-  Given a parent element that sets --uan-series-1 to a different colour
+  Given a parent element that sets --uax-series-1 to a different colour
   When  an element from the package renders inside it
   Then  the element uses the parent's colour
 
@@ -100,10 +100,10 @@ so that the screen reads naturally next to the rest of Umbraco.
 AC1 — Strings come from localization keys
   Given an element that shows built-in text such as "No data yet"
   When  it renders in a backoffice set to English
-  Then  the text is the translation for its uanAnalytics_* key, not the raw key
+  Then  the text is the translation for its uaxAnalytics_* key, not the raw key
 
 AC2 — Product can override a string
-  Given a product registers its own localization for uanAnalytics_emptyHeadline
+  Given a product registers its own localization for uaxAnalytics_emptyHeadline
   When  the empty state renders
   Then  it shows the product's text
 
@@ -123,14 +123,14 @@ so that I don't mistake an empty or half-loaded chart for real results.
 
 ```
 AC1 — Empty state shows the product's text
-  Given a uan-empty-state with headline "No pageviews yet"
+  Given a uax-empty-state with headline "No pageviews yet"
   When  it renders
   Then  the headline reads "No pageviews yet"
 
 AC2 — Default empty text
   Given a data element with no data and no empty-headline set
   When  it renders
-  Then  it shows uan-empty-state with the "No data yet" translation
+  Then  it shows uax-empty-state with the "No data yet" translation
 
 AC3 — Skeleton on first load
   Given a data element with loading set and no data yet
@@ -161,37 +161,37 @@ so that I can tell at a glance whether a number went the right way.
 
 ```
 AC1 — Positive pill
-  Given uan-delta-badge with value 12.4
+  Given uax-delta-badge with value 12.4
   When  it renders
   Then  it shows "+12.4%" on a positive tint
 
 AC2 — Negative pill
-  Given uan-delta-badge with value -3
+  Given uax-delta-badge with value -3
   When  it renders
   Then  it shows "-3%" on a danger tint
 
 AC3 — Flat pill
-  Given uan-delta-badge with value 0.02 and max-decimals 1
+  Given uax-delta-badge with value 0.02 and max-decimals 1
   When  it renders
   Then  it shows "0%" on a neutral tint
 
 AC4 — Lower is better
-  Given uan-delta-badge with value -1.2, unit "points" and lower-is-better
+  Given uax-delta-badge with value -1.2, unit "points" and lower-is-better
   When  it renders
   Then  it shows "-1.2 pp" on a positive tint
 
 AC5 — Small size
-  Given uan-delta-badge with size "sm"
+  Given uax-delta-badge with size "sm"
   When  it renders
   Then  it uses the small font size and padding
 
 AC6 — Culture-aware number
   Given the backoffice culture is da-DK
-  When  uan-delta-badge renders value 12.4
+  When  uax-delta-badge renders value 12.4
   Then  it shows "+12,4 %"
 
 AC7 — Sentiment is not colour only
-  Given uan-delta-badge with value -1.2, unit "points" and lower-is-better
+  Given uax-delta-badge with value -1.2, unit "points" and lower-is-better
   When  it renders
   Then  it has visually hidden text saying "improvement"
 ```
@@ -204,17 +204,17 @@ so that I see the headline results before reading charts.
 
 ```
 AC1 — Label
-  Given uan-kpi-tile with label "Revenue"
+  Given uax-kpi-tile with label "Revenue"
   When  it renders
   Then  it shows "Revenue"
 
 AC2 — Change badge
-  Given uan-kpi-tile with delta 18.7
+  Given uax-kpi-tile with delta 18.7
   When  it renders
-  Then  it shows a uan-delta-badge with "+18.7%"
+  Then  it shows a uax-delta-badge with "+18.7%"
 
 AC3 — No badge without a delta
-  Given uan-kpi-tile with no delta
+  Given uax-kpi-tile with no delta
   When  it renders
   Then  no badge is shown
 
@@ -229,12 +229,12 @@ AC5 — Badge wraps when narrow
   Then  the badge sits below the value
 
 AC6 — Value shown as given
-  Given uan-kpi-tile with value "€ 4,837.40"
+  Given uax-kpi-tile with value "€ 4,837.40"
   When  it renders
   Then  it shows "€ 4,837.40" exactly
 
 AC7 — Icon
-  Given uan-kpi-tile with icon "icon-coins"
+  Given uax-kpi-tile with icon "icon-coins"
   When  it renders
   Then  it shows that icon
 ```
@@ -247,7 +247,7 @@ so that I can explore each number without leaving the screen.
 
 ```
 AC1 — Click raises selected
-  Given a uan-kpi-tile with selectable set
+  Given a uax-kpi-tile with selectable set
   When  the editor clicks it
   Then  it raises a selected event
 
@@ -279,7 +279,7 @@ AC7 — Deselecting clears selected
 Sad path
 
 AC4 — Not selectable by default
-  Given a uan-kpi-tile without selectable
+  Given a uax-kpi-tile without selectable
   When  the editor clicks it
   Then  no selected event is raised
 
@@ -302,22 +302,22 @@ so that I can see short spikes or long trends.
 
 ```
 AC1 — Shows the current value
-  Given uan-group-by with value "week"
+  Given uax-group-by with value "week"
   When  it renders
   Then  "Week" is the checked option
 
 AC2 — Click changes value
-  Given uan-group-by with value "day"
+  Given uax-group-by with value "day"
   When  the editor clicks "Month"
   Then  it raises change with { value: "month" }
 
 AC3 — Arrow keys change value
-  Given uan-group-by with focus on "Day"
+  Given uax-group-by with focus on "Day"
   When  the editor presses the right arrow key
   Then  it raises change with { value: "week" }
 
 AC4 — Limited options
-  Given uan-group-by with options ["day", "week"]
+  Given uax-group-by with options ["day", "week"]
   When  it renders
   Then  only "Day" and "Week" are shown
 ```
@@ -330,7 +330,7 @@ so that I can spot trends and spikes.
 
 ```
 AC1 — One line per series
-  Given uan-time-series-chart with kind "line" and two series
+  Given uax-time-series-chart with kind "line" and two series
   When  it renders
   Then  it draws two lines
 
@@ -375,7 +375,7 @@ so that I can tell whether this period is better or worse.
 AC1 — Dashed compare line
   Given kind "line" with series and compare-series
   When  it renders
-  Then  the compare series is drawn as a dashed line in --uan-compare
+  Then  the compare series is drawn as a dashed line in --uax-compare
 
 AC2 — Gap shaded
   Given kind "line" with series and compare-series
@@ -418,7 +418,7 @@ AC2 — Stacked bars
 AC3 — Compare behind
   Given kind "stacked-bar" with compare-series
   When  it renders
-  Then  each date shows a --uan-compare bar for the compare total behind the current bar
+  Then  each date shows a --uax-compare bar for the compare total behind the current bar
 
 AC4 — No smoothing
   Given kind "bar"
@@ -469,14 +469,14 @@ so that I can look at exactly the days I care about.
 
 ```
 AC1 — Button shows the range
-  Given uan-date-range with value 25 May–23 Jun 2026
+  Given uax-date-range with value 25 May–23 Jun 2026
   When  it renders
   Then  the button reads "May 25, 2026 to Jun 23, 2026" in the backoffice culture
 
 AC2 — Opens the dialog
-  Given uan-date-range on screen
+  Given uax-date-range on screen
   When  the editor clicks it
-  Then  uan-date-range-modal opens
+  Then  uax-date-range-modal opens
 
 AC3 — Preset fills dates
   Given the dialog is open
@@ -519,7 +519,7 @@ so that I can see change over time.
 
 ```
 AC1 — Compare off by default
-  Given uan-date-range with no compare
+  Given uax-date-range with no compare
   When  the dialog opens
   Then  the Compare switch is off
 
@@ -566,7 +566,7 @@ AC2 — Share cell
 AC3 — Second share column colour
   Given two "share" columns
   When  they render
-  Then  the second column's bars use --uan-series-2
+  Then  the second column's bars use --uax-series-2
 
 AC4 — Link cells
   Given a "link" column with hrefKey "url"
@@ -660,7 +660,7 @@ so that I can find one page or campaign without scrolling.
 
 ```
 AC1 — Search raised after typing stops
-  Given uan-table-search in the toolbar
+  Given uax-table-search in the toolbar
   When  the editor types "contact" and stops for 300ms
   Then  it raises search with { query: "contact" }
 
@@ -717,12 +717,12 @@ AC1 — Import map entry
 AC2 — Localization registered
   Given that site
   When  the backoffice loads
-  Then  the uanAnalytics_* keys are available in English
+  Then  the uaxAnalytics_* keys are available in English
 
 AC3 — Date range modal registered
   Given that site
-  When  a uan-date-range button is clicked
-  Then  uan-date-range-modal opens through the modal manager
+  When  a uax-date-range button is clicked
+  Then  uax-date-range-modal opens through the modal manager
 
 AC4 — Version stamped
   Given a release build

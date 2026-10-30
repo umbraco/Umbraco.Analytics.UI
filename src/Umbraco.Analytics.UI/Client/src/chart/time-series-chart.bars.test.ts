@@ -2,7 +2,7 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { page } from "vitest/browser";
 import { html } from "@umbraco-cms/backoffice/external/lit";
-import { renderElement, type UanTestElement } from "../internal/test/pending.js";
+import { renderElement, type UaxTestElement } from "../internal/test/pending.js";
 
 const returning = { id: "r", label: "Returning visitor", points: [
     { date: "2026-06-01", value: 1 }, { date: "2026-06-02", value: 2 }, { date: "2026-06-03", value: 0 },
@@ -16,13 +16,13 @@ const previousTotals = { id: "total", label: "Visitors", points: [
 
 const chart = (kind: string, series: unknown[], compare?: unknown[]) =>
     renderElement(
-        html`<uan-time-series-chart kind=${kind} .series=${series} .compareSeries=${compare} style="width:600px"></uan-time-series-chart>`,
-        "uan-time-series-chart",
+        html`<uax-time-series-chart kind=${kind} .series=${series} .compareSeries=${compare} style="width:600px"></uax-time-series-chart>`,
+        "uax-time-series-chart",
     );
 
 describe("Feature: bar and stacked bar chart", () => {
     describe("Scenario: a bar chart", () => {
-        let el: UanTestElement;
+        let el: UaxTestElement;
         beforeEach(async () => {
             el = await chart("bar", [returning]);
         });
@@ -37,7 +37,7 @@ describe("Feature: bar and stacked bar chart", () => {
     });
 
     describe("Scenario: a stacked bar chart", () => {
-        let el: UanTestElement;
+        let el: UaxTestElement;
         beforeEach(async () => {
             el = await chart("stacked-bar", [returning, newVisitors]);
         });
@@ -48,7 +48,7 @@ describe("Feature: bar and stacked bar chart", () => {
     });
 
     describe("Scenario: a stacked bar chart with a compare series", () => {
-        let el: UanTestElement;
+        let el: UaxTestElement;
         beforeEach(async () => {
             el = await chart("stacked-bar", [returning, newVisitors], [previousTotals]);
         });

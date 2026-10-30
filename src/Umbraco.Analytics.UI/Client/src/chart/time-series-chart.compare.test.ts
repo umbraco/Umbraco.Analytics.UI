@@ -2,7 +2,7 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { page, userEvent } from "vitest/browser";
 import { html } from "@umbraco-cms/backoffice/external/lit";
-import { renderElement, shadow, type UanTestElement } from "../internal/test/pending.js";
+import { renderElement, shadow, type UaxTestElement } from "../internal/test/pending.js";
 
 const current = { id: "pv", label: "Pageviews", points: [
     { date: "2026-05-25", value: 60 }, { date: "2026-05-26", value: 90 }, { date: "2026-05-27", value: 120 },
@@ -14,19 +14,19 @@ const compareLabel = "Apr 25, 2026 – May 24, 2026";
 
 const renderChart = () =>
     renderElement(
-        html`<uan-time-series-chart kind="line" .series=${[current]} .compareSeries=${[previous]}
-            compare-label=${compareLabel} style="width:600px"></uan-time-series-chart>`,
-        "uan-time-series-chart",
+        html`<uax-time-series-chart kind="line" .series=${[current]} .compareSeries=${[previous]}
+            compare-label=${compareLabel} style="width:600px"></uax-time-series-chart>`,
+        "uax-time-series-chart",
     );
 
 describe("Feature: compare with another period", () => {
     describe("Scenario: a line chart with a compare series", () => {
-        let el: UanTestElement;
+        let el: UaxTestElement;
         beforeEach(async () => {
             el = await renderChart();
         });
 
-        it.skip("draws the compare series as a dashed --uan-compare line", async () => {
+        it.skip("draws the compare series as a dashed --uax-compare line", async () => {
             await expect.element(page.elementLocator(el)).toMatchScreenshot("chart-compare-dashed");
         });
 
@@ -44,7 +44,7 @@ describe("Feature: compare with another period", () => {
     });
 
     describe("Scenario: hovering a date while comparing", () => {
-        let el: UanTestElement;
+        let el: UaxTestElement;
         beforeEach(async () => {
             el = await renderChart();
             const canvas = shadow(el).querySelector("canvas")!;
@@ -53,7 +53,7 @@ describe("Feature: compare with another period", () => {
         });
 
         it.skip("shows the current value, the compare value and a change badge", () => {
-            expect(shadow(el).querySelector("[part~='tooltip'] uan-delta-badge")).not.toBe(null);
+            expect(shadow(el).querySelector("[part~='tooltip'] uax-delta-badge")).not.toBe(null);
         });
     });
 });

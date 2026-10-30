@@ -3,9 +3,9 @@ import { css } from "@umbraco-cms/backoffice/external/lit";
 /**
  * Series, comparison and tint tokens. Every element adds this to its `styles`.
  *
- * A product overrides a token by setting the public name (`--uan-series-1`) on any ancestor.
- * Declaring `--uan-series-1` on `:host` would shadow that inherited value, so the public names
- * are never declared here. Instead each element resolves its token into a private `--_uan-*`
+ * A product overrides a token by setting the public name (`--uax-series-1`) on any ancestor.
+ * Declaring `--uax-series-1` on `:host` would shadow that inherited value, so the public names
+ * are never declared here. Instead each element resolves its token into a private `--_uax-*`
  * name: the ancestor's value if there is one, else the UUI default. Elements read the private name.
  *
  * The UUI palette is the same in every theme, so each default is `light-dark(<light>, <dark>)`.
@@ -42,43 +42,43 @@ import { css } from "@umbraco-cms/backoffice/external/lit";
  * The tints themselves are decoration (the sign, arrow and hidden text carry the meaning), so they
  * stay faint: 1.2 to 1.3:1 against the surface in light and high contrast, 1.1 in dark.
  */
-export const uanThemeTokens = css`
+export const uaxThemeTokens = css`
     :host {
         color-scheme: var(--uui-color-scheme, normal);
 
-        --_uan-series-1: var(
-            --uan-series-1,
+        --_uax-series-1: var(
+            --uax-series-1,
             light-dark(var(--uui-palette-space-cadet), var(--uui-palette-malibu-light))
         );
-        --_uan-series-2: var(
-            --uan-series-2,
+        --_uax-series-2: var(
+            --uax-series-2,
             light-dark(var(--uui-palette-maroon-flush), var(--uui-palette-spanish-pink))
         );
-        --_uan-series-3: var(
-            --uan-series-3,
+        --_uax-series-3: var(
+            --uax-series-3,
             light-dark(var(--uui-palette-sunglow-dark), var(--uui-palette-sunglow))
         );
-        --_uan-series-4: var(
-            --uan-series-4,
+        --_uax-series-4: var(
+            --uax-series-4,
             light-dark(var(--uui-palette-violet-blue), var(--uui-palette-jungle-green))
         );
-        --_uan-compare: var(
-            --uan-compare,
+        --_uax-compare: var(
+            --uax-compare,
             light-dark(var(--uui-palette-chamoisee), var(--uui-palette-deep-saffron))
         );
 
-        --_uan-text-positive: var(
-            --uan-text-positive,
+        --_uax-text-positive: var(
+            --uax-text-positive,
             light-dark(var(--uui-palette-forest-green-dark), var(--uui-palette-jungle-green))
         );
-        --_uan-text-negative: var(
-            --uan-text-negative,
+        --_uax-text-negative: var(
+            --uax-text-negative,
             light-dark(var(--uui-palette-maroon-flush-dark), var(--uui-palette-spanish-pink))
         );
-        --_uan-text-neutral: var(--uan-text-neutral, var(--uui-color-text-alt));
+        --_uax-text-neutral: var(--uax-text-neutral, var(--uui-color-text-alt));
 
-        --_uan-tint-positive: var(--uan-tint-positive, color-mix(in srgb, var(--uui-color-positive) 15%, transparent));
-        --_uan-tint-negative: var(--uan-tint-negative, color-mix(in srgb, var(--uui-color-danger) 15%, transparent));
-        --_uan-tint-neutral: var(--uan-tint-neutral, color-mix(in srgb, var(--uui-color-text) 20%, transparent));
+        --_uax-tint-positive: var(--uax-tint-positive, color-mix(in srgb, var(--uui-color-positive) 15%, transparent));
+        --_uax-tint-negative: var(--uax-tint-negative, color-mix(in srgb, var(--uui-color-danger) 15%, transparent));
+        --_uax-tint-neutral: var(--uax-tint-neutral, color-mix(in srgb, var(--uui-color-text) 20%, transparent));
     }
 `;

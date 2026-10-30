@@ -31,7 +31,7 @@ TypeScript types for Umbraco Analytics UI: shared backoffice charts, tables, KPI
    ```ts
    import "@umbraco-analytics/ui";
 
-   html`<uan-delta-badge .value=${12.4}></uan-delta-badge>`;
+   html`<uax-delta-badge .value=${12.4}></uax-delta-badge>`;
    ```
 
 ## Versioning

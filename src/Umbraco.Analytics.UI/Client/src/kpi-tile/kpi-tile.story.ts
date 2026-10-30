@@ -1,11 +1,11 @@
 import type { Meta, StoryObj } from "@storybook/web-components-vite";
 import { html } from "@umbraco-cms/backoffice/external/lit";
-import type { UanKpiTileElement } from "./kpi-tile.element.js";
+import type { UaxKpiTileElement } from "./kpi-tile.element.js";
 import "./kpi-tile.element.js";
 
-const meta: Meta<UanKpiTileElement> = {
+const meta: Meta<UaxKpiTileElement> = {
     title: "Components/KPI Tile",
-    component: "uan-kpi-tile",
+    component: "uax-kpi-tile",
     args: {
         label: "Revenue",
         value: "€ 4,837.40",
@@ -22,7 +22,7 @@ const meta: Meta<UanKpiTileElement> = {
     },
     render: (args) =>
         html`<div style="width: 240px">
-            <uan-kpi-tile
+            <uax-kpi-tile
                 .label=${args.label}
                 .value=${args.value}
                 .icon=${args.icon}
@@ -31,12 +31,12 @@ const meta: Meta<UanKpiTileElement> = {
                 .lowerIsBetter=${args.lowerIsBetter}
                 .loading=${args.loading}
                 .selectable=${args.selectable}
-                .selected=${args.selected}></uan-kpi-tile>
+                .selected=${args.selected}></uax-kpi-tile>
         </div>`,
 };
 
 export default meta;
-type Story = StoryObj<UanKpiTileElement>;
+type Story = StoryObj<UaxKpiTileElement>;
 
 export const Default: Story = {};
 
@@ -59,10 +59,10 @@ export const Reloading: Story = { args: { loading: true } };
 export const RowOfTiles: Story = {
     render: () =>
         html`<div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; width: 880px">
-            <uan-kpi-tile label="Revenue" value="€ 4,837.40" icon="icon-coins" .delta=${18.7}></uan-kpi-tile>
-            <uan-kpi-tile label="Orders" value="26" icon="icon-inbox" .delta=${8.1}></uan-kpi-tile>
-            <uan-kpi-tile label="Carts created" value="64" icon="icon-shopping-basket" .delta=${12.4}></uan-kpi-tile>
-            <uan-kpi-tile label="New customers" value="13" icon="icon-user" .delta=${4.8}></uan-kpi-tile>
+            <uax-kpi-tile label="Revenue" value="€ 4,837.40" icon="icon-coins" .delta=${18.7}></uax-kpi-tile>
+            <uax-kpi-tile label="Orders" value="26" icon="icon-inbox" .delta=${8.1}></uax-kpi-tile>
+            <uax-kpi-tile label="Carts created" value="64" icon="icon-shopping-basket" .delta=${12.4}></uax-kpi-tile>
+            <uax-kpi-tile label="New customers" value="13" icon="icon-user" .delta=${4.8}></uax-kpi-tile>
         </div>`,
 };
 
@@ -79,11 +79,11 @@ export const SelectableRow: Story = {
             style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; width: 880px"
             @selected=${(e: Event) => {
                 const row = e.currentTarget as HTMLElement;
-                for (const tile of row.querySelectorAll("uan-kpi-tile")) if (tile !== e.target) tile.selected = false;
+                for (const tile of row.querySelectorAll("uax-kpi-tile")) if (tile !== e.target) tile.selected = false;
             }}>
-            <uan-kpi-tile label="Revenue" value="€ 4,837.40" icon="icon-coins" .delta=${18.7} selectable selected .deselectable=${false}></uan-kpi-tile>
-            <uan-kpi-tile label="Orders" value="26" icon="icon-inbox" .delta=${8.1} selectable .deselectable=${false}></uan-kpi-tile>
-            <uan-kpi-tile label="Carts created" value="64" icon="icon-shopping-basket" .delta=${12.4} selectable .deselectable=${false}></uan-kpi-tile>
-            <uan-kpi-tile label="New customers" value="13" icon="icon-user" .delta=${4.8} selectable .deselectable=${false}></uan-kpi-tile>
+            <uax-kpi-tile label="Revenue" value="€ 4,837.40" icon="icon-coins" .delta=${18.7} selectable selected .deselectable=${false}></uax-kpi-tile>
+            <uax-kpi-tile label="Orders" value="26" icon="icon-inbox" .delta=${8.1} selectable .deselectable=${false}></uax-kpi-tile>
+            <uax-kpi-tile label="Carts created" value="64" icon="icon-shopping-basket" .delta=${12.4} selectable .deselectable=${false}></uax-kpi-tile>
+            <uax-kpi-tile label="New customers" value="13" icon="icon-user" .delta=${4.8} selectable .deselectable=${false}></uax-kpi-tile>
         </div>`,
 };

@@ -9,7 +9,7 @@ None. The package has no server code. Products call their own APIs and pass data
 All elements live in `src/Umbraco.Analytics.UI/Client/src/<name>/` and are exported from `@umbraco-analytics/ui`. Every element:
 
 - extends `UmbLitElement` and localizes every visible string, `aria-label` and placeholder
-- uses `--uui-*` tokens and reads colours through the private `--_uan-*` tokens (ARCHITECTURE.md decision 6), and reads correctly in the light, dark and high-contrast themes
+- uses `--uui-*` tokens and reads colours through the private `--_uax-*` tokens (ARCHITECTURE.md decision 6), and reads correctly in the light, dark and high-contrast themes
 - raises events as `CustomEvent`s that bubble and are `composed`, with the payload in `detail`, except where it mirrors a UUI event, which keeps UUI's exact options (the KPI tile's `selected`/`deselected` are plain bubbling, cancelable, non-composed `Event`s, like `UUISelectableEvent`)
 - passes an axe audit in its tests and in every Storybook story
 - takes corner radius from `--uui-border-radius-*` tokens, so it follows the v18+ rounded backoffice
@@ -19,13 +19,13 @@ Screenshots are from the Phase 1 design ([`docs/design/phase-1`](../../design/ph
 ### Shared types
 
 ```ts
-type UanPoint = { date: string; value: number };              // date: ISO "2026-06-11"
-type UanSeries = { id: string; label: string; points: UanPoint[] };
-type UanMarker = { id: string; date: string; title: string; description?: string };
-type UanGroupBy = "day" | "week" | "month";
-type UanChartKind = "line" | "area" | "bar" | "stacked-bar";
-type UanDateRange = { from: string; to: string; preset?: string };
-type UanCompare = { mode: "previous-period" | "previous-year" | "custom"; from: string; to: string };
+type UaxPoint = { date: string; value: number };              // date: ISO "2026-06-11"
+type UaxSeries = { id: string; label: string; points: UaxPoint[] };
+type UaxMarker = { id: string; date: string; title: string; description?: string };
+type UaxGroupBy = "day" | "week" | "month";
+type UaxChartKind = "line" | "area" | "bar" | "stacked-bar";
+type UaxDateRange = { from: string; to: string; preset?: string };
+type UaxCompare = { mode: "previous-period" | "previous-year" | "custom"; from: string; to: string };
 ```
 
 ### 1. Panes: `uui-box`, not a new element
@@ -41,7 +41,7 @@ Products wrap each chart and table in the backoffice's own `uui-box`. It already
 
 Storybook gets a "Pane" story showing this recipe, a chart and a table in one `uui-box`, so every product builds it the same way. There's no divider between a chart and a table that follows it, which the recipe shows.
 
-### 2. `uan-kpi-tile`: KPI tile
+### 2. `uax-kpi-tile`: KPI tile
 
 ![KPI tiles](../../design/phase-1/screenshots/kpi-size.png)
 
@@ -49,10 +49,10 @@ Storybook gets a "Pane" story showing this recipe, a chart and a table in one `u
   - `label`
   - `value` (pre-formatted string)
   - `icon`
-  - `delta`, `delta-unit` and `lower-is-better` (passed to `uan-delta-badge`)
+  - `delta`, `delta-unit` and `lower-is-better` (passed to `uax-delta-badge`)
   - `selectable`, `selected`
 - One style only: a card with the icon in a pink square, as in every Phase 1 screenshot.
-- Not used for table totals ("TOTAL PAGEVIEWS 272 +8.4%"). Those are a label and a number, which the product writes in the table's `toolbar` slot, using `uan-delta-badge` for the change.
+- Not used for table totals ("TOTAL PAGEVIEWS 272 +8.4%"). Those are a label and a number, which the product writes in the table's `toolbar` slot, using `uax-delta-badge` for the change.
 - **Selectable:** follows UUI's `SelectableMixin` (as `uui-card` uses), so product code reads the same as for UUI cards. This lets a row of tiles switch which metric a chart shows, like Engage's `AnStatPanes`.
   - When `selectable`, the tile is a toggle button with `aria-pressed` (UUI cards don't expose their state to screen readers; this does).
   - Clicking, Enter or Space on an unselected tile raises a cancelable `selected` event, then sets `selected` unless the event was cancelled.
@@ -60,30 +60,30 @@ Storybook gets a "Pane" story showing this recipe, a chart and a table in one `u
   - Look matches `uui-card`: a 2px `--uui-color-selected` border just outside the card with a soft glow when selected; the same border at 33% on hover when not selected, 80% on hover when selected; focus is a separate `--uui-color-focus` outline.
 - Tiles in one row keep the same height, even when a label wraps. The badge sits below the value when the tile is too narrow to fit both on one line (as in `kpi-size.png`).
 
-### 3. `uan-delta-badge`: change badge (exists, needs restyling)
+### 3. `uax-delta-badge`: change badge (exists, needs restyling)
 
 - Restyle to the design's tinted pill: a green or red tint behind the text, 13px bold, `4px 8px` padding. Flat values use a neutral tint.
 - Add `size`: `"md"` (default) | `"sm"` (for table cells).
 - Keep the current behaviour: signed number, `percent` or `points`, `lower-is-better`, rounding to `max-decimals`. Number formatting moves to `this.localize.number`.
 
-### 4. `uan-time-series-chart`
+### 4. `uax-time-series-chart`
 
 ![Line chart with comparison and markers](../../design/phase-1/screenshots/cmp-diff.png)
 ![Stacked bar chart with comparison](../../design/phase-1/screenshots/vis-cmp.png)
 ![Marker tooltip](../../design/phase-1/screenshots/an-pin-tip.png)
 
 - Properties:
-  - `kind` (`UanChartKind`)
-  - `series` (`UanSeries[]`)
-  - `compare-series` (`UanSeries[]`, matched to `series` by `id`)
+  - `kind` (`UaxChartKind`)
+  - `series` (`UaxSeries[]`)
+  - `compare-series` (`UaxSeries[]`, matched to `series` by `id`)
   - `compare-label`
-  - `markers` (`UanMarker[]`)
-  - `group-by` (`UanGroupBy`, sets the x-axis label format)
+  - `markers` (`UaxMarker[]`)
+  - `group-by` (`UaxGroupBy`, sets the x-axis label format)
   - `value-format` (`Intl.NumberFormatOptions`)
   - `loading`
   - `empty-headline`, `empty-description`
 - **Comparison, by kind:**
-  - `line` and `area`: a dashed `--uan-compare` line, with the gap between the two lines shaded.
+  - `line` and `area`: a dashed `--uax-compare` line, with the gap between the two lines shaded.
   - `bar` and `stacked-bar`: the comparison total is drawn as a bar behind each current bar.
   - Comparison points line up by position (day 1 with day 1), not by date. The two ranges are different dates.
 - **Tooltip:** hovering a point shows a dark tooltip with the date, each series' value and, when comparing, the comparison value and a delta.
@@ -98,30 +98,30 @@ Storybook gets a "Pane" story showing this recipe, a chart and a table in one `u
   - Bar kinds have no smoothing.
 - **Accessibility:** a visually hidden table holds the same data, for screen readers.
 
-### 5. `uan-group-by`: Day / Week / Month switch
+### 5. `uax-group-by`: Day / Week / Month switch
 
-- Properties: `value` (`UanGroupBy`), `options` (defaults to all three).
+- Properties: `value` (`UaxGroupBy`), `options` (defaults to all three).
 - A radio group. Arrow keys move between options. Changing raises `change` with `{ value }`.
 
-### 6. `uan-date-range`: date range picker
+### 6. `uax-date-range`: date range picker
 
 ![Date range button with comparison](../../design/phase-1/screenshots/cmp-diff.png)
 ![Date range dialog](../../design/phase-1/screenshots/01-dr-modal.png)
 
 - Properties:
-  - `value` (`UanDateRange`)
-  - `compare` (`UanCompare | undefined`)
+  - `value` (`UaxDateRange`)
+  - `compare` (`UaxCompare | undefined`)
   - `presets` (defaults to last 7 days, last 30 days, last month, last year and custom; a product can pass its own, such as AI's last 24 hours)
   - `allow-compare` (default true)
   - `max-date` (default today)
-- The button opens `uan-date-range-modal` through the backoffice modal manager.
+- The button opens `uax-date-range-modal` through the backoffice modal manager.
   - **Save** closes the dialog and raises `change` with `{ value, compare }`.
   - **Close** discards the edits.
 - **Presets:** choosing one fills both dates. Editing either date switches the preset to "Custom".
 - **Compare:** turning it on shows the compare mode. "Previous period" and "Previous year" fill the comparison dates. "Custom" shows two more date fields.
 - **The mistake:** an end date before the start, or a date after `max-date`, shows an inline error under the field and disables Save.
 
-### 7. `uan-data-table`
+### 7. `uax-data-table`
 
 ![Table with share columns](../../design/phase-1/screenshots/an-table.png)
 
@@ -137,31 +137,31 @@ Storybook gets a "Pane" story showing this recipe, a chart and a table in one `u
   - `empty-headline`, `empty-description`
 - Slots: `toolbar`, for the search box and totals above the header.
 - **`share` columns:** show the value, its percent of the column total, and a thin bar scaled to the column's largest value.
-  - The first share column uses `--uan-series-1`, the second `--uan-series-2`.
+  - The first share column uses `--uax-series-1`, the second `--uax-series-2`.
   - When comparing, a small delta badge sits after the value.
 - **`link` columns:** render an anchor. The row's `href` comes from the column's `hrefKey`.
 - **Sorting:** clicking a sortable header toggles the direction and raises `sort-change`. In `client` mode the table also sorts itself.
 - **Paging:** the footer has "Show rows" (10, 25, 50, 100) and "1–10 of 272". It raises `page-change` with `{ page, pageSize }`, and in `client` mode it also pages itself. The footer is hidden when everything fits on one page.
-- **Search:** `uan-data-table` exports `uan-table-search` for the toolbar. It raises `search` with `{ query }`, 300ms after typing stops. In `client` mode the table filters rows on any `text` or `link` column.
+- **Search:** `uax-data-table` exports `uax-table-search` for the toolbar. It raises `search` with `{ query }`, 300ms after typing stops. In `client` mode the table filters rows on any `text` or `link` column.
 - **Rows:** a row is clickable only when the product listens for `row-click`. Then it's keyboard-reachable and raises `row-click` with `{ row }`.
 
-### 8. `uan-empty-state` and loading
+### 8. `uax-empty-state` and loading
 
-- **`uan-empty-state`:** properties `headline`, `description`, `icon`. The data elements use it when they have no data. A product can also place it on its own.
+- **`uax-empty-state`:** properties `headline`, `description`, `icon`. The data elements use it when they have no data. A product can also place it on its own.
 - **Loading:** each data element (chart, table, KPI tile) has a `loading` property.
   - On first load it shows a skeleton the same size as the loaded element, so the page doesn't jump.
   - While reloading with data already shown, the old data stays visible under a thin loading bar at the top.
 
 ### 9. Theme and localization
 
-- Products override the `--uan-*` colour names on any parent element. Elements read private `--_uan-*` copies (ARCHITECTURE.md decision 6). Default colours have a light and a dark shade, each at least 3:1 against the surface.
-- Ships `en` translations for its own strings under `uanAnalytics_*`. Generic verbs reuse Umbraco's keys (`buttons_save`, `general_close`, `general_loading`, `general_search`), so they're translated wherever the backoffice is. The package's `localization` extension has weight 200, so a product's own `localization` extension at the default weight (100) always overrides it.
+- Products override the `--uax-*` colour names on any parent element. Elements read private `--_uax-*` copies (ARCHITECTURE.md decision 6). Default colours have a light and a dark shade, each at least 3:1 against the surface.
+- Ships `en` translations for its own strings under `uaxAnalytics_*`. Generic verbs reuse Umbraco's keys (`buttons_save`, `general_close`, `general_loading`, `general_search`), so they're translated wherever the backoffice is. The package's `localization` extension has weight 200, so a product's own `localization` extension at the default weight (100) always overrides it.
 
 ### The five moments
 
 | Moment | Applies? | What the elements do |
 |---|---|---|
-| First run | Yes | Data elements show `uan-empty-state` with the product's `empty-headline` and `empty-description`. Defaults: "No data yet" / "Try a wider date range." |
+| First run | Yes | Data elements show `uax-empty-state` with the product's `empty-headline` and `empty-description`. Defaults: "No data yet" / "Try a wider date range." |
 | The mistake | Date range only | Inline field error, Save disabled. The other elements take no input that can be wrong. |
 | The wait | Yes | A skeleton on first load. On reload, the old data stays under a loading bar. |
 | The finish | Date range only | The dialog closes and the button shows the new range. No toast: the data updating is the confirmation. |
@@ -169,7 +169,7 @@ Storybook gets a "Pane" story showing this recipe, a chart and a table in one `u
 
 ### Later: not in v1
 
-**`uan-funnel` (conversion funnel).** Parked until a product commits to using it. Today none does:
+**`uax-funnel` (conversion funnel).** Parked until a product commits to using it. Today none does:
 
 - Engage's funnel is on Campaign Reporting, which exists only in the design.
 - Commerce's cart conversion widget is a line chart and a table. A funnel would mean redesigning it.

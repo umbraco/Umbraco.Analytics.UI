@@ -1,15 +1,15 @@
 import { css, customElement, html, property, repeat, type CSSResultGroup } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
-import { uanThemeTokens } from "../internal/theme/tokens.css.js";
+import { uaxThemeTokens } from "../internal/theme/tokens.css.js";
 
-export type UanGroupBy = "day" | "week" | "month";
+export type UaxGroupBy = "day" | "week" | "month";
 
-const allOptions: UanGroupBy[] = ["day", "week", "month"];
+const allOptions: UaxGroupBy[] = ["day", "week", "month"];
 
-const termKeys: Record<UanGroupBy, string> = {
-    day: "uanAnalytics_groupByDay",
-    week: "uanAnalytics_groupByWeek",
-    month: "uanAnalytics_groupByMonth",
+const termKeys: Record<UaxGroupBy, string> = {
+    day: "uaxAnalytics_groupByDay",
+    week: "uaxAnalytics_groupByWeek",
+    month: "uaxAnalytics_groupByMonth",
 };
 
 /**
@@ -18,20 +18,20 @@ const termKeys: Record<UanGroupBy, string> = {
  * Arrow keys move the selection and focus to the next or previous option, wrapping at the ends, as in
  * `uui-radio-group`. Only the selected option is in the tab order. Put it in a `uui-box`'s `header-actions` slot.
  *
- * @element uan-group-by
+ * @element uax-group-by
  * @fires change - The editor picked a different option. Bubbles, not cancelable. `detail` is `{ value }`.
  */
-@customElement("uan-group-by")
-export class UanGroupByElement extends UmbLitElement {
+@customElement("uax-group-by")
+export class UaxGroupByElement extends UmbLitElement {
     /** The selected option. Picking an option updates it, as `uui-radio-group` does, then raises `change`. */
     @property({ type: String, reflect: true })
-    value: UanGroupBy = "day";
+    value: UaxGroupBy = "day";
 
     /** The options to show, in order. Defaults to day, week and month. */
     @property({ attribute: false })
-    options: UanGroupBy[] = allOptions;
+    options: UaxGroupBy[] = allOptions;
 
-    #select(value: UanGroupBy) {
+    #select(value: UaxGroupBy) {
         if (value === this.value) return;
         this.value = value;
         this.dispatchEvent(new CustomEvent("change", { bubbles: true, detail: { value } }));
@@ -51,7 +51,7 @@ export class UanGroupByElement extends UmbLitElement {
     override render() {
         // With no selected option (a value that isn't in `options`), the first one takes the tab stop.
         const tabStop = this.options.includes(this.value) ? this.value : this.options[0];
-        return html`<div class="group" role="radiogroup" aria-label=${this.localize.term("uanAnalytics_groupByLabel")}>
+        return html`<div class="group" role="radiogroup" aria-label=${this.localize.term("uaxAnalytics_groupByLabel")}>
             ${repeat(
                 this.options,
                 (option) => option,
@@ -70,13 +70,13 @@ export class UanGroupByElement extends UmbLitElement {
     }
 
     static override styles: CSSResultGroup = [
-        uanThemeTokens,
+        uaxThemeTokens,
         css`
             :host {
                 display: inline-flex;
                 /* Design's selected segment is space cadet. That vanishes on the dark surface, so dark uses malibu light. */
-                --_uan-group-by-selected-bg: light-dark(var(--uui-palette-space-cadet), var(--uui-palette-malibu-light));
-                --_uan-group-by-selected-fg: light-dark(var(--uui-palette-white), var(--uui-palette-space-cadet));
+                --_uax-group-by-selected-bg: light-dark(var(--uui-palette-space-cadet), var(--uui-palette-malibu-light));
+                --_uax-group-by-selected-fg: light-dark(var(--uui-palette-white), var(--uui-palette-space-cadet));
             }
 
             .group {
@@ -111,8 +111,8 @@ export class UanGroupByElement extends UmbLitElement {
             }
 
             button[aria-checked="true"] {
-                background: var(--_uan-group-by-selected-bg);
-                color: var(--_uan-group-by-selected-fg);
+                background: var(--_uax-group-by-selected-bg);
+                color: var(--_uax-group-by-selected-fg);
             }
 
             button:focus-visible {
@@ -131,6 +131,6 @@ export class UanGroupByElement extends UmbLitElement {
 
 declare global {
     interface HTMLElementTagNameMap {
-        "uan-group-by": UanGroupByElement;
+        "uax-group-by": UaxGroupByElement;
     }
 }

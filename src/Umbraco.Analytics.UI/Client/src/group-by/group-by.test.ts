@@ -8,17 +8,17 @@ import { render } from "vitest-browser-lit";
 import { axeRun } from "../internal/test/a11y.js";
 import { userEvent } from "vitest/browser";
 import "./group-by.element.js";
-import type { UanGroupByElement } from "./group-by.element.js";
-import { nextEvent, renderElement, shadow, type UanTestElement } from "../internal/test/pending.js";
+import type { UaxGroupByElement } from "./group-by.element.js";
+import { nextEvent, renderElement, shadow, type UaxTestElement } from "../internal/test/pending.js";
 
 const option = (el: Element, label: string) =>
     [...shadow(el).querySelectorAll("[role='radio']")].find((o) => o.textContent?.trim() === label) as HTMLElement;
 
 describe("Feature: Day / Week / Month switch", () => {
     describe("Scenario: showing the current value", () => {
-        let el: UanTestElement;
+        let el: UaxTestElement;
         beforeEach(async () => {
-            el = await renderElement(html`<uan-group-by value="week"></uan-group-by>`, "uan-group-by");
+            el = await renderElement(html`<uax-group-by value="week"></uax-group-by>`, "uax-group-by");
         });
 
         it("checks Week", () => {
@@ -29,7 +29,7 @@ describe("Feature: Day / Week / Month switch", () => {
     describe("Scenario: clicking an option", () => {
         let detail: unknown;
         beforeEach(async () => {
-            const el = await renderElement(html`<uan-group-by value="day"></uan-group-by>`, "uan-group-by");
+            const el = await renderElement(html`<uax-group-by value="day"></uax-group-by>`, "uax-group-by");
             const event = nextEvent(el, "change");
             option(el, "Month").click();
             detail = (await event).detail;
@@ -43,7 +43,7 @@ describe("Feature: Day / Week / Month switch", () => {
     describe("Scenario: using the arrow keys", () => {
         let detail: unknown;
         beforeEach(async () => {
-            const el = await renderElement(html`<uan-group-by value="day"></uan-group-by>`, "uan-group-by");
+            const el = await renderElement(html`<uax-group-by value="day"></uax-group-by>`, "uax-group-by");
             const event = nextEvent(el, "change");
             option(el, "Day").focus();
             await userEvent.keyboard("{ArrowRight}");
@@ -56,9 +56,9 @@ describe("Feature: Day / Week / Month switch", () => {
     });
 
     describe("Scenario: limited options", () => {
-        let el: UanTestElement;
+        let el: UaxTestElement;
         beforeEach(async () => {
-            el = await renderElement(html`<uan-group-by value="day" .options=${["day", "week"]}></uan-group-by>`, "uan-group-by");
+            el = await renderElement(html`<uax-group-by value="day" .options=${["day", "week"]}></uax-group-by>`, "uax-group-by");
         });
 
         it("shows only Day and Week", () => {
@@ -77,10 +77,10 @@ describe("Feature: Day / Week / Month switch", () => {
             try {
                 const host = render(
                     html`<div style="background: var(--uui-color-surface); padding: 8px">
-                        <uan-group-by value="week"></uan-group-by>
+                        <uax-group-by value="week"></uax-group-by>
                     </div>`,
                 ).container.querySelector("div")!;
-                await host.querySelector<UanGroupByElement>("uan-group-by")!.updateComplete;
+                await host.querySelector<UaxGroupByElement>("uax-group-by")!.updateComplete;
                 return await axeRun(host);
             } finally {
                 theme.remove();

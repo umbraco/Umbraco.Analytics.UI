@@ -1,7 +1,7 @@
 // TBL-3 — Page through rows
 import { beforeEach, describe, expect, it } from "vitest";
 import { html } from "@umbraco-cms/backoffice/external/lit";
-import { nextEvent, renderElement, shadow, type UanTestElement } from "../internal/test/pending.js";
+import { nextEvent, renderElement, shadow, type UaxTestElement } from "../internal/test/pending.js";
 import { manyRows, nameColumns } from "./table-fixtures.js";
 
 const footer = (el: Element) => shadow(el).querySelector("[part~='pager']") as HTMLElement | null;
@@ -10,11 +10,11 @@ const nextButton = (el: Element) => footer(el)!.querySelector("[part~='next']") 
 
 describe("Feature: page through rows", () => {
     describe("Scenario: 272 rows, 10 per page, on page 1", () => {
-        let el: UanTestElement;
+        let el: UaxTestElement;
         beforeEach(async () => {
             el = await renderElement(
-                html`<uan-data-table mode="server" .columns=${nameColumns} .rows=${manyRows(10)} total="272" page="1" page-size="10"></uan-data-table>`,
-                "uan-data-table",
+                html`<uax-data-table mode="server" .columns=${nameColumns} .rows=${manyRows(10)} total="272" page="1" page-size="10"></uax-data-table>`,
+                "uax-data-table",
             );
         });
 
@@ -27,8 +27,8 @@ describe("Feature: page through rows", () => {
         let detail: unknown;
         beforeEach(async () => {
             const el = await renderElement(
-                html`<uan-data-table mode="server" .columns=${nameColumns} .rows=${manyRows(10)} total="272" page="1" page-size="10"></uan-data-table>`,
-                "uan-data-table",
+                html`<uax-data-table mode="server" .columns=${nameColumns} .rows=${manyRows(10)} total="272" page="1" page-size="10"></uax-data-table>`,
+                "uax-data-table",
             );
             const event = nextEvent(el, "page-change");
             nextButton(el).click();
@@ -44,8 +44,8 @@ describe("Feature: page through rows", () => {
         let detail: unknown;
         beforeEach(async () => {
             const el = await renderElement(
-                html`<uan-data-table mode="server" .columns=${nameColumns} .rows=${manyRows(10)} total="272" page="3" page-size="10"></uan-data-table>`,
-                "uan-data-table",
+                html`<uax-data-table mode="server" .columns=${nameColumns} .rows=${manyRows(10)} total="272" page="3" page-size="10"></uax-data-table>`,
+                "uax-data-table",
             );
             const event = nextEvent(el, "page-change");
             const select = pageSizeSelect(el);
@@ -60,11 +60,11 @@ describe("Feature: page through rows", () => {
     });
 
     describe("Scenario: client mode, page 2 of 30 rows", () => {
-        let el: UanTestElement;
+        let el: UaxTestElement;
         beforeEach(async () => {
             el = await renderElement(
-                html`<uan-data-table mode="client" .columns=${nameColumns} .rows=${manyRows(30)} page-size="10"></uan-data-table>`,
-                "uan-data-table",
+                html`<uax-data-table mode="client" .columns=${nameColumns} .rows=${manyRows(30)} page-size="10"></uax-data-table>`,
+                "uax-data-table",
             );
             nextButton(el).click();
             await el.updateComplete;
@@ -76,11 +76,11 @@ describe("Feature: page through rows", () => {
     });
 
     describe("Scenario: everything fits on one page", () => {
-        let el: UanTestElement;
+        let el: UaxTestElement;
         beforeEach(async () => {
             el = await renderElement(
-                html`<uan-data-table mode="client" .columns=${nameColumns} .rows=${manyRows(8)} page-size="10"></uan-data-table>`,
-                "uan-data-table",
+                html`<uax-data-table mode="client" .columns=${nameColumns} .rows=${manyRows(8)} page-size="10"></uax-data-table>`,
+                "uax-data-table",
             );
         });
 

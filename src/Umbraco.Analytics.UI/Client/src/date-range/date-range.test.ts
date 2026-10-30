@@ -3,17 +3,17 @@
 // umbraco-backoffice-testing's "Backoffice element tests" (T13).
 import { beforeEach, describe, expect, it } from "vitest";
 import { html } from "@umbraco-cms/backoffice/external/lit";
-import { recordEvents, renderElement, shadow, type UanTestElement } from "../internal/test/pending.js";
+import { recordEvents, renderElement, shadow, type UaxTestElement } from "../internal/test/pending.js";
 
 const value = { from: "2026-05-25", to: "2026-06-23" };
 
-const openModal = async (el: UanTestElement) => {
+const openModal = async (el: UaxTestElement) => {
     (shadow(el).querySelector("uui-button, button") as HTMLElement).click();
     await el.updateComplete;
-    return document.querySelector("uan-date-range-modal") as UanTestElement;
+    return document.querySelector("uax-date-range-modal") as UaxTestElement;
 };
 const field = (modal: Element, name: string) => shadow(modal).querySelector(`[name='${name}']`) as HTMLInputElement;
-const setField = async (modal: UanTestElement, name: string, v: string) => {
+const setField = async (modal: UaxTestElement, name: string, v: string) => {
     const input = field(modal, name);
     input.value = v;
     input.dispatchEvent(new Event("change", { bubbles: true, composed: true }));
@@ -24,9 +24,9 @@ const button = (modal: Element, label: string) =>
 
 describe("Feature: pick a date range", () => {
     describe("Scenario: the button", () => {
-        let el: UanTestElement;
+        let el: UaxTestElement;
         beforeEach(async () => {
-            el = await renderElement(html`<uan-date-range .value=${value}></uan-date-range>`, "uan-date-range");
+            el = await renderElement(html`<uax-date-range .value=${value}></uax-date-range>`, "uax-date-range");
         });
 
         it.skip("shows the range in the backoffice culture", () => {
@@ -35,21 +35,21 @@ describe("Feature: pick a date range", () => {
     });
 
     describe("Scenario: clicking the button", () => {
-        let modal: UanTestElement | null;
+        let modal: UaxTestElement | null;
         beforeEach(async () => {
-            const el = await renderElement(html`<uan-date-range .value=${value}></uan-date-range>`, "uan-date-range");
+            const el = await renderElement(html`<uax-date-range .value=${value}></uax-date-range>`, "uax-date-range");
             modal = await openModal(el);
         });
 
-        it.skip("opens uan-date-range-modal", () => {
+        it.skip("opens uax-date-range-modal", () => {
             expect(modal).not.toBe(null);
         });
     });
 
     describe("Scenario: choosing a preset", () => {
-        let modal: UanTestElement;
+        let modal: UaxTestElement;
         beforeEach(async () => {
-            const el = await renderElement(html`<uan-date-range .value=${value}></uan-date-range>`, "uan-date-range");
+            const el = await renderElement(html`<uax-date-range .value=${value}></uax-date-range>`, "uax-date-range");
             modal = await openModal(el);
             await setField(modal, "preset", "last-30-days");
         });
@@ -61,9 +61,9 @@ describe("Feature: pick a date range", () => {
     });
 
     describe("Scenario: editing a date after choosing a preset", () => {
-        let modal: UanTestElement;
+        let modal: UaxTestElement;
         beforeEach(async () => {
-            const el = await renderElement(html`<uan-date-range .value=${{ ...value, preset: "last-30-days" }}></uan-date-range>`, "uan-date-range");
+            const el = await renderElement(html`<uax-date-range .value=${{ ...value, preset: "last-30-days" }}></uax-date-range>`, "uax-date-range");
             modal = await openModal(el);
             await setField(modal, "from", "2026-05-20");
         });
@@ -76,7 +76,7 @@ describe("Feature: pick a date range", () => {
     describe("Scenario: saving", () => {
         let events: Event[];
         beforeEach(async () => {
-            const el = await renderElement(html`<uan-date-range .value=${value}></uan-date-range>`, "uan-date-range");
+            const el = await renderElement(html`<uax-date-range .value=${value}></uax-date-range>`, "uax-date-range");
             events = recordEvents(el, "change");
             const modal = await openModal(el);
             await setField(modal, "from", "2026-06-01");
@@ -92,7 +92,7 @@ describe("Feature: pick a date range", () => {
     describe("Scenario (sad path): closing without saving", () => {
         let events: Event[];
         beforeEach(async () => {
-            const el = await renderElement(html`<uan-date-range .value=${value}></uan-date-range>`, "uan-date-range");
+            const el = await renderElement(html`<uax-date-range .value=${value}></uax-date-range>`, "uax-date-range");
             events = recordEvents(el, "change");
             const modal = await openModal(el);
             await setField(modal, "from", "2026-06-01");
@@ -106,9 +106,9 @@ describe("Feature: pick a date range", () => {
     });
 
     describe("Scenario (sad path): end date before start date", () => {
-        let modal: UanTestElement;
+        let modal: UaxTestElement;
         beforeEach(async () => {
-            const el = await renderElement(html`<uan-date-range .value=${value}></uan-date-range>`, "uan-date-range");
+            const el = await renderElement(html`<uax-date-range .value=${value}></uax-date-range>`, "uax-date-range");
             modal = await openModal(el);
             await setField(modal, "to", "2026-05-01");
         });

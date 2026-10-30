@@ -1,11 +1,11 @@
 import type { Meta, StoryObj } from "@storybook/web-components-vite";
 import { html } from "@umbraco-cms/backoffice/external/lit";
-import type { UanDeltaBadgeElement } from "./delta-badge.element.js";
+import type { UaxDeltaBadgeElement } from "./delta-badge.element.js";
 import "./delta-badge.element.js";
 
-const meta: Meta<UanDeltaBadgeElement> = {
+const meta: Meta<UaxDeltaBadgeElement> = {
     title: "Components/Delta Badge",
-    component: "uan-delta-badge",
+    component: "uax-delta-badge",
     args: {
         value: 12.4,
         unit: "percent",
@@ -18,16 +18,16 @@ const meta: Meta<UanDeltaBadgeElement> = {
         size: { control: "inline-radio", options: ["md", "sm"] },
     },
     render: (args) =>
-        html`<uan-delta-badge
+        html`<uax-delta-badge
             .value=${args.value}
             .unit=${args.unit}
             .lowerIsBetter=${args.lowerIsBetter}
             .maxDecimals=${args.maxDecimals}
-            .size=${args.size}></uan-delta-badge>`,
+            .size=${args.size}></uax-delta-badge>`,
 };
 
 export default meta;
-type Story = StoryObj<UanDeltaBadgeElement>;
+type Story = StoryObj<UaxDeltaBadgeElement>;
 
 export const Increase: Story = {};
 
@@ -45,11 +45,11 @@ export const AllStates: Story = {
     render: () => html`<div style="display:flex;flex-direction:column;gap:12px">
         ${(["md", "sm"] as const).map(
             (size) => html`<div style="display:flex;gap:16px;flex-wrap:wrap;align-items:center">
-                <uan-delta-badge .value=${12.4} .size=${size}></uan-delta-badge>
-                <uan-delta-badge .value=${-3} .size=${size}></uan-delta-badge>
-                <uan-delta-badge .value=${0} .size=${size}></uan-delta-badge>
-                <uan-delta-badge .value=${-1.2} unit="points" lower-is-better .size=${size}></uan-delta-badge>
-                <uan-delta-badge .value=${4.5} unit="points" lower-is-better .size=${size}></uan-delta-badge>
+                <uax-delta-badge .value=${12.4} .size=${size}></uax-delta-badge>
+                <uax-delta-badge .value=${-3} .size=${size}></uax-delta-badge>
+                <uax-delta-badge .value=${0} .size=${size}></uax-delta-badge>
+                <uax-delta-badge .value=${-1.2} unit="points" lower-is-better .size=${size}></uax-delta-badge>
+                <uax-delta-badge .value=${4.5} unit="points" lower-is-better .size=${size}></uax-delta-badge>
             </div>`,
         )}
     </div>`,

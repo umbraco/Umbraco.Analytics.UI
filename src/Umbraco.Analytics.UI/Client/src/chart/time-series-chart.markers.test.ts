@@ -2,7 +2,7 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { page, userEvent } from "vitest/browser";
 import { html } from "@umbraco-cms/backoffice/external/lit";
-import { nextEvent, renderElement, shadow, type UanTestElement } from "../internal/test/pending.js";
+import { nextEvent, renderElement, shadow, type UaxTestElement } from "../internal/test/pending.js";
 
 const series = [{ id: "pv", label: "Pageviews", points: [
     { date: "2026-06-10", value: 120 }, { date: "2026-06-11", value: 280 }, { date: "2026-06-12", value: 140 },
@@ -14,13 +14,13 @@ const outside = { id: "m9", date: "2026-07-01", title: "Summer sale" };
 const markers = (el: Element) => [...shadow(el).querySelectorAll("[part~='marker']")] as HTMLElement[];
 const chart = (list: unknown[]) =>
     renderElement(
-        html`<uan-time-series-chart kind="line" .series=${series} .markers=${list} style="width:600px"></uan-time-series-chart>`,
-        "uan-time-series-chart",
+        html`<uax-time-series-chart kind="line" .series=${series} .markers=${list} style="width:600px"></uax-time-series-chart>`,
+        "uax-time-series-chart",
     );
 
 describe("Feature: event markers", () => {
     describe("Scenario: a marker within the range", () => {
-        let el: UanTestElement;
+        let el: UaxTestElement;
         beforeEach(async () => {
             el = await chart([launch]);
         });
@@ -31,7 +31,7 @@ describe("Feature: event markers", () => {
     });
 
     describe("Scenario: hovering a marker", () => {
-        let el: UanTestElement;
+        let el: UaxTestElement;
         beforeEach(async () => {
             el = await chart([launch]);
             await userEvent.hover(page.elementLocator(markers(el)[0]));
@@ -73,7 +73,7 @@ describe("Feature: event markers", () => {
     });
 
     describe("Scenario (sad path): a marker outside the range", () => {
-        let el: UanTestElement;
+        let el: UaxTestElement;
         beforeEach(async () => {
             el = await chart([outside]);
         });

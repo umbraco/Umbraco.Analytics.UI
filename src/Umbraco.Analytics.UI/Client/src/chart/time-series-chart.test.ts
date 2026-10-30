@@ -4,7 +4,7 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { page, userEvent } from "vitest/browser";
 import { html } from "@umbraco-cms/backoffice/external/lit";
-import { renderElement, shadow, type UanTestElement } from "../internal/test/pending.js";
+import { renderElement, shadow, type UaxTestElement } from "../internal/test/pending.js";
 
 const pageviews = { id: "pv", label: "Pageviews", points: [
     { date: "2026-06-01", value: 40 }, { date: "2026-06-02", value: 120 }, { date: "2026-06-03", value: 280 },
@@ -23,11 +23,11 @@ const hoverDate = async (el: Element, index: number) => {
 
 describe("Feature: line and area chart", () => {
     describe("Scenario: a line chart with two series", () => {
-        let el: UanTestElement;
+        let el: UaxTestElement;
         beforeEach(async () => {
             el = await renderElement(
-                html`<uan-time-series-chart kind="line" .series=${[pageviews, sessions]} style="width:600px"></uan-time-series-chart>`,
-                "uan-time-series-chart",
+                html`<uax-time-series-chart kind="line" .series=${[pageviews, sessions]} style="width:600px"></uax-time-series-chart>`,
+                "uax-time-series-chart",
             );
         });
 
@@ -45,11 +45,11 @@ describe("Feature: line and area chart", () => {
     });
 
     describe("Scenario: an area chart", () => {
-        let el: UanTestElement;
+        let el: UaxTestElement;
         beforeEach(async () => {
             el = await renderElement(
-                html`<uan-time-series-chart kind="area" .series=${[pageviews]} style="width:600px"></uan-time-series-chart>`,
-                "uan-time-series-chart",
+                html`<uax-time-series-chart kind="area" .series=${[pageviews]} style="width:600px"></uax-time-series-chart>`,
+                "uax-time-series-chart",
             );
         });
 
@@ -59,11 +59,11 @@ describe("Feature: line and area chart", () => {
     });
 
     describe("Scenario: values from 40 to 280", () => {
-        let el: UanTestElement;
+        let el: UaxTestElement;
         beforeEach(async () => {
             el = await renderElement(
-                html`<uan-time-series-chart kind="line" .series=${[pageviews]} style="width:600px"></uan-time-series-chart>`,
-                "uan-time-series-chart",
+                html`<uax-time-series-chart kind="line" .series=${[pageviews]} style="width:600px"></uax-time-series-chart>`,
+                "uax-time-series-chart",
             );
         });
 
@@ -73,12 +73,12 @@ describe("Feature: line and area chart", () => {
     });
 
     describe("Scenario: currency values", () => {
-        let el: UanTestElement;
+        let el: UaxTestElement;
         beforeEach(async () => {
             el = await renderElement(
-                html`<uan-time-series-chart kind="line" .series=${[pageviews]}
-                    .valueFormat=${{ style: "currency", currency: "EUR" }} style="width:600px"></uan-time-series-chart>`,
-                "uan-time-series-chart",
+                html`<uax-time-series-chart kind="line" .series=${[pageviews]}
+                    .valueFormat=${{ style: "currency", currency: "EUR" }} style="width:600px"></uax-time-series-chart>`,
+                "uax-time-series-chart",
             );
             await hoverDate(el, 2);
         });
@@ -89,11 +89,11 @@ describe("Feature: line and area chart", () => {
     });
 
     describe("Scenario: hovering a date with two series", () => {
-        let el: UanTestElement;
+        let el: UaxTestElement;
         beforeEach(async () => {
             el = await renderElement(
-                html`<uan-time-series-chart kind="line" .series=${[pageviews, sessions]} style="width:600px"></uan-time-series-chart>`,
-                "uan-time-series-chart",
+                html`<uax-time-series-chart kind="line" .series=${[pageviews, sessions]} style="width:600px"></uax-time-series-chart>`,
+                "uax-time-series-chart",
             );
             await hoverDate(el, 2);
         });

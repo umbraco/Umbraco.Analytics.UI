@@ -9,16 +9,16 @@ import lightCss from "@umbraco-ui/uui/themes/light.css?inline";
 import highContrastCss from "@umbraco-ui/uui/themes/high-contrast.css?inline";
 import { axeRun } from "../internal/test/a11y.js";
 import "./kpi-tile.element.js";
-import { recordEvents, renderElement, shadow, type UanTestElement } from "../internal/test/pending.js";
+import { recordEvents, renderElement, shadow, type UaxTestElement } from "../internal/test/pending.js";
 
 describe("Feature: KPI tiles switch the chart's metric", () => {
     const button = (el: Element) => shadow(el).querySelector("button") as HTMLElement;
 
     describe("Scenario: clicking a selectable tile", () => {
-        let el: UanTestElement;
+        let el: UaxTestElement;
         let events: Event[];
         beforeEach(async () => {
-            el = await renderElement(html`<uan-kpi-tile label="Orders" value="26" selectable></uan-kpi-tile>`, "uan-kpi-tile");
+            el = await renderElement(html`<uax-kpi-tile label="Orders" value="26" selectable></uax-kpi-tile>`, "uax-kpi-tile");
             events = recordEvents(el, "selected");
             button(el).click();
         });
@@ -35,7 +35,7 @@ describe("Feature: KPI tiles switch the chart's metric", () => {
     describe("Scenario: pressing Enter on a selectable tile", () => {
         let events: Event[];
         beforeEach(async () => {
-            const el = await renderElement(html`<uan-kpi-tile label="Orders" value="26" selectable></uan-kpi-tile>`, "uan-kpi-tile");
+            const el = await renderElement(html`<uax-kpi-tile label="Orders" value="26" selectable></uax-kpi-tile>`, "uax-kpi-tile");
             events = recordEvents(el, "selected");
             button(el).focus();
             await userEvent.keyboard("{Enter}");
@@ -47,9 +47,9 @@ describe("Feature: KPI tiles switch the chart's metric", () => {
     });
 
     describe("Scenario: a selected tile", () => {
-        let el: UanTestElement;
+        let el: UaxTestElement;
         beforeEach(async () => {
-            el = await renderElement(html`<uan-kpi-tile label="Orders" value="26" selectable selected></uan-kpi-tile>`, "uan-kpi-tile");
+            el = await renderElement(html`<uax-kpi-tile label="Orders" value="26" selectable selected></uax-kpi-tile>`, "uax-kpi-tile");
         });
 
         it("reports aria-pressed true", () => {
@@ -58,10 +58,10 @@ describe("Feature: KPI tiles switch the chart's metric", () => {
     });
 
     describe("Scenario: clicking a selected tile", () => {
-        let el: UanTestElement;
+        let el: UaxTestElement;
         let events: Event[];
         beforeEach(async () => {
-            el = await renderElement(html`<uan-kpi-tile label="Orders" value="26" selectable selected></uan-kpi-tile>`, "uan-kpi-tile");
+            el = await renderElement(html`<uax-kpi-tile label="Orders" value="26" selectable selected></uax-kpi-tile>`, "uax-kpi-tile");
             events = recordEvents(el, "deselected");
             button(el).click();
         });
@@ -78,7 +78,7 @@ describe("Feature: KPI tiles switch the chart's metric", () => {
     describe("Scenario (sad path): a tile that isn't selectable", () => {
         let events: Event[];
         beforeEach(async () => {
-            const el = await renderElement(html`<uan-kpi-tile label="Orders" value="26"></uan-kpi-tile>`, "uan-kpi-tile");
+            const el = await renderElement(html`<uax-kpi-tile label="Orders" value="26"></uax-kpi-tile>`, "uax-kpi-tile");
             events = recordEvents(el, "selected");
             el.click();
         });
@@ -89,9 +89,9 @@ describe("Feature: KPI tiles switch the chart's metric", () => {
     });
 
     describe("Scenario (sad path): the product cancels selected", () => {
-        let el: UanTestElement;
+        let el: UaxTestElement;
         beforeEach(async () => {
-            el = await renderElement(html`<uan-kpi-tile label="Orders" value="26" selectable></uan-kpi-tile>`, "uan-kpi-tile");
+            el = await renderElement(html`<uax-kpi-tile label="Orders" value="26" selectable></uax-kpi-tile>`, "uax-kpi-tile");
             el.addEventListener("selected", (e) => e.preventDefault());
             button(el).click();
         });
@@ -102,11 +102,11 @@ describe("Feature: KPI tiles switch the chart's metric", () => {
     });
 
     describe("Scenario (sad path): a tile that isn't deselectable", () => {
-        let el: UanTestElement;
+        let el: UaxTestElement;
         beforeEach(async () => {
             el = await renderElement(
-                html`<uan-kpi-tile label="Orders" value="26" selectable selected .deselectable=${false}></uan-kpi-tile>`,
-                "uan-kpi-tile",
+                html`<uax-kpi-tile label="Orders" value="26" selectable selected .deselectable=${false}></uax-kpi-tile>`,
+                "uax-kpi-tile",
             );
             button(el).click();
         });
@@ -123,9 +123,9 @@ describe("Feature: KPI tiles switch the chart's metric", () => {
             document.head.appendChild(theme);
             try {
                 const { container } = render(
-                    html`<div style="background: var(--uui-color-surface)"><uan-kpi-tile label="Orders" value="26" selectable selected></uan-kpi-tile></div>`,
+                    html`<div style="background: var(--uui-color-surface)"><uax-kpi-tile label="Orders" value="26" selectable selected></uax-kpi-tile></div>`,
                 );
-                const el = container.querySelector("uan-kpi-tile")!;
+                const el = container.querySelector("uax-kpi-tile")!;
                 await el.updateComplete;
                 const probe = (css: string) => {
                     const span = document.createElement("span");
@@ -147,10 +147,10 @@ describe("Feature: KPI tiles switch the chart's metric", () => {
     describe("Scenario: tile height as a button", () => {
         it("fills the row like a plain tile", async () => {
             const { container } = render(html`<div style="display:grid;grid-template-columns:repeat(2,160px)">
-                <uan-kpi-tile label="Carts created this period" value="1"></uan-kpi-tile>
-                <uan-kpi-tile label="Orders" value="2" selectable></uan-kpi-tile>
+                <uax-kpi-tile label="Carts created this period" value="1"></uax-kpi-tile>
+                <uax-kpi-tile label="Orders" value="2" selectable></uax-kpi-tile>
             </div>`);
-            const tiles = [...container.querySelectorAll("uan-kpi-tile")];
+            const tiles = [...container.querySelectorAll("uax-kpi-tile")];
             await Promise.all(tiles.map((t) => t.updateComplete));
             const card = (t: Element) => t.shadowRoot!.querySelector(".tile")!.getBoundingClientRect();
             expect(card(tiles[1]!).height).toBe(card(tiles[0]!).height);
@@ -168,10 +168,10 @@ describe("Feature: KPI tiles switch the chart's metric", () => {
             try {
                 const host = render(
                     html`<div style="background: var(--uui-color-background); padding: 8px; width: 320px">
-                        <uan-kpi-tile label="Revenue" value="€ 4,837.40" icon="icon-coins" .delta=${-3} selectable ?selected=${selected}></uan-kpi-tile>
+                        <uax-kpi-tile label="Revenue" value="€ 4,837.40" icon="icon-coins" .delta=${-3} selectable ?selected=${selected}></uax-kpi-tile>
                     </div>`,
                 ).container.querySelector("div")!;
-                await host.querySelector("uan-kpi-tile")!.updateComplete;
+                await host.querySelector("uax-kpi-tile")!.updateComplete;
                 return await axeRun(host);
             } finally {
                 theme.remove();

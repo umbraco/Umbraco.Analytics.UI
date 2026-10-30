@@ -1,8 +1,8 @@
 import { css, customElement, html, nothing, property, type CSSResultGroup } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { getLoadingMode } from "../internal/loading/index.js";
-import { uanThemeTokens } from "../internal/theme/tokens.css.js";
-import type { UanDeltaUnit } from "../delta-badge/delta-badge.element.js";
+import { uaxThemeTokens } from "../internal/theme/tokens.css.js";
+import type { UaxDeltaUnit } from "../delta-badge/delta-badge.element.js";
 import "../delta-badge/delta-badge.element.js";
 
 /**
@@ -12,15 +12,15 @@ import "../delta-badge/delta-badge.element.js";
  * too narrow for both. While `loading` with no `value` it shows a skeleton the size of a loaded tile. While
  * loading with a `value` it keeps the value and marks the tile busy, without a loading bar.
  *
- * @element uan-kpi-tile
+ * @element uax-kpi-tile
  * @fires selected - A selectable, unselected tile was pressed. Cancelable: cancel it to keep the tile unselected.
  * @fires deselected - A selectable, selected tile was pressed while `deselectable`. Cancelable: cancel it to keep the tile selected.
- * @cssprop --uan-kpi-icon-bg - Background of the icon square. Defaults to spanish pink in every theme.
- * @cssprop --uan-kpi-selected - Colour of the selection border. Defaults to `--uui-color-selected` in light and high contrast, and to malibu light in dark, where the UUI colour is under 3:1 on the surface.
- * @cssprop --uan-kpi-icon-fg - Icon colour. Defaults to space cadet, which passes 3:1 on the default square. A product that overrides either owns that contrast.
+ * @cssprop --uax-kpi-icon-bg - Background of the icon square. Defaults to spanish pink in every theme.
+ * @cssprop --uax-kpi-selected - Colour of the selection border. Defaults to `--uui-color-selected` in light and high contrast, and to malibu light in dark, where the UUI colour is under 3:1 on the surface.
+ * @cssprop --uax-kpi-icon-fg - Icon colour. Defaults to space cadet, which passes 3:1 on the default square. A product that overrides either owns that contrast.
  */
-@customElement("uan-kpi-tile")
-export class UanKpiTileElement extends UmbLitElement {
+@customElement("uax-kpi-tile")
+export class UaxKpiTileElement extends UmbLitElement {
     /** What the number is, e.g. "Revenue". */
     @property({ type: String })
     label = "";
@@ -39,7 +39,7 @@ export class UanKpiTileElement extends UmbLitElement {
 
     /** Whether `delta` is a percent change or a change in percentage points. */
     @property({ type: String, attribute: "delta-unit" })
-    deltaUnit: UanDeltaUnit = "percent";
+    deltaUnit: UaxDeltaUnit = "percent";
 
     /** Shows a fall as good (green) and a rise as bad (red), e.g. for refund rate. */
     @property({ type: Boolean, attribute: "lower-is-better" })
@@ -85,17 +85,17 @@ export class UanKpiTileElement extends UmbLitElement {
                 : nothing}
             <span class="content" aria-busy=${this.loading ? "true" : "false"}>
                 ${mode === "skeleton"
-                    ? html`<uan-skeleton></uan-skeleton>`
+                    ? html`<uax-skeleton></uax-skeleton>`
                     : html`<span class="body">
                           <span class="label">${this.label}</span>
                           <span class="row">
                               ${hasValue ? html`<span class="value">${this.value}</span>` : nothing}
                               ${this.delta === undefined || this.delta === null
                                   ? nothing
-                                  : html`<uan-delta-badge
+                                  : html`<uax-delta-badge
                                         .value=${this.delta}
                                         .unit=${this.deltaUnit}
-                                        .lowerIsBetter=${this.lowerIsBetter}></uan-delta-badge>`}
+                                        .lowerIsBetter=${this.lowerIsBetter}></uax-delta-badge>`}
                           </span>
                       </span>`}
             </span>`;
@@ -113,20 +113,20 @@ export class UanKpiTileElement extends UmbLitElement {
     }
 
     static override styles: CSSResultGroup = [
-        uanThemeTokens,
+        uaxThemeTokens,
         css`
             :host {
                 display: block;
                 height: 100%;
                 /* Content height of a tile with the badge beside the value: the icon square. */
-                --_uan-skeleton-height: 48px;
+                --_uax-skeleton-height: 48px;
                 /* Pink square with a dark glyph in every theme (series-2 is maroon in light, so a dark glyph
                    on it fails 3:1). Both palette colours are theme-independent: space-cadet on spanish-pink
                    is 12.5:1. A product that overrides either public name owns the 3:1 between them. */
-                --_uan-kpi-icon-bg: var(--uan-kpi-icon-bg, var(--uui-palette-spanish-pink));
-                --_uan-kpi-icon-fg: var(--uan-kpi-icon-fg, var(--uui-palette-space-cadet));
-                --_uan-kpi-selected: var(
-                    --uan-kpi-selected,
+                --_uax-kpi-icon-bg: var(--uax-kpi-icon-bg, var(--uui-palette-spanish-pink));
+                --_uax-kpi-icon-fg: var(--uax-kpi-icon-fg, var(--uui-palette-space-cadet));
+                --_uax-kpi-selected: var(
+                    --uax-kpi-selected,
                     light-dark(var(--uui-color-selected), var(--uui-palette-malibu-light))
                 );
             }
@@ -172,11 +172,11 @@ export class UanKpiTileElement extends UmbLitElement {
                 width: 100%;
                 height: 100%;
                 box-sizing: border-box;
-                border: 2px solid var(--_uan-kpi-selected);
+                border: 2px solid var(--_uax-kpi-selected);
                 border-radius: calc(var(--uui-border-radius-3) + 2px);
                 box-shadow:
-                    0 0 4px 0 var(--_uan-kpi-selected),
-                    inset 0 0 2px 0 var(--_uan-kpi-selected);
+                    0 0 4px 0 var(--_uax-kpi-selected),
+                    inset 0 0 2px 0 var(--_uax-kpi-selected);
             }
 
             button.tile[aria-pressed="true"] .select-border {
@@ -235,15 +235,15 @@ export class UanKpiTileElement extends UmbLitElement {
                 width: 48px;
                 height: 48px;
                 border-radius: 9px;
-                background: var(--_uan-kpi-icon-bg);
-                color: var(--_uan-kpi-icon-fg);
+                background: var(--_uax-kpi-icon-bg);
+                color: var(--_uax-kpi-icon-fg);
                 font-size: 20px;
             }
 
             .content {
                 flex: 1;
                 min-width: 0;
-                min-height: var(--_uan-skeleton-height);
+                min-height: var(--_uax-skeleton-height);
                 display: flex;
                 flex-direction: column;
                 justify-content: center;
@@ -287,6 +287,6 @@ export class UanKpiTileElement extends UmbLitElement {
 
 declare global {
     interface HTMLElementTagNameMap {
-        "uan-kpi-tile": UanKpiTileElement;
+        "uax-kpi-tile": UaxKpiTileElement;
     }
 }

@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/web-components-vite";
 import { css, html, LitElement } from "@umbraco-cms/backoffice/external/lit";
-import { uanThemeTokens } from "./tokens.css.js";
+import { uaxThemeTokens } from "./tokens.css.js";
 
 const tokens = [
     "series-1",
@@ -17,20 +17,20 @@ const tokens = [
 ];
 
 /** Story-only element: shows each resolved token, the same way a component sees it. */
-class UanThemeSwatchesElement extends LitElement {
+class UaxThemeSwatchesElement extends LitElement {
     override render() {
         return html`<div class="grid">
             ${tokens.map(
                 (name) => html`<div class="item">
-                    <div class="swatch" style="background: var(--_uan-${name})"></div>
-                    <code>--uan-${name}</code>
+                    <div class="swatch" style="background: var(--_uax-${name})"></div>
+                    <code>--uax-${name}</code>
                 </div>`,
             )}
         </div>`;
     }
 
     static override styles = [
-        uanThemeTokens,
+        uaxThemeTokens,
         css`
             .grid {
                 display: grid;
@@ -50,13 +50,13 @@ class UanThemeSwatchesElement extends LitElement {
     ];
 }
 
-if (!customElements.get("uan-theme-swatches")) {
-    customElements.define("uan-theme-swatches", UanThemeSwatchesElement);
+if (!customElements.get("uax-theme-swatches")) {
+    customElements.define("uax-theme-swatches", UaxThemeSwatchesElement);
 }
 
 const meta: Meta = {
     title: "Foundation/Theme",
-    render: () => html`<uan-theme-swatches></uan-theme-swatches>`,
+    render: () => html`<uax-theme-swatches></uax-theme-swatches>`,
 };
 
 export default meta;
@@ -65,7 +65,7 @@ type Story = StoryObj;
 /** Switch the toolbar theme to check light, dark and high contrast. */
 export const Swatches: Story = {};
 
-/** A parent sets `--uan-series-1`, so the first swatch follows it. */
+/** A parent sets `--uax-series-1`, so the first swatch follows it. */
 export const Overridden: Story = {
-    render: () => html`<div style="--uan-series-1: hotpink"><uan-theme-swatches></uan-theme-swatches></div>`,
+    render: () => html`<div style="--uax-series-1: hotpink"><uax-theme-swatches></uax-theme-swatches></div>`,
 };

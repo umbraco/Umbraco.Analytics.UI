@@ -6,14 +6,14 @@ import highContrastCss from "@umbraco-ui/uui/themes/high-contrast.css?inline";
 import { render } from "vitest-browser-lit";
 import { axeRun } from "../internal/test/a11y.js";
 import "./delta-badge.element.js";
-import type { UanDeltaBadgeElement } from "./delta-badge.element.js";
+import type { UaxDeltaBadgeElement } from "./delta-badge.element.js";
 
-describe("UanDeltaBadgeElement", () => {
-    let element: UanDeltaBadgeElement;
+describe("UaxDeltaBadgeElement", () => {
+    let element: UaxDeltaBadgeElement;
 
     beforeEach(async () => {
-        element = render(html`<uan-delta-badge .value=${12.4}></uan-delta-badge>`).container.querySelector(
-            "uan-delta-badge",
+        element = render(html`<uax-delta-badge .value=${12.4}></uax-delta-badge>`).container.querySelector(
+            "uax-delta-badge",
         )!;
         await element.updateComplete;
     });
@@ -28,12 +28,12 @@ describe("UanDeltaBadgeElement", () => {
         try {
             const host = render(
                 html`<div style="background: var(--uui-color-surface); padding: 8px">
-                    <uan-delta-badge .value=${12.4}></uan-delta-badge>
-                    <uan-delta-badge .value=${-3}></uan-delta-badge>
-                    <uan-delta-badge .value=${0}></uan-delta-badge>
+                    <uax-delta-badge .value=${12.4}></uax-delta-badge>
+                    <uax-delta-badge .value=${-3}></uax-delta-badge>
+                    <uax-delta-badge .value=${0}></uax-delta-badge>
                 </div>`,
             ).container.querySelector("div")!;
-            await Promise.all([...host.querySelectorAll("uan-delta-badge")].map((b) => b.updateComplete));
+            await Promise.all([...host.querySelectorAll("uax-delta-badge")].map((b) => b.updateComplete));
             return await axeRun(host);
         } finally {
             theme.remove();

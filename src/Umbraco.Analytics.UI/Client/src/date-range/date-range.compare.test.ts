@@ -1,17 +1,17 @@
 // DR-2 — Pick a comparison range
 import { beforeEach, describe, expect, it } from "vitest";
 import { html } from "@umbraco-cms/backoffice/external/lit";
-import { renderElement, shadow, type UanTestElement } from "../internal/test/pending.js";
+import { renderElement, shadow, type UaxTestElement } from "../internal/test/pending.js";
 
 const value = { from: "2026-05-25", to: "2026-06-23" };
 
-const openModal = async (el: UanTestElement) => {
+const openModal = async (el: UaxTestElement) => {
     (shadow(el).querySelector("uui-button, button") as HTMLElement).click();
     await el.updateComplete;
-    return document.querySelector("uan-date-range-modal") as UanTestElement;
+    return document.querySelector("uax-date-range-modal") as UaxTestElement;
 };
 const field = (modal: Element, name: string) => shadow(modal).querySelector(`[name='${name}']`) as HTMLInputElement | null;
-const setField = async (modal: UanTestElement, name: string, v: string | boolean) => {
+const setField = async (modal: UaxTestElement, name: string, v: string | boolean) => {
     const input = field(modal, name)!;
     if (typeof v === "boolean") input.checked = v;
     else input.value = v;
@@ -21,9 +21,9 @@ const setField = async (modal: UanTestElement, name: string, v: string | boolean
 
 describe("Feature: pick a comparison range", () => {
     describe("Scenario: no comparison yet", () => {
-        let modal: UanTestElement;
+        let modal: UaxTestElement;
         beforeEach(async () => {
-            const el = await renderElement(html`<uan-date-range .value=${value}></uan-date-range>`, "uan-date-range");
+            const el = await renderElement(html`<uax-date-range .value=${value}></uax-date-range>`, "uax-date-range");
             modal = await openModal(el);
         });
 
@@ -33,9 +33,9 @@ describe("Feature: pick a comparison range", () => {
     });
 
     describe("Scenario: comparing with the previous period", () => {
-        let modal: UanTestElement;
+        let modal: UaxTestElement;
         beforeEach(async () => {
-            const el = await renderElement(html`<uan-date-range .value=${value}></uan-date-range>`, "uan-date-range");
+            const el = await renderElement(html`<uax-date-range .value=${value}></uax-date-range>`, "uax-date-range");
             modal = await openModal(el);
             await setField(modal, "compare", true);
             await setField(modal, "compare-mode", "previous-period");
@@ -47,11 +47,11 @@ describe("Feature: pick a comparison range", () => {
     });
 
     describe("Scenario: a saved comparison", () => {
-        let el: UanTestElement;
+        let el: UaxTestElement;
         beforeEach(async () => {
             el = await renderElement(
-                html`<uan-date-range .value=${value} .compare=${{ mode: "previous-period", from: "2026-04-25", to: "2026-05-24" }}></uan-date-range>`,
-                "uan-date-range",
+                html`<uax-date-range .value=${value} .compare=${{ mode: "previous-period", from: "2026-04-25", to: "2026-05-24" }}></uax-date-range>`,
+                "uax-date-range",
             );
         });
 
@@ -61,9 +61,9 @@ describe("Feature: pick a comparison range", () => {
     });
 
     describe("Scenario: comparing isn't allowed", () => {
-        let modal: UanTestElement;
+        let modal: UaxTestElement;
         beforeEach(async () => {
-            const el = await renderElement(html`<uan-date-range .value=${value} .allowCompare=${false}></uan-date-range>`, "uan-date-range");
+            const el = await renderElement(html`<uax-date-range .value=${value} .allowCompare=${false}></uax-date-range>`, "uax-date-range");
             modal = await openModal(el);
         });
 
@@ -73,9 +73,9 @@ describe("Feature: pick a comparison range", () => {
     });
 
     describe("Scenario (sad path): custom comparison ending before it starts", () => {
-        let modal: UanTestElement;
+        let modal: UaxTestElement;
         beforeEach(async () => {
-            const el = await renderElement(html`<uan-date-range .value=${value}></uan-date-range>`, "uan-date-range");
+            const el = await renderElement(html`<uax-date-range .value=${value}></uax-date-range>`, "uax-date-range");
             modal = await openModal(el);
             await setField(modal, "compare", true);
             await setField(modal, "compare-mode", "custom");

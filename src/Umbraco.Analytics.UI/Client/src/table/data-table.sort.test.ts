@@ -1,7 +1,7 @@
 // TBL-2 — Sort by a column
 import { beforeEach, describe, expect, it } from "vitest";
 import { html } from "@umbraco-cms/backoffice/external/lit";
-import { nextEvent, recordEvents, renderElement, shadow, type UanTestElement } from "../internal/test/pending.js";
+import { nextEvent, recordEvents, renderElement, shadow, type UaxTestElement } from "../internal/test/pending.js";
 import { nameColumns } from "./table-fixtures.js";
 
 const rows = [{ name: "Contact", views: 62 }, { name: "Home", views: 210 }];
@@ -14,8 +14,8 @@ describe("Feature: sort by a column", () => {
         let detail: unknown;
         beforeEach(async () => {
             const el = await renderElement(
-                html`<uan-data-table .columns=${nameColumns} .rows=${rows} .sort=${{ key: "views", direction: "desc" }}></uan-data-table>`,
-                "uan-data-table",
+                html`<uax-data-table .columns=${nameColumns} .rows=${rows} .sort=${{ key: "views", direction: "desc" }}></uax-data-table>`,
+                "uax-data-table",
             );
             const event = nextEvent(el, "sort-change");
             header(el, "Views").click();
@@ -28,11 +28,11 @@ describe("Feature: sort by a column", () => {
     });
 
     describe("Scenario: client mode", () => {
-        let el: UanTestElement;
+        let el: UaxTestElement;
         beforeEach(async () => {
             el = await renderElement(
-                html`<uan-data-table mode="client" .columns=${nameColumns} .rows=${rows} .sort=${{ key: "views", direction: "desc" }}></uan-data-table>`,
-                "uan-data-table",
+                html`<uax-data-table mode="client" .columns=${nameColumns} .rows=${rows} .sort=${{ key: "views", direction: "desc" }}></uax-data-table>`,
+                "uax-data-table",
             );
         });
 
@@ -42,9 +42,9 @@ describe("Feature: sort by a column", () => {
     });
 
     describe("Scenario: server mode", () => {
-        let el: UanTestElement;
+        let el: UaxTestElement;
         beforeEach(async () => {
-            el = await renderElement(html`<uan-data-table mode="server" .columns=${nameColumns} .rows=${rows}></uan-data-table>`, "uan-data-table");
+            el = await renderElement(html`<uax-data-table mode="server" .columns=${nameColumns} .rows=${rows}></uax-data-table>`, "uax-data-table");
             header(el, "Views").click();
             await el.updateComplete;
         });
@@ -57,7 +57,7 @@ describe("Feature: sort by a column", () => {
     describe("Scenario (sad path): a column that isn't sortable", () => {
         let events: Event[];
         beforeEach(async () => {
-            const el = await renderElement(html`<uan-data-table .columns=${nameColumns} .rows=${rows}></uan-data-table>`, "uan-data-table");
+            const el = await renderElement(html`<uax-data-table .columns=${nameColumns} .rows=${rows}></uax-data-table>`, "uax-data-table");
             events = recordEvents(el, "sort-change");
             header(el, "Name").click();
         });

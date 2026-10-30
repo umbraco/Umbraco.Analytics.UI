@@ -7,16 +7,16 @@ import { html } from "@umbraco-cms/backoffice/external/lit";
 import { render } from "vitest-browser-lit";
 import { axeRun } from "../internal/test/a11y.js";
 import "./kpi-tile.element.js";
-import type { UanKpiTileElement } from "./kpi-tile.element.js";
-import { renderElement, shadow, type UanTestElement } from "../internal/test/pending.js";
+import type { UaxKpiTileElement } from "./kpi-tile.element.js";
+import { renderElement, shadow, type UaxTestElement } from "../internal/test/pending.js";
 
 describe("Feature: KPI tile shows a headline number", () => {
     describe("Scenario: label, value and icon", () => {
-        let el: UanTestElement;
+        let el: UaxTestElement;
         beforeEach(async () => {
             el = await renderElement(
-                html`<uan-kpi-tile label="Revenue" value="€ 4,837.40" icon="icon-coins"></uan-kpi-tile>`,
-                "uan-kpi-tile",
+                html`<uax-kpi-tile label="Revenue" value="€ 4,837.40" icon="icon-coins"></uax-kpi-tile>`,
+                "uax-kpi-tile",
             );
         });
 
@@ -34,25 +34,25 @@ describe("Feature: KPI tile shows a headline number", () => {
     });
 
     describe("Scenario: with a delta", () => {
-        let el: UanTestElement;
+        let el: UaxTestElement;
         beforeEach(async () => {
-            el = await renderElement(html`<uan-kpi-tile label="Revenue" value="€ 1" .delta=${18.7}></uan-kpi-tile>`, "uan-kpi-tile");
+            el = await renderElement(html`<uax-kpi-tile label="Revenue" value="€ 1" .delta=${18.7}></uax-kpi-tile>`, "uax-kpi-tile");
         });
 
         it("shows a change badge for the delta", () => {
-            expect((shadow(el).querySelector("uan-delta-badge") as UanTestElement | null)?.value).toBe(18.7);
+            expect((shadow(el).querySelector("uax-delta-badge") as UaxTestElement | null)?.value).toBe(18.7);
         });
     });
 
     describe("Scenario: tiles in one row", () => {
-        let tiles: UanKpiTileElement[];
+        let tiles: UaxKpiTileElement[];
         beforeEach(async () => {
             const { container } = render(html`<div style="display:grid;grid-template-columns:repeat(3,160px)">
-                <uan-kpi-tile label="Revenue" value="1"></uan-kpi-tile>
-                <uan-kpi-tile label="Carts created this period" value="2"></uan-kpi-tile>
-                <uan-kpi-tile label="Orders" value="3"></uan-kpi-tile>
+                <uax-kpi-tile label="Revenue" value="1"></uax-kpi-tile>
+                <uax-kpi-tile label="Carts created this period" value="2"></uax-kpi-tile>
+                <uax-kpi-tile label="Orders" value="3"></uax-kpi-tile>
             </div>`);
-            tiles = [...container.querySelectorAll("uan-kpi-tile")];
+            tiles = [...container.querySelectorAll("uax-kpi-tile")];
             await Promise.all(tiles.map((t) => t.updateComplete));
         });
 
@@ -70,55 +70,55 @@ describe("Feature: KPI tile shows a headline number", () => {
     });
 
     describe("Scenario: a narrow tile", () => {
-        let el: UanTestElement;
+        let el: UaxTestElement;
         beforeEach(async () => {
             el = await renderElement(
-                html`<div style="width:140px"><uan-kpi-tile label="Revenue" value="€ 4,837.40" .delta=${18.7}></uan-kpi-tile></div>`,
-                "uan-kpi-tile",
+                html`<div style="width:140px"><uax-kpi-tile label="Revenue" value="€ 4,837.40" .delta=${18.7}></uax-kpi-tile></div>`,
+                "uax-kpi-tile",
             );
         });
 
         it("puts the badge below the value", () => {
             const value = shadow(el).querySelector(".value")!.getBoundingClientRect();
-            const badge = shadow(el).querySelector("uan-delta-badge")!.getBoundingClientRect();
+            const badge = shadow(el).querySelector("uax-delta-badge")!.getBoundingClientRect();
             expect(badge.top).toBeGreaterThanOrEqual(value.bottom);
         });
     });
 
     describe("Scenario (sad path): no delta", () => {
-        let el: UanTestElement;
+        let el: UaxTestElement;
         beforeEach(async () => {
-            el = await renderElement(html`<uan-kpi-tile label="Orders" value="26"></uan-kpi-tile>`, "uan-kpi-tile");
+            el = await renderElement(html`<uax-kpi-tile label="Orders" value="26"></uax-kpi-tile>`, "uax-kpi-tile");
         });
 
         it("shows no badge", () => {
-            expect(shadow(el).querySelector("uan-delta-badge")).toBe(null);
+            expect(shadow(el).querySelector("uax-delta-badge")).toBe(null);
         });
     });
 
     describe("Scenario: loading", () => {
         it("shows a skeleton and no value while loading with no value", async () => {
-            const el = await renderElement(html`<uan-kpi-tile label="Revenue" loading></uan-kpi-tile>`, "uan-kpi-tile");
-            expect(shadow(el).querySelector("uan-skeleton")).not.toBe(null);
+            const el = await renderElement(html`<uax-kpi-tile label="Revenue" loading></uax-kpi-tile>`, "uax-kpi-tile");
+            expect(shadow(el).querySelector("uax-skeleton")).not.toBe(null);
         });
 
         it("keeps the value, with no skeleton, while reloading", async () => {
             const el = await renderElement(
-                html`<uan-kpi-tile label="Revenue" value="€ 1" loading></uan-kpi-tile>`,
-                "uan-kpi-tile",
+                html`<uax-kpi-tile label="Revenue" value="€ 1" loading></uax-kpi-tile>`,
+                "uax-kpi-tile",
             );
-            expect(shadow(el).querySelector("uan-skeleton")).toBe(null);
+            expect(shadow(el).querySelector("uax-skeleton")).toBe(null);
             expect(shadow(el).textContent).toContain("€ 1");
         });
 
         it("marks its content busy while loading", async () => {
-            const el = await renderElement(html`<uan-kpi-tile label="Revenue" loading></uan-kpi-tile>`, "uan-kpi-tile");
+            const el = await renderElement(html`<uax-kpi-tile label="Revenue" loading></uax-kpi-tile>`, "uax-kpi-tile");
             expect(shadow(el).querySelector(".content")?.getAttribute("aria-busy")).toBe("true");
         });
 
         it("is as tall as a loaded tile, so the page does not jump", async () => {
-            const loaded = await renderElement(html`<uan-kpi-tile label="Revenue" value="1"></uan-kpi-tile>`, "uan-kpi-tile");
-            const loading = await renderElement(html`<uan-kpi-tile label="Revenue" loading></uan-kpi-tile>`, "uan-kpi-tile");
+            const loaded = await renderElement(html`<uax-kpi-tile label="Revenue" value="1"></uax-kpi-tile>`, "uax-kpi-tile");
+            const loading = await renderElement(html`<uax-kpi-tile label="Revenue" loading></uax-kpi-tile>`, "uax-kpi-tile");
             expect(loading.getBoundingClientRect().height).toBe(loaded.getBoundingClientRect().height);
         });
     });
@@ -134,10 +134,10 @@ describe("Feature: KPI tile shows a headline number", () => {
             try {
                 const host = render(
                     html`<div style="background: var(--uui-color-background); padding: 8px; width: 320px">
-                        <uan-kpi-tile label="Revenue" value="€ 4,837.40" icon="icon-coins" .delta=${-3}></uan-kpi-tile>
+                        <uax-kpi-tile label="Revenue" value="€ 4,837.40" icon="icon-coins" .delta=${-3}></uax-kpi-tile>
                     </div>`,
                 ).container.querySelector("div")!;
-                await host.querySelector("uan-kpi-tile")!.updateComplete;
+                await host.querySelector("uax-kpi-tile")!.updateComplete;
                 return await axeRun(host);
             } finally {
                 theme.remove();
@@ -157,7 +157,7 @@ describe("Feature: KPI tile shows a headline number", () => {
         });
 
         it("hides the icon from assistive tech", async () => {
-            const el = await renderElement(html`<uan-kpi-tile label="A" value="1" icon="icon-coins"></uan-kpi-tile>`, "uan-kpi-tile");
+            const el = await renderElement(html`<uax-kpi-tile label="A" value="1" icon="icon-coins"></uax-kpi-tile>`, "uax-kpi-tile");
             expect(shadow(el).querySelector(".icon")?.getAttribute("aria-hidden")).toBe("true");
         });
     });

@@ -1,22 +1,22 @@
 import type { Meta, StoryObj } from "@storybook/web-components-vite";
 import { html } from "@umbraco-cms/backoffice/external/lit";
-import type { UanEmptyStateElement } from "./empty-state.element.js";
+import type { UaxEmptyStateElement } from "./empty-state.element.js";
 import "./empty-state.element.js";
 
-const meta: Meta<UanEmptyStateElement> = {
+const meta: Meta<UaxEmptyStateElement> = {
     title: "Components/Empty State",
-    component: "uan-empty-state",
+    component: "uax-empty-state",
     render: (args) =>
         html`<div style="background: var(--uui-color-surface); border-radius: var(--uui-border-radius-3)">
-            <uan-empty-state
+            <uax-empty-state
                 .headline=${args.headline}
                 .description=${args.description}
-                .icon=${args.icon ?? "icon-search"}></uan-empty-state>
+                .icon=${args.icon ?? "icon-search"}></uax-empty-state>
         </div>`,
 };
 
 export default meta;
-type Story = StoryObj<UanEmptyStateElement>;
+type Story = StoryObj<UaxEmptyStateElement>;
 
 /** No text set: the built-in "No data yet" / "Try a wider date range.". */
 export const Default: Story = {};

@@ -32,7 +32,7 @@ Engage, Commerce and Umbraco AI each have an analytics section in the backoffice
 
 **Riskiest unknowns:**
 
-- TODO: Owner, final package name and element prefix (`uan-` is a working name).
+- TODO: Owner, final package name and element prefix (`uax-` is a working name).
 - > ASSUMPTION: Engage moves to the package first, then Commerce, then AI, as in the proposal.
 
 ## Non-goals

@@ -2,7 +2,7 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { html } from "@umbraco-cms/backoffice/external/lit";
 import { userEvent } from "vitest/browser";
-import { renderElement, shadow, type UanTestElement } from "../internal/test/pending.js";
+import { renderElement, shadow, type UaxTestElement } from "../internal/test/pending.js";
 import { nameColumns } from "./table-fixtures.js";
 
 const rows = [{ name: "Home", views: 210 }];
@@ -14,7 +14,7 @@ describe("Feature: open a row", () => {
         beforeEach(async () => {
             clicked = [];
             const listener = (e: Event) => clicked.push((e as CustomEvent).detail.row);
-            const el = await renderElement(html`<uan-data-table .columns=${nameColumns} .rows=${rows} @row-click=${listener}></uan-data-table>`, "uan-data-table");
+            const el = await renderElement(html`<uax-data-table .columns=${nameColumns} .rows=${rows} @row-click=${listener}></uax-data-table>`, "uax-data-table");
             firstRow(el).click();
         });
 
@@ -28,7 +28,7 @@ describe("Feature: open a row", () => {
         beforeEach(async () => {
             clicked = [];
             const listener = (e: Event) => clicked.push((e as CustomEvent).detail.row);
-            const el = await renderElement(html`<uan-data-table .columns=${nameColumns} .rows=${rows} @row-click=${listener}></uan-data-table>`, "uan-data-table");
+            const el = await renderElement(html`<uax-data-table .columns=${nameColumns} .rows=${rows} @row-click=${listener}></uax-data-table>`, "uax-data-table");
             firstRow(el).focus();
             await userEvent.keyboard("{Enter}");
         });
@@ -39,9 +39,9 @@ describe("Feature: open a row", () => {
     });
 
     describe("Scenario (sad path): no row-click listener", () => {
-        let el: UanTestElement;
+        let el: UaxTestElement;
         beforeEach(async () => {
-            el = await renderElement(html`<uan-data-table .columns=${nameColumns} .rows=${rows}></uan-data-table>`, "uan-data-table");
+            el = await renderElement(html`<uax-data-table .columns=${nameColumns} .rows=${rows}></uax-data-table>`, "uax-data-table");
         });
 
         it.skip("leaves rows unfocusable", () => {

@@ -10,28 +10,28 @@ import { TemplateResult } from 'lit-html';
 import { UmbLitElement } from '@umbraco-cms/backoffice/lit-element';
 
 // @public
-export class UanDeltaBadgeElement extends UmbLitElement {
+export class UaxDeltaBadgeElement extends UmbLitElement {
     get direction(): "up" | "down" | "flat";
     lowerIsBetter: boolean;
     maxDecimals: number;
     // (undocumented)
     render(): TemplateResult<1> | typeof nothing;
     get sentiment(): "positive" | "negative" | "neutral";
-    size: UanDeltaBadgeSize;
+    size: UaxDeltaBadgeSize;
     // (undocumented)
     static styles: CSSResultGroup;
-    unit: UanDeltaUnit;
+    unit: UaxDeltaUnit;
     value?: number;
 }
 
 // @public (undocumented)
-export type UanDeltaBadgeSize = "md" | "sm";
+export type UaxDeltaBadgeSize = "md" | "sm";
 
 // @public (undocumented)
-export type UanDeltaUnit = "percent" | "points";
+export type UaxDeltaUnit = "percent" | "points";
 
 // @public
-export class UanEmptyStateElement extends UmbLitElement {
+export class UaxEmptyStateElement extends UmbLitElement {
     description?: string;
     headline?: string;
     icon: string;
@@ -42,22 +42,22 @@ export class UanEmptyStateElement extends UmbLitElement {
 }
 
 // @public (undocumented)
-export type UanGroupBy = "day" | "week" | "month";
+export type UaxGroupBy = "day" | "week" | "month";
 
 // @public
-export class UanGroupByElement extends UmbLitElement {
-    options: UanGroupBy[];
+export class UaxGroupByElement extends UmbLitElement {
+    options: UaxGroupBy[];
     // (undocumented)
     render(): TemplateResult<1>;
     // (undocumented)
     static styles: CSSResultGroup;
-    value: UanGroupBy;
+    value: UaxGroupBy;
 }
 
 // @public
-export class UanKpiTileElement extends UmbLitElement {
+export class UaxKpiTileElement extends UmbLitElement {
     delta?: number;
-    deltaUnit: UanDeltaUnit;
+    deltaUnit: UaxDeltaUnit;
     deselectable: boolean;
     icon?: string;
     label: string;

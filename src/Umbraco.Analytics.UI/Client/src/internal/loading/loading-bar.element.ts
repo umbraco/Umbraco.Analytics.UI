@@ -8,10 +8,10 @@ import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
  * It is positioned absolutely, so the host needs `position: relative` and the content doesn't shift.
  * Render it only while reloading (see `getLoadingMode`). Named "Loading" for assistive tech.
  *
- * @element uan-loading-bar
+ * @element uax-loading-bar
  */
-@customElement("uan-loading-bar")
-export class UanLoadingBarElement extends UmbLitElement {
+@customElement("uax-loading-bar")
+export class UaxLoadingBarElement extends UmbLitElement {
     override render() {
         return html`<div class="bar" role="progressbar" aria-label=${this.localize.term("general_loading")}>
             <div class="indicator"></div>
@@ -62,6 +62,6 @@ export class UanLoadingBarElement extends UmbLitElement {
 
 declare global {
     interface HTMLElementTagNameMap {
-        "uan-loading-bar": UanLoadingBarElement;
+        "uax-loading-bar": UaxLoadingBarElement;
     }
 }

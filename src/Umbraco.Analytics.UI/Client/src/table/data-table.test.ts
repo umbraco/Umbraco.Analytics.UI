@@ -1,7 +1,7 @@
 // TBL-1 — Table cells by column type
 import { beforeEach, describe, expect, it } from "vitest";
 import { html } from "@umbraco-cms/backoffice/external/lit";
-import { renderElement, shadow, type UanTestElement } from "../internal/test/pending.js";
+import { renderElement, shadow, type UaxTestElement } from "../internal/test/pending.js";
 import { pageColumns, pageRows } from "./table-fixtures.js";
 
 const firstRowCells = (el: Element) => [...shadow(el).querySelectorAll("uui-table-row:not([part~='header']) uui-table-cell")].slice(0, 3);
@@ -10,11 +10,11 @@ const bars = (el: Element, column: number) =>
 
 describe("Feature: table cells by column type", () => {
     describe("Scenario: a number column in en-US", () => {
-        let el: UanTestElement;
+        let el: UaxTestElement;
         beforeEach(async () => {
             el = await renderElement(
-                html`<uan-data-table .columns=${[{ key: "n", label: "N", type: "number" }]} .rows=${[{ n: 1234 }]}></uan-data-table>`,
-                "uan-data-table",
+                html`<uax-data-table .columns=${[{ key: "n", label: "N", type: "number" }]} .rows=${[{ n: 1234 }]}></uax-data-table>`,
+                "uax-data-table",
             );
         });
 
@@ -24,9 +24,9 @@ describe("Feature: table cells by column type", () => {
     });
 
     describe("Scenario: share columns", () => {
-        let el: UanTestElement;
+        let el: UaxTestElement;
         beforeEach(async () => {
-            el = await renderElement(html`<uan-data-table .columns=${pageColumns} .rows=${pageRows}></uan-data-table>`, "uan-data-table");
+            el = await renderElement(html`<uax-data-table .columns=${pageColumns} .rows=${pageRows}></uax-data-table>`, "uax-data-table");
         });
 
         it.skip("shows the value and its percent of the column total", () => {
@@ -37,9 +37,9 @@ describe("Feature: table cells by column type", () => {
             expect(bars(el, 1)[0].style.width).toBe("100%");
         });
 
-        it.skip("colours the second share column's bars with --uan-series-2", () => {
+        it.skip("colours the second share column's bars with --uax-series-2", () => {
             expect(getComputedStyle(bars(el, 2)[0]).backgroundColor).toBe(
-                getComputedStyle(el).getPropertyValue("--uan-series-2").trim(),
+                getComputedStyle(el).getPropertyValue("--uax-series-2").trim(),
             );
         });
 
@@ -49,26 +49,26 @@ describe("Feature: table cells by column type", () => {
     });
 
     describe("Scenario: comparing with earlier rows", () => {
-        let el: UanTestElement;
+        let el: UaxTestElement;
         beforeEach(async () => {
             const compareRows = [{ url: "https://example.com/", pageviews: 190, sessions: 30 }];
             el = await renderElement(
-                html`<uan-data-table .columns=${pageColumns} .rows=${pageRows} .compareRows=${compareRows} row-key="url"></uan-data-table>`,
-                "uan-data-table",
+                html`<uax-data-table .columns=${pageColumns} .rows=${pageRows} .compareRows=${compareRows} row-key="url"></uax-data-table>`,
+                "uax-data-table",
             );
         });
 
         it.skip("puts a small change badge after the share value", () => {
-            expect(firstRowCells(el)[1].querySelector("uan-delta-badge[size='sm']")).not.toBe(null);
+            expect(firstRowCells(el)[1].querySelector("uax-delta-badge[size='sm']")).not.toBe(null);
         });
     });
 
     describe("Scenario: content in the toolbar slot", () => {
-        let el: UanTestElement;
+        let el: UaxTestElement;
         beforeEach(async () => {
             el = await renderElement(
-                html`<uan-data-table .columns=${pageColumns} .rows=${pageRows}><div slot="toolbar" id="totals">272</div></uan-data-table>`,
-                "uan-data-table",
+                html`<uax-data-table .columns=${pageColumns} .rows=${pageRows}><div slot="toolbar" id="totals">272</div></uax-data-table>`,
+                "uax-data-table",
             );
         });
 

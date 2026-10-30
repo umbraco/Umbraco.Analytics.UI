@@ -1,4 +1,4 @@
-// Shared rows and columns for the uan-data-table specs.
+// Shared rows and columns for the uax-data-table specs.
 export const pageColumns = [
     { key: "url", label: "Page URL", type: "link", hrefKey: "url" },
     { key: "pageviews", label: "Pageviews", type: "share", sortable: true },
