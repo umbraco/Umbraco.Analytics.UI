@@ -10,9 +10,6 @@ export default {
         emptyHeadline: "No data yet",
         emptyDescription: "Try a wider date range.",
 
-        // KPI tile
-        kpiTileAriaLabel: "{0}: {1}",
-        kpiTileChangeAriaLabel: "{0}: {1}, change {2}",
 
         // Delta badge
         deltaPercentagePoints: "{0} pp",

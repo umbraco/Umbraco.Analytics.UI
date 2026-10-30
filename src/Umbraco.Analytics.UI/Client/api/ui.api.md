@@ -15,7 +15,7 @@ export class UanDeltaBadgeElement extends UmbLitElement {
     lowerIsBetter: boolean;
     maxDecimals: number;
     // (undocumented)
-    render(): typeof nothing | TemplateResult<1>;
+    render(): TemplateResult<1> | typeof nothing;
     get sentiment(): "positive" | "negative" | "neutral";
     size: UanDeltaBadgeSize;
     // (undocumented)
@@ -39,6 +39,21 @@ export class UanEmptyStateElement extends UmbLitElement {
     render(): TemplateResult<1>;
     // (undocumented)
     static styles: CSSResultGroup;
+}
+
+// @public
+export class UanKpiTileElement extends UmbLitElement {
+    delta?: number;
+    deltaUnit: UanDeltaUnit;
+    icon?: string;
+    label: string;
+    loading: boolean;
+    lowerIsBetter: boolean;
+    // (undocumented)
+    render(): TemplateResult<1>;
+    // (undocumented)
+    static styles: CSSResultGroup;
+    value?: string;
 }
 
 // (No @packageDocumentation comment for this package)
