@@ -1,0 +1,30 @@
+{
+  "compilerOptions": {
+
+    /* Defaults */
+    "target": "ESNext",
+    "experimentalDecorators": true,
+    "useDefineForClassFields": false,
+    "module": "ESNext",
+    "lib": [ "ES2020", "DOM", "DOM.Iterable" ],
+    "skipLibCheck": true,
+    "allowSyntheticDefaultImports": true,
+    "forceConsistentCasingInFileNames": true,
+
+    /* Bundler mode */
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+
+    /* Linting */
+    "strict": true,
+    "noFallthroughCasesInSwitch": true,
+
+    /* Types */
+    "types": [
+      "@umbraco-cms/backoffice/extension-types"
+    ]
+  },
+  "include": [ "src/**/*.ts" ],
+  "exclude": [ "src/**/*.test.ts" ]
+}

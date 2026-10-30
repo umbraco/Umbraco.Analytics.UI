@@ -1,0 +1,11 @@
+{
+  "id": "Umbraco.Analytics.UI",
+  "name": "Umbraco Analytics UI",
+  "version": "",
+  "extensions": [],
+  "importmap": {
+    "imports": {
+      "@umbraco-analytics/ui": "/App_Plugins/Umbraco.Analytics.UI/umbraco-analytics-ui.js"
+    }
+  }
+}

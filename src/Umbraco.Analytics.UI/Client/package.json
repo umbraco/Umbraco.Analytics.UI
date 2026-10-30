@@ -1,0 +1,45 @@
+{
+  "name": "@umbraco-analytics/ui",
+  "version": "19.0.0-alpha.1",
+  "type": "module",
+  "types": "./types/umbraco-analytics-ui-public.d.ts",
+  "files": [
+    "types/umbraco-analytics-ui-public.d.ts",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=24.13",
+    "npm": ">=11"
+  },
+  "author": {
+    "name": "Umbraco A/S",
+    "url": "https://umbraco.com"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "npm run build:api && npm run build:app",
+    "build:app": "tsc -p tsconfig.app.json && vite build",
+    "build:api": "tsc -p tsconfig.api.json && api-extractor run -c api-extractor.json --typescript-compiler-folder ./node_modules/typescript --local",
+    "check:api": "tsc -p tsconfig.api.json && api-extractor run -c api-extractor.json --typescript-compiler-folder ./node_modules/typescript",
+    "prepack:api": "node ./devops/publish/sync-package-version.js && node ./devops/publish/cleanse-pkg.js && npx mkdirp ./artifacts",
+    "pack:api": "npm pack --pack-destination ./artifacts",
+    "postpack:api": "node ./devops/publish/copy-package-to-output-dir.js",
+    "build-and-pack:api": "npm run build:api && npm run pack:api",
+    "watch": "vite build --watch",
+    "test": "vitest run --passWithNoTests"
+  },
+  "peerDependencies": {
+    "@umbraco-cms/backoffice": "^19.0.0-beta1"
+  },
+  "dependencies": {
+    "chart.js": "^4.5.1"
+  },
+  "devDependencies": {
+    "@microsoft/api-extractor": "^7.55.1",
+    "@umbraco-cms/backoffice": "19.0.0-beta1",
+    "mkdirp": "^3.0.1",
+    "typescript": "^5.9.3",
+    "vite": "^7.2.4",
+    "vitest": "^4.1.11"
+  }
+}

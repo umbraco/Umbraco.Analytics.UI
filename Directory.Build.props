@@ -1,0 +1,42 @@
+<Project>
+  <PropertyGroup>
+    <TargetFramework>net11.0</TargetFramework>
+    <Company>Umbraco HQ</Company>
+    <Authors>Umbraco</Authors>
+    <Copyright>Copyright © Umbraco $([System.DateTime]::Today.ToString('yyyy'))</Copyright>
+    <Product>Umbraco Analytics UI</Product>
+    <PackageProjectUrl>https://github.com/umbraco/Umbraco.Analytics.UI</PackageProjectUrl>
+    <PackageTags>umbraco analytics charts backoffice</PackageTags>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+    <NeutralLanguage>en-US</NeutralLanguage>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <AnalysisMode>All</AnalysisMode>
+  </PropertyGroup>
+  <!-- NuGet packages lock -->
+  <PropertyGroup>
+    <DisableImplicitNuGetFallbackFolder>true</DisableImplicitNuGetFallbackFolder>
+    <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+    <DefaultItemExcludes>$(DefaultItemExcludes);packages.lock.json</DefaultItemExcludes>
+  </PropertyGroup>
+  <!-- SourceLink -->
+  <PropertyGroup>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+  </PropertyGroup>
+  <!-- Package validation -->
+  <PropertyGroup>
+    <EnablePackageValidation>true</EnablePackageValidation>
+    <!--<PackageValidationBaselineVersion>19.0.0</PackageValidationBaselineVersion>-->
+    <EnableStrictModeForCompatibleFrameworksInPackage>true</EnableStrictModeForCompatibleFrameworksInPackage>
+    <EnableStrictModeForCompatibleTfms>true</EnableStrictModeForCompatibleTfms>
+  </PropertyGroup>
+  <ItemGroup>
+    <Content Include="$(MSBuildThisFileDirectory)\LICENSE.md" Pack="true" PackagePath="" Visible="false" />
+  </ItemGroup>
+  <PropertyGroup>
+    <GitVersionBaseDirectory>$(MSBuildThisFileDirectory)</GitVersionBaseDirectory>
+  </PropertyGroup>
+</Project>

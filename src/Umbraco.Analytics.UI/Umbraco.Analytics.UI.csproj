@@ -1,0 +1,38 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+  <PropertyGroup>
+    <Title>Umbraco Analytics UI</Title>
+    <Description>Shared backoffice charts, tables, KPI tiles and filters for Umbraco product analytics</Description>
+    <StaticWebAssetBasePath>App_Plugins/Umbraco.Analytics.UI</StaticWebAssetBasePath>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <SupportedPlatform Include="browser" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Umbraco.Cms.Api.Management" />
+  </ItemGroup>
+
+  <!--
+    Client assets are built as explicit steps in the azure pipelines configuration
+    For local development, run one of the following commands inside the Client folder:
+    - npm run build (to build the project)
+    - npm run watch (to build and watch the project for changes)
+  -->
+
+  <!-- Update umbraco-package.json files with current build version -->
+  <!-- Assumes that the client assets have already been built to wwwroot -->
+  <Target Name="UpdatePackageManifestVersion" BeforeTargets="BeforeBuild" DependsOnTargets="GetBuildVersion;GetUmbracoBuildVersion" Condition="Exists('wwwroot\umbraco-package.json')">
+    <Message Text="Update umbraco-package.json files with current build version" Importance="high" />
+    <ItemGroup>
+      <_PackageManifestFiles Include="wwwroot\umbraco-package.json" />
+    </ItemGroup>
+    <JsonPathUpdateValue JsonFile="%(_PackageManifestFiles.FullPath)" Path="$.version" Value="&quot;$(PackageVersion)&quot;" />
+  </Target>
+
+</Project>
