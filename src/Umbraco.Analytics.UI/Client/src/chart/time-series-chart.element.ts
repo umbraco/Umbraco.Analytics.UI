@@ -523,7 +523,8 @@ export class UaxTimeSeriesChartElement extends UmbLitElement {
     }
 
     #markerLabel(bucket: MarkerBucket) {
-        const text = bucket.markers.map((m) => `${m.title} (${this.#markerDateText(m)})`).join("; ");
+        const entries = bucket.markers.map((m) => this.localize.term("uaxAnalytics_chartMarkerEntry", m.title, this.#markerDateText(m)));
+        const text = entries.join(this.localize.term("uaxAnalytics_chartMarkerSeparator"));
         return this.localize.term("uaxAnalytics_chartMarkerAriaLabel", text);
     }
 

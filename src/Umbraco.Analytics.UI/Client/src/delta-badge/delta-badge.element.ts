@@ -79,8 +79,12 @@ export class UaxDeltaBadgeElement extends UmbLitElement {
     }
 
     #sentimentLabel() {
-        const key = { positive: "deltaImprovement", negative: "deltaDecline", neutral: "deltaNoChange" }[this.sentiment];
-        return this.localize.term(`uaxAnalytics_${key}`);
+        const key = {
+            positive: "uaxAnalytics_deltaImprovement",
+            negative: "uaxAnalytics_deltaDecline",
+            neutral: "uaxAnalytics_deltaNoChange",
+        }[this.sentiment];
+        return this.localize.term("uaxAnalytics_deltaSentimentSuffix", this.localize.term(key));
     }
 
     override render(): TemplateResult | typeof nothing {
@@ -92,7 +96,7 @@ export class UaxDeltaBadgeElement extends UmbLitElement {
         // The signed number carries the direction for screen readers and the hidden text says whether it is
         // good, so neither the arrow nor the colour has to; the arrow is decoration.
         return html`<span class="badge" data-sentiment=${this.sentiment}
-            ><span class="arrow" aria-hidden="true">${arrow}</span>${this.#format(value)}<span class="visually-hidden">${", "}${this.#sentimentLabel()}</span></span
+            ><span class="arrow" aria-hidden="true">${arrow}</span>${this.#format(value)}<span class="visually-hidden">${this.#sentimentLabel()}</span></span
         >`;
     }
 

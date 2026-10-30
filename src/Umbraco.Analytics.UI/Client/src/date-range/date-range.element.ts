@@ -113,7 +113,10 @@ export class UaxDateRangeElement extends UmbLitElement {
             : undefined;
         const compareLine = compareShown ? this.localize.term("uaxAnalytics_dateRangeCompareShort", compareShown) : undefined;
         // The name is the purpose plus the two lines as shown, so the visible text is part of it (WCAG 2.5.3).
-        const label = [this.localize.term("uaxAnalytics_dateRangeButtonLabel"), range, compareLine].filter(Boolean).join(". ");
+        const purpose = this.localize.term("uaxAnalytics_dateRangeButtonLabel");
+        const label = compareLine
+            ? this.localize.term("uaxAnalytics_dateRangeButtonNameCompare", purpose, range, compareLine)
+            : this.localize.term("uaxAnalytics_dateRangeButtonName", purpose, range);
         return html`<uui-button look="outline" label=${label} class=${compareLine ? "has-compare" : ""} @click=${this.#open}>
             <!-- An empty default-slot child on purpose: with nothing assigned, uui-button draws its label text (our whole accessible name) as visible text. -->
             <span hidden></span>

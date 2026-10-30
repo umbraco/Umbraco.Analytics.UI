@@ -7,7 +7,7 @@ import backofficeEn from "./backoffice-en.js";
 
 const OVERRIDE_ALIAS = "Uax.Localization.TestOverride";
 
-function waitForKey(key: string, expected?: string): Promise<void> {
+export function waitForKey(key: string, expected?: string): Promise<void> {
     return new Promise((resolve, reject) => {
         const deadline = Date.now() + 5000;
         const check = () => {

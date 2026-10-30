@@ -19,6 +19,8 @@ export default {
         deltaImprovement: "improvement",
         deltaDecline: "decline",
         deltaNoChange: "no change",
+        // Screen-reader text after the number, "+12.4%, improvement". {0} is one of the three words above.
+        deltaSentimentSuffix: ", {0}",
 
         // Group by
         groupByLabel: "Group by",
@@ -34,11 +36,17 @@ export default {
         chartTableCompareHeader: "{0} (compare)",
         chartTotalLabel: "Total",
         chartMarkerAriaLabel: "Marker: {0}",
+        // One marker inside that label, "Newsletter sent (May 29, 2026)", and what goes between several of them.
+        chartMarkerEntry: "{0} ({1})",
+        chartMarkerSeparator: "; ",
         chartMarkersMore: "+{0} more",
         chartComparisonLabel: "Comparison",
 
         // Date range
+        // The button's accessible name is its purpose, then the lines it shows ({0} purpose, {1} range, {2} comparison).
         dateRangeButtonLabel: "Choose date range",
+        dateRangeButtonName: "{0}. {1}",
+        dateRangeButtonNameCompare: "{0}. {1}. {2}",
         dateRangeRange: "{0} to {1}",
         dateRangeCompareShort: "vs {0}",
         dateRangeModalHeadline: "Date range",
@@ -66,10 +74,5 @@ export default {
         pagerPosition: "{0}–{1} of {2}",
         pagerPreviousPage: "Previous page",
         pagerNextPage: "Next page",
-
-        // Data table
-        tableSortAscending: "Sorted ascending",
-        tableSortDescending: "Sorted descending",
-        tableSortBy: "Sort by {0}",
     },
 } satisfies UmbLocalizationDictionary;
