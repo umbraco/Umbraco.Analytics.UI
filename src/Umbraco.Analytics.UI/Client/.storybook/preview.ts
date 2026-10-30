@@ -50,6 +50,8 @@ export const globalTypes = {
 
 const preview: Preview = {
     parameters: {
+        // Like Umbraco UI's Storybook: the public sections first, worked examples after them, internals last.
+        options: { storySort: { order: ["Components", "Foundation", "Examples", "Internal"] } },
         docs: {
             source: {
                 excludeDecorators: true,

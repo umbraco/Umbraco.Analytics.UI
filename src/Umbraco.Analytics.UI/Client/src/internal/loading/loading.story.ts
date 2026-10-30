@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/web-components-vite";
 import { css, html, LitElement, nothing } from "@umbraco-cms/backoffice/external/lit";
+import { notPublicApi } from "../story/internal.js";
 import { getLoadingMode } from "./loading-mode.js";
 import "./skeleton.element.js";
 import "./loading-bar.element.js";
@@ -59,6 +60,10 @@ const rows = ["Home", "Contact", "Pricing"];
 
 const meta: Meta = {
     title: "Internal/Loading",
+    tags: ["internal"],
+    parameters: {
+        docs: { description: { component: notPublicApi("`uax-skeleton` and `uax-loading-bar` are the loading parts the data elements share.") } },
+    },
 };
 
 export default meta;
