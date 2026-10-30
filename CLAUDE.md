@@ -9,6 +9,7 @@ Shared backoffice analytics components (Lit + UUI) consumed by Engage, Commerce 
 - Chart.js is bundled (not external). Only `@umbraco-cms/*` is external.
 - Colours via UUI CSS custom properties only. Must work in light and dark mode.
 - Number/date formatting via `Intl` with the backoffice user's culture. Currency and units come from the consumer.
+- Every user-facing string (text, `aria-*`, `title`, `placeholder`, visually hidden text, announced joins and separators) goes through a localization key: reuse an Umbraco key for generic words (`general_*`, `buttons_*`), else add a `uaxAnalytics_*` key to `Client/src/lang/en.ts`. Keys are whole literals, never built from parts. `src/lang/localization.*.test.ts` fails on untranslated text, missing or unused keys.
 - Everything exported from `Client/src/index.ts` is public API, including element names, attributes and event names.
 - Minor versions must never break: one version is shared by every product on a site. Run `npm run check:api`; a changed `api/*.api.md` report needs explicit reviewer sign-off.
 - Obsolete before removal: `@deprecated Use X instead. Will be removed in vN.0.0` (current major + 2).
