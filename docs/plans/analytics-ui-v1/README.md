@@ -10,3 +10,5 @@ Read these in order:
 6. [ ] [BUILD-LOG.md](./BUILD-LOG.md) — <pending>
 
 See [DECISION-LOG.md](./DECISION-LOG.md) for why things changed along the way.
+
+> The design reference that SPEC.md links to (`docs/design/phase-1`) is kept out of this public repo until Engage's Phase 1 design is public. Ask the Commerce team for a copy and drop it in that folder locally; `.git/info/exclude` keeps it out of commits.
