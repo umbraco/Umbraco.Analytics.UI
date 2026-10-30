@@ -76,7 +76,7 @@
 
 ## Data table
 
-- [ ] **T15** - story: TBL-1 (AC1–AC4, AC6, AC7), FND-3 (AC2–AC6 for the table). Add `uax-data-table` built on `uui-table`. Column types `text`, `link`, `number`, `percent` and `share` (value, percent of column total, bar scaled to the column max; first share column `--uax-series-1`, second `--uax-series-2`). `value-format` per column, `toolbar` slot, empty state (T4), loading (T5). No sorting or paging yet.
+- [x] **T15** - story: TBL-1 (AC1–AC4, AC6, AC7), FND-3 (AC2–AC6 for the table). Add `uax-data-table` built on `uui-table`. Column types `text`, `link`, `number`, `percent` and `share` (value, percent of column total, bar scaled to the column max; first share column `--uax-series-1`, second `--uax-series-2`). `value-format` per column, `toolbar` slot, empty state (T4), loading (T5). No sorting or paging yet.
   Acceptance: TBL-1 AC1–AC4, AC6 and AC7 specs green. "Share columns" story matches `an-table.png`.
   depends-on: T1, T2, T4, T5. parallel-group: D
 
