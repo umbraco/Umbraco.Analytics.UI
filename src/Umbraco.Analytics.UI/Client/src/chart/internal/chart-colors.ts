@@ -12,6 +12,11 @@ export interface UaxChartColors {
     tick: string;
     surface: string;
     hoverLine: string;
+    /** Marker dot, its hovered or focused shade, and the dashed line at rest and when active. */
+    marker: string;
+    markerHover: string;
+    markerLine: string;
+    markerLineActive: string;
     fontFamily: string;
 }
 
@@ -46,6 +51,10 @@ export function resolveChartColors(probe: HTMLElement, slots: number[]): UaxChar
         tick: colorOf("var(--uui-color-text-alt)"),
         surface: colorOf("var(--uui-color-surface)"),
         hoverLine: colorOf("color-mix(in srgb, var(--uui-color-text) 35%, transparent)"),
+        marker: colorOf("var(--_uax-marker)"),
+        markerHover: colorOf("var(--_uax-marker-hover)"),
+        markerLine: colorOf("color-mix(in srgb, var(--_uax-marker) 26%, transparent)"),
+        markerLineActive: colorOf("color-mix(in srgb, var(--_uax-marker-hover) 60%, transparent)"),
         fontFamily: getComputedStyle(probe).fontFamily,
     };
 }

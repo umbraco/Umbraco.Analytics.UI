@@ -4,6 +4,7 @@ import type { UaxTimeSeriesChartElement } from "./time-series-chart.element.js";
 import "./time-series-chart.element.js";
 import {
     compareRangeLabel,
+    markers,
     newVisitors,
     pageviews,
     pageviewsPrevious,
@@ -22,6 +23,7 @@ const meta: Meta<UaxTimeSeriesChartElement> = {
         series: [pageviews],
         compareSeries: [],
         compareLabel: undefined,
+        markers: [],
         groupBy: "day",
         valueFormat: undefined,
         loading: false,
@@ -39,6 +41,7 @@ const meta: Meta<UaxTimeSeriesChartElement> = {
                 .series=${args.series}
                 .compareSeries=${args.compareSeries}
                 .compareLabel=${args.compareLabel}
+                .markers=${args.markers}
                 .groupBy=${args.groupBy}
                 .valueFormat=${args.valueFormat}
                 .loading=${args.loading}
@@ -97,4 +100,13 @@ export const StackedBar: Story = {
 export const StackedWithCompare: Story = {
     name: "Stacked with compare",
     args: { kind: "stacked-bar", series: [returningVisitors, newVisitors], compareSeries: [previousVisitors], compareLabel: compareRangeLabel },
+};
+
+/** Each event is a dot on the x-axis with a dashed line. Hover or Tab to one for its date, title and description; click or Enter raises `marker-click`. Two events on 18 Jun share a dot with a count. */
+export const Markers: Story = { args: { kind: "area", markers } };
+
+/** Markers work on every kind. */
+export const MarkersOnStackedBar: Story = {
+    name: "Markers on stacked bar",
+    args: { kind: "stacked-bar", series: [returningVisitors, newVisitors], markers },
 };

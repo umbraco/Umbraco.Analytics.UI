@@ -18,12 +18,14 @@ import { getLoadingMode } from "../internal/loading/loading-mode.js";
 import "../internal/loading/loading-bar.element.js";
 import "../internal/loading/skeleton.element.js";
 import { uaxThemeTokens } from "../internal/theme/tokens.css.js";
+import { bucketMarkers, type MarkerBucket } from "./internal/marker-buckets.js";
+import type { UaxMarkerPlacement } from "./internal/markers-plugin.js";
 import { allWhole, buildChartData, maxValue, parseIsoDate, seriesTotals, type UaxChartData } from "./internal/chart-data.js";
 import { colorsDiffer, resolveChartColors, type UaxChartColors } from "./internal/chart-colors.js";
 import { UaxChartRenderer, type UaxChartHover } from "./internal/chart-renderer.js";
 import { niceScale } from "./internal/nice-scale.js";
 import { watchTheme } from "./internal/theme-watch.js";
-import type { UaxChartKind, UaxSeries } from "./types.js";
+import type { UaxChartKind, UaxMarker, UaxSeries } from "./types.js";
 
 const axisDateFormat: Record<UaxGroupBy, Intl.DateTimeFormatOptions> = {
     day: { day: "numeric", month: "short" },
@@ -56,8 +58,19 @@ interface Derived {
     /** For the bar kinds, the formatted date of each compare total (empty string where there is none). */
     compareTotalDateLabels: string[];
     numberFormat: Intl.NumberFormat;
+    /** A marker's own date, whichever bucket it is drawn in. */
+    markerDate: Intl.DateTimeFormat;
     lang: string;
 }
+
+interface MarkersFrom {
+    markers: UaxMarker[];
+    dates: string[];
+    groupBy: UaxGroupBy;
+}
+
+/** A tooltip lists this many markers of a crowded dot, then says how many more there are. */
+const MAX_MARKERS_IN_TOOLTIP = 4;
 
 const emptyDerived: Derived = {
     data: { dates: [], series: [] },
@@ -67,6 +80,7 @@ const emptyDerived: Derived = {
     totals: [],
     compareTotalDateLabels: [],
     numberFormat: new Intl.NumberFormat("en"),
+    markerDate: new Intl.DateTimeFormat("en", tooltipDateFormat.day),
     lang: "en",
 };
 
@@ -96,12 +110,16 @@ function tickFormat(valueFormat: Intl.NumberFormatOptions | undefined, max: numb
  * The bar kinds draw each date's compare series, added together, as one bar behind the current bar or bars
  * (so there `compare-series` needn't match the `id`s of `series`). `stacked-bar` stacks the series per date and
  * adds a total to the tooltip and the hidden table.
+ * `markers` draw a dashed line and a dot on the x-axis at their date (in the bucket that contains it when grouped by
+ * week or month; none when it is outside the chart). Each dot is a button: hover or focus shows the markers' dates,
+ * titles and descriptions, and click or Enter raises `marker-click`. Markers in one bucket share a dot.
  * The x-axis labels follow `group-by`, and every number
  * (axis, tooltip, table) is formatted with `value-format` in the backoffice user's culture.
  * While `loading` is set it shows a skeleton on first load, or keeps the old data under a loading bar
  * when reloading. With no points it shows `uax-empty-state`.
  *
  * @element uax-time-series-chart
+ * @fires marker-click - The editor clicked a marker's dot, or pressed Enter or Space on it. Bubbles and is composed, not cancelable. `detail` is `{ id }`; a dot standing for several markers raises the earliest one's id.
  * @cssprop --uax-chart-height - Height of the plot, without the legend or padding. Defaults to 260px.
  * @cssprop --uax-chart-padding - Padding around the plot, legend and empty state, as a CSS `padding` value. Defaults to `12px 24px 28px`. The loading bar ignores it and spans the full width at the top edge, so put the chart in a `uui-box` with `--uui-box-default-padding: 0`.
  * @cssprop --uax-series-1 - Colour of the first series. Series 2 to 4 follow, then the colours repeat.
@@ -113,6 +131,7 @@ function tickFormat(valueFormat: Intl.NumberFormatOptions | undefined, max: numb
  * @cssprop --uax-bar-3 - Colour of the third series' bars.
  * @cssprop --uax-bar-4 - Colour of the fourth series' bars.
  * @cssprop --uax-compare - Colour of the compare line, and of the compare bar (at 45% opacity).
+ * @cssprop --uax-marker - Colour of the marker dots and their dashed lines (the lines at 26% opacity). Defaults to space cadet in light and white in dark.
  * @cssprop --uax-gap-positive - Shading between a series and its compare line where the series is above it.
  * @cssprop --uax-gap-negative - Shading between a series and its compare line where the series is below it.
  */
@@ -137,6 +156,10 @@ export class UaxTimeSeriesChartElement extends UmbLitElement {
     @property({ type: String, attribute: "compare-label" })
     compareLabel?: string;
 
+    /** Events shown as a dot on the x-axis with a dashed line. One outside the chart's dates draws nothing. */
+    @property({ attribute: false })
+    markers: UaxMarker[] = [];
+
     /** Sets the format of the x-axis labels. The points themselves are not grouped: pass them already grouped. */
     @property({ type: String, attribute: "group-by" })
     groupBy: UaxGroupBy = "day";
@@ -160,6 +183,21 @@ export class UaxTimeSeriesChartElement extends UmbLitElement {
     @state()
     private _hover?: UaxChartHover;
 
+    /** Escape hides the date tooltip until the pointer moves to another date or leaves. */
+    @state()
+    private _hoverDismissed = false;
+
+    /** Where the renderer drew the marker dots, to put a button over each. */
+    @state()
+    private _markerPlacements: UaxMarkerPlacement[] = [];
+
+    /** The marker dots (by date index) the pointer is over and the keyboard is on. Hover wins. */
+    @state()
+    private _hoverMarker?: number;
+
+    @state()
+    private _focusMarker?: number;
+
     #renderer?: UaxChartRenderer;
     #stopThemeWatch?: () => void;
     #colors?: UaxChartColors;
@@ -169,12 +207,15 @@ export class UaxTimeSeriesChartElement extends UmbLitElement {
     #derivedFrom?: DerivedFrom;
     /** Bumped when `#derived` changes; keys the cached data table. */
     #derivedVersion = 0;
+    #markerBuckets: MarkerBucket[] = [];
+    #markersFrom?: MarkersFrom;
     /** The chart needs drawing: the derived data or the kind changed. */
     #dirty = true;
 
     override connectedCallback() {
         super.connectedCallback();
         this.#stopThemeWatch = watchTheme(() => this.#syncColors());
+        document.addEventListener("keydown", this.#onDocumentKeydown);
         // On reconnect the first render has already happened, so rebuild the chart in `updated`.
         if (this.hasUpdated) this.requestUpdate();
     }
@@ -187,7 +228,20 @@ export class UaxTimeSeriesChartElement extends UmbLitElement {
         this.#renderer = undefined;
         this.#colors = undefined;
         this._hover = undefined;
+        this._markerPlacements = [];
+        this._hoverMarker = undefined;
+        this._focusMarker = undefined;
+        this._hoverDismissed = false;
+        document.removeEventListener("keydown", this.#onDocumentKeydown);
     }
+
+    /** WCAG 1.4.13: Escape hides a tooltip that opened on hover or focus, without moving the pointer or focus. */
+    #onDocumentKeydown = (e: KeyboardEvent) => {
+        if (e.key !== "Escape") return;
+        if (this._hover) this._hoverDismissed = true;
+        this._hoverMarker = undefined;
+        this._focusMarker = undefined;
+    };
 
     protected override willUpdate(changed: PropertyValues<this>) {
         super.willUpdate(changed);
@@ -200,12 +254,25 @@ export class UaxTimeSeriesChartElement extends UmbLitElement {
             this.#dirty = true;
         }
         if (changed.has("kind")) this.#dirty = true;
+
+        const markersNext = { markers: this.markers, dates: this.#derived.data.dates, groupBy: this.groupBy };
+        const markersPrev = this.#markersFrom;
+        if (!markersPrev || (Object.keys(markersNext) as (keyof MarkersFrom)[]).some((key) => markersPrev[key] !== markersNext[key])) {
+            this.#markersFrom = markersNext;
+            this.#markerBuckets = bucketMarkers(markersNext.markers, markersNext.dates, markersNext.groupBy);
+            // The old buttons go without a mouseleave or blur, so what they set would stick.
+            this._hoverMarker = undefined;
+            this._focusMarker = undefined;
+            this.#dirty = true;
+        }
     }
 
     protected override updated(changed: PropertyValues<this>) {
         super.updated(changed);
         this.#syncChart();
+        this.#renderer?.setActiveMarker(this.#activeMarker);
         if (this._hover) this.#placeTooltip();
+        if (this.#activeMarker !== undefined) this.#placeMarkerTooltip();
     }
 
     get #hasData() {
@@ -239,6 +306,7 @@ export class UaxTimeSeriesChartElement extends UmbLitElement {
             totals: seriesTotals(data),
             compareTotalDateLabels: (data.compareTotal?.dates ?? []).map((d) => (d ? tooltipDate.format(parseIsoDate(d)) : "")),
             numberFormat: new Intl.NumberFormat(lang, valueFormat),
+            markerDate: new Intl.DateTimeFormat(lang, tooltipDateFormat.day),
             lang,
         };
     }
@@ -284,9 +352,16 @@ export class UaxTimeSeriesChartElement extends UmbLitElement {
         if (!canvas || !probe) return;
 
         if (!this.#renderer) {
-            this.#renderer = new UaxChartRenderer(canvas, (hover) => {
-                this._hover = hover;
-            });
+            this.#renderer = new UaxChartRenderer(
+                canvas,
+                (hover) => {
+                    this._hoverDismissed = false;
+                    this._hover = hover;
+                },
+                (placements) => {
+                    this._markerPlacements = placements;
+                },
+            );
             this.#dirty = true;
             // Axis text is measured with the web font, so redraw once fonts have settled.
             document.fonts?.ready.then(() => this.#renderer?.redraw());
@@ -307,6 +382,7 @@ export class UaxTimeSeriesChartElement extends UmbLitElement {
             labels: axisLabels,
             datasets: data.series.map((s) => ({ label: s.label, values: s.values, compare: this.#isBars ? undefined : s.compare })),
             compareTotal: this.#isBars ? data.compareTotal?.values : undefined,
+            markers: this.#markerBuckets.map((b) => ({ index: b.index, count: b.markers.length })),
             yMax: scale.max,
             yStep: scale.step,
             formatTick: (value) => tick.format(value),
@@ -341,7 +417,7 @@ export class UaxTimeSeriesChartElement extends UmbLitElement {
     #renderTooltip() {
         const hover = this._hover;
         const { data, dateLabels } = this.#derived;
-        if (!hover || !dateLabels[hover.index]) return nothing;
+        if (!hover || this._hoverDismissed || !dateLabels[hover.index] || this.#activeMarker !== undefined) return nothing;
         const values = data.series.map((s, i) => ({ s, i, value: s.values[hover.index] })).filter((v) => v.value !== null);
         const bars = this.#isBars;
         const swatch = bars ? "swatch swatch-square" : "swatch";
@@ -357,6 +433,81 @@ export class UaxTimeSeriesChartElement extends UmbLitElement {
                     ${bars ? nothing : this.#renderTooltipCompare(value!, s.compare?.[hover.index], this.#derived.compareDateLabels[i][hover.index], false)}`,
             )}
             ${bars ? this.#renderBarTooltipTotals(hover.index) : nothing}
+        </div>`;
+    }
+
+    /** The hovered or focused dot, only while it has a bucket and a placement. */
+    get #activeMarker() {
+        const index = this._hoverMarker ?? this._focusMarker;
+        if (index === undefined) return undefined;
+        const drawn = this.#markerBuckets.some((b) => b.index === index) && this._markerPlacements.some((p) => p.index === index);
+        return drawn ? index : undefined;
+    }
+
+    /** Puts the marker tooltip over its dot, centred, kept inside the plot. */
+    #placeMarkerTooltip() {
+        const tip = this.shadowRoot?.querySelector<HTMLElement>(".marker-tooltip");
+        const plot = this.shadowRoot?.querySelector<HTMLElement>(".plot");
+        const placement = this._markerPlacements.find((p) => p.index === this.#activeMarker);
+        if (!tip || !plot || !placement) return;
+        const left = Math.min(Math.max(placement.x - tip.offsetWidth / 2, 0), Math.max(plot.clientWidth - tip.offsetWidth, 0));
+        tip.style.left = `${left}px`;
+        tip.style.visibility = "visible";
+    }
+
+    #markerLabel(bucket: MarkerBucket) {
+        const { markerDate } = this.#derived;
+        const text = bucket.markers.map((m) => `${m.title} (${markerDate.format(parseIsoDate(m.date))})`).join("; ");
+        return this.localize.term("uaxAnalytics_chartMarkerAriaLabel", text);
+    }
+
+    #onMarkerClick(e: MouseEvent, bucket: MarkerBucket) {
+        // A pointer click leaves focus on the button; only the hover then shows the tooltip, so it goes when the pointer does.
+        if (e.detail > 0) this._focusMarker = undefined;
+        this.dispatchEvent(new CustomEvent("marker-click", { bubbles: true, composed: true, detail: { id: bucket.markers[0].id } }));
+    }
+
+    /** One button over each dot, in date order so the tab order follows the timeline. */
+    #renderMarkers() {
+        const placements = new Map(this._markerPlacements.map((p) => [p.index, p]));
+        const active = this.#activeMarker;
+        const drawn = this.#markerBuckets.filter((b) => placements.has(b.index));
+        // Keyed by what the button stands for, so a reused button never stands for a different bucket.
+        return repeat(
+            drawn,
+            (bucket) => `${bucket.index}:${bucket.markers.map((m) => m.id).join(",")}`,
+            (bucket) => {
+            const placement = placements.get(bucket.index)!;
+            return html`<button
+                type="button"
+                class="marker"
+                style="left:${placement.x}px; top:${placement.y}px"
+                aria-label=${this.#markerLabel(bucket)}
+                aria-describedby=${active === bucket.index ? "marker-tooltip" : nothing}
+                @mouseenter=${() => (this._hoverMarker = bucket.index)}
+                @mouseleave=${() => (this._hoverMarker = undefined)}
+                @focus=${() => (this._focusMarker = bucket.index)}
+                @blur=${() => (this._focusMarker = undefined)}
+                @click=${(e: MouseEvent) => this.#onMarkerClick(e, bucket)}></button>`;
+            },
+        );
+    }
+
+    #renderMarkerTooltip() {
+        const bucket = this.#markerBuckets.find((b) => b.index === this.#activeMarker);
+        if (!bucket || !this._markerPlacements.some((p) => p.index === bucket.index)) return nothing;
+        const { markerDate } = this.#derived;
+        const shown = bucket.markers.slice(0, MAX_MARKERS_IN_TOOLTIP);
+        const more = bucket.markers.length - shown.length;
+        return html`<div class="marker-tooltip" id="marker-tooltip" style="visibility:hidden">
+            ${shown.map(
+                (m) => html`<div class="marker-entry">
+                    <div class="tooltip-date">${markerDate.format(parseIsoDate(m.date))}</div>
+                    <div class="marker-title">${m.title}</div>
+                    ${m.description ? html`<div class="marker-note">${m.description}</div>` : nothing}
+                </div>`,
+            )}
+            ${more > 0 ? html`<div class="marker-more">${this.localize.term("uaxAnalytics_chartMarkersMore", more)}</div>` : nothing}
         </div>`;
     }
 
@@ -474,6 +625,7 @@ export class UaxTimeSeriesChartElement extends UmbLitElement {
             <div class="plot" ?hidden=${!showPlot}>
                 <canvas aria-hidden="true"></canvas>
                 ${this.#renderTooltip()}
+                ${showPlot ? this.#renderMarkers() : nothing} ${showPlot ? this.#renderMarkerTooltip() : nothing}
             </div>
             ${showPlot ? this.#renderLegend() : nothing}
             ${showPlot
@@ -527,7 +679,8 @@ export class UaxTimeSeriesChartElement extends UmbLitElement {
                 width: 100%;
             }
 
-            .tooltip {
+            .tooltip,
+            .marker-tooltip {
                 position: absolute;
                 z-index: 2;
                 box-sizing: border-box;
@@ -543,6 +696,55 @@ export class UaxTimeSeriesChartElement extends UmbLitElement {
                 color-scheme: dark;
                 font-size: 12px;
                 pointer-events: none;
+            }
+
+            .marker-tooltip {
+                top: 6px;
+                max-width: 240px;
+                padding: 9px 12px;
+            }
+
+            .marker-entry + .marker-entry {
+                margin-top: var(--uui-size-space-2);
+                padding-top: var(--uui-size-space-2);
+                border-top: 1px solid color-mix(in srgb, var(--uui-palette-white) 18%, transparent);
+            }
+
+            .marker-title {
+                font-size: 13px;
+                font-weight: 700;
+                line-height: 1.3;
+            }
+
+            .marker-note {
+                margin-top: 3px;
+                line-height: 1.45;
+                color: color-mix(in srgb, var(--uui-palette-white) 82%, transparent);
+            }
+
+            .marker-more {
+                margin-top: var(--uui-size-space-2);
+                font-size: 11px;
+                color: color-mix(in srgb, var(--uui-palette-white) 70%, transparent);
+            }
+
+            /* The canvas draws the dot; this transparent button over it is the hover and focus target. */
+            .marker {
+                position: absolute;
+                z-index: 1;
+                width: 24px;
+                height: 24px;
+                margin: -12px 0 0 -12px;
+                padding: 0;
+                border: 0;
+                border-radius: 50%;
+                background: transparent;
+                cursor: pointer;
+            }
+
+            .marker:focus-visible {
+                outline: 2px solid var(--uui-color-focus);
+                outline-offset: 0;
             }
 
             .tooltip-date {

@@ -31,7 +31,7 @@ export default {
         chartTableCompareHeader: "{0} (compare)",
         chartTotalLabel: "Total",
         chartMarkerAriaLabel: "Marker: {0}",
-        chartMarkersLabel: "Markers",
+        chartMarkersMore: "+{0} more",
         chartComparisonLabel: "Comparison",
 
         // Date range

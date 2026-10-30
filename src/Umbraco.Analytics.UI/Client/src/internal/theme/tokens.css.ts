@@ -46,6 +46,15 @@ import { css } from "@umbraco-cms/backoffice/external/lit";
  * The compare bar sits behind the current bars: `--_uax-compare` at 45% over the surface (chamoisee
  * 1.68:1 light, deep-saffron 2.34:1 dark). It is decoration too: the legend, tooltip and table carry it.
  *
+ * Chart markers (the dot on the x-axis and its dashed line, drawn at 26% opacity) need 3:1 for the dot against the
+ * surface. A product's `--uax-marker` also replaces the hover shade: the bigger dot and stronger line still show
+ * the state.
+ *
+ * | token         | light (on #fff)        | dark (on #2d333b)        |
+ * | ------------- | ---------------------- | ------------------------ |
+ * | marker        | space-cadet 14.62      | white 12.63              |
+ * | marker-hover  | violet-blue 9.80       | malibu-light 4.44        |
+ *
  * Compare gap (the shading between a series and its compare line): the light and high contrast value is
  * 15% of `--uui-color-positive` / `--uui-color-danger` (1.2 to 1.3:1 on white), which vanishes on the dark
  * surface (1.05:1). Dark uses 25% jungle-green (1.56:1 on #2d333b) and 40% maroon-flush (1.36:1). The
@@ -119,6 +128,12 @@ export const uaxThemeTokens = css`
             light-dark(var(--uui-palette-chamoisee), var(--uui-palette-deep-saffron))
         );
         --_uax-compare-bar: color-mix(in srgb, var(--_uax-compare) 45%, transparent);
+
+        --_uax-marker: var(--uax-marker, light-dark(var(--uui-palette-space-cadet), var(--uui-palette-white)));
+        --_uax-marker-hover: var(
+            --uax-marker,
+            light-dark(var(--uui-palette-violet-blue), var(--uui-palette-malibu-light))
+        );
 
         --_uax-gap-positive: var(
             --uax-gap-positive,

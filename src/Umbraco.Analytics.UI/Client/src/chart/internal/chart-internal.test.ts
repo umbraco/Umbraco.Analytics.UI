@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { allWhole, buildChartData, maxValue, parseIsoDate, seriesTotals } from "./chart-data.js";
+import { bucketMarkers } from "./marker-buckets.js";
 import { niceScale } from "./nice-scale.js";
 
 describe("niceScale", () => {
@@ -69,5 +70,46 @@ describe("seriesTotals and allWhole", () => {
 
     it("is not whole when a compare value has a fraction", () => {
         expect(allWhole(buildChartData([a], [{ ...a, points: [{ date: "2026-05-01", value: 1.5 }] }]))).toBe(false);
+    });
+});
+
+describe("bucketMarkers", () => {
+    const days = ["2026-06-10", "2026-06-11", "2026-06-12"];
+    const weeks = ["2026-06-01", "2026-06-08", "2026-06-15"];
+    const months = ["2026-04-01", "2026-05-01", "2026-06-01"];
+    const marker = (id: string, date: string) => ({ id, date, title: id });
+    const indexes = (buckets: ReturnType<typeof bucketMarkers>) => buckets.map((b) => [b.index, b.markers.map((m) => m.id)]);
+
+    it("puts a daily marker on its own date", () => {
+        expect(indexes(bucketMarkers([marker("a", "2026-06-11")], days, "day"))).toEqual([[1, ["a"]]]);
+    });
+
+    it("drops a daily marker on a date with no point", () => {
+        expect(bucketMarkers([marker("a", "2026-06-13"), marker("b", "2026-06-09")], days, "day")).toEqual([]);
+    });
+
+    it("puts a weekly marker in the week that contains it, up to the week's last day", () => {
+        expect(indexes(bucketMarkers([marker("a", "2026-06-08"), marker("b", "2026-06-14")], weeks, "week"))).toEqual([[1, ["a", "b"]]]);
+    });
+
+    it("drops a weekly marker past the last week", () => {
+        expect(bucketMarkers([marker("a", "2026-06-22")], weeks, "week")).toEqual([]);
+    });
+
+    it("puts a monthly marker in its month, including the last day", () => {
+        expect(indexes(bucketMarkers([marker("a", "2026-05-31")], months, "month"))).toEqual([[1, ["a"]]]);
+    });
+
+    it("drops a monthly marker in the month after the last", () => {
+        expect(bucketMarkers([marker("a", "2026-07-01")], months, "month")).toEqual([]);
+    });
+
+    it("lists a bucket's markers earliest first, keeping the given order for the same date", () => {
+        const list = [marker("late", "2026-06-12"), marker("x", "2026-06-09"), marker("y", "2026-06-09")];
+        expect(indexes(bucketMarkers(list, weeks, "week"))).toEqual([[1, ["x", "y", "late"]]]);
+    });
+
+    it("reads the date of a timestamp", () => {
+        expect(indexes(bucketMarkers([marker("a", "2026-06-11T09:30:00")], days, "day"))).toEqual([[1, ["a"]]]);
     });
 });

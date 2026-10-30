@@ -1,6 +1,7 @@
 import { Chart, type ChartConfiguration, type PointElement, type Plugin } from "chart.js";
 import type { UaxChartKind } from "../types.js";
 import type { UaxChartColors } from "./chart-colors.js";
+import { createMarkersPlugin, type UaxMarkerPin, type UaxMarkerPlacement, type UaxMarkersState } from "./markers-plugin.js";
 import "./register.js";
 
 /** What the renderer draws. Our own shape: Chart.js types stay inside `src/chart/internal`. */
@@ -16,6 +17,8 @@ export interface UaxChartModel {
     yStep: number;
     formatTick: (value: number) => string;
     colors: UaxChartColors;
+    /** One dot on the x-axis per entry. */
+    markers?: UaxMarkerPin[];
 }
 
 /** The date the pointer is on, and where to anchor a tooltip (canvas pixels). */
@@ -46,10 +49,24 @@ export class UaxChartRenderer {
     #lastHover?: UaxChartHover;
     #canvas: HTMLCanvasElement;
     #onHover: (hover: UaxChartHover | undefined) => void;
+    #markers: UaxMarkersState;
 
-    constructor(canvas: HTMLCanvasElement, onHover: (hover: UaxChartHover | undefined) => void) {
+    /** `onMarkerLayout` is told where the marker dots are drawn, after every layout in which they moved. */
+    constructor(
+        canvas: HTMLCanvasElement,
+        onHover: (hover: UaxChartHover | undefined) => void,
+        onMarkerLayout: (placements: UaxMarkerPlacement[]) => void = () => {},
+    ) {
         this.#canvas = canvas;
         this.#onHover = onHover;
+        this.#markers = { pins: [], onLayout: onMarkerLayout };
+    }
+
+    /** Draws the dot at the `index`th date larger and stronger, or none. Cheap: redraws without relayout. */
+    setActiveMarker(index: number | undefined): void {
+        if (this.#markers.active === index) return;
+        this.#markers.active = index;
+        this.#chart?.draw();
     }
 
     /** Chart.js can't change a chart's type, so moving between the line and bar kinds builds a new chart. */
@@ -83,7 +100,7 @@ export class UaxChartRenderer {
         const config: ChartConfiguration = {
             type: family,
             data: { labels: [], datasets: [] },
-            plugins: [hoverLine],
+            plugins: [hoverLine, createMarkersPlugin(this.#markers)],
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
@@ -122,6 +139,8 @@ export class UaxChartRenderer {
 
     update(model: UaxChartModel): void {
         this.#colors = model.colors;
+        this.#markers.colors = model.colors;
+        this.#markers.pins = model.markers ?? [];
         const family = isBarKind(model.kind) ? "bar" : "line";
         if (!this.#chart || this.#family !== family) {
             this.#chart?.destroy();

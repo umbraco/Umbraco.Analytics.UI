@@ -125,6 +125,7 @@ export class UaxTimeSeriesChartElement extends UmbLitElement {
     groupBy: UaxGroupBy;
     kind: UaxChartKind;
     loading: boolean;
+    markers: UaxMarker[];
     // (undocumented)
     render(): TemplateResult<1>;
     series: UaxSeries[];

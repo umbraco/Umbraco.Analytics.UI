@@ -1,5 +1,5 @@
 // Sample data for the chart stories: 30 days from 25 May 2026 with a spike on 11 Jun, like the Phase 1 design.
-import type { UaxSeries } from "../types.js";
+import type { UaxMarker, UaxSeries } from "../types.js";
 
 const pageviewValues = [
     62, 70, 87, 95, 104, 58, 44, 73, 83, 113, 120, 128, 66, 51, 80, 98, 142, 280, 132, 92, 60, 76, 98, 124, 116, 92, 64, 50, 78, 118,
@@ -63,3 +63,19 @@ export const returningVisitors: UaxSeries = { ...toSeries("returning", "Returnin
 export const newVisitors: UaxSeries = { ...toSeries("new", "New visitor", newVisitorValues), color: 3 };
 /** Visitors for 25 Apr to 24 May 2026: the compare series of the stacked bars. */
 export const previousVisitors = toSeries("visitors", "Visitors", previousVisitorValues, dayAfter25Apr);
+
+/** Events inside the 25 May to 23 Jun range of the series above. Two share 18 Jun, so that dot carries a count. */
+export const markers: UaxMarker[] = [
+    { id: "m1", date: "2026-05-29", title: "Newsletter sent", description: "May issue to 12,400 subscribers." },
+    { id: "m2", date: "2026-06-03", title: "Blog post published", description: "How we cut page load by 40%." },
+    {
+        id: "m3",
+        date: "2026-06-11",
+        title: "Spring product launch",
+        description: "Homepage hero + paid push went live. Traffic spiked across all channels.",
+    },
+    { id: "m4", date: "2026-06-14", title: "Paid push ended" },
+    { id: "m5", date: "2026-06-18", title: "Partner webinar", description: "Live session with 340 attendees." },
+    { id: "m6", date: "2026-06-18", title: "Webinar recording shared" },
+    { id: "m7", date: "2026-06-22", title: "Pricing page update", description: "New plan comparison table." },
+];
