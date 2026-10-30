@@ -10,7 +10,7 @@ const meta: Meta<UaxTablePagerElement> = {
     component: "uax-table-pager",
     tags: ["internal"],
     parameters: {
-        docs: { description: { component: notPublicApi("`uax-table-pager` is the footer of `uax-data-table`.") } },
+        docs: { description: { component: notPublicApi("`uax-table-pager` is the paging controls of `uax-data-table`. The table's footer section draws the border and padding.") } },
     },
     args: { page: 1, pageSize: 10, total: 272 },
     render: (args) => html`<uax-table-pager

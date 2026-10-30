@@ -107,15 +107,13 @@ export class UaxTablePagerElement extends UmbLitElement {
             display: block;
         }
 
-        /* The design's footer: right-aligned, "Show rows", the range, then previous and next. */
+        /* Just the controls: "Show rows", the range, then previous and next. The table's footer owns the border and padding. */
         .pager {
             display: flex;
             align-items: center;
             justify-content: flex-end;
             flex-wrap: wrap;
             gap: var(--uui-size-space-4);
-            padding: var(--uax-table-padding, var(--uui-size-space-4) var(--uui-size-space-6));
-            border-top: 1px solid var(--uui-color-border);
             font-size: 12px;
             color: var(--uui-color-text-alt);
         }

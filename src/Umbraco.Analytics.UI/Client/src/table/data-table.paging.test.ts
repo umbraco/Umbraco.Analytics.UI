@@ -13,16 +13,20 @@ import "./data-table.element.js";
 import { manyRows, nameColumns } from "./table-fixtures.js";
 import { UAX_TABLE_CELL } from "./cells/cell-names.js";
 
-/** The footer is its own element (`uax-table-pager`), so its parts live in that element's shadow root. */
+/** The controls are their own element (`uax-table-pager`), so their parts live in that element's shadow root. */
 const pagerElement = (el: Element) => shadow(el).querySelector("uax-table-pager") as (HTMLElement & { updateComplete: Promise<boolean> }) | null;
-const footer = (el: Element) => (pagerElement(el)?.shadowRoot?.querySelector(".pager") ?? null) as HTMLElement | null;
-const pageSizeSelect = (el: Element) => footer(el)!.querySelector("uui-select[name='page-size']") as HTMLElement & {
+const controls = (el: Element) => (pagerElement(el)?.shadowRoot?.querySelector(".pager") ?? null) as HTMLElement | null;
+/** The table's own footer section, which holds the pager. */
+const footer = (el: Element) => shadow(el).querySelector(".footer") as HTMLElement | null;
+/** The footer is always in the DOM, so whether it shows is whether it takes up space. */
+const footerShown = (el: Element) => footer(el)!.checkVisibility();
+const pageSizeSelect = (el: Element) => controls(el)!.querySelector("uui-select[name='page-size']") as HTMLElement & {
         value: string;
         options: { value: string }[];
         updateComplete: Promise<boolean>;
     };
-const nextButton = (el: Element) => footer(el)!.querySelector(".next") as HTMLElement & { updateComplete: Promise<boolean> };
-const previousButton = (el: Element) => footer(el)!.querySelector(".previous") as HTMLElement & { updateComplete: Promise<boolean> };
+const nextButton = (el: Element) => controls(el)!.querySelector(".next") as HTMLElement & { updateComplete: Promise<boolean> };
+const previousButton = (el: Element) => controls(el)!.querySelector(".previous") as HTMLElement & { updateComplete: Promise<boolean> };
 /** Clicks a pager button once uui-button has rendered its inner button (its host click does nothing before that), then waits for the table to update. */
 const press = async (el: UaxTestElement, button: HTMLElement) => {
     await (button as HTMLElement & { updateComplete: Promise<boolean> }).updateComplete;
@@ -57,7 +61,7 @@ describe("Feature: page through rows", () => {
         });
 
         it("shows 1–10 of 272", () => {
-            expect(footer(el)!.textContent).toContain("1–10 of 272");
+            expect(controls(el)!.textContent).toContain("1–10 of 272");
         });
 
         it("offers 10, 25, 50 and 100 rows per page", () => {
@@ -77,7 +81,7 @@ describe("Feature: page through rows", () => {
     describe("Scenario: the last page of 272 rows", () => {
         it("shows 271–272 of 272 and disables next", async () => {
             const el = await serverTable({ page: 28 });
-            expect([footer(el)!.textContent, nextButton(el).hasAttribute("disabled")]).toEqual([expect.stringContaining("271–272 of 272"), true]);
+            expect([controls(el)!.textContent, nextButton(el).hasAttribute("disabled")]).toEqual([expect.stringContaining("271–272 of 272"), true]);
         });
     });
 
@@ -114,7 +118,7 @@ describe("Feature: page through rows", () => {
         it("shows the new range straight away", async () => {
             const el = await serverTable();
             await press(el, nextButton(el));
-            expect(footer(el)!.textContent).toContain("11–20 of 272");
+            expect(controls(el)!.textContent).toContain("11–20 of 272");
         });
     });
 
@@ -155,7 +159,7 @@ describe("Feature: page through rows", () => {
         });
 
         it("shows 11–20 of 30", () => {
-            expect(footer(el)!.textContent).toContain("11–20 of 30");
+            expect(controls(el)!.textContent).toContain("11–20 of 30");
         });
 
         it("still raises page-change", async () => {
@@ -216,7 +220,7 @@ describe("Feature: page through rows", () => {
         });
 
         it("shows 1–10 of 30", () => {
-            expect(footer(el)!.textContent).toContain("1–10 of 30");
+            expect(controls(el)!.textContent).toContain("1–10 of 30");
         });
     });
 
@@ -226,20 +230,20 @@ describe("Feature: page through rows", () => {
             el = await clientTable(8);
         });
 
-        it("has no paging footer", () => {
-            expect(footer(el)).toBe(null);
+        it("hides the footer", () => {
+            expect(footerShown(el)).toBe(false);
         });
     });
 
     describe("Scenario: a page size bigger than the rows", () => {
         it("keeps the footer so the editor can go back to a smaller size", async () => {
             const el = await clientTable(30, 50);
-            expect(footer(el)).not.toBe(null);
+            expect(footerShown(el)).toBe(true);
         });
 
         it("hides the footer when the rows fit the smallest size", async () => {
             const el = await clientTable(10, 50);
-            expect(footer(el)).toBe(null);
+            expect(footerShown(el)).toBe(false);
         });
     });
 
@@ -303,10 +307,81 @@ describe("Feature: page through rows", () => {
         });
     });
 
+    describe("Scenario: the footer section", () => {
+        it("draws the top border", async () => {
+            expect(getComputedStyle(footer(await clientTable(30))!).borderTopWidth).toBe("1px");
+        });
+
+        it("takes --uax-table-padding", async () => {
+            const el = await renderElement(
+                html`<uax-data-table style="--uax-table-padding: 7px" .columns=${nameColumns} .rows=${manyRows(30)}></uax-data-table>`,
+                "uax-data-table",
+            );
+            expect(getComputedStyle(footer(el)!).paddingLeft).toBe("7px");
+        });
+
+        it("leaves the pager without a border", async () => {
+            expect(getComputedStyle(controls(await clientTable(30))!).borderTopWidth).toBe("0px");
+        });
+
+        it("leaves the pager without padding", async () => {
+            expect(getComputedStyle(controls(await clientTable(30))!).paddingLeft).toBe("0px");
+        });
+    });
+
+    describe("Scenario: the footer slot", () => {
+        const slotTable = (count: number) =>
+            renderElement(
+                html`<uax-data-table .columns=${nameColumns} .rows=${manyRows(count)}>
+                    <span slot="footer">Updated</span>
+                </uax-data-table>`,
+                "uax-data-table",
+            );
+
+        it("has no pager when the rows fit one page", async () => {
+            expect(pagerElement(await slotTable(8))).toBe(null);
+        });
+
+        it("shows the footer for slot content alone", async () => {
+            expect(footerShown(await slotTable(8))).toBe(true);
+        });
+
+        it("renders the pager beside the slot", async () => {
+            expect(pagerElement(await slotTable(30))).not.toBe(null);
+        });
+
+        it("renders the slot beside the pager", async () => {
+            expect(footer(await slotTable(30))!.querySelector("slot[name='footer']")).not.toBe(null);
+        });
+
+        it("shows the footer for slot content under the skeleton", async () => {
+            const el = await renderElement(
+                html`<uax-data-table mode="server" .columns=${nameColumns} .rows=${[]} total="272" loading>
+                    <span slot="footer">Updated</span>
+                </uax-data-table>`,
+                "uax-data-table",
+            );
+            expect(footerShown(el)).toBe(true);
+        });
+
+        it("shows the footer when slot content arrives after the first render", async () => {
+            const el = await clientTable(8);
+            const note = document.createElement("span");
+            note.slot = "footer";
+            el.append(note);
+            await settle(el);
+            expect(footerShown(el)).toBe(true);
+        });
+
+        it("hides the footer with no slot content and no pager", async () => {
+            expect(footerShown(await clientTable(8))).toBe(false);
+        });
+    });
+
     describe("Scenario: the pager landmark", () => {
         it("is a navigation named Pagination", async () => {
             const el = await clientTable(30);
-            expect([footer(el)!.getAttribute("role"), footer(el)!.getAttribute("aria-label")]).toEqual(["navigation", "Pagination"]);
+            expect([controls(el)!.getAttribute("role"), controls(el)!.getAttribute("aria-label")]).toEqual(["navigation", "Pagination"]);
         });
     });
 
@@ -318,11 +393,11 @@ describe("Feature: page through rows", () => {
             );
 
         it("has no footer under the skeleton", async () => {
-            expect(footer(await loadingTable(true, []))).toBe(null);
+            expect(footerShown(await loadingTable(true, []))).toBe(false);
         });
 
         it("keeps the footer while reloading rows already shown", async () => {
-            expect(footer(await loadingTable(true, manyRows(10)))).not.toBe(null);
+            expect(footerShown(await loadingTable(true, manyRows(10)))).toBe(true);
         });
     });
 
@@ -422,7 +497,9 @@ describe("Feature: page through rows", () => {
             try {
                 const host = render(
                     html`<div style="background: var(--uui-color-surface); color: var(--uui-color-text); width: 700px">
-                        <uax-data-table .columns=${nameColumns} .rows=${manyRows(30)} page-size="10"></uax-data-table>
+                        <uax-data-table .columns=${nameColumns} .rows=${manyRows(30)} page-size="10">
+                            <span slot="footer">Updated 5 minutes ago</span>
+                        </uax-data-table>
                     </div>`,
                 ).container.querySelector("div")!;
                 await host.querySelector("uax-data-table")!.updateComplete;

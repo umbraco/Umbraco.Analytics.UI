@@ -124,6 +124,18 @@ export const PagedClient: Story = {
         </uui-box>`,
 };
 
+/** A note in the `footer` slot, on the left of the pager. The footer shows whenever the slot has content, even when the rows fit one page. */
+export const FooterSlot: Story = {
+    name: "Footer slot",
+    args: { columns: pageColumns, rows: manyPageRows },
+    render: (args) =>
+        html`<uui-box headline="Top pages" style="--uui-box-default-padding: 0">
+            <uax-data-table .columns=${args.columns} .rows=${args.rows}>
+                <span slot="footer">Updated 5 minutes ago</span>
+            </uax-data-table>
+        </uui-box>`,
+};
+
 /** A `uax-table-search` in the `toolbar` slot. In `client` mode the table filters its rows on the `searchable` columns (here only the URL), goes back to page 1 and shows the empty state when nothing matches. In `server` mode it never filters: listen for `search` and load the matching rows. */
 export const Search: Story = {
     args: {

@@ -143,7 +143,8 @@ const SKELETON_WIDTHS = [72, 54, 83, 47, 65];
  * @fires row-click - A row was clicked, or Enter or Space was pressed on it, while `clickable-rows` is set. Bubbles, not composed or cancelable, like `sort-change`. `detail` is `{ row }`: the object from `rows`.
  * @fires search - Not raised by the table: the `search` event of a `uax-table-search` in the `toolbar` slot bubbles through it, and the table has already set `query` and gone back to page 1 when a product's listener runs.
  * @slot toolbar - Content above the header row, such as a search box and totals. It pads itself with `--uax-table-padding`.
- * @cssprop --uax-table-padding - Padding around the `toolbar` slot, as a CSS `padding` value. Defaults to `12px 24px`. The loading bar ignores it and spans the full width at the top edge.
+ * @slot footer - Content below the rows, on the left of the pager, such as an "updated" note. The footer shows whenever this has content, even while loading, and pads itself with `--uax-table-padding`.
+ * @cssprop --uax-table-padding - Padding of the toolbar and footer sections, as a CSS `padding` value. Defaults to `12px 24px`. The loading bar ignores it and spans the full width at the top edge.
  * @cssprop --uax-series-1 - Bar colour of the first share column. Also `--uax-series-2` to `--uax-series-4` for the other slots.
  * @cssprop --uax-tint-neutral - Colour of the track behind a share bar.
  */
@@ -405,6 +406,11 @@ export class UaxDataTableElement extends UmbLitElement {
         return this.querySelector(':scope > [slot="toolbar"]') !== null;
     }
 
+    /** Whether anything is slotted into `footer`, for the same reason as `#hasToolbar`. */
+    get #hasFooterContent(): boolean {
+        return this.querySelector(':scope > [slot="footer"]') !== null;
+    }
+
     /** How many skeleton rows to draw on first load. */
     get #skeletonRowCount(): number {
         return SKELETON_ROWS;
@@ -577,7 +583,7 @@ export class UaxDataTableElement extends UmbLitElement {
                     : this.#visibleRows.map((row) => this.#renderRow(row))}
             </uui-table>
             ${this.#renderEmptyState(mode, hasData)}
-            ${this.#showPager && mode !== "skeleton" ? this.#renderPager() : nothing}
+            ${this.#renderFooter(this.#showPager && mode !== "skeleton")}
         </div>`;
     }
 
@@ -593,13 +599,20 @@ export class UaxDataTableElement extends UmbLitElement {
         return nothing;
     }
 
-    #renderPager(): TemplateResult {
-        return html`<uax-table-pager
-            .page=${this.#currentPage}
-            .pageSize=${this.#pageSize}
-            .total=${this.#totalRows}
-            .pageSizes=${this.#pageSizeOptions}
-            @page-change=${this.#onPagerChange}></uax-table-pager>`;
+    /** The footer section owns the border, padding and placement, like the toolbar above the table. The pager is only its controls. */
+    #renderFooter(showPager: boolean): TemplateResult {
+        // Always rendered, so the slot is there to raise `slotchange` when content arrives later. Hidden when it has nothing to show.
+        return html`<div class="footer" ?hidden=${!showPager && !this.#hasFooterContent}>
+            <slot name="footer" @slotchange=${() => this.requestUpdate()}></slot>
+            ${showPager
+                ? html`<uax-table-pager
+                      .page=${this.#currentPage}
+                      .pageSize=${this.#pageSize}
+                      .total=${this.#totalRows}
+                      .pageSizes=${this.#pageSizeOptions}
+                      @page-change=${this.#onPagerChange}></uax-table-pager>`
+                : nothing}
+        </div>`;
     }
 
     static override styles: CSSResultGroup = [
@@ -625,6 +638,29 @@ export class UaxDataTableElement extends UmbLitElement {
             /* The toolbar pads itself, only when something is slotted, so the loading bar can span the full width. */
             .has-toolbar .toolbar {
                 padding: var(--uax-table-padding, var(--uui-size-space-4) var(--uui-size-space-6));
+            }
+
+            /* The footer slot grows on the left, so the pager stays on the right. */
+            .footer {
+                display: flex;
+                align-items: center;
+                flex-wrap: wrap;
+                gap: var(--uui-size-space-4);
+                padding: var(--uax-table-padding, var(--uui-size-space-4) var(--uui-size-space-6));
+                border-top: 1px solid var(--uui-color-border);
+            }
+
+            .footer[hidden] {
+                display: none;
+            }
+
+            .footer slot {
+                display: block;
+                flex: 1;
+            }
+
+            uax-table-pager {
+                margin-left: auto;
             }
 
             uax-loading-bar {
