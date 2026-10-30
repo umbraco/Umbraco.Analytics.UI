@@ -28,6 +28,7 @@ export default {
         chartLegendLabel: "Legend",
         chartTableCaption: "Chart data",
         chartTableDateHeader: "Date",
+        chartTableCompareHeader: "{0} (compare)",
         chartMarkerAriaLabel: "Marker: {0}",
         chartMarkersLabel: "Markers",
         chartComparisonLabel: "Comparison",

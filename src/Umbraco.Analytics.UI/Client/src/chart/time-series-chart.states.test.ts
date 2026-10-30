@@ -160,7 +160,7 @@ describe("Feature: chart accessibility and cleanup", () => {
 
     describe("Scenario: a11y audit", () => {
         // Renders the chart on the surface, optionally under a UUI theme.
-        async function audit(themeCss?: string) {
+        async function audit(themeCss?: string, compare = false) {
             const theme = document.createElement("style");
             if (themeCss) {
                 theme.textContent = themeCss;
@@ -169,7 +169,10 @@ describe("Feature: chart accessibility and cleanup", () => {
             try {
                 const host = render(
                     html`<div style="background: var(--uui-color-surface); width: 400px">
-                        <uax-time-series-chart .series=${[...series, { ...series[0], id: "b", label: "Sessions" }]}></uax-time-series-chart>
+                        <uax-time-series-chart
+                            .series=${[...series, { ...series[0], id: "b", label: "Sessions" }]}
+                            .compareSeries=${compare ? [{ ...series[0], id: "pv" }] : []}
+                            compare-label=${compare ? "Previous period" : ""}></uax-time-series-chart>
                     </div>`,
                 ).container.querySelector("div")!;
                 await host.querySelector("uax-time-series-chart")!.updateComplete;
@@ -189,6 +192,18 @@ describe("Feature: chart accessibility and cleanup", () => {
 
         it("passes in the high contrast theme", async () => {
             expect(await audit(highContrastCss)).toHaveNoViolations();
+        });
+
+        it("passes with a compare series in the light theme", async () => {
+            expect(await audit(undefined, true)).toHaveNoViolations();
+        });
+
+        it("passes with a compare series in the dark theme", async () => {
+            expect(await audit(darkCss, true)).toHaveNoViolations();
+        });
+
+        it("passes with a compare series in the high contrast theme", async () => {
+            expect(await audit(highContrastCss, true)).toHaveNoViolations();
         });
     });
 });

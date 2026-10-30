@@ -11,6 +11,7 @@ import {
     type PropertyValues,
 } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
+import "../delta-badge/delta-badge.element.js";
 import "../empty-state/empty-state.element.js";
 import type { UaxGroupBy } from "../group-by/group-by.element.js";
 import { getLoadingMode } from "../internal/loading/loading-mode.js";
@@ -38,6 +39,7 @@ const tooltipDateFormat: Record<UaxGroupBy, Intl.DateTimeFormatOptions> = {
 
 interface DerivedFrom {
     series: UaxSeries[];
+    compareSeries: UaxSeries[];
     groupBy: UaxGroupBy;
     valueFormat?: Intl.NumberFormatOptions;
     lang: string;
@@ -47,6 +49,8 @@ interface Derived {
     data: UaxChartData;
     axisLabels: string[];
     dateLabels: string[];
+    /** Per series, the formatted date of each compare point (empty string where there is none). */
+    compareDateLabels: string[][];
     numberFormat: Intl.NumberFormat;
     lang: string;
 }
@@ -55,6 +59,7 @@ const emptyDerived: Derived = {
     data: { dates: [], series: [] },
     axisLabels: [],
     dateLabels: [],
+    compareDateLabels: [],
     numberFormat: new Intl.NumberFormat("en"),
     lang: "en",
 };
@@ -74,7 +79,9 @@ function tickFormat(valueFormat: Intl.NumberFormatOptions | undefined, max: numb
  * Shows a metric over time as lines or filled areas, with a legend, a hover tooltip and a visually
  * hidden table of the same data for screen readers.
  *
- * Draws only: pass the points in `series`. The x-axis labels follow `group-by`, and every number
+ * Draws only: pass the points in `series`. Pass last period's points in `compare-series` to draw them as a
+ * dashed line with the gap shaded. Series are matched by `id`, points by position (not by date).
+ * The x-axis labels follow `group-by`, and every number
  * (axis, tooltip, table) is formatted with `value-format` in the backoffice user's culture.
  * While `loading` is set it shows a skeleton on first load, or keeps the old data under a loading bar
  * when reloading. With no points it shows `uax-empty-state`.
@@ -86,6 +93,9 @@ function tickFormat(valueFormat: Intl.NumberFormatOptions | undefined, max: numb
  * @cssprop --uax-series-2 - Colour of the second series.
  * @cssprop --uax-series-3 - Colour of the third series.
  * @cssprop --uax-series-4 - Colour of the fourth series.
+ * @cssprop --uax-compare - Colour of the compare line.
+ * @cssprop --uax-gap-positive - Shading between a series and its compare line where the series is above it.
+ * @cssprop --uax-gap-negative - Shading between a series and its compare line where the series is below it.
  */
 @customElement("uax-time-series-chart")
 export class UaxTimeSeriesChartElement extends UmbLitElement {
@@ -96,6 +106,17 @@ export class UaxTimeSeriesChartElement extends UmbLitElement {
     /** One line per series. Dates are ISO ("2026-06-11"). Series needn't share the same dates. */
     @property({ attribute: false })
     series: UaxSeries[] = [];
+
+    /**
+     * The same metrics for another period, drawn as a dashed line. Each is matched to the series with the same `id`,
+     * and its points to that series' points by position (first with first), so the two periods can cover different dates.
+     */
+    @property({ attribute: false })
+    compareSeries: UaxSeries[] = [];
+
+    /** Names the compared period in the legend and tooltip, e.g. "Apr 25, 2026 – May 24, 2026". Defaults to the translation of "Comparison". */
+    @property({ type: String, attribute: "compare-label" })
+    compareLabel?: string;
 
     /** Sets the format of the x-axis labels. The points themselves are not grouped: pass them already grouped. */
     @property({ type: String, attribute: "group-by" })
@@ -151,7 +172,7 @@ export class UaxTimeSeriesChartElement extends UmbLitElement {
 
     protected override willUpdate(changed: PropertyValues<this>) {
         super.willUpdate(changed);
-        const next = { series: this.series, groupBy: this.groupBy, valueFormat: this.valueFormat, lang: this.localize.lang() };
+        const next = { series: this.series, compareSeries: this.compareSeries, groupBy: this.groupBy, valueFormat: this.valueFormat, lang: this.localize.lang() };
         const prev = this.#derivedFrom;
         if (!prev || (Object.keys(next) as (keyof typeof next)[]).some((key) => prev[key] !== next[key])) {
             this.#derivedFrom = next;
@@ -186,8 +207,8 @@ export class UaxTimeSeriesChartElement extends UmbLitElement {
      * too slow for the hundreds of labels and table cells of a long chart. These formatters use the
      * same language `localize` does.
      */
-    #derive({ series, groupBy, valueFormat, lang }: DerivedFrom): Derived {
-        const data = buildChartData(series);
+    #derive({ series, compareSeries, groupBy, valueFormat, lang }: DerivedFrom): Derived {
+        const data = buildChartData(series, compareSeries);
         const axisDate = new Intl.DateTimeFormat(lang, axisDateFormat[groupBy] ?? axisDateFormat.day);
         const tooltipDate = new Intl.DateTimeFormat(lang, tooltipDateFormat[groupBy] ?? tooltipDateFormat.day);
         const dates = data.dates.map(parseIsoDate);
@@ -195,6 +216,7 @@ export class UaxTimeSeriesChartElement extends UmbLitElement {
             data,
             axisLabels: dates.map((d) => axisDate.format(d)),
             dateLabels: dates.map((d) => tooltipDate.format(d)),
+            compareDateLabels: data.series.map((s) => (s.compareDates ?? []).map((d) => (d ? tooltipDate.format(parseIsoDate(d)) : ""))),
             numberFormat: new Intl.NumberFormat(lang, valueFormat),
             lang,
         };
@@ -202,6 +224,14 @@ export class UaxTimeSeriesChartElement extends UmbLitElement {
 
     #formatValue(value: number) {
         return this.#derived.numberFormat.format(value);
+    }
+
+    get #isComparing() {
+        return this.#derived.data.series.some((s) => s.compare);
+    }
+
+    get #compareText() {
+        return this.compareLabel || this.localize.term("uaxAnalytics_chartComparisonLabel");
     }
 
     /** Creates the chart if it doesn't exist, and draws it when the data or kind changed. */
@@ -232,7 +262,7 @@ export class UaxTimeSeriesChartElement extends UmbLitElement {
         this.#renderer.update({
             kind: this.kind === "area" ? "area" : "line",
             labels: axisLabels,
-            datasets: data.series.map((s) => ({ label: s.label, values: s.values })),
+            datasets: data.series.map((s) => ({ label: s.label, values: s.values, compare: s.compare })),
             yMax: scale.max,
             yStep: scale.step,
             formatTick: (value) => tick.format(value),
@@ -273,16 +303,32 @@ export class UaxTimeSeriesChartElement extends UmbLitElement {
             <div class="tooltip-date">${dateLabels[hover.index]}</div>
             ${values.map(
                 ({ s, i, value }) => html`<div class="tooltip-row">
-                    <span class="swatch" style="--swatch: var(--_uax-series-${(i % 4) + 1})"></span>
-                    <span class="tooltip-value">${this.#formatValue(value!)}</span>
-                    ${data.series.length > 1 ? html`<span class="tooltip-label">${s.label}</span>` : nothing}
-                </div>`,
+                        <span class="swatch" style="--swatch: var(--_uax-series-${(i % 4) + 1})"></span>
+                        <span class="tooltip-value">${this.#formatValue(value!)}</span>
+                        ${data.series.length > 1 ? html`<span class="tooltip-label">${s.label}</span>` : nothing}
+                    </div>
+                    ${this.#renderTooltipCompare(value!, s.compare?.[hover.index], this.#derived.compareDateLabels[i][hover.index])}`,
             )}
         </div>`;
     }
 
+    /** The compare value, with the change from it to the current value. No badge when there is nothing to divide by. */
+    #renderTooltipCompare(value: number, compare: number | null | undefined, compareDate: string) {
+        if (compare === null || compare === undefined) return nothing;
+        return html`<div class="tooltip-compare">
+            <div class="tooltip-row">
+                <span class="swatch swatch-compare"></span>
+                <span class="tooltip-value">${this.#formatValue(compare)}</span>
+                ${compare !== 0
+                    ? html`<uax-delta-badge size="sm" .value=${((value - compare) / Math.abs(compare)) * 100}></uax-delta-badge>`
+                    : nothing}
+            </div>
+            <div class="tooltip-sub">${compareDate}</div>
+        </div>`;
+    }
+
     #renderLegend() {
-        if (this.series.length < 2) return nothing;
+        if (this.series.length < 2 && !this.#isComparing) return nothing;
         return html`<ul class="legend" aria-label=${this.localize.term("uaxAnalytics_chartLegendLabel")}>
             ${repeat(
                 this.series,
@@ -292,6 +338,12 @@ export class UaxTimeSeriesChartElement extends UmbLitElement {
                     ${s.label}
                 </li>`,
             )}
+            ${this.#isComparing
+                ? html`<li>
+                      <span class="legend-line legend-compare" aria-hidden="true"></span>
+                      ${this.#compareText}
+                  </li>`
+                : nothing}
         </ul>`;
     }
 
@@ -305,14 +357,24 @@ export class UaxTimeSeriesChartElement extends UmbLitElement {
             <thead>
                 <tr>
                     <th scope="col">${this.localize.term("uaxAnalytics_chartTableDateHeader")}</th>
-                    ${data.series.map((s) => html`<th scope="col">${s.label}</th>`)}
+                    ${data.series.map(
+                        (s) => html`<th scope="col">${s.label}</th>
+                            ${s.compare
+                                ? html`<th scope="col">${this.localize.term("uaxAnalytics_chartTableCompareHeader", s.label)}</th>`
+                                : nothing}`,
+                    )}
                 </tr>
             </thead>
             <tbody>
                 ${data.dates.map(
                     (_, row) => html`<tr>
                         <th scope="row">${dateLabels[row]}</th>
-                        ${data.series.map((s) => html`<td>${s.values[row] === null ? "" : this.#formatValue(s.values[row]!)}</td>`)}
+                        ${data.series.map(
+                            (s) => html`<td>${s.values[row] === null ? "" : this.#formatValue(s.values[row]!)}</td>
+                                ${s.compare
+                                    ? html`<td>${s.compare[row] === null ? "" : this.#formatValue(s.compare[row]!)}</td>`
+                                    : nothing}`,
+                        )}
                     </tr>`,
                 )}
             </tbody>
@@ -349,6 +411,7 @@ export class UaxTimeSeriesChartElement extends UmbLitElement {
                           this.#derivedVersion,
                           this.localize.term("uaxAnalytics_chartTableCaption"),
                           this.localize.term("uaxAnalytics_chartTableDateHeader"),
+                          this.localize.term("uaxAnalytics_chartTableCompareHeader", "{0}"),
                       ],
                       () => this.#renderTable(),
                   )
@@ -396,7 +459,7 @@ export class UaxTimeSeriesChartElement extends UmbLitElement {
                 z-index: 2;
                 box-sizing: border-box;
                 min-width: 96px;
-                max-width: 240px;
+                max-width: 260px;
                 padding: var(--uui-size-space-2) var(--uui-size-space-3);
                 border: 1px solid color-mix(in srgb, var(--uui-palette-white) 18%, transparent);
                 border-radius: var(--uui-border-radius);
@@ -436,7 +499,38 @@ export class UaxTimeSeriesChartElement extends UmbLitElement {
                 font-weight: 700;
             }
 
+            /* The tooltip is dark in every theme: the badge reads its dark branch and ignores product overrides here. */
+            .tooltip uax-delta-badge {
+                margin-left: auto;
+                --uui-color-scheme: dark;
+                --uax-text-positive: initial;
+                --uax-text-negative: initial;
+                --uax-text-neutral: var(--uui-palette-white);
+                --uax-tint-positive: color-mix(in srgb, var(--uui-palette-jungle-green) 20%, transparent);
+                --uax-tint-negative: color-mix(in srgb, var(--uui-palette-spanish-pink) 20%, transparent);
+                --uax-tint-neutral: color-mix(in srgb, var(--uui-palette-white) 20%, transparent);
+            }
+
+            .tooltip-value,
+            .tooltip uax-delta-badge {
+                white-space: nowrap;
+            }
+
+            /* Indented under the value, past the swatch and its gap. */
+            .tooltip-sub {
+                margin: -2px 0 2px calc(8px + var(--uui-size-space-2));
+                font-size: 11px;
+                white-space: nowrap;
+                color: color-mix(in srgb, var(--uui-palette-white) 70%, transparent);
+            }
+
+            .swatch-compare {
+                background: var(--_uax-compare);
+            }
+
             .tooltip-label {
+                min-width: 0;
+                overflow-wrap: anywhere;
                 color: color-mix(in srgb, var(--uui-palette-white) 82%, transparent);
             }
 
@@ -463,6 +557,12 @@ export class UaxTimeSeriesChartElement extends UmbLitElement {
                 width: 18px;
                 border-top: 3px solid var(--swatch);
                 border-radius: 2px;
+            }
+
+            .legend-compare {
+                border-top-style: dashed;
+                border-top-width: 2px;
+                border-top-color: var(--_uax-compare);
             }
 
             .visually-hidden {

@@ -1,6 +1,11 @@
 export interface UaxChartColors {
     /** One entry per series, cycling through the four series tokens. */
     series: { line: string; fill: string }[];
+    /** The compare line. */
+    compare: string;
+    /** The gap between a series and its compare line where the series is above / below it. */
+    gapAbove: string;
+    gapBelow: string;
     grid: string;
     tick: string;
     surface: string;
@@ -30,6 +35,9 @@ export function resolveChartColors(probe: HTMLElement, seriesCount: number): Uax
     });
     return {
         series,
+        compare: colorOf("var(--_uax-compare)"),
+        gapAbove: colorOf("var(--_uax-gap-positive)"),
+        gapBelow: colorOf("var(--_uax-gap-negative)"),
         grid: colorOf("var(--uui-color-divider-standalone)"),
         tick: colorOf("var(--uui-color-text-alt)"),
         surface: colorOf("var(--uui-color-surface)"),

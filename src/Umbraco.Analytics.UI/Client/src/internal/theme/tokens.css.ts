@@ -31,6 +31,11 @@ import { css } from "@umbraco-cms/backoffice/external/lit";
  * the dark shades match their lines. A product that overrides `--uax-series-N` gets that colour as the fill.
  * Fills are decoration (the line or bar edge carries the series), so they have no contrast target.
  *
+ * Compare gap (the shading between a series and its compare line): the light and high contrast value is
+ * 15% of `--uui-color-positive` / `--uui-color-danger` (1.2 to 1.3:1 on white), which vanishes on the dark
+ * surface (1.05:1). Dark uses 25% jungle-green (1.56:1 on #2d333b) and 40% maroon-flush (1.36:1). The
+ * shading is decoration: the lines and the tooltip carry the values.
+ *
  * Neutral tint: 20% of `--uui-color-text` over the surface gives a track of 1.59:1 (light and
  * high contrast) and 1.78:1 (dark). The old 40% of `--uui-color-divider` was 1.03:1 / 1.06:1.
  *
@@ -84,6 +89,21 @@ export const uaxThemeTokens = css`
         --_uax-compare: var(
             --uax-compare,
             light-dark(var(--uui-palette-chamoisee), var(--uui-palette-deep-saffron))
+        );
+
+        --_uax-gap-positive: var(
+            --uax-gap-positive,
+            light-dark(
+                color-mix(in srgb, var(--uui-color-positive) 15%, transparent),
+                color-mix(in srgb, var(--uui-palette-jungle-green) 25%, transparent)
+            )
+        );
+        --_uax-gap-negative: var(
+            --uax-gap-negative,
+            light-dark(
+                color-mix(in srgb, var(--uui-color-danger) 15%, transparent),
+                color-mix(in srgb, var(--uui-palette-maroon-flush) 40%, transparent)
+            )
         );
 
         --_uax-text-positive: var(

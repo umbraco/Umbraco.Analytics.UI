@@ -171,6 +171,8 @@ Storybook gets a "Pane" story showing this recipe, a chart and a table in one `u
 
 ### Later: not in v1
 
+**Chart `lower-is-better`.** For metrics where a drop is good (bounce rate, refund rate): flip the gap shading colours and pass it to the tooltip badge. The chart treats higher as better until then.
+
 **`uax-funnel` (conversion funnel).** Parked until a product commits to using it. Today none does:
 
 - Engage's funnel is on Campaign Reporting, which exists only in the design.

@@ -6,7 +6,8 @@ import "./register.js";
 export interface UaxChartModel {
     kind: "line" | "area";
     labels: string[];
-    datasets: { label: string; values: (number | null)[] }[];
+    /** `compare` is drawn as a dashed line, with the gap to `values` shaded. */
+    datasets: { label: string; values: (number | null)[]; compare?: (number | null)[] }[];
     /** The y-axis runs from 0 to `yMax` in steps of `yStep`. */
     yMax: number;
     yStep: number;
@@ -100,8 +101,11 @@ export class UaxChartRenderer {
         const showDots = model.labels.length <= MAX_POINTS_WITH_DOTS;
 
         chart.data.labels = model.labels;
-        chart.data.datasets = model.datasets.map((set, i) => {
+        // Compare lines come after every series, so each series keeps its dataset index.
+        const compared = model.datasets.flatMap((set, i) => (set.compare ? [i] : []));
+        const currentSets = model.datasets.map((set, i) => {
             const color = colors.series[i];
+            const compareIndex = compared.indexOf(i);
             return {
                 label: set.label,
                 data: set.values,
@@ -111,8 +115,13 @@ export class UaxChartRenderer {
                 borderJoinStyle: "round" as const,
                 cubicInterpolationMode: "monotone" as const,
                 spanGaps: true,
-                fill: model.kind === "area" ? "origin" : false,
-                pointRadius: showDots ? 2 : 0,
+                fill:
+                    compareIndex >= 0
+                        ? { target: model.datasets.length + compareIndex, above: colors.gapAbove, below: colors.gapBelow }
+                        : model.kind === "area"
+                          ? ("origin" as const)
+                          : false,
+                pointRadius: showDots && compareIndex < 0 ? 2 : 0,
                 pointBackgroundColor: color.line,
                 pointBorderColor: color.line,
                 pointHoverRadius: 4,
@@ -121,6 +130,24 @@ export class UaxChartRenderer {
                 pointHoverBorderWidth: 2,
             };
         });
+        const compareSets = compared.map((i) => ({
+            label: model.datasets[i].label,
+            data: model.datasets[i].compare!,
+            borderColor: colors.compare,
+            backgroundColor: colors.compare,
+            borderWidth: 1.75,
+            borderDash: [5, 4],
+            borderJoinStyle: "round" as const,
+            cubicInterpolationMode: "monotone" as const,
+            spanGaps: true,
+            fill: false,
+            pointRadius: 0,
+            pointHoverRadius: 4,
+            pointHoverBackgroundColor: colors.surface,
+            pointHoverBorderColor: colors.compare,
+            pointHoverBorderWidth: 2,
+        }));
+        chart.data.datasets = [...currentSets, ...compareSets];
 
         const font = { family: colors.fontFamily, size: 11 };
         const options = chart.options;

@@ -113,6 +113,8 @@ export type UaxSeries = {
 
 // @public
 export class UaxTimeSeriesChartElement extends UmbLitElement {
+    compareLabel?: string;
+    compareSeries: UaxSeries[];
     // (undocumented)
     connectedCallback(): void;
     // (undocumented)

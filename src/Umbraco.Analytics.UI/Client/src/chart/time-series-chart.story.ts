@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/web-components-vite";
 import { html } from "@umbraco-cms/backoffice/external/lit";
 import type { UaxTimeSeriesChartElement } from "./time-series-chart.element.js";
 import "./time-series-chart.element.js";
-import { pageviews, revenue, sessions } from "./internal/chart-fixtures.js";
+import { compareRangeLabel, pageviews, pageviewsPrevious, revenue, sessions, sessionsPrevious } from "./internal/chart-fixtures.js";
 
 const meta: Meta<UaxTimeSeriesChartElement> = {
     title: "Components/Time Series Chart",
@@ -10,6 +10,8 @@ const meta: Meta<UaxTimeSeriesChartElement> = {
     args: {
         kind: "line",
         series: [pageviews],
+        compareSeries: [],
+        compareLabel: undefined,
         groupBy: "day",
         valueFormat: undefined,
         loading: false,
@@ -25,6 +27,8 @@ const meta: Meta<UaxTimeSeriesChartElement> = {
             <uax-time-series-chart
                 .kind=${args.kind}
                 .series=${args.series}
+                .compareSeries=${args.compareSeries}
+                .compareLabel=${args.compareLabel}
                 .groupBy=${args.groupBy}
                 .valueFormat=${args.valueFormat}
                 .loading=${args.loading}
@@ -58,3 +62,14 @@ export const Empty: Story = {
 
 /** Two series get a legend. */
 export const TwoSeries: Story = { args: { series: [pageviews, sessions] } };
+
+/** One series against the previous period: a dashed line, the gap shaded (green where above, red where below) and a legend. */
+export const Compare: Story = {
+    args: { series: [pageviews], compareSeries: [pageviewsPrevious], compareLabel: compareRangeLabel },
+};
+
+/** Each series is matched to its compare series by `id`; they share the one compare colour and label. */
+export const CompareTwoSeries: Story = {
+    name: "Compare, two series",
+    args: { series: [pageviews, sessions], compareSeries: [pageviewsPrevious, sessionsPrevious], compareLabel: compareRangeLabel },
+};
