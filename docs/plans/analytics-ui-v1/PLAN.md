@@ -8,7 +8,7 @@
 
 ## Foundation
 
-- [ ] **T1** - story: FND-1 (AC1–AC3). Add `src/theme/tokens.css.ts` exporting a Lit `css` block that sets `--uan-series-1`…`--uan-series-4` and `--uan-compare` from the UUI palette (ARCHITECTURE.md decision 6), plus `--uan-tint-positive`, `--uan-tint-negative` and `--uan-tint-neutral` via `color-mix()` on `--uui-color-positive`, `--uui-color-danger` and `--uui-color-divider`. Every element adds it to its `styles`. Export from `src/theme/index.ts`.
+- [x] **T1** - story: FND-1 (AC1–AC3). Add `src/theme/tokens.css.ts` exporting a Lit `css` block that sets `--uan-series-1`…`--uan-series-4` and `--uan-compare` from the UUI palette (ARCHITECTURE.md decision 6), plus `--uan-tint-positive`, `--uan-tint-negative` and `--uan-tint-neutral` via `color-mix()` on `--uui-color-positive`, `--uui-color-danger` and `--uui-color-divider`. Every element adds it to its `styles`. Export from `src/theme/index.ts`.
   Acceptance: FND-1 specs green. A Storybook "Theme" story shows the swatches in light, dark and high-contrast.
   depends-on: none. parallel-group: A
 
