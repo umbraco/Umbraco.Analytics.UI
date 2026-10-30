@@ -60,7 +60,7 @@
   Acceptance: CHT-3 specs green. "Stacked with compare" story matches `vis-cmp.png`.
   depends-on: T10
 
-- [ ] **T12** - story: CHT-4 (AC1–AC5). Add `markers` through a private Chart.js plugin in `src/chart/internal/markers-plugin.ts`, following Engage v18's `annotation-dataset-generator.controller.ts` (ARCHITECTURE.md decision 3). Each dot gets an HTML button overlay, so it's focusable in date order, shows the marker tooltip, and raises `marker-click`.
+- [x] **T12** - story: CHT-4 (AC1–AC5). Add `markers` through a private Chart.js plugin in `src/chart/internal/markers-plugin.ts`, following Engage v18's `annotation-dataset-generator.controller.ts` (ARCHITECTURE.md decision 3). Each dot gets an HTML button overlay, so it's focusable in date order, shows the marker tooltip, and raises `marker-click`.
   Acceptance: CHT-4 specs green, axe clean with markers. "Markers" story matches `an-pin-tip.png`.
   depends-on: T11
 
