@@ -10,7 +10,7 @@ All elements live in `src/Umbraco.Analytics.UI/Client/src/<name>/` and are expor
 
 - extends `UmbLitElement` and localizes every visible string, `aria-label` and placeholder
 - uses `--uui-*` tokens and reads colours through the `--uax-color-*` read tokens (ARCHITECTURE.md decision 6), and reads correctly in the light, dark and high-contrast themes
-- raises events as `CustomEvent`s that bubble but are not `composed`, like UUI's `change`, with the payload in `detail` (an exported `Uax…Detail` type). The KPI tile's `selected`/`deselected` are bubbling, cancelable, non-composed `CustomEvent`s with `detail` `{}`, like `UUISelectableEvent`
+- raises events as `CustomEvent`s that bubble but are not `composed`, like UUI's `change`, with the payload in `detail` (an exported `Uax…Detail` type). The exception is `retry` (`uax-error-state` and the chart and table that re-raise it): a plain `Event` that bubbles, is not `composed` and has no detail. The KPI tile's `selected`/`deselected` are bubbling, cancelable, non-composed `CustomEvent`s with `detail` `{}`, like `UUISelectableEvent`
 - passes an axe audit in its tests and in every Storybook story
 - takes corner radius from `--uui-border-radius-*` tokens, so it follows the v18+ rounded backoffice
 
@@ -27,12 +27,24 @@ type UaxGroupBy = "day" | "week" | "month";
 type UaxChartKind = "line" | "area" | "bar" | "stacked-bar";
 type UaxDateRange = { from: string; to: string; preset?: string };
 type UaxCompare = { mode: "previous-period" | "previous-year" | "custom"; from: string; to: string };
+type UaxDateSpan = { from: string; to: string };              // any range; a UaxDateRange or UaxCompare fits
+type UaxDateBucket = { start: string; days: string[] };       // start: where the chart plots the bucket; days: only the days inside the range
 
 // Event details
 type UaxGroupByChangeDetail = { value: UaxGroupBy };
 type UaxDateRangeChangeDetail = { value: UaxDateRange; compare?: UaxCompare };
 type UaxMarkerClickDetail = { id: string };
+type UaxSegmentedChangeDetail = { value: string };
 ```
+
+**Date helpers** (public functions in `src/date-helpers/`, for products that use them without the picker; weeks start on Monday, not locale-dependent):
+
+- `uaxPreviousPeriod(range)`: the same number of days straight before `range` (`UaxDateSpan`, or `undefined` for an invalid range).
+- `uaxPreviousYear(range)`: the same dates one year earlier (`UaxDateSpan` or `undefined`).
+- `uaxCompareFor(mode, range)`: a full `UaxCompare` for `previous-period` or `previous-year`. `custom` and invalid ranges give `undefined`.
+- `uaxDaysIn(range)`: every day in the range, both ends included.
+- `uaxDateBuckets(range, groupBy)`: `UaxDateBucket[]`. `start` is the day, the Monday of the week or the 1st of the month. `days` holds only days inside the range.
+- `uaxFormatDateRange(localize, range, { showYear })`: the range as "May 25, 2026 to Jun 23, 2026", the label the date range button and the chart's `compare-label` use. It takes `this.localize`, so it follows the user's culture and the translated "{0} to {1}" term. `showYear: false` leaves the year off.
 
 ### 1. Panes: `uui-box`, not a new element
 
@@ -57,13 +69,18 @@ Storybook gets a "Pane" story showing this recipe, a chart and a table in one `u
   - `icon`
   - `delta`, `delta-unit` and `lower-is-better` (passed to `uax-delta-badge`)
   - `selectable`, `selected`
+  - `no-data`: the metric has no data for the period (see below)
+  - `error`: the data could not be loaded (see below)
 - One style only: a card with the icon in a pink square, as in every Phase 1 screenshot.
-- Not used for table totals ("TOTAL PAGEVIEWS 272 +8.4%"). Those are a label and a number, which the product writes in the table's `toolbar` slot, using `uax-delta-badge` for the change.
+- Not used for table totals ("TOTAL PAGEVIEWS 272 +8.4%"). Those are a label and a number, which the product slots into the table's summary row (`summary-<column key>`, §7), using `uax-delta-badge` for the change.
 - **Selectable:** follows UUI's `SelectableMixin` (as `uui-card` uses), so product code reads the same as for UUI cards. This lets a row of tiles switch which metric a chart shows, like Engage's `AnStatPanes`.
   - When `selectable`, the tile is a toggle button with `aria-pressed` (UUI cards don't expose their state to screen readers; this does).
   - Clicking, Enter or Space on an unselected tile raises a cancelable `selected` event, then sets `selected` unless the event was cancelled.
   - On a selected tile it raises a cancelable `deselected` event, then clears `selected`, unless the event was cancelled or `deselectable` is false (default true). A product keeping exactly one tile selected sets `deselectable` false and clears the others on `selected`.
+  - A selected tile with `deselectable` false raises nothing when pressed. This departs from `uui-card`, which raises `selected` again.
   - Look matches `uui-card`: a 2px `--uui-color-selected` border just outside the card with a soft glow when selected; the same border at 33% on hover when not selected, 80% on hover when selected; focus is a separate `--uui-color-focus` outline.
+- **No data:** `no-data` shows a dash (hidden from screen readers) with the hidden text "No data yet" and no change badge. The tile keeps its height and stays selectable. With `loading` it keeps the dash and is busy. It is a boolean on purpose: an unset `value` means "not loaded yet", and a formatted "0" is a real value.
+- **Error:** `error` shows the label, a dash and no badge, with the hidden text "Something went wrong". The tile has no Retry button (a row of tiles would each show one) and stays selectable. `error` wins over `no-data` and `loading`, and the tile is not busy.
 - Tiles in one row keep the same height, even when a label wraps. The badge sits below the value when the tile is too narrow to fit both on one line (as in `kpi-size.png`).
 
 ### 3. `uax-delta-badge`: change badge (exists, needs restyling)
@@ -86,8 +103,11 @@ Storybook gets a "Pane" story showing this recipe, a chart and a table in one `u
   - `markers` (`UaxMarker[]`)
   - `group-by` (`UaxGroupBy`, sets the x-axis label format)
   - `value-format` (`Intl.NumberFormatOptions`)
+  - `range` (`UaxDateRange`), `compare` (`UaxCompare`): the period starts, to align compare points (see Comparison)
   - `loading`
   - `empty-headline`, `empty-description`
+  - `error`, `error-headline`, `error-description`, `retryable`: see Error
+- **Error:** `error` replaces the plot, legend and hidden table with `uax-error-state` (§8), passing on `error-headline`, `error-description` and `retryable`. The canvas stays in the DOM, hidden, so a retry doesn't rebuild the chart. The chart re-raises the state's `retry` from its own host. Precedence is error, then loading, then empty: an element in error is not `aria-busy` and shows no skeleton or loading bar. `error` is a plain property, so the product decides what an error is.
 - **Comparison, by kind:**
   - `line` and `area`: a dashed `--uax-compare` line, with the gap between the two lines shaded.
   - `bar` and `stacked-bar`: the comparison total is drawn as a bar behind each date's bars. For bar kinds, all compare series are summed per date and aligned by bucket offset like any compare series (no `id` matching), and the current total for that date is shown in the tooltip and hidden table whenever it's compared against two or more series.
@@ -106,10 +126,19 @@ Storybook gets a "Pane" story showing this recipe, a chart and a table in one `u
   - Bar kinds have no smoothing.
 - **Accessibility:** a visually hidden table holds the same data, for screen readers.
 
-### 5. `uax-group-by`: Day / Week / Month switch
+### 5. `uax-group-by` and `uax-segmented`: Day / Week / Month switch
+
+**`uax-segmented`** (public) is a segmented control: a row of options with exactly one selected, built as a radio group. UUI has no such control (`uui-button-group` has no selection, `uui-tabs` switches panels, `uui-radio-group` draws radio circles).
+
+- Properties: `value` (the selected option's `value`), `options` (`{ value, label }[]`) and `label` (the group's accessible name, not shown).
+- Arrow keys move the selection and focus to the next or previous option, wrapping at the ends. Only the selected option is in the tab order (the first when `value` matches no option).
+- Clicking another option sets `value` and raises `change` with `{ value }` (`UaxSegmentedChangeDetail`). Clicking the selected option raises nothing.
+- Put it in a `uui-box`'s `header-actions` slot.
+
+**`uax-group-by`** is `uax-segmented` with the day, week and month options.
 
 - Properties: `value` (`UaxGroupBy`), `options` (defaults to all three).
-- A radio group. Arrow keys move between options. Changing raises `change` with `{ value }` (`UaxGroupByChangeDetail`).
+- It re-raises its own `change` with `{ value }` (`UaxGroupByChangeDetail`).
 
 ### 6. `uax-date-range`: date range picker
 
@@ -122,6 +151,8 @@ Storybook gets a "Pane" story showing this recipe, a chart and a table in one `u
   - `presets` (defaults to last 7 days, last 30 days, last month, last year and custom; a product can pass its own, such as AI's last 24 hours)
   - `allow-compare` (default true). A plain boolean attribute, like `deselectable` and UUI's: it can't say false, so turn it off with the property, `.allowCompare=${false}`
   - `max-date` (default today)
+  - `today` (an ISO date). Presets, the default `value` and the default `max-date` count from it. Unset uses the clock, and text that isn't a real date is ignored, so a typo can't break the picker. `max-date` still wins for the latest allowed date. A `value` the product sets stays as given. Examples set it so presets match their fixed data.
+- With a comparison on, the button stays as tall as `uax-group-by` (40px) and shows two lines: the range on line 1, "vs Apr 25 to May 24" on line 2 in the small, alt text style. The year is left off line 2 only when the range and both compare dates share a year. The button's accessible name is the purpose plus both lines as shown. Both lines are cut with an ellipsis in a narrow header. Without a comparison the button is unchanged.
 - The button opens `uax-date-range-modal` through the backoffice modal manager.
   - **Save** closes the dialog and raises `change` with `{ value, compare }` (`UaxDateRangeChangeDetail`).
   - **Close** discards the edits.
@@ -145,9 +176,12 @@ Storybook gets a "Pane" story showing this recipe, a chart and a table in one `u
   - `clickable-rows` (makes rows openable and raises `row-click`)
   - `loading`
   - `empty-headline`, `empty-description`
+  - `error`, `error-headline`, `error-description`, `retryable`
+- **Error:** `error` shows `uax-error-state` (§8) in place of the rows, passing on `error-headline`, `error-description` and `retryable`. The header stays. The rows, summary row, skeleton, "No results" and pager go. The table re-raises the state's `retry` from its own host. Precedence is error, then loading, then empty: the table in error is not `aria-busy` and shows no skeleton or loading bar. `error` is a plain property, so the product decides what an error is.
 - **Loading:** cells take an optional `loading` flag and draw their own placeholder, so loading rows match loaded rows. A cell without `loading` gets a generic placeholder.
 - **Cells are elements**, as in the CMS `umb-table`: each gets `column`, `item` (the row) and `value`. A column names its cell with `elementName` (default the text cell); the package ships ready-made cells (`uax-share-cell` and others, with exported name constants). Columns have no `type`: alignment is `align`, sorting is `sortAs` (number, text or a compare function). Cells that need table-wide data (column total and max, compare rows) read it from the table's context, so the table doesn't special-case any cell.
-- Slots: `toolbar`, for the search box and totals above the header, and `footer`, left of the pager.
+- Slots: `toolbar`, for the search box (or any free layout above the header), `summary-<column key>` for totals, and `footer`, left of the pager.
+- **Summary row:** content slotted as `summary-<column key>` sits in that column's cell, so it lines up with the header and the numbers below and takes the column's `align`. It is a row of the table, directly under the header, and is not sorted, searched or paged. It stays hidden while nothing is slotted for a column the table has. Content that arrives later shows it. A slot for an unknown column draws nothing. In `error` it is hidden.
 - **Padding:** the cells pad themselves. The `toolbar` slot pads itself with the public CSS property `--uax-table-padding` (default `12px 24px`), only when something is slotted. The reload loading bar sits outside it at the element's top edge, full width, so put the table in a `uui-box` with `--uui-box-default-padding: 0`.
 - **Share cells (`UAX_TABLE_CELL.share`):** show the value, its percent of the column total, and a thin bar scaled to the column's largest value.
   - The first share column uses `--uax-series-1`, the second `--uax-series-2`.
@@ -155,13 +189,26 @@ Storybook gets a "Pane" story showing this recipe, a chart and a table in one `u
 - **Compare badges:** number, percent and share cells show a change badge when the table has a compare row for the row. `uax-table-compare-badge` is the public piece behind them, and a product's own cell uses it with `column`, `item` and `value`. A column's `meta.lowerIsBetter` makes a fall positive.
 - **Link cells (`UAX_TABLE_CELL.link`):** render an anchor. The row's `href` comes from the column's `meta.hrefKey`.
 - **Sorting:** clicking a sortable header toggles the direction and raises `sort-change`. In `client` mode the table also sorts itself.
-- **Paging:** the footer has "Per page" (10, 25, 50, 100) and "1–10 of 272". It raises `page-change` with `{ page, pageSize }`, and in `client` mode it also pages itself. The footer is hidden when the rows fit on one page at the smallest page size the editor could need (row count ≤ the smaller of the current page size and 10), so a table at 50 rows per page can still go back to 10.
+- **Paging:** the footer is an internal compact pager (`uax-compact-pager`, no table wording; its text comes from the `pager*` keys, so a product rewords it with its own localization). It has "Per page" (10, 25, 50, 100) and "1–10 of 272". It raises `page-change` with `{ page, pageSize }`, and in `client` mode it also pages itself. The footer is hidden when the rows fit on one page at the smallest page size the editor could need (row count ≤ the smaller of the current page size and 10), so a table at 50 rows per page can still go back to 10.
 - **Search:** `uax-data-table` exports `uax-table-search` for the toolbar. It raises `search` with `{ query }`, 300ms after typing stops. In `client` mode the table filters rows on columns marked `searchable`; if none are marked, on every column's text.
+- **`UaxTableServerController`** (public) runs the server side of a `server` table, so a page doesn't write the wiring again. It is a Lit `ReactiveController` that works on any host: create it on the page, attach it with `${ref(controller.attach)}`, and don't bind the properties it sets.
+  - **Options:** `load(state, signal)` (required, returns the rows and any fields of your own), `sort`, `page` (default 1), `pageSize` (default 10), `query`, `onError(error)` and `retryable` (default true).
+  - **Sets on the table:** `mode="server"`, `sort`, `page`, `pageSize`, `query`, `rows`, `compareRows`, `totalRows`, `stats`, `loading`, `error` and `retryable`. `result` hands back the last good answer with your own fields.
+  - **When it loads:** when the host connects, and on the table's `sort-change`, `page-change` and `search`. A sort or search goes back to page 1, and a search with the same query loads nothing. `reload({ resetPage })` is for changes it can't see, such as the date range.
+  - **Newer wins:** a newer request aborts the one before it (the `AbortSignal` passed to `load`), and a late answer is also dropped by a request counter, because a loader may ignore the signal. An aborted request is not an error.
+  - **Failure:** any other rejection sets `error` (on the controller and the table), keeps the old rows in `result`, clears `loading` and calls `onError`. The table's `retry` calls `reload()`. The error clears when the next request starts, so a retry shows the skeleton or the old rows under a loading bar.
+  - **Disconnected host:** it starts nothing (`reload` and table events do nothing). The host leaving aborts the request, and the state is loaded as it is on reconnect.
 - **Rows:** a row is clickable only when the product sets `clickable-rows` (an element can't tell whether `row-click` has a listener). Then it's keyboard-reachable (Enter or Space) and raises `row-click` with `{ row }`. Clicks on links and buttons inside a row stay with them.
 
-### 8. `uax-empty-state` and loading
+### 8. `uax-empty-state`, `uax-error-state` and loading
 
 - **`uax-empty-state`:** properties `headline`, `description`, `icon`. The data elements use it when they have no data. A product can also place it on its own.
+- **`uax-error-state`:** a separate public element (not a variant of the empty state: an error needs a role, a Retry action and an event). Same layout and look as the empty state, with an alert icon.
+  - Properties: `headline`, `description`, `icon` and `retryable` (default false).
+  - Without `headline` or `description` it shows "Something went wrong" and "The data could not be loaded." An empty string hides that line.
+  - `retryable` shows a Retry button that raises `retry` (a plain `Event`, bubbling, not composed, no detail). Without it there is no button.
+  - The text is announced when it appears (`role="alert"`).
+  - The chart and table show it when `error` is set. The KPI tile shows a dash instead.
 - **Loading:** each data element (chart, table, KPI tile) has a `loading` property.
   - On first load it shows a skeleton the same size as the loaded element, so the page doesn't jump.
   - While reloading with data already shown, the old data stays visible under a thin loading bar at the top.
@@ -177,6 +224,7 @@ Storybook gets a "Pane" story showing this recipe, a chart and a table in one `u
 |---|---|---|
 | First run | Yes | Data elements show `uax-empty-state` with the product's `empty-headline` and `empty-description`. Defaults: "No data yet" / "Try a wider date range." |
 | The mistake | Date range only | Inline field error, Save disabled. The other elements take no input that can be wrong. |
+| An error | Yes | The chart and table show `uax-error-state`, with Retry when `retryable`. The tile shows a dash. Error wins over loading and empty. |
 | The wait | Yes | A skeleton on first load. On reload, the old data stays under a loading bar. |
 | The finish | Date range only | The dialog closes and the button shows the new range. No toast: the data updating is the confirmation. |
 | The return | Product's job | Elements don't store state. Products keep the date range, group-by, sort and page size between visits. `change` events carry everything needed to save them. |

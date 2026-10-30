@@ -3,16 +3,11 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { html } from "@umbraco-cms/backoffice/external/lit";
 import "@umbraco-cms/backoffice/external/uui";
-import { deepQuery, recordEvents, renderElement, settle, shadow, type UaxTestElement } from "../internal/test/dom.js";
+import { deepQuery, pressed, recordEvents, renderElement, settle, shadow, type UaxTestElement } from "../internal/test/dom.js";
 import "./time-series-chart.element.js";
 
 const series = [{ id: "pv", label: "Pageviews", points: [{ date: "2026-06-01", value: 40 }, { date: "2026-06-02", value: 120 }] }];
 
-// uui-button raises its click a tick after `click()`, so a spec waits before it counts events.
-const pressed = async (button: HTMLElement) => {
-    button.click();
-    await new Promise((resolve) => setTimeout(resolve));
-};
 const errorState = (el: Element) => shadow(el).querySelector("uax-error-state") as UaxTestElement | null;
 
 describe("Feature: chart error state", () => {

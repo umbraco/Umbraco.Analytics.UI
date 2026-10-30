@@ -252,4 +252,16 @@ describe("Feature: Umbraco AI usage page", () => {
             expect(deepQueryAll(shadow(page), "uax-skeleton")).toHaveLength(0);
         });
     });
+
+    describe("Scenario (sad path): the API fails", () => {
+        it("shows the error state", async () => {
+            const page = await renderPageExample(
+                html`<example-ai-usage-page .latency=${0} failing></example-ai-usage-page>`,
+                "example-ai-usage-page",
+            );
+            await expect.poll(() => chart(page).error).toBe(true);
+            await settle(page);
+            expect(shadow(chart(page)).querySelector("uax-error-state")).not.toBe(null);
+        });
+    });
 });

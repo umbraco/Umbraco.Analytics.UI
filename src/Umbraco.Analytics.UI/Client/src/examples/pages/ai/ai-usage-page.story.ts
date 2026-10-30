@@ -33,8 +33,8 @@ const meta: Meta = {
 export default meta;
 
 // The host stands in for the backoffice's modal manager, which the date range dialog opens through.
-const render = (latency?: number) => html`
-    <uax-test-modal-host><example-ai-usage-page latency=${ifDefined(latency)}></example-ai-usage-page></uax-test-modal-host>
+const render = (latency?: number, failing = false) => html`
+    <uax-test-modal-host><example-ai-usage-page latency=${ifDefined(latency)} ?failing=${failing}></example-ai-usage-page></uax-test-modal-host>
 `;
 
 /**
@@ -59,5 +59,12 @@ export const Usage: StoryObj = {
 export const SlowApi: StoryObj = {
     name: "Slow API",
     render: () => render(1500),
+    parameters: { docs: sourceDocs(code) },
+};
+
+/** The same page when the API fails: the tiles, chart and breakdown table show the error state, and the chart and table offer Retry. Pressing Retry loads again, and fails again, since the fake API keeps failing. */
+export const FailingApi: StoryObj = {
+    name: "Failing API",
+    render: () => render(undefined, true),
     parameters: { docs: sourceDocs(code) },
 };

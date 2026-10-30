@@ -1,6 +1,6 @@
 # Stories: Analytics UI v1
 
-**19 stories, 100 criteria.** Story ids are used by `PLAN.md` and the spec files, so never renumber them.
+**31 stories, 181 criteria.** Story ids are used by `PLAN.md` and the spec files, so never renumber them.
 
 > [!IMPORTANT]
 > **3 guesses need your OK.**
@@ -19,7 +19,11 @@
 - [BDG-1](#bdg-1-change-badge-matches-the-design) Change badge matches the design, 7 criteria
 - [KPI-1](#kpi-1-kpi-tile-shows-a-headline-number) KPI tile shows a headline number, 7 criteria
 - [KPI-2](#kpi-2-kpi-tiles-switch-the-charts-metric) KPI tiles switch the chart's metric, 9 criteria
+- [KPI-3](#kpi-3-kpi-tile-with-no-data) KPI tile with no data, 6 criteria
 - [GRP-1](#grp-1-day--week--month-switch) Day / Week / Month switch, 4 criteria
+- [SEG-1](#seg-1-segmented-control) Segmented control, 6 criteria
+- [ERR-1](#err-1-error-state) Error state, 6 criteria
+- [ERR-2](#err-2-chart-table-and-tile-in-error) Chart, table and tile in error, 7 criteria
 
 **Time-series chart**
 
@@ -27,12 +31,15 @@
 - [CHT-2](#cht-2-compare-with-another-period) Compare with another period, 5 criteria
 - [CHT-3](#cht-3-bar-and-stacked-bar-chart) Bar and stacked bar chart, 4 criteria
 - [CHT-4](#cht-4-event-markers) Event markers, 5 criteria
+- [CHT-5](#cht-5-compare-points-under-the-same-bucket) Compare points under the same bucket, 8 criteria
 
 **Date range**
 
 - [DR-1](#dr-1-pick-a-date-range) Pick a date range, 8 criteria
 - [DR-2](#dr-2-pick-a-comparison-range) Pick a comparison range, 5 criteria
 - [DR-3](#dr-3-the-button-with-a-comparison) The button with a comparison, 5 criteria
+- [DR-4](#dr-4-a-fixed-today) A fixed today, 6 criteria
+- [DAT-1](#dat-1-public-date-helpers) Public date helpers, 8 criteria
 
 **Data table**
 
@@ -41,6 +48,10 @@
 - [TBL-3](#tbl-3-page-through-rows) Page through rows, 5 criteria
 - [TBL-4](#tbl-4-search-rows) Search rows, 3 criteria
 - [TBL-5](#tbl-5-open-a-row) Open a row, 3 criteria
+- [TBL-6](#tbl-6-summary-row) Summary row, 9 criteria
+- [TBL-7](#tbl-7-compare-badge-in-value-cells) Compare badge in value cells, 6 criteria
+- [TBL-8](#tbl-8-compact-pager-label) Compact pager label, 3 criteria
+- [SRV-1](#srv-1-server-table-wiring) Server table wiring, 11 criteria
 
 **Integration**
 
@@ -764,4 +775,503 @@ AC4 — Version stamped
   Given a release build
   When  the package is packed
   Then  umbraco-package.json's version matches the NuGet package version
+```
+
+## KPI-3: KPI tile with no data
+
+As an editor,
+I want a tile to say "no data" when the period has none,
+so that I don't read an empty metric as a real zero.
+
+```
+AC1 — Dash in place of the value
+  Given a uax-kpi-tile with no-data set and a label
+  When  it renders
+  Then  it shows a dash and no value, and keeps its label
+
+AC2 — Screen readers hear it
+  Given a tile with no-data set
+  When  a screen reader reads it
+  Then  it hears "No data yet" (the dash itself is hidden)
+
+AC3 — No badge
+  Given a tile with no-data set and a delta
+  When  it renders
+  Then  it shows no change badge
+
+AC4 — Same height
+  Given a tile with no-data next to a tile with a value
+  When  they render
+  Then  both are the same height
+
+AC5 — Still selectable
+  Given a selectable tile with no-data set
+  When  the editor clicks it
+  Then  it raises a selected event
+
+Sad path
+
+AC6 — No data while loading
+  Given a tile with no-data and loading set
+  When  it renders
+  Then  it keeps the dash instead of a skeleton
+  And   its content is marked busy
+```
+
+## ERR-1: Error state
+
+As a product developer,
+I want a "could not load" message with an optional Retry button,
+so that an editor can tell a failed request from an empty result.
+
+```
+AC1 — Default text
+  Given uax-error-state with no headline or description
+  When  it renders
+  Then  it shows "Something went wrong" and "The data could not be loaded." with an alert icon
+
+AC2 — The product's text
+  Given a headline, description and icon set
+  When  it renders
+  Then  it shows that text and that icon
+
+AC3 — Announced
+  Given uax-error-state
+  When  it appears
+  Then  it is announced as an alert
+
+AC4 — A line can be left out
+  Given a description set to an empty string
+  When  it renders
+  Then  the description line is not shown
+
+AC5 — Retry raises retry
+  Given uax-error-state with retryable set
+  When  the editor presses Retry
+  Then  it raises retry
+  And   the event bubbles and is not composed
+
+Sad path
+
+AC6 — No Retry unless asked
+  Given uax-error-state without retryable
+  When  it renders
+  Then  it shows no Retry button
+```
+
+## ERR-2: Chart, table and tile in error
+
+As an editor,
+I want a chart, table or tile whose data failed to load to say so,
+so that I know to retry instead of waiting or reading stale numbers.
+
+```
+AC1 — Chart shows the error state
+  Given a uax-time-series-chart with error set
+  When  it renders
+  Then  it shows uax-error-state in place of the plot, with no empty state
+
+AC2 — Table shows the error state
+  Given a uax-data-table with error set and rows
+  When  it renders
+  Then  it shows uax-error-state, keeps the header row, and shows no rows, summary row, pager or empty state
+
+AC3 — Retry on the chart and table
+  Given a chart or table with error and retryable set
+  When  the editor presses Retry
+  Then  the chart or table raises retry once
+
+AC4 — Clearing the error
+  Given a chart or table in error
+  When  error is cleared
+  Then  the error state goes, and the table's rows are back
+
+AC5 — Tile shows a dash
+  Given a uax-kpi-tile with error set
+  When  it renders
+  Then  it keeps its label, shows a dash with the hidden text "Something went wrong", and shows no change badge
+
+AC6 — The product's text
+  Given a chart with error-headline set
+  When  it renders
+  Then  its error state shows that headline
+
+Sad path
+
+AC7 — Error wins over loading and no-data
+  Given a chart, table or tile with error and loading set (a tile also with no-data)
+  When  it renders
+  Then  it shows the error, with no skeleton or loading bar, and it is not busy
+  And   a tile shows the error text, not the no-data text
+```
+
+## SEG-1: Segmented control
+
+As a product developer,
+I want a segmented control for choosing one option from a short list,
+so that my screens switch views the way the group-by switch does.
+
+```
+AC1 — Shows the options
+  Given uax-segmented with options and a label
+  When  it renders
+  Then  it shows each option's label in order, as a radio group named by the label
+
+AC2 — Shows the current value
+  Given a value that matches an option
+  When  it renders
+  Then  that option is checked, the others are not, and only it is in the tab order
+
+AC3 — Click changes value
+  Given an unselected option
+  When  the editor clicks it
+  Then  it raises change with { value } and its value property is updated
+  And   the event bubbles and is not composed
+
+AC4 — Arrow keys
+  Given focus on the first option
+  When  the editor presses the right arrow key
+  Then  the next option is selected and has focus
+  And   the left arrow key on the first option selects the last
+
+Sad path
+
+AC5 — Clicking the selected option
+  Given the selected option
+  When  the editor clicks it
+  Then  it raises nothing
+
+AC6 — A value that is not an option
+  Given a value that matches no option
+  When  it renders
+  Then  the first option has the tab stop
+```
+
+## CHT-5: Compare points under the same bucket
+
+As a product developer,
+I want to say where each period starts,
+so that last period's points line up under this period's even when the data skips buckets.
+
+```
+AC1 — Weeks line up by offset
+  Given week grouping, with current weeks starting 1, 8 and 15 Jun and compare weeks 4 May and 18 May (11 May missing)
+  When  the chart builds its data
+  Then  the compare values are under the 1st and 3rd weeks, with the 2nd empty
+
+AC2 — Months line up by offset
+  Given month grouping and compare months of different lengths
+  When  the chart builds its data
+  Then  the Nth compare month sits under the Nth current month
+
+AC3 — A mid-week start
+  Given a compare start in the middle of a week
+  When  the chart builds its data
+  Then  it is read as the week it falls in
+
+AC4 — Given ranges set the anchor
+  Given range and compare whose first week has no data
+  When  the chart builds its data
+  Then  buckets count from the start of each range, so the compare points stay aligned
+
+AC5 — Each compare point keeps its date
+  Given a compare series
+  When  the chart builds its data
+  Then  each compare point reports the date it really has
+
+AC6 — Points on one date add up
+  Given two points of a series, or two compare points, on the same date
+  When  the chart builds its data
+  Then  they are added together
+
+Sad path
+
+AC7 — No range given
+  Given no range and compare
+  When  the current data misses its first week
+  Then  each side starts at its first point, as before
+
+AC8 — A shorter compare
+  Given a compare period shorter than the current one
+  When  the chart builds its data
+  Then  the trailing dates are empty, and compare points past the last current date are dropped
+```
+
+## DR-4: A fixed today
+
+As a product developer,
+I want to tell the date range what today is,
+so that presets match fixed example data instead of the real clock.
+
+```
+AC1 — Presets count from it
+  Given uax-date-range with today "2026-06-23"
+  When  the editor chooses "Last 7 days"
+  Then  the dates are 2026-06-17 to 2026-06-23
+
+AC2 — The date fields stop at it
+  Given today "2026-06-23" and no max-date
+  When  the dialog opens
+  Then  the latest date the fields accept is 2026-06-23
+
+AC3 — The default value follows it
+  Given today "2026-06-23" and no value
+  When  the button renders
+  Then  it shows the last 30 days as of that day, and shows the new range when today changes
+
+AC4 — A given value is kept
+  Given a value and today
+  When  the button renders
+  Then  it shows the value as given
+
+AC5 — max-date wins
+  Given today "2026-06-23" and max-date "2026-06-30"
+  When  the dialog opens
+  Then  the latest date the fields accept is 2026-06-30
+
+Sad path
+
+AC6 — Not a real date
+  Given today "soon"
+  When  the dialog opens
+  Then  it uses the clock, with no error
+```
+
+## DAT-1: Public date helpers
+
+As a product developer,
+I want the package's date maths as functions,
+so that my page builds the same compare ranges, buckets and labels as the picker and chart, without the picker.
+
+```
+AC1 — Previous period
+  Given a range
+  When  uaxPreviousPeriod is called
+  Then  it returns the same number of days straight before it
+
+AC2 — Previous year
+  Given a range
+  When  uaxPreviousYear is called
+  Then  it returns the same dates one year earlier
+
+AC3 — Compare for a mode
+  Given a range
+  When  uaxCompareFor is called with "previous-period" or "previous-year"
+  Then  it returns a UaxCompare with those dates
+
+AC4 — Days in a range
+  Given a range
+  When  uaxDaysIn is called
+  Then  it lists every day, both ends included
+
+AC5 — Buckets
+  Given a range and a group-by
+  When  uaxDateBuckets is called
+  Then  day buckets start on their day, week buckets on their Monday (even before the range starts) and month buckets on the 1st
+  And   each bucket's days hold only days inside the range
+
+AC6 — Label
+  Given a range or a UaxCompare and a localizer
+  When  uaxFormatDateRange is called
+  Then  it returns both dates in the localizer's medium style joined with "to"
+  And   with showYear false the year is left off
+
+Sad path
+
+AC7 — Invalid range
+  Given a range that isn't valid
+  When  uaxPreviousPeriod, uaxDaysIn or uaxDateBuckets is called
+  Then  it returns undefined, an empty list or no buckets
+
+AC8 — Custom comparison
+  Given mode "custom"
+  When  uaxCompareFor is called
+  Then  it returns undefined
+```
+
+## TBL-6: Summary row
+
+As a product developer,
+I want to put a total under its own column,
+so that the number lines up with the column header and the figures below it.
+
+```
+AC1 — Content sits in its column
+  Given content slotted as summary-pageviews in a table with a pageviews column
+  When  it renders
+  Then  a summary row shows it in that column's cell, lined up with the header, with the column's alignment
+
+AC2 — One cell per column
+  Given a summary slot for one column
+  When  it renders
+  Then  the row has one cell per column
+
+AC3 — Above the data, not counted
+  Given a summary row and data rows
+  When  it renders
+  Then  the summary row comes first, directly under the header, and is not counted among the data rows
+
+AC4 — Not sorted
+  Given a summary row
+  When  the editor sorts the table
+  Then  the summary row stays first
+
+AC5 — Content that arrives later
+  Given a table with no summary content
+  When  content is slotted later
+  Then  the row appears, and it goes again when the content goes
+
+AC6 — Table semantics
+  Given a summary row
+  When  it renders
+  Then  it is a row of the table and holds cells
+
+Sad path
+
+AC7 — Nothing slotted
+  Given no summary content
+  When  it renders
+  Then  no summary row shows
+
+AC8 — A column the table doesn't have
+  Given content slotted as summary-missing
+  When  it renders
+  Then  no summary row shows
+
+AC9 — In error
+  Given a table in error
+  When  it renders
+  Then  the summary row is hidden
+```
+
+## TBL-7: Compare badge in value cells
+
+As an editor,
+I want a change badge next to each compared value,
+so that I can see how each row moved against last period.
+
+```
+AC1 — Number and percent cells
+  Given a table with compare-rows and a row-key, and a row that has a compare row
+  When  a number cell or a percent cell renders
+  Then  it shows a change badge
+
+AC2 — Higher is better
+  Given a rise against the compare row
+  When  the badge renders
+  Then  it is positive
+
+AC3 — Lower is better
+  Given a column with meta.lowerIsBetter and a rise
+  When  the badge renders
+  Then  it is negative
+
+AC4 — A product's own cell
+  Given a custom cell that uses uax-table-compare-badge with column, item and value
+  When  it renders
+  Then  it shows the badge
+
+Sad path
+
+AC5 — No compare row
+  Given a row with no compare row
+  When  its cell renders
+  Then  it shows no badge
+
+AC6 — No compare rows
+  Given a table without compare-rows
+  When  it renders
+  Then  no cell shows a badge
+```
+
+## TBL-8: Compact pager label
+
+As an editor,
+I want the table's pager to read plainly,
+so that I can tell the page size and where I am at a glance.
+
+```
+AC1 — Page size label
+  Given a table with 272 rows, 10 per page
+  When  the pager renders
+  Then  the page size select is labelled "Per page" and offers 10, 25, 50 and 100
+
+AC2 — Position
+  Given that table on page 1
+  When  the pager renders
+  Then  it shows "1–10 of 272"
+
+AC3 — Landmark
+  Given the pager
+  When  a screen reader lists landmarks
+  Then  it is a navigation named "Pagination"
+```
+
+## SRV-1: Server table wiring
+
+As a product developer,
+I want one helper to run a server-mode table,
+so that I don't rewrite the sort, page, search, abort and error wiring on every page.
+
+```
+AC1 — First load
+  Given a UaxTableServerController attached to a table, on a host that connects
+  When  the host connects
+  Then  it loads the starting state, sets the table to server mode, shows it loading, and shows the starting sort and page size
+
+AC2 — The answer goes to the table
+  Given a load that answers with rows, compareRows, totalRows and stats
+  When  it resolves
+  Then  the table has all four, and `result` hands the whole answer back to the page
+
+AC3 — Sort and search
+  Given a loaded table
+  When  the editor sorts or searches
+  Then  it loads with the new sort or query, goes back to page 1 and keeps the page size
+  And   a search with the same query loads nothing
+
+AC4 — Paging
+  Given a loaded table
+  When  the editor changes page or page size
+  Then  it loads that page and size
+
+AC5 — Reload
+  Given a loaded table
+  When  the page calls reload (with resetPage)
+  Then  it loads the same state again (from page 1), keeping the old rows under a loading bar
+
+AC6 — A failed request
+  Given a load that rejects
+  When  it fails
+  Then  the table's error is set and Retry is offered, the old rows stay in `result`, and onError is called
+  And   pressing Retry loads the same state again
+  And   the error clears when the next request starts
+
+AC7 — Retry can be off
+  Given the option retryable false
+  When  a request fails
+  Then  the table's retryable stays false
+
+Sad path
+
+AC8 — Newer wins
+  Given a request still on its way
+  When  a newer request starts
+  Then  the older one is aborted, and its answer is dropped even if it arrives later or first
+
+AC9 — Aborted is not an error
+  Given a request that rejects because it was aborted
+  When  it ends
+  Then  no error is set and onError is not called
+
+AC10 — Disconnected host
+  Given a host that is disconnected
+  When  reload is called, or an aborted request rejects
+  Then  no request starts and no error is set
+  And   the host leaving the page aborts its request
+
+AC11 — A replaced table
+  Given the page draws another table
+  When  it attaches
+  Then  the old table is no longer listened to, and the new table gets the last rows, page and sort
 ```

@@ -282,7 +282,7 @@ An empty string hides that line. `icon` is a backoffice icon name.
 
 ### uax-error-state
 
-A "could not load" message. The tile, chart and table show it when their `error` is set. [Storybook](https://umbraco.github.io/Umbraco.Analytics.UI/?path=/docs/components-error-state--docs)
+A "could not load" message. The chart and table show it when their `error` is set. The KPI tile shows a dash instead, with no Retry. [Storybook](https://umbraco.github.io/Umbraco.Analytics.UI/?path=/docs/components-error-state--docs)
 
 ```ts
 html`<uax-error-state retryable @retry=${() => this.#load()}></uax-error-state>`;

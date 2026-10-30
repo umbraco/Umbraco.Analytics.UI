@@ -3,15 +3,10 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { html } from "@umbraco-cms/backoffice/external/lit";
 import "@umbraco-cms/backoffice/external/uui";
-import { deepQuery, recordEvents, renderElement, settle, shadow, type UaxTestElement } from "../internal/test/dom.js";
+import { deepQuery, pressed, recordEvents, renderElement, settle, shadow, type UaxTestElement } from "../internal/test/dom.js";
 import "./data-table.element.js";
 import { pageColumns, pageRows } from "./table-fixtures.js";
 
-// uui-button raises its click a tick after `click()`, so a spec waits before it counts events.
-const pressed = async (button: HTMLElement) => {
-    button.click();
-    await new Promise((resolve) => setTimeout(resolve));
-};
 const errorState = (el: Element) => shadow(el).querySelector("uax-error-state") as UaxTestElement | null;
 const dataRows = (el: Element) => [...shadow(el).querySelectorAll("uui-table-row:not(.summary)")].filter((row) => !row.querySelector("uui-table-head-cell"));
 

@@ -67,3 +67,9 @@ export function recordEvents(el: Element, name: string): Event[] {
     el.addEventListener(name, (e) => events.push(e));
     return events;
 }
+
+/** Clicks a `uui-button`, then waits a tick: it raises its click event after `click()` returns. */
+export async function pressed(button: HTMLElement): Promise<void> {
+    button.click();
+    await new Promise((resolve) => setTimeout(resolve));
+}

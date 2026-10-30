@@ -1,5 +1,6 @@
 import { css, customElement, html, property, ref, state } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
+import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
 import "../../../kpi-tile/kpi-tile.element.js";
 import "../../../chart/time-series-chart.element.js";
 import "../../../date-range/date-range.element.js";
@@ -94,6 +95,10 @@ export class ExampleCommerceAnalyticsPageElement extends UmbLitElement {
     @property({ type: Number })
     latency = 150;
 
+    /** Makes every request to the fake API fail, to show the error states and Retry. */
+    @property({ type: Boolean })
+    failing = false;
+
     @state() private _range: UaxDateRange = { from: "2026-05-25", to: "2026-06-23" };
     @state() private _compare?: UaxCompare = uaxCompareFor("previous-period", { from: "2026-05-25", to: "2026-06-23" });
     @state() private _metric: MetricId = "revenue";
@@ -101,7 +106,7 @@ export class ExampleCommerceAnalyticsPageElement extends UmbLitElement {
     @state() private _data?: Snapshot;
     @state() private _compareData?: Snapshot;
     @state() private _loading = true;
-
+    @state() private _error = false;
 
     // A newer request makes an older answer stale, so only the latest one is shown. A real fetch should also abort the
     // previous request (AbortController) and abort on disconnect, so nothing runs for a page that is gone.
@@ -123,17 +128,24 @@ export class ExampleCommerceAnalyticsPageElement extends UmbLitElement {
     async #loadSummary() {
         const request = ++this.#summaryRequest;
         this._loading = true;
+        this._error = false;
         const [data, compareData] = await Promise.all([
             loadSnapshot(this._range, this.latency),
             this._compare ? loadSnapshot(this._compare, this.latency) : undefined,
         ]);
         if (request !== this.#summaryRequest) return;
+        if (this.failing) {
+            this._error = true;
+            this._loading = false;
+            return;
+        }
         this._data = data;
         this._compareData = compareData;
         this._loading = false;
     }
 
     async #loadBuyers(state: Readonly<UaxTableServerState>, signal: AbortSignal): Promise<BuyerResult> {
+        if (this.failing) throw new Error("The buyers request failed.");
         const [buyers, compareRows] = await Promise.all([
             loadBuyers(this._range, { sort: state.sort, page: state.page, pageSize: state.pageSize, query: state.query }, this.latency),
             this._compare ? loadBuyerCompare(this._compare, this.latency) : [],
@@ -182,6 +194,7 @@ export class ExampleCommerceAnalyticsPageElement extends UmbLitElement {
             .delta=${this.#delta(metric.id)}
             delta-unit=${metric.id === "conversion" ? "points" : "percent"}
             ?loading=${this._loading}
+            ?error=${this._error}
             selectable
             .deselectable=${false}
             .selected=${this._metric === metric.id}
@@ -193,12 +206,13 @@ export class ExampleCommerceAnalyticsPageElement extends UmbLitElement {
         const compare = this._compare;
         return html`
             <div class="actions">
+                <h2 class="uui-h3">Analytics</h2>
                 <uax-date-range today="2026-06-23" .value=${this._range} .compare=${compare} @change=${this.#onRangeChange}></uax-date-range>
             </div>
 
             <div class="kpis">${metrics.map((m) => this.#renderTile(m))}</div>
 
-            <uui-box headline=${metric.label} headline-variant="h2" style="--uui-box-default-padding: 0">
+            <uui-box headline=${metric.label} headline-variant="h3" style="--uui-box-default-padding: 0">
                 <uax-time-series-chart
                     kind="line"
                     .series=${this.#series(this._data?.days, this._metric)}
@@ -207,32 +221,41 @@ export class ExampleCommerceAnalyticsPageElement extends UmbLitElement {
                     .compare=${this._compare}
                     .compareLabel=${compare ? uaxFormatDateRange(this.localize, compare) : undefined}
                     .valueFormat=${metric.format}
-                    ?loading=${this._loading}></uax-time-series-chart>
+                    ?loading=${this._loading}
+                    ?error=${this._error}
+                    retryable
+                    @retry=${() => this.#loadSummary()}></uax-time-series-chart>
             </uui-box>
 
             <div class="tables">
-                <uui-box headline="Top products" headline-variant="h2" style="--uui-box-default-padding: 0">
+                <uui-box headline="Top products" headline-variant="h3" style="--uui-box-default-padding: 0">
                     <uax-data-table
                         row-key="sku"
                         .columns=${productColumns}
                         .rows=${this._data?.products ?? []}
                         .compareRows=${this._compareData?.products ?? []}
-                        ?loading=${this._loading}>
+                        ?loading=${this._loading}
+                        ?error=${this._error}
+                        retryable
+                        @retry=${() => this.#loadSummary()}>
                         <div slot="toolbar"><uax-table-search></uax-table-search></div>
                     </uax-data-table>
                 </uui-box>
 
-                <uui-box headline="Popular discounts" headline-variant="h2" style="--uui-box-default-padding: 0">
+                <uui-box headline="Popular discounts" headline-variant="h3" style="--uui-box-default-padding: 0">
                     <uax-data-table
                         row-key="code"
                         .columns=${discountColumns}
                         .rows=${this._data?.discounts ?? []}
                         .compareRows=${this._compareData?.discounts ?? []}
-                        ?loading=${this._loading}></uax-data-table>
+                        ?loading=${this._loading}
+                        ?error=${this._error}
+                        retryable
+                        @retry=${() => this.#loadSummary()}></uax-data-table>
                 </uui-box>
             </div>
 
-            <uui-box headline="Top buyers" headline-variant="h2" style="--uui-box-default-padding: 0">
+            <uui-box headline="Top buyers" headline-variant="h3" style="--uui-box-default-padding: 0">
                 <uax-data-table
                     ${ref(this.#buyers.attach)}
                     row-key="email"
@@ -243,31 +266,37 @@ export class ExampleCommerceAnalyticsPageElement extends UmbLitElement {
         `;
     }
 
-    static override styles = css`
-        :host {
-            display: flex;
-            flex-direction: column;
-            gap: var(--uui-size-4);
-            padding: var(--uui-size-layout-1);
-        }
-        .actions {
-            display: flex;
-            align-items: center;
-            justify-content: flex-end;
-            gap: var(--uui-size-4);
-        }
-        .kpis {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: var(--uui-size-space-5);
-        }
-        .tables {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(480px, 1fr));
-            gap: var(--uui-size-4);
-            align-items: start;
-        }
-    `;
+    static override styles = [
+        UmbTextStyles,
+        css`
+            :host {
+                display: flex;
+                flex-direction: column;
+                gap: var(--uui-size-4);
+                padding: var(--uui-size-layout-1);
+            }
+            h2 {
+                margin: 0;
+            }
+            .actions {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: var(--uui-size-4);
+            }
+            .kpis {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+                gap: var(--uui-size-space-5);
+            }
+            .tables {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(480px, 1fr));
+                gap: var(--uui-size-4);
+                align-items: start;
+            }
+        `,
+    ];
 }
 // #endregion
 

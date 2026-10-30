@@ -7,14 +7,9 @@ import darkCss from "@umbraco-ui/uui/themes/dark.css?inline";
 import highContrastCss from "@umbraco-ui/uui/themes/high-contrast.css?inline";
 import { render } from "vitest-browser-lit";
 import { axeRun } from "../internal/test/a11y.js";
-import { recordEvents, renderElement, shadow, type UaxTestElement } from "../internal/test/dom.js";
+import { pressed, recordEvents, renderElement, shadow, type UaxTestElement } from "../internal/test/dom.js";
 import "./error-state.element.js";
 
-// uui-button raises its click a tick after `click()`, so a spec waits before it counts events.
-const pressed = async (button: HTMLElement) => {
-    button.click();
-    await new Promise((resolve) => setTimeout(resolve));
-};
 const retryButton = (el: Element) => shadow(el).querySelector("uui-button") as HTMLElement | null;
 
 describe("Feature: error state", () => {

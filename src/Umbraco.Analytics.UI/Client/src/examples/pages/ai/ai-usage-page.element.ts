@@ -1,5 +1,6 @@
 import { css, customElement, html, property, ref, state } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
+import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
 import "../../../kpi-tile/kpi-tile.element.js";
 import "../../../chart/time-series-chart.element.js";
 import "../../../group-by/group-by.element.js";
@@ -93,6 +94,10 @@ export class ExampleAiUsagePageElement extends UmbLitElement {
     @property({ type: Number })
     latency = 150;
 
+    /** Makes every request to the fake API fail, to show the error states and Retry. */
+    @property({ type: Boolean })
+    failing = false;
+
     @state() private _range: UaxDateRange = initialRange;
     @state() private _compare?: UaxCompare = initialCompare;
     @state() private _groupBy: UaxGroupBy = "day";
@@ -101,6 +106,7 @@ export class ExampleAiUsagePageElement extends UmbLitElement {
 
     @state() private _usage?: UsageResult;
     @state() private _usageLoading = true;
+    @state() private _usageError = false;
 
     // A newer request makes an older answer stale, so only the latest one is shown. A real fetch should also abort the
     // previous request (AbortController) and abort on disconnect, so nothing runs for a page that is gone.
@@ -122,13 +128,20 @@ export class ExampleAiUsagePageElement extends UmbLitElement {
     async #loadUsage() {
         const request = ++this.#usageRequest;
         this._usageLoading = true;
+        this._usageError = false;
         const usage = await getUsage({ range: this._range, compare: this._compare, groupBy: this._groupBy }, this.latency);
         if (request !== this.#usageRequest) return;
+        if (this.failing) {
+            this._usageError = true;
+            this._usageLoading = false;
+            return;
+        }
         this._usage = usage;
         this._usageLoading = false;
     }
 
     async #loadBreakdown(state: Readonly<UaxTableServerState>, signal: AbortSignal) {
+        if (this.failing) throw new Error("The breakdown request failed.");
         const breakdown = await getBreakdown(
             {
                 by: this._by,
@@ -178,6 +191,7 @@ export class ExampleAiUsagePageElement extends UmbLitElement {
             ?no-data=${summary !== undefined && !summary.requests}
             .delta=${summary && change(pick(summary), this._usage?.compareSummary && pick(this._usage.compareSummary))}
             ?loading=${this._usageLoading}
+            ?error=${this._usageError}
             selectable
             .deselectable=${false}
             .selected=${this._metric === metric}
@@ -218,7 +232,8 @@ export class ExampleAiUsagePageElement extends UmbLitElement {
                 ?no-data=${noData}
                 .delta=${comparable ? (this.#successRate(now) - this.#successRate(before)) * 100 : undefined}
                 delta-unit="points"
-                ?loading=${this._usageLoading}></uax-kpi-tile>
+                ?loading=${this._usageLoading}
+                ?error=${this._usageError}></uax-kpi-tile>
             <uax-kpi-tile
                 label="Avg duration"
                 icon="icon-time"
@@ -228,7 +243,8 @@ export class ExampleAiUsagePageElement extends UmbLitElement {
                 ?no-data=${noData}
                 .delta=${comparable ? change(this.#avgDuration(now), this.#avgDuration(before)) : undefined}
                 lower-is-better
-                ?loading=${this._usageLoading}></uax-kpi-tile>
+                ?loading=${this._usageLoading}
+                ?error=${this._usageError}></uax-kpi-tile>
         </div>`;
     }
 
@@ -236,13 +252,16 @@ export class ExampleAiUsagePageElement extends UmbLitElement {
         const usage = this._usage;
         return html`
             <div class="actions">
-                <uax-group-by .value=${this._groupBy} @change=${this.#onGroupBy}></uax-group-by>
-                <uax-date-range today="2026-06-23" .value=${this._range} .compare=${this._compare} @change=${this.#onDateRange}></uax-date-range>
+                <h2 class="uui-h3">Usage</h2>
+                <div class="controls">
+                    <uax-group-by .value=${this._groupBy} @change=${this.#onGroupBy}></uax-group-by>
+                    <uax-date-range today="2026-06-23" .value=${this._range} .compare=${this._compare} @change=${this.#onDateRange}></uax-date-range>
+                </div>
             </div>
 
             ${this.#tiles()}
 
-            <uui-box headline="${metricLabels[this._metric]} over time" headline-variant="h2" style="--uui-box-default-padding: 0">
+            <uui-box headline="${metricLabels[this._metric]} over time" headline-variant="h3" style="--uui-box-default-padding: 0">
                 <uax-time-series-chart
                     kind="stacked-bar"
                     .series=${toSeries(this._metric, usage?.buckets)}
@@ -251,10 +270,13 @@ export class ExampleAiUsagePageElement extends UmbLitElement {
                     .compare=${this._compare}
                     .compareLabel=${this._compare ? uaxFormatDateRange(this.localize, this._compare) : undefined}
                     .groupBy=${this._groupBy}
-                    ?loading=${this._usageLoading}></uax-time-series-chart>
+                    ?loading=${this._usageLoading}
+                    ?error=${this._usageError}
+                    retryable
+                    @retry=${() => this.#loadUsage()}></uax-time-series-chart>
             </uui-box>
 
-            <uui-box headline="Breakdown" headline-variant="h2" style="--uui-box-default-padding: 0">
+            <uui-box headline="Breakdown" headline-variant="h3" style="--uui-box-default-padding: 0">
                 <uax-segmented
                     slot="header-actions"
                     label="Break down by"
@@ -271,25 +293,36 @@ export class ExampleAiUsagePageElement extends UmbLitElement {
         `;
     }
 
-    static override styles = css`
-        :host {
-            display: flex;
-            flex-direction: column;
-            gap: var(--uui-size-4);
-            padding: var(--uui-size-layout-1);
-        }
-        .actions {
-            display: flex;
-            align-items: center;
-            justify-content: flex-end;
-            gap: var(--uui-size-4);
-        }
-        .tiles {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
-            gap: var(--uui-size-space-4);
-        }
-    `;
+    static override styles = [
+        UmbTextStyles,
+        css`
+            :host {
+                display: flex;
+                flex-direction: column;
+                gap: var(--uui-size-4);
+                padding: var(--uui-size-layout-1);
+            }
+            h2 {
+                margin: 0;
+            }
+            .controls {
+                display: flex;
+                align-items: center;
+                gap: var(--uui-size-4);
+            }
+            .actions {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: var(--uui-size-4);
+            }
+            .tiles {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+                gap: var(--uui-size-space-4);
+            }
+        `,
+    ];
 }
 // #endregion
 

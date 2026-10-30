@@ -4,7 +4,8 @@ import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 /**
  * Tells the editor the data could not be loaded, with an optional Retry button.
  *
- * The data elements show it when their `error` is set, and a product can place it on its own. It is the sibling of
+ * The chart and table show it when their `error` is set, and a product can place it on its own. The KPI tile shows
+ * a dash instead, with no Retry. It is the sibling of
  * `uax-empty-state`: same layout, with an alert icon. Without `headline` or `description` it shows the built-in
  * "Something went wrong" / "The data could not be loaded." text. The text is announced when it appears (`role="alert"`).
  * Set an attribute to an empty string to leave that line out.

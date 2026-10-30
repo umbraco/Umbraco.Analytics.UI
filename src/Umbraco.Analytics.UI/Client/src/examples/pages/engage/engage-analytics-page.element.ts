@@ -1,5 +1,6 @@
 import { css, customElement, html, nothing, property, ref, state } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
+import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
 import "../../../chart/time-series-chart.element.js";
 import "../../../date-range/date-range.element.js";
 import "../../../delta-badge/delta-badge.element.js";
@@ -190,17 +191,20 @@ export class ExampleEngageAnalyticsPageElement extends UmbLitElement {
         const visitors = this.view === "visitors";
         return html`
             <div class="actions">
-                <uax-group-by .value=${this._groupBy} @change=${this.#onGroupByChange}></uax-group-by>
-                <uax-date-range
-                    .value=${this._range}
-                    .compare=${this._compare}
-                    today="2026-06-29"
-                    @change=${this.#onDateRangeChange}></uax-date-range>
+                <h2 class="uui-h3">${visitors ? "Visitors" : "Pageviews"}</h2>
+                <div class="controls">
+                    <uax-group-by .value=${this._groupBy} @change=${this.#onGroupByChange}></uax-group-by>
+                    <uax-date-range
+                        .value=${this._range}
+                        .compare=${this._compare}
+                        today="2026-06-29"
+                        @change=${this.#onDateRangeChange}></uax-date-range>
+                </div>
             </div>
 
             <uui-box
                 headline=${visitors ? "New and returning visitors over time" : "Pageviews over time"}
-                headline-variant="h2"
+                headline-variant="h3"
                 style="--uui-box-default-padding: 0">
                 <uax-time-series-chart
                     .kind=${visitors ? "stacked-bar" : "area"}
@@ -220,25 +224,36 @@ export class ExampleEngageAnalyticsPageElement extends UmbLitElement {
         `;
     }
 
-    static override styles = css`
-        :host {
-            display: flex;
-            flex-direction: column;
-            gap: var(--uui-size-4);
-            padding: var(--uui-size-layout-1);
-        }
-        .actions {
-            display: flex;
-            align-items: center;
-            justify-content: flex-end;
-            gap: var(--uui-size-4);
-        }
-        .total {
-            display: flex;
-            align-items: center;
-            gap: var(--uui-size-space-3);
-        }
-    `;
+    static override styles = [
+        UmbTextStyles,
+        css`
+            :host {
+                display: flex;
+                flex-direction: column;
+                gap: var(--uui-size-4);
+                padding: var(--uui-size-layout-1);
+            }
+            h2 {
+                margin: 0;
+            }
+            .controls {
+                display: flex;
+                align-items: center;
+                gap: var(--uui-size-4);
+            }
+            .actions {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: var(--uui-size-4);
+            }
+            .total {
+                display: flex;
+                align-items: center;
+                gap: var(--uui-size-space-3);
+            }
+        `,
+    ];
 }
 // #endregion
 

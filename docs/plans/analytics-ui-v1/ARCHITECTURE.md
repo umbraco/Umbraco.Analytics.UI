@@ -50,7 +50,7 @@ What every new element does touch:
 
 7. **Table supports client and server modes.** In `client` mode it sorts, searches and pages the rows it's given. In `server` mode it only raises `sort-change`, `search` and `page-change`, and the product passes back the new page. Engage needs server mode, because its tables can have thousands of rows. Commerce and AI lists are short. Rejected: server-only, which would make every small table write paging code.
 
-8. **Composition over options for headers.** The design puts search plus totals ("TOTAL PAGEVIEWS 272 +8.4%") above the table, and group-by, notes and date range in the chart's header. These are slots (`toolbar`, `actions`), filled with our elements or the product's own (such as Engage's notes control). Rejected: built-in totals and notes properties, which would grow the API for one product's layout.
+8. **Composition over options for headers.** The design puts search above the table, a totals row under its header, and group-by, notes and date range in the chart's header. These are slots (`toolbar`, `summary-<column key>`, `actions`), filled with our elements or the product's own (such as Engage's notes control). Totals are composition too: a product slots content into the summary row, one slot per column, so it lines up with that column. Rejected: built-in totals and notes properties, which would grow the API for one product's layout.
 
 9. **Group-by is a UUI-styled radio group.** It's a short, fixed list (day, week, month), not an entity choice, so a picker doesn't apply. It's a radio group, not a select, because the design shows all options at once and switching is one click.
 

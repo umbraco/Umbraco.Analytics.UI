@@ -1,6 +1,6 @@
 import { css, customElement, html, nothing, property, type CSSResultGroup, type TemplateResult } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
-import { getLoadingMode } from "../internal/loading/index.js";
+import { getLoadingMode, isBusy } from "../internal/loading/index.js";
 import { UaxVisuallyHiddenStyles } from "../internal/a11y/visually-hidden.css.js";
 import { UaxPaletteStyles } from "../theme/index.js";
 import type { UaxDeltaUnit } from "../delta-badge/delta-badge.element.js";
@@ -102,9 +102,8 @@ export class UaxKpiTileElement extends UmbLitElement {
 
     override render(): TemplateResult {
         const hasValue = this.value !== undefined && this.value !== null && this.value !== "";
-        // Error wins over loading, and loading over empty.
-        const mode = this.error ? "idle" : getLoadingMode(this.loading, hasValue || this.noData);
-        const busy = this.loading && !this.error;
+        const mode = getLoadingMode(this.loading, hasValue || this.noData, this.error);
+        const busy = isBusy(this.loading, this.error);
 
         const content = html`${this.icon
                 ? html`<span class="icon" aria-hidden="true"><uui-icon name=${this.icon}></uui-icon></span>`

@@ -1,5 +1,6 @@
 import { css, customElement, html, nothing, property, type CSSResultGroup, type TemplateResult } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
+import { UaxVisuallyHiddenStyles } from "../../internal/a11y/visually-hidden.css.js";
 import { getNumberFormat } from "../../internal/format/number-format.js";
 import type { UaxChartData } from "./chart-data.js";
 
@@ -50,7 +51,7 @@ export class UaxChartDataTableElement extends UmbLitElement {
 
     override render(): TemplateResult {
         const { series, bars, totals, compareTotal } = this;
-        return html`<table>
+        return html`<table class="visually-hidden">
             <caption>
                 ${this.localize.term("uaxAnalytics_chartTableCaption")}
             </caption>
@@ -81,19 +82,16 @@ export class UaxChartDataTableElement extends UmbLitElement {
         </table>`;
     }
 
-    static override styles: CSSResultGroup = css`
-        :host {
-            position: absolute;
-            width: 1px;
-            height: 1px;
-            margin: -1px;
-            padding: 0;
-            overflow: hidden;
-            clip-path: inset(50%);
-            white-space: nowrap;
-            border: 0;
-        }
-    `;
+    static override styles: CSSResultGroup = [
+        UaxVisuallyHiddenStyles,
+        css`
+            :host {
+                position: relative;
+                display: block;
+                height: 0;
+            }
+        `,
+    ];
 }
 
 declare global {

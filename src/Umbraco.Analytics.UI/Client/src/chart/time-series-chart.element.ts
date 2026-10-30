@@ -17,7 +17,7 @@ import type { UaxGroupBy } from "../group-by/group-by.element.js";
 import { dateOnly } from "../internal/date/date-math.js";
 import { formatIsoDate } from "../internal/date/format-date.js";
 import { getNumberFormat } from "../internal/format/number-format.js";
-import { getLoadingMode } from "../internal/loading/loading-mode.js";
+import { getLoadingMode, isBusy } from "../internal/loading/loading-mode.js";
 import "../internal/loading/loading-bar.element.js";
 import "../internal/loading/skeleton.element.js";
 import { UaxPaletteStyles } from "../theme/index.js";
@@ -600,9 +600,8 @@ export class UaxTimeSeriesChartElement extends UmbLitElement {
     }
 
     override render(): TemplateResult {
-        // Error wins over loading, and loading over empty.
-        const mode = this.error ? "idle" : getLoadingMode(this.loading, this.#hasData);
-        const busy = this.loading && !this.error;
+        const mode = getLoadingMode(this.loading, this.#hasData, this.error);
+        const busy = isBusy(this.loading, this.error);
         const showPlot = this.#hasData && mode !== "skeleton" && !this.error;
         return html`<div
             class="region"

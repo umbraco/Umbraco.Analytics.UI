@@ -6,10 +6,17 @@
  * - `idle`: not loading. Render the content, or the empty state when there is no data.
  *
  * `hasData` means "there is something to show", e.g. `series.length > 0` or `rows.length > 0`.
+ *
+ * An element in `error` is `idle`: error wins over loading, and loading over empty.
  */
 export type UaxLoadingMode = "skeleton" | "reload" | "idle";
 
-export function getLoadingMode(loading: boolean, hasData: boolean): UaxLoadingMode {
-    if (!loading) return "idle";
+export function getLoadingMode(loading: boolean, hasData: boolean, error = false): UaxLoadingMode {
+    if (error || !loading) return "idle";
     return hasData ? "reload" : "skeleton";
+}
+
+/** Whether the element is busy for assistive tech (`aria-busy`): loading, and not in `error`. */
+export function isBusy(loading: boolean, error = false): boolean {
+    return loading && !error;
 }

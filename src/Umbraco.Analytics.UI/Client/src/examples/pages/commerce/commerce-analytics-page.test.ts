@@ -150,4 +150,16 @@ describe("Feature: the Commerce analytics page", () => {
             await expect.poll(() => buyerNames(page)).toEqual(["Ada Example"]);
         });
     });
+
+    describe("Scenario (sad path): the API fails", () => {
+        it("shows the error state", async () => {
+            const page = await renderPageExample(
+                html`<example-commerce-analytics-page .latency=${0} failing></example-commerce-analytics-page>`,
+                "example-commerce-analytics-page",
+            );
+            await expect.poll(() => chart(page).error).toBe(true);
+            await settle(page);
+            expect(shadow(chart(page)).querySelector("uax-error-state")).not.toBe(null);
+        });
+    });
 });

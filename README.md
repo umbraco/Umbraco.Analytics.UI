@@ -28,9 +28,9 @@ Live previews of every element, all states, and full example pages (Commerce, En
 | `uax-text-cell`, `uax-link-cell`, `uax-number-cell`, `uax-percent-cell`, `uax-share-cell` | Table cells. Name one in a column's `elementName`, or write your own. |
 | `uax-table-compare-badge` | The change badge of a table cell: finds the compare row and shows how a value moved. Use it in your own cells. |
 | `uax-empty-state` | "Nothing to show" message. The chart and table use it too. |
-| `uax-error-state` | "Could not load" message, with an optional Retry button. The tile, chart and table show it when their `error` is set. |
+| `uax-error-state` | "Could not load" message, with an optional Retry button. The chart and table show it when their `error` is set. The KPI tile shows a dash instead, with no Retry. |
 
-Also public: `UAX_TABLE_CELL` (the cell element names), `UAX_TABLE_CONTEXT` (what a custom cell reads from its table) and `UaxPaletteStyles` (the colour palette for your own elements).
+Also public: `UAX_TABLE_CELL` (the cell element names), `UAX_TABLE_CONTEXT` (what a custom cell reads from its table), `UaxPaletteStyles` (the colour palette for your own elements), `UaxTableServerController` (runs a table in `server` mode) and the date helpers `uaxPreviousPeriod`, `uaxPreviousYear`, `uaxCompareFor`, `uaxDaysIn`, `uaxDateBuckets` and `uaxFormatDateRange`.
 
 ## Packages
 

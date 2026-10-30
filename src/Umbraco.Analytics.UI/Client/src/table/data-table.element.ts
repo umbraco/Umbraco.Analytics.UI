@@ -12,7 +12,7 @@ import {
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import "../empty-state/empty-state.element.js";
 import "../error-state/error-state.element.js";
-import { getLoadingMode } from "../internal/loading/loading-mode.js";
+import { getLoadingMode, isBusy } from "../internal/loading/loading-mode.js";
 import "../internal/loading/loading-bar.element.js";
 import "../internal/loading/skeleton.element.js";
 import { UaxPaletteStyles } from "../theme/index.js";
@@ -600,9 +600,8 @@ export class UaxDataTableElement extends UmbLitElement {
 
     override render(): TemplateResult {
         const hasData = this.rows.length > 0;
-        // Error wins over loading, and loading over empty.
-        const mode = this.error ? "idle" : getLoadingMode(this.loading, hasData);
-        const busy = this.loading && !this.error;
+        const mode = getLoadingMode(this.loading, hasData, this.error);
+        const busy = isBusy(this.loading, this.error);
         return html`<div class="region ${this.#hasToolbar ? "has-toolbar" : ""}">
             ${mode === "reload" ? html`<uax-loading-bar></uax-loading-bar>` : nothing}
             <div class="toolbar"><slot name="toolbar" @slotchange=${() => this.requestUpdate()} @search=${this.#onSearch}></slot></div>
