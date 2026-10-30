@@ -18,6 +18,12 @@
     <PackageReference Include="Umbraco.Cms.Api.Management" />
   </ItemGroup>
 
+  <!-- Client source is built to wwwroot; keep its config files out of the NuGet package -->
+  <ItemGroup>
+    <Content Remove="Client\**" />
+    <None Remove="Client\**" />
+  </ItemGroup>
+
   <!--
     Client assets are built as explicit steps in the azure pipelines configuration
     For local development, run one of the following commands inside the Client folder:
