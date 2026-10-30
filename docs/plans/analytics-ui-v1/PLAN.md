@@ -20,7 +20,7 @@
   Acceptance: BDG-1 specs green, existing badge tests still green, axe clean in light and dark.
   depends-on: T1, T2. parallel-group: B
 
-- [ ] **T4** - story: FND-3 (AC1, AC2). Add `uan-empty-state` in `src/empty-state/` (`headline`, `description`, `icon`), defaulting to the "No data yet" / "Try a wider date range." translations. Remove the now-unused `layout/` and `states/` placeholder folders and their exports from `src/index.ts`.
+- [x] **T4** - story: FND-3 (AC1, AC2). Add `uan-empty-state` in `src/empty-state/` (`headline`, `description`, `icon`), defaulting to the "No data yet" / "Try a wider date range." translations. Remove the now-unused `layout/` and `states/` placeholder folders and their exports from `src/index.ts`.
   Acceptance: FND-3 AC1 and AC2 specs green. FND-2 AC1 in `src/lang/localization.test.ts` retargeted from the test-only element to `uan-empty-state`.
   depends-on: T2. parallel-group: B
 
