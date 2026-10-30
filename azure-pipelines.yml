@@ -87,6 +87,11 @@ extends:
               - script: npm run ci:test-client
                 displayName: Run client tests
 
+              # The timing specs run alone (Chromium, one file at a time): sharing the runner with three
+              # engines would make them flaky. vite.config.ts leaves them out of the step above on CI.
+              - script: npm run ci:test-perf-client
+                displayName: Run client performance tests
+
               - task: PublishTestResults@2
                 displayName: Publish test results
                 condition: succeededOrFailed()

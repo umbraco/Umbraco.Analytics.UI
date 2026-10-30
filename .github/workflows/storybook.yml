@@ -37,9 +37,13 @@ jobs:
       - run: npm ci
       - run: npm run lint
       - run: npm run build
+      # Fails if the built bundle is over the gzip budget in the plan's SPEC.md
+      - run: npm run check:size
       # Fails if the public API changed and api/*.api.md was not updated and committed
       - run: npm run check:api
       - run: npm test
+      # Timing specs: CI leaves them out of `npm test` so three engines don't compete for the runner
+      - run: npm run test:perf
 
   storybook:
     # Publishes to GitHub Pages. Needs Settings > Pages > Source set to "GitHub Actions",

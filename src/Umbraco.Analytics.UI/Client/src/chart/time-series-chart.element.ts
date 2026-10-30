@@ -774,16 +774,18 @@ export class UaxTimeSeriesChartElement extends UmbLitElement {
                 font-weight: 700;
             }
 
-            /* The tooltip is dark in every theme: the badge reads its dark branch and ignores product overrides here. */
+            /* The tooltip is dark in every theme: the badge reads its dark branch and ignores product overrides here.
+               The tints are 15%: jungle green on a 20% tint of itself over space cadet is 4.47:1, under 4.5:1. */
             .tooltip uax-delta-badge {
                 margin-left: auto;
+                --_uax-tooltip-tint: 15%;
                 --uui-color-scheme: dark;
                 --uax-text-positive: initial;
                 --uax-text-negative: initial;
                 --uax-text-neutral: var(--uui-palette-white);
-                --uax-tint-positive: color-mix(in srgb, var(--uui-palette-jungle-green) 20%, transparent);
-                --uax-tint-negative: color-mix(in srgb, var(--uui-palette-spanish-pink) 20%, transparent);
-                --uax-tint-neutral: color-mix(in srgb, var(--uui-palette-white) 20%, transparent);
+                --uax-tint-positive: color-mix(in srgb, var(--uui-palette-jungle-green) var(--_uax-tooltip-tint), transparent);
+                --uax-tint-negative: color-mix(in srgb, var(--uui-palette-spanish-pink) var(--_uax-tooltip-tint), transparent);
+                --uax-tint-neutral: color-mix(in srgb, var(--uui-palette-white) var(--_uax-tooltip-tint), transparent);
             }
 
             .tooltip-value,
