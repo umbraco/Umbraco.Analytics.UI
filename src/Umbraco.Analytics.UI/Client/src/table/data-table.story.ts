@@ -25,6 +25,18 @@ const pageRows = [
     { url: `${host}/faq/`, pageviews: 1, sessions: 1 },
 ];
 
+/** Last period: `/blog/` is new this period (no match) and `/faq/` was zero (nothing to divide by). */
+const compareRows = [
+    { url: `${host}/`, pageviews: 190, sessions: 38 },
+    { url: `${host}/contact/`, pageviews: 34, sessions: 4 },
+    { url: `${host}/leons-page/`, pageviews: 12, sessions: 7 },
+    { url: `${host}/thank-you-pagea/`, pageviews: 5, sessions: 1 },
+    { url: `${host}/products/`, pageviews: 6, sessions: 4 },
+    { url: `${host}/about-us/`, pageviews: 2, sessions: 2 },
+    { url: `${host}/news/`, pageviews: 3, sessions: 3 },
+    { url: `${host}/faq/`, pageviews: 0, sessions: 0 },
+];
+
 const visitorColumns: UaxTableColumn[] = [
     { key: "type", label: "User type", type: "text" },
     { key: "visitors", label: "Visitors", type: "share" },
@@ -127,6 +139,20 @@ type Story = StoryObj<UaxDataTableElement>;
 
 /** A link column and two share columns: the value, its percent of the column total, and a bar scaled to the column's largest value. The first share column uses `--uax-series-1`, the second `--uax-series-2`. Search and totals are the product's, in the `toolbar` slot. */
 export const ShareColumns: Story = { name: "Share columns" };
+
+/** Compare rows matched by `row-key`: a small change badge follows each share value. A row with no match, or a compare value of zero, has no badge. */
+export const ShareColumnsWithCompare: Story = {
+    name: "Share columns with compare",
+    render: (args) =>
+        html`<style>
+                ${toolbarStyles}
+            </style>
+            <uui-box headline="Top pages" style="--uui-box-default-padding: 0">
+                <uax-data-table .columns=${args.columns} .rows=${args.rows} .compareRows=${compareRows} row-key="url">
+                    <div slot="toolbar" class="toolbar">${searchPlaceholder}${total("Total pageviews", "272", 8.4)}</div>
+                </uax-data-table>
+            </uui-box>`,
+};
 
 /** Plain text in the first column, two share columns, and two totals in the toolbar. */
 export const Visitors: Story = {

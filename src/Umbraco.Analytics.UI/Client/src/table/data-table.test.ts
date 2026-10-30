@@ -68,7 +68,7 @@ describe("Feature: table cells by column type", () => {
             );
         });
 
-        it.skip("puts a small change badge after the share value", () => {
+        it("puts a small change badge after the share value", () => {
             expect(firstRowCells(el)[1].querySelector("uax-delta-badge[size='sm']")).not.toBe(null);
         });
     });

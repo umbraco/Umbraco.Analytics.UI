@@ -24,11 +24,13 @@ export type UaxCompare = {
 // @public
 export class UaxDataTableElement extends UmbLitElement {
     columns: UaxTableColumn[];
+    compareRows: Record<string, unknown>[];
     emptyDescription?: string;
     emptyHeadline?: string;
     loading: boolean;
     // (undocumented)
     render(): TemplateResult_2<1>;
+    rowKey?: string;
     rows: Record<string, unknown>[];
     // (undocumented)
     static styles: CSSResultGroup;

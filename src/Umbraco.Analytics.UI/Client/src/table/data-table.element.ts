@@ -10,6 +10,7 @@ import {
     type TemplateResult,
 } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
+import "../delta-badge/delta-badge.element.js";
 import "../empty-state/empty-state.element.js";
 import { getLoadingMode } from "../internal/loading/loading-mode.js";
 import "../internal/loading/loading-bar.element.js";
@@ -39,7 +40,14 @@ interface DerivedColumn {
 interface DerivedFrom {
     columns: UaxTableColumn[];
     rows: UaxTableRow[];
+    compareRows: UaxTableRow[];
+    rowKey?: string;
     lang: string;
+}
+
+/** A row's identity for matching: strings and numbers only. Anything else never matches. */
+function rowIdentity(value: unknown): string | undefined {
+    return typeof value === "string" || typeof value === "number" ? String(value) : undefined;
 }
 
 const SKELETON_ROWS = 5;
@@ -62,9 +70,13 @@ const percentFormatOptions: Intl.NumberFormatOptions = { style: "percent", maxim
  * column's largest value. The first share column uses the palette slot `--uax-series-1`, the second
  * `--uax-series-2` and so on, unless the column sets `color`.
  *
+ * Pass last period's rows in `compare-rows` and name the column that identifies a row in `row-key` to
+ * show a small change badge after each share value. A row with no matching compare row, or a compare
+ * value of zero, shows no badge. Without a `row-key` there are no badges.
+ *
  * While `loading` is set it shows skeleton rows on first load, or keeps the old rows under a loading
  * bar when reloading. With no rows it shows `uax-empty-state` under the header. Replace `rows` and
- * `columns` with new arrays to update the table: changing one in place isn't noticed.
+ * `columns` (and `compare-rows`) with new arrays to update the table: changing one in place isn't noticed.
  *
  * @element uax-data-table
  * @slot toolbar - Content above the header row, such as a search box and totals. It pads itself with `--uax-table-padding`.
@@ -82,6 +94,14 @@ export class UaxDataTableElement extends UmbLitElement {
     @property({ attribute: false })
     rows: Record<string, unknown>[] = [];
 
+    /** Last period's rows. Each is matched to a row in `rows` by its `rowKey` value. */
+    @property({ attribute: false })
+    compareRows: Record<string, unknown>[] = [];
+
+    /** The key in each row, and compare row, that identifies it, such as a URL. Without it no compare badges are shown. */
+    @property({ type: String, attribute: "row-key" })
+    rowKey?: string;
+
     /** Shows skeleton rows on first load, or a loading bar over the old rows when reloading. */
     @property({ type: Boolean, reflect: true })
     loading = false;
@@ -96,15 +116,39 @@ export class UaxDataTableElement extends UmbLitElement {
 
     #derived: DerivedColumn[] = [];
     #derivedFrom?: DerivedFrom;
+    /** The compare rows by their `rowKey` value, rebuilt when `compareRows` or `rowKey` change. */
+    #compareByKey = new Map<string, UaxTableRow>();
 
     protected override willUpdate(changed: PropertyValues<this>) {
         super.willUpdate(changed);
         const lang = this.localize.lang();
         const prev = this.#derivedFrom;
+        if (!prev || prev.compareRows !== this.compareRows || prev.rowKey !== this.rowKey) {
+            this.#compareByKey = this.#indexCompareRows(this.compareRows, this.rowKey);
+        }
         if (!prev || prev.columns !== this.columns || prev.rows !== this.rows || prev.lang !== lang) {
-            this.#derivedFrom = { columns: this.columns, rows: this.rows, lang };
             this.#derived = this.#derive(this.columns, this.#statsRows, lang);
         }
+        this.#derivedFrom = { columns: this.columns, rows: this.rows, compareRows: this.compareRows, rowKey: this.rowKey, lang };
+    }
+
+    #indexCompareRows(compareRows: UaxTableRow[], rowKey?: string): Map<string, UaxTableRow> {
+        const byKey = new Map<string, UaxTableRow>();
+        if (!rowKey) return byKey;
+        for (const row of compareRows) {
+            const key = rowIdentity(row[rowKey]);
+            if (key !== undefined) byKey.set(key, row);
+        }
+        return byKey;
+    }
+
+    /** The percent change from the matching compare row's value, or undefined when there is nothing to compare or divide by. */
+    #changeFor(column: UaxTableColumn, row: UaxTableRow, value: number): number | undefined {
+        if (!this.rowKey) return undefined;
+        const key = rowIdentity(row[this.rowKey]);
+        const compareRow = key === undefined ? undefined : this.#compareByKey.get(key);
+        const compare = compareRow ? asNumber(compareRow[column.key]) : undefined;
+        return compare === undefined || compare === 0 ? undefined : ((value - compare) / Math.abs(compare)) * 100;
     }
 
     /**
@@ -186,10 +230,12 @@ export class UaxDataTableElement extends UmbLitElement {
         const value = asNumber(row[derived.column.key]);
         if (value === undefined) return nothing;
         const share = derived.total ? value / derived.total : 0;
+        const change = this.#changeFor(derived.column, row, value);
         const width = derived.max > 0 ? Math.round(Math.min(Math.max(value / derived.max, 0), 1) * 10000) / 100 : 0;
         return html`<div class="share">
             <div class="share-top">
                 <span class="share-value">${derived.format!.format(value)}</span> <span class="share-percent">(${derived.shareFormat!.format(share)})</span>
+                ${change === undefined ? nothing : html`<uax-delta-badge size="sm" .value=${change}></uax-delta-badge>`}
             </div>
             <div class="share-track" aria-hidden="true">
                 <div class="share-bar" style="width: ${width}%; background-color: var(--_uax-series-${derived.color})"></div>
