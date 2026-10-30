@@ -2,7 +2,17 @@ import type { Meta, StoryObj } from "@storybook/web-components-vite";
 import { html } from "@umbraco-cms/backoffice/external/lit";
 import type { UaxTimeSeriesChartElement } from "./time-series-chart.element.js";
 import "./time-series-chart.element.js";
-import { compareRangeLabel, pageviews, pageviewsPrevious, revenue, sessions, sessionsPrevious } from "./internal/chart-fixtures.js";
+import {
+    compareRangeLabel,
+    newVisitors,
+    pageviews,
+    pageviewsPrevious,
+    previousVisitors,
+    returningVisitors,
+    revenue,
+    sessions,
+    sessionsPrevious,
+} from "./internal/chart-fixtures.js";
 
 const meta: Meta<UaxTimeSeriesChartElement> = {
     title: "Components/Time Series Chart",
@@ -19,7 +29,7 @@ const meta: Meta<UaxTimeSeriesChartElement> = {
         emptyDescription: undefined,
     },
     argTypes: {
-        kind: { control: "inline-radio", options: ["line", "area"] },
+        kind: { control: "inline-radio", options: ["line", "area", "bar", "stacked-bar"] },
         groupBy: { control: "inline-radio", options: ["day", "week", "month"] },
     },
     render: (args) =>
@@ -72,4 +82,19 @@ export const Compare: Story = {
 export const CompareTwoSeries: Story = {
     name: "Compare, two series",
     args: { series: [pageviews, sessions], compareSeries: [pageviewsPrevious, sessionsPrevious], compareLabel: compareRangeLabel },
+};
+
+/** One bar per date. */
+export const Bar: Story = { args: { kind: "bar", series: [sessions] } };
+
+/** Series stack into one bar per date; the tooltip adds a total. */
+export const StackedBar: Story = {
+    name: "Stacked bar",
+    args: { kind: "stacked-bar", series: [returningVisitors, newVisitors] },
+};
+
+/** The compare series are added up per date and drawn as one lighter, wider bar behind each current bar. */
+export const StackedWithCompare: Story = {
+    name: "Stacked with compare",
+    args: { kind: "stacked-bar", series: [returningVisitors, newVisitors], compareSeries: [previousVisitors], compareLabel: compareRangeLabel },
 };

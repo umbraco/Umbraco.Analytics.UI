@@ -20,7 +20,7 @@ Screenshots are from the Phase 1 design ([`docs/design/phase-1`](../../design/ph
 
 ```ts
 type UaxPoint = { date: string; value: number };              // date: ISO "2026-06-11"
-type UaxSeries = { id: string; label: string; points: UaxPoint[] };
+type UaxSeries = { id: string; label: string; points: UaxPoint[]; color?: 1 | 2 | 3 | 4 }; // color: palette slot, defaults to the series' position
 type UaxMarker = { id: string; date: string; title: string; description?: string };
 type UaxGroupBy = "day" | "week" | "month";
 type UaxChartKind = "line" | "area" | "bar" | "stacked-bar";
@@ -84,7 +84,7 @@ Storybook gets a "Pane" story showing this recipe, a chart and a table in one `u
   - `empty-headline`, `empty-description`
 - **Comparison, by kind:**
   - `line` and `area`: a dashed `--uax-compare` line, with the gap between the two lines shaded.
-  - `bar` and `stacked-bar`: the comparison total is drawn as a bar behind each current bar.
+  - `bar` and `stacked-bar`: the comparison total is drawn as a bar behind each date's bars. For bar kinds, all compare series are summed per date and paired by position (no `id` matching), and the current total for that date is shown in the tooltip and hidden table whenever it's compared against two or more series.
   - Comparison points line up by position (day 1 with day 1), not by date. The two ranges are different dates.
 - **Tooltip:** hovering a point shows a dark tooltip with the date, each series' value and, when comparing, the comparison value and a delta.
 - **Markers:** each marker shows as a dot on the x-axis, with a dashed line up the chart.

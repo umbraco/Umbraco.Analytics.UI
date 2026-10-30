@@ -18,7 +18,7 @@ import { getLoadingMode } from "../internal/loading/loading-mode.js";
 import "../internal/loading/loading-bar.element.js";
 import "../internal/loading/skeleton.element.js";
 import { uaxThemeTokens } from "../internal/theme/tokens.css.js";
-import { buildChartData, maxValue, parseIsoDate, type UaxChartData } from "./internal/chart-data.js";
+import { allWhole, buildChartData, maxValue, parseIsoDate, seriesTotals, type UaxChartData } from "./internal/chart-data.js";
 import { colorsDiffer, resolveChartColors, type UaxChartColors } from "./internal/chart-colors.js";
 import { UaxChartRenderer, type UaxChartHover } from "./internal/chart-renderer.js";
 import { niceScale } from "./internal/nice-scale.js";
@@ -51,6 +51,10 @@ interface Derived {
     dateLabels: string[];
     /** Per series, the formatted date of each compare point (empty string where there is none). */
     compareDateLabels: string[][];
+    /** The sum of the series per date, `null` where every series is missing a point. */
+    totals: (number | null)[];
+    /** For the bar kinds, the formatted date of each compare total (empty string where there is none). */
+    compareTotalDateLabels: string[];
     numberFormat: Intl.NumberFormat;
     lang: string;
 }
@@ -60,9 +64,17 @@ const emptyDerived: Derived = {
     axisLabels: [],
     dateLabels: [],
     compareDateLabels: [],
+    totals: [],
+    compareTotalDateLabels: [],
     numberFormat: new Intl.NumberFormat("en"),
     lang: "en",
 };
+
+/** The palette slot (1 to 4) of a series: its `color` when valid, else its position, cycling through the four. */
+function slotOf(series: UaxSeries | undefined, position: number): number {
+    const color = series?.color;
+    return color === 1 || color === 2 || color === 3 || color === 4 ? color : (position % 4) + 1;
+}
 
 /** Whole numbers on the axis unless the step is fractional; compact once the numbers get long. */
 function tickFormat(valueFormat: Intl.NumberFormatOptions | undefined, max: number, step: number): Intl.NumberFormatOptions {
@@ -76,11 +88,14 @@ function tickFormat(valueFormat: Intl.NumberFormatOptions | undefined, max: numb
 }
 
 /**
- * Shows a metric over time as lines or filled areas, with a legend, a hover tooltip and a visually
+ * Shows a metric over time as lines, filled areas, bars or stacked bars, with a legend, a hover tooltip and a visually
  * hidden table of the same data for screen readers.
  *
  * Draws only: pass the points in `series`. Pass last period's points in `compare-series` to draw them as a
  * dashed line with the gap shaded. Series are matched by `id`, points by position (not by date).
+ * The bar kinds draw each date's compare series, added together, as one bar behind the current bar or bars
+ * (so there `compare-series` needn't match the `id`s of `series`). `stacked-bar` stacks the series per date and
+ * adds a total to the tooltip and the hidden table.
  * The x-axis labels follow `group-by`, and every number
  * (axis, tooltip, table) is formatted with `value-format` in the backoffice user's culture.
  * While `loading` is set it shows a skeleton on first load, or keeps the old data under a loading bar
@@ -93,7 +108,11 @@ function tickFormat(valueFormat: Intl.NumberFormatOptions | undefined, max: numb
  * @cssprop --uax-series-2 - Colour of the second series.
  * @cssprop --uax-series-3 - Colour of the third series.
  * @cssprop --uax-series-4 - Colour of the fourth series.
- * @cssprop --uax-compare - Colour of the compare line.
+ * @cssprop --uax-bar-1 - Colour of the first series' bars. Bars 2 to 4 follow. Each falls back to `--uax-series-N`, then to a livelier default than the line colour.
+ * @cssprop --uax-bar-2 - Colour of the second series' bars.
+ * @cssprop --uax-bar-3 - Colour of the third series' bars.
+ * @cssprop --uax-bar-4 - Colour of the fourth series' bars.
+ * @cssprop --uax-compare - Colour of the compare line, and of the compare bar (at 45% opacity).
  * @cssprop --uax-gap-positive - Shading between a series and its compare line where the series is above it.
  * @cssprop --uax-gap-negative - Shading between a series and its compare line where the series is below it.
  */
@@ -217,6 +236,8 @@ export class UaxTimeSeriesChartElement extends UmbLitElement {
             axisLabels: dates.map((d) => axisDate.format(d)),
             dateLabels: dates.map((d) => tooltipDate.format(d)),
             compareDateLabels: data.series.map((s) => (s.compareDates ?? []).map((d) => (d ? tooltipDate.format(parseIsoDate(d)) : ""))),
+            totals: seriesTotals(data),
+            compareTotalDateLabels: (data.compareTotal?.dates ?? []).map((d) => (d ? tooltipDate.format(parseIsoDate(d)) : "")),
             numberFormat: new Intl.NumberFormat(lang, valueFormat),
             lang,
         };
@@ -226,8 +247,30 @@ export class UaxTimeSeriesChartElement extends UmbLitElement {
         return this.#derived.numberFormat.format(value);
     }
 
+    get #slots() {
+        return this.#derived.data.series.map((_, i) => slotOf(this.series[i], i));
+    }
+
+    get #isBars() {
+        return this.kind === "bar" || this.kind === "stacked-bar";
+    }
+
+    /** Bar kinds compare the total of the compare series; line kinds compare each series with its match. */
     get #isComparing() {
-        return this.#derived.data.series.some((s) => s.compare);
+        const { data } = this.#derived;
+        return this.#isBars ? !!data.compareTotal : data.series.some((s) => s.compare);
+    }
+
+    /**
+     * The total of the series is shown (tooltip, hidden table) where there are several to add up and it is either
+     * what the bars stack to or what the compare total is compared against.
+     */
+    get #showsTotal() {
+        return this.#isBars && this.#derived.data.series.length > 1 && (this.kind === "stacked-bar" || this.#isComparing);
+    }
+
+    get #totalText() {
+        return this.localize.term("uaxAnalytics_chartTotalLabel");
     }
 
     get #compareText() {
@@ -250,19 +293,20 @@ export class UaxTimeSeriesChartElement extends UmbLitElement {
         }
         if (!this.#dirty) return;
         this.#dirty = false;
-        this.#colors = resolveChartColors(probe, this.#derived.data.series.length);
+        this.#colors = resolveChartColors(probe, this.#slots);
         this.#draw();
     }
 
     #draw() {
         if (!this.#renderer || !this.#colors) return;
         const { data, axisLabels, lang } = this.#derived;
-        const scale = niceScale(maxValue(data));
+        const scale = niceScale(maxValue(data, this.kind), 5, allWhole(data));
         const tick = new Intl.NumberFormat(lang, tickFormat(this.valueFormat, scale.max, scale.step));
         this.#renderer.update({
-            kind: this.kind === "area" ? "area" : "line",
+            kind: this.kind,
             labels: axisLabels,
-            datasets: data.series.map((s) => ({ label: s.label, values: s.values, compare: s.compare })),
+            datasets: data.series.map((s) => ({ label: s.label, values: s.values, compare: this.#isBars ? undefined : s.compare })),
+            compareTotal: this.#isBars ? data.compareTotal?.values : undefined,
             yMax: scale.max,
             yStep: scale.step,
             formatTick: (value) => tick.format(value),
@@ -274,7 +318,7 @@ export class UaxTimeSeriesChartElement extends UmbLitElement {
     #syncColors() {
         const probe = this.#probe;
         if (!probe || !this.#renderer) return;
-        const colors = resolveChartColors(probe, this.#derived.data.series.length);
+        const colors = resolveChartColors(probe, this.#slots);
         if (!colorsDiffer(this.#colors, colors)) return;
         this.#colors = colors;
         this.#draw();
@@ -299,28 +343,45 @@ export class UaxTimeSeriesChartElement extends UmbLitElement {
         const { data, dateLabels } = this.#derived;
         if (!hover || !dateLabels[hover.index]) return nothing;
         const values = data.series.map((s, i) => ({ s, i, value: s.values[hover.index] })).filter((v) => v.value !== null);
+        const bars = this.#isBars;
+        const swatch = bars ? "swatch swatch-square" : "swatch";
+        const token = bars ? "bar" : "series";
         return html`<div class="tooltip" style="visibility:hidden" aria-hidden="true">
             <div class="tooltip-date">${dateLabels[hover.index]}</div>
             ${values.map(
-                ({ s, i, value }) => html`<div class="tooltip-row">
-                        <span class="swatch" style="--swatch: var(--_uax-series-${(i % 4) + 1})"></span>
+                ({ s, i, value }) => html`<div class="tooltip-row tooltip-series">
+                        <span class=${swatch} style="--swatch: var(--_uax-${token}-${slotOf(this.series[i], i)})"></span>
                         <span class="tooltip-value">${this.#formatValue(value!)}</span>
                         ${data.series.length > 1 ? html`<span class="tooltip-label">${s.label}</span>` : nothing}
                     </div>
-                    ${this.#renderTooltipCompare(value!, s.compare?.[hover.index], this.#derived.compareDateLabels[i][hover.index])}`,
+                    ${bars ? nothing : this.#renderTooltipCompare(value!, s.compare?.[hover.index], this.#derived.compareDateLabels[i][hover.index], false)}`,
             )}
+            ${bars ? this.#renderBarTooltipTotals(hover.index) : nothing}
         </div>`;
     }
 
+    /** Bar kinds: the total of the series (stacked only), then the compare total with the change from the current total. */
+    #renderBarTooltipTotals(index: number) {
+        const { data, compareTotalDateLabels } = this.#derived;
+        const total = this.#derived.totals[index];
+        return html`${this.#showsTotal && total !== null
+            ? html`<div class="tooltip-row tooltip-total">
+                  <span class="tooltip-value">${this.#formatValue(total)}</span>
+                  <span class="tooltip-label">${this.#totalText}</span>
+              </div>`
+            : nothing}
+        ${this.#renderTooltipCompare(total, data.compareTotal?.values[index], compareTotalDateLabels[index], true)}`;
+    }
+
     /** The compare value, with the change from it to the current value. No badge when there is nothing to divide by. */
-    #renderTooltipCompare(value: number, compare: number | null | undefined, compareDate: string) {
+    #renderTooltipCompare(value: number | null, compare: number | null | undefined, compareDate: string, square: boolean) {
         if (compare === null || compare === undefined) return nothing;
         return html`<div class="tooltip-compare">
             <div class="tooltip-row">
-                <span class="swatch swatch-compare"></span>
+                <span class=${square ? "swatch swatch-compare swatch-square" : "swatch swatch-compare"}></span>
                 <span class="tooltip-value">${this.#formatValue(compare)}</span>
-                ${compare !== 0
-                    ? html`<uax-delta-badge size="sm" .value=${((value - compare) / Math.abs(compare)) * 100}></uax-delta-badge>`
+                ${compare !== 0 && value !== null
+                    ? html`<uax-delta-badge size="sm" .value=${((value! - compare) / Math.abs(compare)) * 100}></uax-delta-badge>`
                     : nothing}
             </div>
             <div class="tooltip-sub">${compareDate}</div>
@@ -329,18 +390,22 @@ export class UaxTimeSeriesChartElement extends UmbLitElement {
 
     #renderLegend() {
         if (this.series.length < 2 && !this.#isComparing) return nothing;
+        const bars = this.#isBars;
         return html`<ul class="legend" aria-label=${this.localize.term("uaxAnalytics_chartLegendLabel")}>
             ${repeat(
                 this.series,
                 (s) => s.id,
                 (s, i) => html`<li>
-                    <span class="legend-line" style="--swatch: var(--_uax-series-${(i % 4) + 1})" aria-hidden="true"></span>
+                    <span
+                        class=${bars ? "legend-swatch" : "legend-line"}
+                        style="--swatch: var(--_uax-${bars ? "bar" : "series"}-${slotOf(this.series[i], i)})"
+                        aria-hidden="true"></span>
                     ${s.label}
                 </li>`,
             )}
             ${this.#isComparing
                 ? html`<li>
-                      <span class="legend-line legend-compare" aria-hidden="true"></span>
+                      <span class=${bars ? "legend-swatch legend-compare-swatch" : "legend-line legend-compare"} aria-hidden="true"></span>
                       ${this.#compareText}
                   </li>`
                 : nothing}
@@ -350,6 +415,10 @@ export class UaxTimeSeriesChartElement extends UmbLitElement {
     /** Built from `#derived`, so it is the same template until the data changes (see `guard` in `render`). */
     #renderTable() {
         const { data, dateLabels } = this.#derived;
+        const bars = this.#isBars;
+        const totals = this.#showsTotal ? this.#derived.totals : undefined;
+        const compareTotal = bars ? data.compareTotal : undefined;
+        const cell = (value: number | null | undefined) => html`<td>${value === null || value === undefined ? "" : this.#formatValue(value)}</td>`;
         return html`<table class="visually-hidden">
             <caption>
                 ${this.localize.term("uaxAnalytics_chartTableCaption")}
@@ -359,10 +428,14 @@ export class UaxTimeSeriesChartElement extends UmbLitElement {
                     <th scope="col">${this.localize.term("uaxAnalytics_chartTableDateHeader")}</th>
                     ${data.series.map(
                         (s) => html`<th scope="col">${s.label}</th>
-                            ${s.compare
+                            ${s.compare && !bars
                                 ? html`<th scope="col">${this.localize.term("uaxAnalytics_chartTableCompareHeader", s.label)}</th>`
                                 : nothing}`,
                     )}
+                    ${totals ? html`<th scope="col">${this.#totalText}</th>` : nothing}
+                    ${compareTotal
+                        ? html`<th scope="col">${this.localize.term("uaxAnalytics_chartTableCompareHeader", this.#totalText)}</th>`
+                        : nothing}
                 </tr>
             </thead>
             <tbody>
@@ -370,11 +443,9 @@ export class UaxTimeSeriesChartElement extends UmbLitElement {
                     (_, row) => html`<tr>
                         <th scope="row">${dateLabels[row]}</th>
                         ${data.series.map(
-                            (s) => html`<td>${s.values[row] === null ? "" : this.#formatValue(s.values[row]!)}</td>
-                                ${s.compare
-                                    ? html`<td>${s.compare[row] === null ? "" : this.#formatValue(s.compare[row]!)}</td>`
-                                    : nothing}`,
+                            (s) => html`${cell(s.values[row])}${s.compare && !bars ? cell(s.compare[row]) : nothing}`,
                         )}
+                        ${totals ? cell(totals[row]) : nothing} ${compareTotal ? cell(compareTotal.values[row]) : nothing}
                     </tr>`,
                 )}
             </tbody>
@@ -409,6 +480,8 @@ export class UaxTimeSeriesChartElement extends UmbLitElement {
                 ? guard(
                       [
                           this.#derivedVersion,
+                          this.kind,
+                          this.localize.term("uaxAnalytics_chartTotalLabel"),
                           this.localize.term("uaxAnalytics_chartTableCaption"),
                           this.localize.term("uaxAnalytics_chartTableDateHeader"),
                           this.localize.term("uaxAnalytics_chartTableCompareHeader", "{0}"),
@@ -524,8 +597,23 @@ export class UaxTimeSeriesChartElement extends UmbLitElement {
                 color: color-mix(in srgb, var(--uui-palette-white) 70%, transparent);
             }
 
+            .swatch-square {
+                border-radius: 2px;
+            }
+
             .swatch-compare {
                 background: var(--_uax-compare);
+            }
+
+            .swatch-compare.swatch-square {
+                background: var(--_uax-compare-bar);
+            }
+
+            /* Indented under the swatch column, with a hairline above, so it reads as the sum of the rows. */
+            .tooltip-total {
+                margin-top: 2px;
+                padding: 2px 0 0 calc(8px + var(--uui-size-space-2));
+                border-top: 1px solid color-mix(in srgb, var(--uui-palette-white) 18%, transparent);
             }
 
             .tooltip-label {
@@ -557,6 +645,18 @@ export class UaxTimeSeriesChartElement extends UmbLitElement {
                 width: 18px;
                 border-top: 3px solid var(--swatch);
                 border-radius: 2px;
+            }
+
+            .legend-swatch {
+                flex: none;
+                width: 10px;
+                height: 10px;
+                border-radius: 2px;
+                background: var(--swatch);
+            }
+
+            .legend-compare-swatch {
+                background: var(--_uax-compare-bar);
             }
 
             .legend-compare {

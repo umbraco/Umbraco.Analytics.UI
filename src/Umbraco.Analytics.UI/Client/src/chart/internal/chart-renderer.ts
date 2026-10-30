@@ -1,13 +1,16 @@
 import { Chart, type ChartConfiguration, type PointElement, type Plugin } from "chart.js";
+import type { UaxChartKind } from "../types.js";
 import type { UaxChartColors } from "./chart-colors.js";
 import "./register.js";
 
 /** What the renderer draws. Our own shape: Chart.js types stay inside `src/chart/internal`. */
 export interface UaxChartModel {
-    kind: "line" | "area";
+    kind: UaxChartKind;
     labels: string[];
-    /** `compare` is drawn as a dashed line, with the gap to `values` shaded. */
+    /** For the line kinds, `compare` is drawn as a dashed line, with the gap to `values` shaded. */
     datasets: { label: string; values: (number | null)[]; compare?: (number | null)[] }[];
+    /** For the bar kinds, one compare bar per date, drawn behind the current bars. */
+    compareTotal?: (number | null)[];
     /** The y-axis runs from 0 to `yMax` in steps of `yStep`. */
     yMax: number;
     yStep: number;
@@ -22,6 +25,12 @@ export interface UaxChartHover {
     y: number;
 }
 
+/** Widest a bar gets on a chart with few points, in pixels. The compare bar is a little wider than the current bars. */
+const MAX_BAR_WIDTH = 28;
+const COMPARE_BAR_EXTRA_WIDTH = 12;
+
+const isBarKind = (kind: UaxChartKind) => kind === "bar" || kind === "stacked-bar";
+
 /** Above this many points per series, dots would crowd the line, so only the hovered point shows. */
 const MAX_POINTS_WITH_DOTS = 45;
 
@@ -31,11 +40,20 @@ const MAX_POINTS_WITH_DOTS = 45;
  * every change, including loading toggles: it is only destroyed when the element disconnects.
  */
 export class UaxChartRenderer {
-    #chart: Chart<"line">;
+    #chart?: Chart;
+    #family?: "line" | "bar";
     #colors?: UaxChartColors;
     #lastHover?: UaxChartHover;
+    #canvas: HTMLCanvasElement;
+    #onHover: (hover: UaxChartHover | undefined) => void;
 
     constructor(canvas: HTMLCanvasElement, onHover: (hover: UaxChartHover | undefined) => void) {
+        this.#canvas = canvas;
+        this.#onHover = onHover;
+    }
+
+    /** Chart.js can't change a chart's type, so moving between the line and bar kinds builds a new chart. */
+    #create(family: "line" | "bar"): Chart {
         const hoverLine: Plugin = {
             id: "uaxHoverLine",
             beforeDatasetsDraw: (chart) => {
@@ -43,19 +61,27 @@ export class UaxChartRenderer {
                 if (!active || !this.#colors) return;
                 const { ctx, chartArea } = chart;
                 ctx.save();
-                ctx.strokeStyle = this.#colors.hoverLine;
-                ctx.lineWidth = 1;
-                ctx.setLineDash([3, 3]);
-                ctx.beginPath();
-                ctx.moveTo(active.x, chartArea.top);
-                ctx.lineTo(active.x, chartArea.bottom);
-                ctx.stroke();
+                if (family === "bar") {
+                    // Bars are wide, so the hovered date is shown as a faint band behind them.
+                    const width = chartArea.width / Math.max(chart.data.labels?.length ?? 1, 1);
+                    ctx.globalAlpha = 0.25;
+                    ctx.fillStyle = this.#colors.hoverLine;
+                    ctx.fillRect(active.x - width / 2, chartArea.top, width, chartArea.bottom - chartArea.top);
+                } else {
+                    ctx.strokeStyle = this.#colors.hoverLine;
+                    ctx.lineWidth = 1;
+                    ctx.setLineDash([3, 3]);
+                    ctx.beginPath();
+                    ctx.moveTo(active.x, chartArea.top);
+                    ctx.lineTo(active.x, chartArea.bottom);
+                    ctx.stroke();
+                }
                 ctx.restore();
             },
         };
 
-        const config: ChartConfiguration<"line"> = {
-            type: "line",
+        const config: ChartConfiguration = {
+            type: family,
             data: { labels: [], datasets: [] },
             plugins: [hoverLine],
             options: {
@@ -73,7 +99,7 @@ export class UaxChartRenderer {
                             const points = tooltip.opacity === 0 ? [] : tooltip.dataPoints;
                             if (!points?.length) {
                                 this.#lastHover = undefined;
-                                onHover(undefined);
+                                this.#onHover(undefined);
                                 return;
                             }
                             const hover = {
@@ -85,22 +111,61 @@ export class UaxChartRenderer {
                             const last = this.#lastHover;
                             if (last && last.index === hover.index && last.y === hover.y) return;
                             this.#lastHover = hover;
-                            onHover(hover);
+                            this.#onHover(hover);
                         },
                     },
                 },
             },
         };
-        this.#chart = new Chart(canvas, config);
+        return new Chart(this.#canvas, config);
     }
 
     update(model: UaxChartModel): void {
-        const { colors } = model;
-        this.#colors = colors;
+        this.#colors = model.colors;
+        const family = isBarKind(model.kind) ? "bar" : "line";
+        if (!this.#chart || this.#family !== family) {
+            this.#chart?.destroy();
+            this.#chart = this.#create(family);
+            this.#family = family;
+            this.#lastHover = undefined;
+            this.#onHover(undefined);
+        }
         const chart = this.#chart;
-        const showDots = model.labels.length <= MAX_POINTS_WITH_DOTS;
-
         chart.data.labels = model.labels;
+        chart.data.datasets = family === "bar" ? this.#barDatasets(model) : this.#lineDatasets(model);
+
+        const { colors } = model;
+        const font = { family: colors.fontFamily, size: 11 };
+        const stacked = model.kind === "stacked-bar";
+        const options = chart.options;
+        const scales = options.scales!;
+        scales["x"] = {
+            stacked,
+            grid: { display: false },
+            border: { color: colors.grid },
+            ticks: { color: colors.tick, font, maxRotation: 45, autoSkip: true },
+        };
+        scales["y"] = {
+            stacked,
+            min: 0,
+            max: model.yMax,
+            grid: { color: colors.grid, drawTicks: false },
+            border: { display: false },
+            ticks: {
+                color: colors.tick,
+                font,
+                stepSize: model.yStep,
+                padding: 8,
+                callback: (value) => model.formatTick(Number(value)),
+            },
+        };
+        chart.update();
+    }
+
+    // The datasets are built as plain objects: Chart.js types the dataset by chart type, and the two families differ.
+    #lineDatasets(model: UaxChartModel) {
+        const { colors } = model;
+        const showDots = model.labels.length <= MAX_POINTS_WITH_DOTS;
         // Compare lines come after every series, so each series keeps its dataset index.
         const compared = model.datasets.flatMap((set, i) => (set.compare ? [i] : []));
         const currentSets = model.datasets.map((set, i) => {
@@ -147,38 +212,57 @@ export class UaxChartRenderer {
             pointHoverBorderColor: colors.compare,
             pointHoverBorderWidth: 2,
         }));
-        chart.data.datasets = [...currentSets, ...compareSets];
+        return [...currentSets, ...compareSets];
+    }
 
-        const font = { family: colors.fontFamily, size: 11 };
-        const options = chart.options;
-        const scales = options.scales!;
-        scales["x"] = {
-            grid: { display: false },
-            border: { color: colors.grid },
-            ticks: { color: colors.tick, font, maxRotation: 45, autoSkip: true },
-        };
-        scales["y"] = {
-            min: 0,
-            max: model.yMax,
-            grid: { color: colors.grid, drawTicks: false },
-            border: { display: false },
-            ticks: {
-                color: colors.tick,
-                font,
-                stepSize: model.yStep,
-                padding: 8,
-                callback: (value) => model.formatTick(Number(value)),
+    /**
+     * Current bars first, so each series keeps its dataset index. The compare total is one more bar per date,
+     * not grouped with the others and drawn first (a higher `order` is drawn earlier), so it sits behind them,
+     * wider than the group.
+     */
+    #barDatasets(model: UaxChartModel) {
+        const { colors } = model;
+        const stacked = model.kind === "stacked-bar";
+        const groupWidth = stacked ? MAX_BAR_WIDTH : MAX_BAR_WIDTH * Math.max(model.datasets.length, 1);
+        const currentSets = model.datasets.map((set, i) => ({
+            label: set.label,
+            data: set.values,
+            order: 0,
+            stack: stacked ? "current" : undefined,
+            backgroundColor: colors.series[i].bar,
+            // Stacked segments are told apart by a surface-coloured hairline as well as by colour.
+            borderColor: colors.surface,
+            borderWidth: stacked ? { top: 1, bottom: 1, left: 0, right: 0 } : 0,
+            borderSkipped: false as const,
+            categoryPercentage: 0.8,
+            barPercentage: stacked ? 0.55 : 0.9,
+            maxBarThickness: MAX_BAR_WIDTH,
+        }));
+        if (!model.compareTotal) return currentSets;
+        return [
+            ...currentSets,
+            {
+                label: "",
+                data: model.compareTotal,
+                order: 1,
+                stack: "compare",
+                grouped: false,
+                backgroundColor: colors.compareBar,
+                borderWidth: 0,
+                categoryPercentage: 0.9,
+                barPercentage: 1,
+                maxBarThickness: groupWidth + COMPARE_BAR_EXTRA_WIDTH,
             },
-        };
-        chart.update();
+        ];
     }
 
     /** Redraws with the current data, e.g. once a web font has loaded. */
     redraw(): void {
-        this.#chart.update();
+        this.#chart?.update();
     }
 
     destroy(): void {
-        this.#chart.destroy();
+        this.#chart?.destroy();
+        this.#chart = undefined;
     }
 }

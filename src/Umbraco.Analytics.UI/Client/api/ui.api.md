@@ -108,6 +108,7 @@ export type UaxPoint = {
 export type UaxSeries = {
     id: string;
     label: string;
+    color?: 1 | 2 | 3 | 4;
     points: UaxPoint[];
 };
 

@@ -52,3 +52,14 @@ export const sessionsPrevious = toSeries(
 );
 
 export const compareRangeLabel = "Apr 25, 2026 – May 24, 2026";
+
+/** Small daily counts for the bar stories (25 May to 23 Jun 2026), like the Phase 1 visitors chart. */
+const returningValues = [1, 0, 1, 0, 1, 0, 0, 2, 1, 0, 1, 0, 0, 2, 0, 1, 1, 0, 0, 2, 0, 0, 1, 0, 1, 0, 1, 0, 0, 1];
+const newVisitorValues = [0, 1, 1, 2, 0, 1, 1, 0, 1, 4, 1, 0, 1, 0, 0, 1, 1, 2, 0, 0, 1, 1, 0, 1, 0, 1, 0, 0, 1, 1];
+/** The 30 days before, as one total per day (the compare series of both parts added up). */
+const previousVisitorValues = [1, 1, 0, 1, 1, 1, 2, 1, 1, 1, 2, 2, 1, 1, 0, 1, 1, 0, 1, 2, 1, 1, 2, 1, 1, 1, 0, 1, 1, 1];
+
+export const returningVisitors: UaxSeries = { ...toSeries("returning", "Returning visitor", returningValues), color: 1 };
+export const newVisitors: UaxSeries = { ...toSeries("new", "New visitor", newVisitorValues), color: 3 };
+/** Visitors for 25 Apr to 24 May 2026: the compare series of the stacked bars. */
+export const previousVisitors = toSeries("visitors", "Visitors", previousVisitorValues, dayAfter25Apr);

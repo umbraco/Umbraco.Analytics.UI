@@ -29,6 +29,7 @@ export default {
         chartTableCaption: "Chart data",
         chartTableDateHeader: "Date",
         chartTableCompareHeader: "{0} (compare)",
+        chartTotalLabel: "Total",
         chartMarkerAriaLabel: "Marker: {0}",
         chartMarkersLabel: "Markers",
         chartComparisonLabel: "Comparison",

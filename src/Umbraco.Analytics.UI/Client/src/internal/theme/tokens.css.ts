@@ -17,7 +17,7 @@ import { css } from "@umbraco-cms/backoffice/external/lit";
  * | token      | light (on #fff)            | dark (on #2d333b)             |
  * | ---------- | -------------------------- | ----------------------------- |
  * | series-1   | space-cadet 14.62          | malibu-light 4.44             |
- * | series-2   | maroon-flush 4.54          | spanish-pink 10.88            |
+ * | series-2   | maroon-flush 4.54          | maroon-flush-light 3.05       |
  * | series-3   | sunglow-dark 4.07          | sunglow 8.94                  |
  * | series-4   | violet-blue 9.80           | jungle-green 5.58             |
  * | compare    | chamoisee 3.71             | deep-saffron 5.92             |
@@ -25,11 +25,26 @@ import { css } from "@umbraco-cms/backoffice/external/lit";
  * Replaced because they fail 3:1: space-cadet (1.15 dark), violet-blue (1.30 dark), spanish-pink
  * (1.17 light), sunglow (1.43 light), deep-saffron (2.15 light; no orange shade passes on white).
  *
- * Fills (areas, and the bars of T11) use `--_uax-fill-N` at low alpha, not the line colour: the line
+ * Fills (areas) use `--_uax-fill-N` at low alpha, not the line colour: the line
  * tokens are darker so lines clear 3:1, and a pale tint of them looks grey. In light, fill 1 is the
  * design's violet blue, fill 3 is sunglow, and fill 4 is malibu so it differs from fill 1; fills 2 and
  * the dark shades match their lines. A product that overrides `--uax-series-N` gets that colour as the fill.
  * Fills are decoration (the line or bar edge carries the series), so they have no contrast target.
+ *
+ * Bars use `--_uax-bar-N`, opaque and livelier than the line shades. Light is the design's violet-blue,
+ * maroon-flush-light, sunglow and malibu; dark keeps the dark line shades. A product's `--uax-bar-N`
+ * wins, then its `--uax-series-N`. A bar is a large fill that the legend and the hidden table also name,
+ * so it needn't reach 3:1.
+ *
+ * | token      | light (on #fff)            | dark (on #2d333b)             |
+ * | ---------- | -------------------------- | ----------------------------- |
+ * | bar-1      | violet-blue 9.80           | malibu-light 4.44             |
+ * | bar-2      | maroon-flush-light 4.18    | maroon-flush-light 3.05       |
+ * | bar-3      | sunglow 1.43               | sunglow 8.94                  |
+ * | bar-4      | malibu 3.93                | jungle-green 5.58             |
+ *
+ * The compare bar sits behind the current bars: `--_uax-compare` at 45% over the surface (chamoisee
+ * 1.68:1 light, deep-saffron 2.34:1 dark). It is decoration too: the legend, tooltip and table carry it.
  *
  * Compare gap (the shading between a series and its compare line): the light and high contrast value is
  * 15% of `--uui-color-positive` / `--uui-color-danger` (1.2 to 1.3:1 on white), which vanishes on the dark
@@ -63,7 +78,7 @@ export const uaxThemeTokens = css`
         );
         --_uax-series-2: var(
             --uax-series-2,
-            light-dark(var(--uui-palette-maroon-flush), var(--uui-palette-spanish-pink))
+            light-dark(var(--uui-palette-maroon-flush), var(--uui-palette-maroon-flush-light))
         );
         --_uax-series-3: var(
             --uax-series-3,
@@ -79,17 +94,31 @@ export const uaxThemeTokens = css`
         );
         --_uax-fill-2: var(
             --uax-series-2,
-            light-dark(var(--uui-palette-maroon-flush), var(--uui-palette-spanish-pink))
+            light-dark(var(--uui-palette-maroon-flush), var(--uui-palette-maroon-flush-light))
         );
         --_uax-fill-3: var(--uax-series-3, var(--uui-palette-sunglow));
         --_uax-fill-4: var(
             --uax-series-4,
             light-dark(var(--uui-palette-malibu), var(--uui-palette-jungle-green))
         );
+        --_uax-bar-1: var(
+            --uax-bar-1,
+            var(--uax-series-1, light-dark(var(--uui-palette-violet-blue), var(--uui-palette-malibu-light)))
+        );
+        --_uax-bar-2: var(
+            --uax-bar-2,
+            var(--uax-series-2, var(--uui-palette-maroon-flush-light))
+        );
+        --_uax-bar-3: var(--uax-bar-3, var(--uax-series-3, var(--uui-palette-sunglow)));
+        --_uax-bar-4: var(
+            --uax-bar-4,
+            var(--uax-series-4, light-dark(var(--uui-palette-malibu), var(--uui-palette-jungle-green)))
+        );
         --_uax-compare: var(
             --uax-compare,
             light-dark(var(--uui-palette-chamoisee), var(--uui-palette-deep-saffron))
         );
+        --_uax-compare-bar: color-mix(in srgb, var(--_uax-compare) 45%, transparent);
 
         --_uax-gap-positive: var(
             --uax-gap-positive,

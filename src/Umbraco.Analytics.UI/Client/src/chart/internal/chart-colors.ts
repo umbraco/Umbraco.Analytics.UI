@@ -1,8 +1,10 @@
 export interface UaxChartColors {
     /** One entry per series, cycling through the four series tokens. */
-    series: { line: string; fill: string }[];
+    series: { line: string; fill: string; bar: string }[];
     /** The compare line. */
     compare: string;
+    /** The compare bar: the compare colour at reduced opacity, drawn behind the current bars. */
+    compareBar: string;
     /** The gap between a series and its compare line where the series is above / below it. */
     gapAbove: string;
     gapBelow: string;
@@ -18,24 +20,26 @@ export interface UaxChartColors {
  * `light-dark(...)` strings, not colours. So each colour is applied to a probe element in the
  * chart's shadow root and read back as a computed `color`, which is a real colour in the
  * element's current theme. The fill is a base colour at low alpha (`--_uax-fill-N`, declared by the
- * element): the livelier design colour by default, the product's colour when it overrides a series token.
+ * element): the livelier design colour by default, the product's colour when it overrides a series token. Bars use
+ * `--_uax-bar-N`, opaque.
  */
-export function resolveChartColors(probe: HTMLElement, seriesCount: number): UaxChartColors {
+export function resolveChartColors(probe: HTMLElement, slots: number[]): UaxChartColors {
     const colorOf = (expression: string): string => {
         probe.style.color = "";
         probe.style.color = expression;
         return getComputedStyle(probe).color;
     };
-    const series = Array.from({ length: seriesCount }, (_, i) => {
-        const n = (i % 4) + 1;
+    const series = slots.map((n) => {
         return {
             line: colorOf(`var(--_uax-series-${n})`),
             fill: colorOf(`color-mix(in srgb, var(--_uax-fill-${n}) 12%, transparent)`),
+            bar: colorOf(`var(--_uax-bar-${n})`),
         };
     });
     return {
         series,
         compare: colorOf("var(--_uax-compare)"),
+        compareBar: colorOf("var(--_uax-compare-bar)"),
         gapAbove: colorOf("var(--_uax-gap-positive)"),
         gapBelow: colorOf("var(--_uax-gap-negative)"),
         grid: colorOf("var(--uui-color-divider-standalone)"),

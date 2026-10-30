@@ -11,6 +11,8 @@ export type UaxSeries = {
     id: string;
     /** Shown in the legend, the tooltip and the screen reader table. */
     label: string;
+    /** Palette slot (series/bar/fill colour). Defaults to the series' position. */
+    color?: 1 | 2 | 3 | 4;
     points: UaxPoint[];
 };
 
