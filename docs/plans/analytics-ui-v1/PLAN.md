@@ -12,7 +12,7 @@
   Acceptance: FND-1 specs green. A Storybook "Theme" story shows the swatches in light, dark and high-contrast.
   depends-on: none. parallel-group: A
 
-- [ ] **T2** - story: FND-2 (AC1, AC3). Add `src/lang/en.ts` with every built-in string under `uanAnalytics_*` (UmbLocalizationDictionary shape). Make `vite.config.ts` a multi-entry build emitting `lang/en.js` beside `umbraco-analytics-ui.js`. Register the translations in `.storybook/preview.ts` and in a test helper, `src/internal/test/localization.ts`, so stories and tests render text, not keys.
+- [x] **T2** - story: FND-2 (AC1, AC3). Add `src/lang/en.ts` with every built-in string under `uanAnalytics_*` (UmbLocalizationDictionary shape). Make `vite.config.ts` a multi-entry build emitting `lang/en.js` beside `umbraco-analytics-ui.js`. Register the translations in `.storybook/preview.ts` and in a test helper, `src/internal/test/localization.ts`, so stories and tests render text, not keys.
   Acceptance: FND-2 AC1 and AC3 specs green. `npm run build` emits `../wwwroot/lang/en.js`.
   depends-on: none. parallel-group: A
 
