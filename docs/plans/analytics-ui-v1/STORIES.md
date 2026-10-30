@@ -1,6 +1,6 @@
 # Stories: Analytics UI v1
 
-**19 stories, 93 criteria.** Story ids are used by `PLAN.md` and the spec files, so never renumber them.
+**19 stories, 94 criteria.** Story ids are used by `PLAN.md` and the spec files, so never renumber them.
 
 > [!IMPORTANT]
 > **3 guesses need your OK.**
@@ -10,7 +10,7 @@
 
 **Foundation**
 
-- [FND-1](#fnd-1-theme-tokens-products-can-override) Theme tokens products can override, 3 criteria
+- [FND-1](#fnd-1-theme-tokens-products-can-override) Theme tokens products can override, 4 criteria
 - [FND-2](#fnd-2-built-in-text-is-translated) Built-in text is translated, 3 criteria
 - [FND-3](#fnd-3-empty-and-loading-states) Empty and loading states, 6 criteria
 
@@ -70,9 +70,9 @@ so that my analytics screen can follow my product's palette without forking the 
 
 ```
 AC1 — Default series colours
-  Given an element from the package on a page with no overrides
+  Given an element from the package on a page with no overrides, in the light theme
   When  it renders
-  Then  --uan-series-1 resolves to the value of --uui-palette-space-cadet
+  Then  its series 1 colour resolves to --uui-palette-space-cadet
 
 AC2 — Override from a parent
   Given a parent element that sets --uan-series-1 to a different colour
@@ -80,9 +80,14 @@ AC2 — Override from a parent
   Then  the element uses the parent's colour
 
 AC3 — Tints follow the theme
-  Given the dark theme is active
-  When  a positive tint (--uan-tint-positive) is read
-  Then  it is derived from --uui-color-positive, not a fixed colour
+  Given a parent that changes --uui-color-positive, as a theme does
+  When  the element's positive tint is read
+  Then  it is derived from the parent's --uui-color-positive, not a fixed colour
+
+AC4 — Dark theme picks the dark shade
+  Given the dark theme is active (--uui-color-scheme: dark)
+  When  an element from the package renders
+  Then  its series 1 colour resolves to --uui-palette-malibu-light
 ```
 
 ## FND-2: Built-in text is translated

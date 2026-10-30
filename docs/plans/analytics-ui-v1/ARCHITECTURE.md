@@ -39,15 +39,13 @@ What every new element does touch:
    Rejected: formatter callback functions. They don't show in Storybook controls or docs, and products would each write slightly different ones.
    > ASSUMPTION: Intl options cover every unit the products show today (counts, currency, percent, durations in seconds or ms, compact "14.3k"). Durations may need a `unit` option: check AI's `_formatMs` before building.
 
-6. **Colours: series tokens from the UUI palette, tints from semantic colours.**
-   - Series colours are custom properties on `:host`, so a product can override them:
-     - `--uan-series-1` = `--uui-palette-space-cadet` (navy)
-     - `--uan-series-2` = `--uui-palette-spanish-pink`
-     - `--uan-series-3` = `--uui-palette-sunglow`
-     - `--uan-series-4` = `--uui-palette-violet-blue`
-     - `--uan-compare` = `--uui-palette-deep-saffron`
-   - Tints (delta pills, diff shading, share-bar tracks) use `color-mix()` on semantic tokens, e.g. `color-mix(in srgb, var(--uui-color-positive) 10%, transparent)`. The design's hard-coded `rgba(...)` values would break dark mode.
-   > ASSUMPTION: the palette colours stay readable on the dark theme's surface. Check each one against dark and high-contrast in Storybook. Where one fails, the token gets a theme-aware fallback, not a new hard-coded colour.
+6. **Colours: public names for products, private names for elements, a shade per theme.**
+   - **Products override** the public names on any ancestor: `--uan-series-1` to `--uan-series-4`, `--uan-compare`, `--uan-tint-positive`, `--uan-tint-negative`, `--uan-tint-neutral`.
+   - **Elements read** private copies, resolved on each element's `:host`: `--_uan-series-1: var(--uan-series-1, <default>)`. They never declare a public name themselves, because that would hide an ancestor's override. An element that reads `--uan-*` directly gets nothing when no product has set it.
+   - **Defaults pair a light and a dark shade** with CSS `light-dark()`, since the UUI palette is the same in every theme. The dark theme only sets the custom property `--uui-color-scheme: dark`, so each element's `:host` sets `color-scheme: var(--uui-color-scheme, normal)`, as UUI's own inputs do, for `light-dark()` to pick the right shade. A resolved `--_uan-*` value is a `light-dark(...)` string, not a colour: code that needs the colour (the Chart.js wrapper) reads it back as a computed `color`. The design's colours are kept where they read. Where one doesn't (navy and violet blue in dark, pink, yellow and orange in light), a lighter or darker UUI palette shade replaces it in that theme. Lines and bars need 3:1 against the surface.
+     - Starting points: series 1 navy (`--uui-palette-space-cadet`), 2 pink (`--uui-palette-spanish-pink`), 3 yellow (`--uui-palette-sunglow`), 4 violet blue (`--uui-palette-violet-blue`), compare orange (`--uui-palette-deep-saffron`).
+   - Tints (delta pills, diff shading, share-bar tracks) use `color-mix()` on semantic tokens such as `--uui-color-positive`, which already change per theme. The design's hard-coded `rgba(...)` values would break dark mode.
+   - The token stylesheet is internal (`src/internal/theme/`), not exported. The public contract is the `--uan-*` names only.
 
 7. **Table supports client and server modes.** In `client` mode it sorts, searches and pages the rows it's given. In `server` mode it only raises `sort-change`, `search` and `page-change`, and the product passes back the new page. Engage needs server mode, because its tables can have thousands of rows. Commerce and AI lists are short. Rejected: server-only, which would make every small table write paging code.
 

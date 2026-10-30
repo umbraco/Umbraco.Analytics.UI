@@ -4,7 +4,7 @@
 
 ```ts
 
-import { CSSResult } from 'lit';
+import { CSSResultGroup } from '@umbraco-cms/backoffice/external/lit';
 import { LitElement } from '@umbraco-cms/backoffice/external/lit';
 import { nothing } from '@umbraco-cms/backoffice/external/lit';
 import { TemplateResult } from 'lit-html';
@@ -18,7 +18,7 @@ export class UanDeltaBadgeElement extends LitElement {
     render(): typeof nothing | TemplateResult<1>;
     get sentiment(): "positive" | "negative" | "neutral";
     // (undocumented)
-    static styles: CSSResult;
+    static styles: CSSResultGroup;
     unit: UanDeltaUnit;
     value?: number;
 }

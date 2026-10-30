@@ -1,4 +1,5 @@
-import { css, customElement, html, nothing, property, LitElement } from "@umbraco-cms/backoffice/external/lit";
+import { css, customElement, html, nothing, property, LitElement, type CSSResultGroup } from "@umbraco-cms/backoffice/external/lit";
+import { uanThemeTokens } from "../internal/theme/tokens.css.js";
 
 export type UanDeltaUnit = "percent" | "points";
 
@@ -65,7 +66,9 @@ export class UanDeltaBadgeElement extends LitElement {
         >`;
     }
 
-    static override styles = css`
+    static override styles: CSSResultGroup = [
+        uanThemeTokens,
+        css`
         :host {
             display: inline-flex;
         }
@@ -95,7 +98,8 @@ export class UanDeltaBadgeElement extends LitElement {
         [data-sentiment="neutral"] {
             color: var(--uui-color-text-alt);
         }
-    `;
+    `,
+    ];
 }
 
 declare global {

@@ -8,4 +8,3 @@ export * from "./table/index.js";
 export * from "./date-range/index.js";
 export * from "./layout/index.js";
 export * from "./states/index.js";
-export * from "./theme/index.js";

@@ -9,7 +9,7 @@ None. The package has no server code. Products call their own APIs and pass data
 All elements live in `src/Umbraco.Analytics.UI/Client/src/<name>/` and are exported from `@umbraco-analytics/ui`. Every element:
 
 - extends `UmbLitElement` and localizes every visible string, `aria-label` and placeholder
-- uses `--uui-*` tokens and the `--uan-*` tokens in ARCHITECTURE.md, and reads correctly in the light, dark and high-contrast themes
+- uses `--uui-*` tokens and reads colours through the private `--_uan-*` tokens (ARCHITECTURE.md decision 6), and reads correctly in the light, dark and high-contrast themes
 - raises events as `CustomEvent`s that bubble and are `composed`, with the payload in `detail`
 - passes an axe audit in its tests and in every Storybook story
 - takes corner radius from `--uui-border-radius-*` tokens, so it follows the v18+ rounded backoffice
@@ -150,7 +150,7 @@ Storybook gets a "Pane" story showing this recipe, a chart and a table in one `u
 
 ### 9. Theme and localization
 
-- Exports the series and tint tokens as CSS custom properties on each element's `:host`. Products can override them on a parent element.
+- Products override the `--uan-*` colour names on any parent element. Elements read private `--_uan-*` copies (ARCHITECTURE.md decision 6). Default colours have a light and a dark shade, each at least 3:1 against the surface.
 - Ships `en` translations for every built-in string under `uanAnalytics_*`. Products can override them with their own `localization` extension.
 
 ### The five moments
