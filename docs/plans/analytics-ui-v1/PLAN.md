@@ -118,7 +118,7 @@
 
 ## Integration
 
-- [ ] **T21** - **wire: localization and date range modal into `umbraco-package.json`.** story: INT-1 (AC1–AC4). Add a `localization` extension (`culture: "en"`, `weight: 200`, `js: /App_Plugins/Umbraco.Analytics.UI/lang/en.js`) and a `modal` extension (alias `Uax.Modal.DateRange`, `elementName: "uax-date-range-modal"`) to `public/umbraco-package.json`.
+- [x] **T21** - **wire: localization and date range modal into `umbraco-package.json`.** story: INT-1 (AC1–AC4). Add a `localization` extension (`culture: "en"`, `weight: 200`, `js: /App_Plugins/Umbraco.Analytics.UI/lang/en.js`) and a `modal` extension (alias `Uax.Modal.DateRange`, `elementName: "uax-date-range-modal"`) to `public/umbraco-package.json`.
   Acceptance (real backoffice, not unit tests):
   - On a CMS 19 site referencing `Umbraco.Analytics.UI.csproj`, `@umbraco-analytics/ui` resolves in the browser.
   - `uaxAnalytics_emptyHeadline` translates.
