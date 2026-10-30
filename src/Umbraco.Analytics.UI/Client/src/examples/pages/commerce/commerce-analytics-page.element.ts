@@ -84,7 +84,7 @@ const discountColumns: UaxTableColumn[] = [
 ];
 
 /**
- * Commerce > Analytics: a page header with the date range, a row of KPI tiles that pick the metric of one chart,
+ * Commerce > Analytics: an actions row with the date range, a row of KPI tiles that pick the metric of one chart,
  * then top products, popular discounts and top buyers tables. The page owns the state, asks the API for data when
  * it changes, and hands the answer to the parts.
  */
@@ -192,85 +192,69 @@ export class ExampleCommerceAnalyticsPageElement extends UmbLitElement {
         const metric = metrics.find((m) => m.id === this._metric)!;
         const compare = this._compare;
         return html`
-            <div class="page">
-                <header>
-                    <h1>Analytics</h1>
-                    <div class="actions">
-                        <uax-date-range today="2026-06-23" .value=${this._range} .compare=${compare} @change=${this.#onRangeChange}></uax-date-range>
-                    </div>
-                </header>
+            <div class="actions">
+                <uax-date-range today="2026-06-23" .value=${this._range} .compare=${compare} @change=${this.#onRangeChange}></uax-date-range>
+            </div>
 
-                <div class="kpis">${metrics.map((m) => this.#renderTile(m))}</div>
+            <div class="kpis">${metrics.map((m) => this.#renderTile(m))}</div>
 
-                <uui-box headline=${metric.label} headline-variant="h2" style="--uui-box-default-padding: 0">
-                    <uax-time-series-chart
-                        kind="line"
-                        .series=${this.#series(this._data?.days, this._metric)}
-                        .compareSeries=${this.#series(this._compareData?.days, this._metric)}
-                        .range=${this._range}
-                        .compare=${this._compare}
-                        .compareLabel=${compare ? uaxFormatDateRange(this.localize, compare) : undefined}
-                        .valueFormat=${metric.format}
-                        ?loading=${this._loading}></uax-time-series-chart>
-                </uui-box>
+            <uui-box headline=${metric.label} headline-variant="h2" style="--uui-box-default-padding: 0">
+                <uax-time-series-chart
+                    kind="line"
+                    .series=${this.#series(this._data?.days, this._metric)}
+                    .compareSeries=${this.#series(this._compareData?.days, this._metric)}
+                    .range=${this._range}
+                    .compare=${this._compare}
+                    .compareLabel=${compare ? uaxFormatDateRange(this.localize, compare) : undefined}
+                    .valueFormat=${metric.format}
+                    ?loading=${this._loading}></uax-time-series-chart>
+            </uui-box>
 
-                <div class="tables">
-                    <uui-box headline="Top products" headline-variant="h2" style="--uui-box-default-padding: 0">
-                        <uax-data-table
-                            row-key="sku"
-                            .columns=${productColumns}
-                            .rows=${this._data?.products ?? []}
-                            .compareRows=${this._compareData?.products ?? []}
-                            ?loading=${this._loading}>
-                            <div slot="toolbar"><uax-table-search></uax-table-search></div>
-                        </uax-data-table>
-                    </uui-box>
-
-                    <uui-box headline="Popular discounts" headline-variant="h2" style="--uui-box-default-padding: 0">
-                        <uax-data-table
-                            row-key="code"
-                            .columns=${discountColumns}
-                            .rows=${this._data?.discounts ?? []}
-                            .compareRows=${this._compareData?.discounts ?? []}
-                            ?loading=${this._loading}></uax-data-table>
-                    </uui-box>
-                </div>
-
-                <uui-box headline="Top buyers" headline-variant="h2" style="--uui-box-default-padding: 0">
+            <div class="tables">
+                <uui-box headline="Top products" headline-variant="h2" style="--uui-box-default-padding: 0">
                     <uax-data-table
-                        ${ref(this.#buyers.attach)}
-                        row-key="email"
-                        .columns=${buyerColumns}>
+                        row-key="sku"
+                        .columns=${productColumns}
+                        .rows=${this._data?.products ?? []}
+                        .compareRows=${this._compareData?.products ?? []}
+                        ?loading=${this._loading}>
                         <div slot="toolbar"><uax-table-search></uax-table-search></div>
                     </uax-data-table>
                 </uui-box>
+
+                <uui-box headline="Popular discounts" headline-variant="h2" style="--uui-box-default-padding: 0">
+                    <uax-data-table
+                        row-key="code"
+                        .columns=${discountColumns}
+                        .rows=${this._data?.discounts ?? []}
+                        .compareRows=${this._compareData?.discounts ?? []}
+                        ?loading=${this._loading}></uax-data-table>
+                </uui-box>
             </div>
+
+            <uui-box headline="Top buyers" headline-variant="h2" style="--uui-box-default-padding: 0">
+                <uax-data-table
+                    ${ref(this.#buyers.attach)}
+                    row-key="email"
+                    .columns=${buyerColumns}>
+                    <div slot="toolbar"><uax-table-search></uax-table-search></div>
+                </uax-data-table>
+            </uui-box>
         `;
     }
 
     static override styles = css`
         :host {
-            display: block;
-        }
-        .page {
             display: flex;
             flex-direction: column;
-            gap: var(--uui-size-layout-1);
-        }
-        header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: var(--uui-size-space-4);
-        }
-        h1 {
-            margin: 0;
-            font-size: var(--uui-type-h3-size);
+            gap: var(--uui-size-4);
+            padding: var(--uui-size-layout-1);
         }
         .actions {
             display: flex;
             align-items: center;
-            gap: var(--uui-size-space-4);
+            justify-content: flex-end;
+            gap: var(--uui-size-4);
         }
         .kpis {
             display: grid;
@@ -280,7 +264,7 @@ export class ExampleCommerceAnalyticsPageElement extends UmbLitElement {
         .tables {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(480px, 1fr));
-            gap: var(--uui-size-layout-1);
+            gap: var(--uui-size-4);
             align-items: start;
         }
     `;

@@ -41,8 +41,8 @@ const render = (view: "pageviews" | "visitors", latency?: number, failing = fals
 `;
 
 /**
- * Engage > Analytics > Pageviews, rebuilt from this package: group by and date range (with compare) in the page
- * header, an area chart with compare and markers flowing into an edge-to-edge table with share columns, compare badges,
+ * Engage > Analytics > Pageviews, rebuilt from this package: group by and date range (with compare) in an actions row
+ * at the top, an area chart with compare and markers flowing into an edge-to-edge table with share columns, compare badges,
  * search, a total and paging. Change the group by or the dates and the chart reloads; sort, page and search load the
  * table's rows, as a server would. The data is made up. The docs panel shows the page element's own code.
  */

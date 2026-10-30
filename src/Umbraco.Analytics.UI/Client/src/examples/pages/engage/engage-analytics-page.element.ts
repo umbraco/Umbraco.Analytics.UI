@@ -46,7 +46,7 @@ const percentChange = (current: number, previous?: number) =>
     previous ? ((current - previous) / previous) * 100 : undefined;
 
 /**
- * Engage > Analytics > Pageviews (`view="pageviews"`) or Visitors (`view="visitors"`): a page header with the group-by
+ * Engage > Analytics > Pageviews (`view="pageviews"`) or Visitors (`view="visitors"`): an actions row with the group-by
  * and date range, then one pane where a chart flows into an edge-to-edge table. The page owns the state (range,
  * compare, group by, sort, page, search), asks the API for data when it changes, and hands the answer to the parts.
  */
@@ -189,65 +189,49 @@ export class ExampleEngageAnalyticsPageElement extends UmbLitElement {
     override render() {
         const visitors = this.view === "visitors";
         return html`
-            <div class="page">
-                <header>
-                    <h1>${visitors ? "Visitors" : "Pageviews"}</h1>
-                    <div class="actions">
-                        <uax-group-by .value=${this._groupBy} @change=${this.#onGroupByChange}></uax-group-by>
-                        <uax-date-range
-                            .value=${this._range}
-                            .compare=${this._compare}
-                            today="2026-06-29"
-                            @change=${this.#onDateRangeChange}></uax-date-range>
-                    </div>
-                </header>
-
-                <uui-box
-                    headline=${visitors ? "New and returning visitors over time" : "Pageviews over time"}
-                    headline-variant="h2"
-                    style="--uui-box-default-padding: 0">
-                    <uax-time-series-chart
-                        .kind=${visitors ? "stacked-bar" : "area"}
-                        .series=${this._series}
-                        .compareSeries=${this._compareSeries}
-                        .range=${this._range}
-                        .compare=${this._compare}
-                        .compareLabel=${this._compare ? uaxFormatDateRange(this.localize, this._compare) : undefined}
-                        .markers=${markers}
-                        .groupBy=${this._groupBy}
-                        ?loading=${this._chartLoading}
-                        ?error=${this._chartError}
-                        retryable
-                        @retry=${() => this.#loadChart()}></uax-time-series-chart>
-                    ${this.#renderTable()}
-                </uui-box>
+            <div class="actions">
+                <uax-group-by .value=${this._groupBy} @change=${this.#onGroupByChange}></uax-group-by>
+                <uax-date-range
+                    .value=${this._range}
+                    .compare=${this._compare}
+                    today="2026-06-29"
+                    @change=${this.#onDateRangeChange}></uax-date-range>
             </div>
+
+            <uui-box
+                headline=${visitors ? "New and returning visitors over time" : "Pageviews over time"}
+                headline-variant="h2"
+                style="--uui-box-default-padding: 0">
+                <uax-time-series-chart
+                    .kind=${visitors ? "stacked-bar" : "area"}
+                    .series=${this._series}
+                    .compareSeries=${this._compareSeries}
+                    .range=${this._range}
+                    .compare=${this._compare}
+                    .compareLabel=${this._compare ? uaxFormatDateRange(this.localize, this._compare) : undefined}
+                    .markers=${markers}
+                    .groupBy=${this._groupBy}
+                    ?loading=${this._chartLoading}
+                    ?error=${this._chartError}
+                    retryable
+                    @retry=${() => this.#loadChart()}></uax-time-series-chart>
+                ${this.#renderTable()}
+            </uui-box>
         `;
     }
 
     static override styles = css`
         :host {
-            display: block;
-        }
-        .page {
             display: flex;
             flex-direction: column;
-            gap: var(--uui-size-layout-1);
-        }
-        header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: var(--uui-size-space-4);
-        }
-        h1 {
-            margin: 0;
-            font-size: var(--uui-type-h3-size);
+            gap: var(--uui-size-4);
+            padding: var(--uui-size-layout-1);
         }
         .actions {
             display: flex;
             align-items: center;
-            gap: var(--uui-size-space-4);
+            justify-content: flex-end;
+            gap: var(--uui-size-4);
         }
         .total {
             display: flex;

@@ -235,70 +235,54 @@ export class ExampleAiUsagePageElement extends UmbLitElement {
     override render() {
         const usage = this._usage;
         return html`
-            <div class="page">
-                <header>
-                    <h1>Usage</h1>
-                    <div class="actions">
-                        <uax-group-by .value=${this._groupBy} @change=${this.#onGroupBy}></uax-group-by>
-                        <uax-date-range today="2026-06-23" .value=${this._range} .compare=${this._compare} @change=${this.#onDateRange}></uax-date-range>
-                    </div>
-                </header>
-
-                ${this.#tiles()}
-
-                <uui-box headline="${metricLabels[this._metric]} over time" headline-variant="h2" style="--uui-box-default-padding: 0">
-                    <uax-time-series-chart
-                        kind="stacked-bar"
-                        .series=${toSeries(this._metric, usage?.buckets)}
-                        .compareSeries=${toSeries(this._metric, usage?.compareBuckets)}
-                        .range=${this._range}
-                        .compare=${this._compare}
-                        .compareLabel=${this._compare ? uaxFormatDateRange(this.localize, this._compare) : undefined}
-                        .groupBy=${this._groupBy}
-                        ?loading=${this._usageLoading}></uax-time-series-chart>
-                </uui-box>
-
-                <uui-box headline="Breakdown" headline-variant="h2" style="--uui-box-default-padding: 0">
-                    <uax-segmented
-                        slot="header-actions"
-                        label="Break down by"
-                        .value=${this._by}
-                        .options=${breakdownOptions}
-                        @change=${this.#onBreakdownBy}></uax-segmented>
-                    <uax-data-table
-                        ${ref(this.#breakdown.attach)}
-                        row-key="name"
-                        .columns=${tableColumns(this._by)}>
-                        <div slot="toolbar"><uax-table-search></uax-table-search></div>
-                    </uax-data-table>
-                </uui-box>
+            <div class="actions">
+                <uax-group-by .value=${this._groupBy} @change=${this.#onGroupBy}></uax-group-by>
+                <uax-date-range today="2026-06-23" .value=${this._range} .compare=${this._compare} @change=${this.#onDateRange}></uax-date-range>
             </div>
+
+            ${this.#tiles()}
+
+            <uui-box headline="${metricLabels[this._metric]} over time" headline-variant="h2" style="--uui-box-default-padding: 0">
+                <uax-time-series-chart
+                    kind="stacked-bar"
+                    .series=${toSeries(this._metric, usage?.buckets)}
+                    .compareSeries=${toSeries(this._metric, usage?.compareBuckets)}
+                    .range=${this._range}
+                    .compare=${this._compare}
+                    .compareLabel=${this._compare ? uaxFormatDateRange(this.localize, this._compare) : undefined}
+                    .groupBy=${this._groupBy}
+                    ?loading=${this._usageLoading}></uax-time-series-chart>
+            </uui-box>
+
+            <uui-box headline="Breakdown" headline-variant="h2" style="--uui-box-default-padding: 0">
+                <uax-segmented
+                    slot="header-actions"
+                    label="Break down by"
+                    .value=${this._by}
+                    .options=${breakdownOptions}
+                    @change=${this.#onBreakdownBy}></uax-segmented>
+                <uax-data-table
+                    ${ref(this.#breakdown.attach)}
+                    row-key="name"
+                    .columns=${tableColumns(this._by)}>
+                    <div slot="toolbar"><uax-table-search></uax-table-search></div>
+                </uax-data-table>
+            </uui-box>
         `;
     }
 
     static override styles = css`
         :host {
-            display: block;
-        }
-        .page {
             display: flex;
             flex-direction: column;
-            gap: var(--uui-size-layout-1);
-        }
-        header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: var(--uui-size-space-4);
-        }
-        h1 {
-            margin: 0;
-            font-size: var(--uui-type-h3-size);
+            gap: var(--uui-size-4);
+            padding: var(--uui-size-layout-1);
         }
         .actions {
             display: flex;
             align-items: center;
-            gap: var(--uui-size-space-4);
+            justify-content: flex-end;
+            gap: var(--uui-size-4);
         }
         .tiles {
             display: grid;

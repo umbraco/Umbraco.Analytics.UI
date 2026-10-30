@@ -39,7 +39,7 @@ const render = (latency?: number) => html`
 `;
 
 /**
- * Commerce > Analytics rebuilt from this package: the date range (with compare) in the page header, five KPI tiles
+ * Commerce > Analytics rebuilt from this package: the date range (with compare) in an actions row, five KPI tiles
  * that switch the metric of the revenue chart, then tables. Top products and popular discounts are `client` tables that
  * sort, search and page themselves; top buyers is a `server` table, so the page listens for `sort-change`,
  * `page-change` and `search` and asks for the next page. Change the date range and every part reloads.

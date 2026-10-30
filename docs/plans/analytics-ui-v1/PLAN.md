@@ -175,6 +175,7 @@ Run after whole-feature review round B. Each gets a builder, a review and its ow
 - [x] **T38** - Date range button keeps the same height with compare on, without looking cramped. Show options in Storybook for the user to pick before building.
 - [x] **T39** - The table pager becomes a generic compact pager (internal), and "Show rows" becomes a generic label (e.g. "Per page") under a translation key products can override.
 - [ ] **T40** - Localization audit: every fixed user-facing string (labels, aria-labels, titles, placeholders, sr-only text) goes through a `uaxAnalytics_*` or Umbraco key; a spec fails on new hard-coded text where practical.
+- [x] **T41** - Page examples match CMS dashboard headers (no page h1, actions row, layout-1 padding). User request 30-10-2026.
 
 ## Follow-ups from T22
 
