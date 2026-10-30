@@ -45,6 +45,7 @@ export class UanEmptyStateElement extends UmbLitElement {
 export class UanKpiTileElement extends UmbLitElement {
     delta?: number;
     deltaUnit: UanDeltaUnit;
+    deselectable: boolean;
     icon?: string;
     label: string;
     loading: boolean;

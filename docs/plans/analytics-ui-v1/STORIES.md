@@ -1,6 +1,6 @@
 # Stories: Analytics UI v1
 
-**19 stories, 95 criteria.** Story ids are used by `PLAN.md` and the spec files, so never renumber them.
+**19 stories, 100 criteria.** Story ids are used by `PLAN.md` and the spec files, so never renumber them.
 
 > [!IMPORTANT]
 > **3 guesses need your OK.**
@@ -18,7 +18,7 @@
 
 - [BDG-1](#bdg-1-change-badge-matches-the-design) Change badge matches the design, 7 criteria
 - [KPI-1](#kpi-1-kpi-tile-shows-a-headline-number) KPI tile shows a headline number, 7 criteria
-- [KPI-2](#kpi-2-kpi-tiles-switch-the-charts-metric) KPI tiles switch the chart's metric, 4 criteria
+- [KPI-2](#kpi-2-kpi-tiles-switch-the-charts-metric) KPI tiles switch the chart's metric, 9 criteria
 - [GRP-1](#grp-1-day--week--month-switch) Day / Week / Month switch, 4 criteria
 
 **Time-series chart**
@@ -246,27 +246,52 @@ I want to click a KPI tile to see its metric in the chart below,
 so that I can explore each number without leaving the screen.
 
 ```
-AC1 — Click raises select
+AC1 — Click raises selected
   Given a uan-kpi-tile with selectable set
   When  the editor clicks it
-  Then  it raises a select event
+  Then  it raises a selected event
 
-AC2 — Keyboard raises select
+AC2 — Keyboard raises selected
   Given a selectable tile with keyboard focus
   When  the editor presses Enter
-  Then  it raises a select event
+  Then  it raises a selected event
 
 AC3 — Selected state
   Given a selectable tile with selected set
   When  it renders
-  Then  it shows its active state and reports aria-pressed="true"
+  Then  it reports aria-pressed="true"
+
+AC5 — Selecting sets selected
+  Given a selectable, unselected tile
+  When  the editor clicks it
+  Then  its selected property is true
+
+AC6 — Clicking a selected tile deselects it
+  Given a selectable, selected tile
+  When  the editor clicks it
+  Then  it raises a deselected event
+
+AC7 — Deselecting clears selected
+  Given a selectable, selected tile
+  When  the editor clicks it
+  Then  its selected property is false
 
 Sad path
 
 AC4 — Not selectable by default
   Given a uan-kpi-tile without selectable
   When  the editor clicks it
-  Then  no select event is raised
+  Then  no selected event is raised
+
+AC8 — Cancelled select keeps it unselected
+  Given a selectable tile whose selected event the product cancels
+  When  the editor clicks it
+  Then  its selected property stays false
+
+AC9 — Not deselectable
+  Given a selectable, selected tile with deselectable false
+  When  the editor clicks it
+  Then  its selected property stays true
 ```
 
 ## GRP-1: Day / Week / Month switch

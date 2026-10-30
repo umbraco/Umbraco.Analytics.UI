@@ -13,7 +13,10 @@ import "../delta-badge/delta-badge.element.js";
  * loading with a `value` it keeps the value and marks the tile busy, without a loading bar.
  *
  * @element uan-kpi-tile
+ * @fires selected - A selectable, unselected tile was pressed. Cancelable: cancel it to keep the tile unselected.
+ * @fires deselected - A selectable, selected tile was pressed while `deselectable`. Cancelable: cancel it to keep the tile selected.
  * @cssprop --uan-kpi-icon-bg - Background of the icon square. Defaults to spanish pink in every theme.
+ * @cssprop --uan-kpi-selected - Colour of the selection border. Defaults to `--uui-color-selected` in light and high contrast, and to malibu light in dark, where the UUI colour is under 3:1 on the surface.
  * @cssprop --uan-kpi-icon-fg - Icon colour. Defaults to space cadet, which passes 3:1 on the default square. A product that overrides either owns that contrast.
  */
 @customElement("uan-kpi-tile")
@@ -46,7 +49,11 @@ export class UanKpiTileElement extends UmbLitElement {
     @property({ type: Boolean, reflect: true })
     loading = false;
 
-    /** Makes the tile a button that raises `select` when pressed, so a row of tiles can switch a chart's metric. */
+    /**
+     * Makes the tile a toggle button, so a row of tiles can switch a chart's metric. Pressing it raises a
+     * cancelable `selected` or `deselected` event and then flips `selected`, unless the event was cancelled.
+     * Follows `uui-card`, so product code reads the same.
+     */
     @property({ type: Boolean, reflect: true })
     selectable = false;
 
@@ -54,8 +61,19 @@ export class UanKpiTileElement extends UmbLitElement {
     @property({ type: Boolean, reflect: true })
     selected = false;
 
-    #select() {
-        this.dispatchEvent(new CustomEvent("select", { bubbles: true, composed: true, detail: {} }));
+    /**
+     * Whether pressing a selected tile deselects it. Set it to false (as a property) when exactly one tile
+     * must stay selected: pressing the selected tile then raises `selected` again and changes nothing.
+     */
+    @property({ type: Boolean })
+    deselectable = true;
+
+    #toggle() {
+        const deselecting = this.selected && this.deselectable;
+        const event = new CustomEvent(deselecting ? "deselected" : "selected", { bubbles: true, cancelable: true, detail: {} });
+        this.dispatchEvent(event);
+        if (event.defaultPrevented) return;
+        this.selected = !deselecting;
     }
 
     override render() {
@@ -63,24 +81,24 @@ export class UanKpiTileElement extends UmbLitElement {
         const mode = getLoadingMode(this.loading, hasValue);
 
         const content = html`${this.icon
-                ? html`<div class="icon" aria-hidden="true"><uui-icon name=${this.icon}></uui-icon></div>`
+                ? html`<span class="icon" aria-hidden="true"><uui-icon name=${this.icon}></uui-icon></span>`
                 : nothing}
-            <div class="content" aria-busy=${this.loading ? "true" : "false"}>
+            <span class="content" aria-busy=${this.loading ? "true" : "false"}>
                 ${mode === "skeleton"
                     ? html`<uan-skeleton></uan-skeleton>`
-                    : html`<div class="body">
-                          <div class="label">${this.label}</div>
-                          <div class="row">
-                              ${hasValue ? html`<div class="value">${this.value}</div>` : nothing}
+                    : html`<span class="body">
+                          <span class="label">${this.label}</span>
+                          <span class="row">
+                              ${hasValue ? html`<span class="value">${this.value}</span>` : nothing}
                               ${this.delta === undefined || this.delta === null
                                   ? nothing
                                   : html`<uan-delta-badge
                                         .value=${this.delta}
                                         .unit=${this.deltaUnit}
                                         .lowerIsBetter=${this.lowerIsBetter}></uan-delta-badge>`}
-                          </div>
-                      </div>`}
-            </div>`;
+                          </span>
+                      </span>`}
+            </span>`;
 
         // A native button gives Enter and Space for free, and both arrive as one click.
         return this.selectable
@@ -88,8 +106,8 @@ export class UanKpiTileElement extends UmbLitElement {
                   type="button"
                   class="tile selectable"
                   aria-pressed=${this.selected ? "true" : "false"}
-                  @click=${this.#select}>
-                  ${content}
+                  @click=${this.#toggle}>
+                  ${content}<span class="select-border" aria-hidden="true"></span>
               </button>`
             : html`<div class="tile">${content}</div>`;
     }
@@ -107,6 +125,10 @@ export class UanKpiTileElement extends UmbLitElement {
                    is 12.5:1. A product that overrides either public name owns the 3:1 between them. */
                 --_uan-kpi-icon-bg: var(--uan-kpi-icon-bg, var(--uui-palette-spanish-pink));
                 --_uan-kpi-icon-fg: var(--uan-kpi-icon-fg, var(--uui-palette-space-cadet));
+                --_uan-kpi-selected: var(
+                    --uan-kpi-selected,
+                    light-dark(var(--uui-color-selected), var(--uui-palette-malibu-light))
+                );
             }
 
             .tile {
@@ -125,30 +147,83 @@ export class UanKpiTileElement extends UmbLitElement {
             button.tile {
                 /* Reset the button so it fills the row like the div card does. */
                 appearance: none;
+                position: relative;
                 margin: 0;
                 width: 100%;
                 text-align: inherit;
                 font: inherit;
                 color: inherit;
                 cursor: pointer;
-                transition:
-                    border-color 120ms,
-                    box-shadow 120ms;
             }
 
-            button.tile:hover {
-                border-color: var(--uui-color-interactive);
-                box-shadow: 0 0 0 1px var(--uui-color-interactive);
+            /* The selection border copies uui-card: 2px just outside the card, with a glow. */
+            .select-border {
+                position: absolute;
+                z-index: 2;
+                inset: -2px;
+                pointer-events: none;
+                opacity: 0;
+                transition: opacity 120ms;
             }
 
-            /* Selected is a thicker ring (3px against 1px), so it reads without relying on colour. */
-            button.tile[aria-pressed="true"] {
-                border-color: var(--uui-color-interactive);
-                box-shadow: 0 0 0 2px var(--uui-color-interactive);
+            .select-border::after {
+                content: "";
+                position: absolute;
+                width: 100%;
+                height: 100%;
+                box-sizing: border-box;
+                border: 2px solid var(--_uan-kpi-selected);
+                border-radius: calc(var(--uui-border-radius-3) + 2px);
+                box-shadow:
+                    0 0 4px 0 var(--_uan-kpi-selected),
+                    inset 0 0 2px 0 var(--_uan-kpi-selected);
             }
 
+            button.tile[aria-pressed="true"] .select-border {
+                opacity: 1;
+            }
+
+            button.tile[aria-pressed="false"]:hover .select-border {
+                opacity: 0.33;
+            }
+
+            button.tile[aria-pressed="true"]:hover .select-border {
+                opacity: 0.8;
+            }
+
+            @media (prefers-reduced-motion: no-preference) {
+                button.tile[aria-pressed="false"]:hover .select-border::after {
+                    animation: not-selected--hover 1.2s infinite;
+                }
+
+                button.tile[aria-pressed="true"]:hover .select-border::after {
+                    animation: selected--hover 1.4s infinite;
+                }
+            }
+
+            @keyframes not-selected--hover {
+                0%,
+                100% {
+                    opacity: 0.66;
+                }
+                50% {
+                    opacity: 1;
+                }
+            }
+
+            @keyframes selected--hover {
+                0%,
+                100% {
+                    opacity: 1;
+                }
+                50% {
+                    opacity: 0.66;
+                }
+            }
+
+            /* Same as uui-card: 3px wide and 3px off. */
             button.tile:focus-visible {
-                outline: 2px solid var(--uui-color-focus);
+                outline: 3px solid var(--uui-color-focus);
                 outline-offset: 3px;
             }
 
@@ -182,6 +257,7 @@ export class UanKpiTileElement extends UmbLitElement {
             }
 
             .label {
+                display: block;
                 font-size: 12px;
                 font-weight: 600;
                 line-height: 1.3;
@@ -198,6 +274,7 @@ export class UanKpiTileElement extends UmbLitElement {
             }
 
             .value {
+                display: block;
                 font-size: 24px;
                 font-weight: 700;
                 line-height: 1.1;

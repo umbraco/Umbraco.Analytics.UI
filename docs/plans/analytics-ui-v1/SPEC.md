@@ -10,7 +10,7 @@ All elements live in `src/Umbraco.Analytics.UI/Client/src/<name>/` and are expor
 
 - extends `UmbLitElement` and localizes every visible string, `aria-label` and placeholder
 - uses `--uui-*` tokens and reads colours through the private `--_uan-*` tokens (ARCHITECTURE.md decision 6), and reads correctly in the light, dark and high-contrast themes
-- raises events as `CustomEvent`s that bubble and are `composed`, with the payload in `detail`
+- raises events as `CustomEvent`s that bubble and are `composed`, with the payload in `detail`, except where it mirrors a UUI event, which keeps UUI's exact options (the KPI tile's `selected`/`deselected` are plain bubbling, cancelable, non-composed `Event`s, like `UUISelectableEvent`)
 - passes an axe audit in its tests and in every Storybook story
 - takes corner radius from `--uui-border-radius-*` tokens, so it follows the v18+ rounded backoffice
 
@@ -53,7 +53,11 @@ Storybook gets a "Pane" story showing this recipe, a chart and a table in one `u
   - `selectable`, `selected`
 - One style only: a card with the icon in a pink square, as in every Phase 1 screenshot.
 - Not used for table totals ("TOTAL PAGEVIEWS 272 +8.4%"). Those are a label and a number, which the product writes in the table's `toolbar` slot, using `uan-delta-badge` for the change.
-- **Selectable:** when `selectable`, the tile is a button. Clicking it raises `select` with `{}`, and `selected` draws its active state. This lets a row of tiles switch which metric a chart shows, like Engage's `AnStatPanes`.
+- **Selectable:** follows UUI's `SelectableMixin` (as `uui-card` uses), so product code reads the same as for UUI cards. This lets a row of tiles switch which metric a chart shows, like Engage's `AnStatPanes`.
+  - When `selectable`, the tile is a toggle button with `aria-pressed` (UUI cards don't expose their state to screen readers; this does).
+  - Clicking, Enter or Space on an unselected tile raises a cancelable `selected` event, then sets `selected` unless the event was cancelled.
+  - On a selected tile it raises a cancelable `deselected` event, then clears `selected`, unless the event was cancelled or `deselectable` is false (default true). A product keeping exactly one tile selected sets `deselectable` false and clears the others on `selected`.
+  - Look matches `uui-card`: a 2px `--uui-color-selected` border just outside the card with a soft glow when selected; the same border at 33% on hover when not selected, 80% on hover when selected; focus is a separate `--uui-color-focus` outline.
 - Tiles in one row keep the same height, even when a label wraps. The badge sits below the value when the tile is too narrow to fit both on one line (as in `kpi-size.png`).
 
 ### 3. `uan-delta-badge`: change badge (exists, needs restyling)
