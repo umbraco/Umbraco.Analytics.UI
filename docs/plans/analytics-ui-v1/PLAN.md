@@ -88,7 +88,7 @@
   Acceptance: TBL-2 specs green, headers keyboard-operable.
   depends-on: T16
 
-- [ ] **T18** - story: TBL-3 (AC1–AC5). Add an optional `totals` input (column key → total, the share denominator, not a displayed total) so share percentages use the full total in server mode (DECISION-LOG), and decide how share bars scale in server mode (e.g. an optional per-column max, or scale to the total). Add the paging footer ("Show rows" 10/25/50/100, "1–10 of 272", previous and next), `page`, `page-size`, `total`, `page-change`. Client mode pages itself. The footer is hidden on one page.
+- [x] **T18** - story: TBL-3 (AC1–AC5). Add an optional `totals` input (column key → total, the share denominator, not a displayed total) so share percentages use the full total in server mode (DECISION-LOG), and decide how share bars scale in server mode (e.g. an optional per-column max, or scale to the total). Add the paging footer ("Show rows" 10/25/50/100, "1–10 of 272", previous and next), `page`, `page-size`, `total`, `page-change`. Client mode pages itself. The footer is hidden on one page.
   Acceptance: TBL-3 specs green.
   depends-on: T17
 
