@@ -136,6 +136,9 @@ export class UauiDateRangeElement extends UmbLitElement {
                 /* Outline buttons dim their text in the dark theme; the interactive token reads as the design does in both */
                 --uui-button-contrast: var(--uui-color-interactive);
                 --uui-button-contrast-hover: var(--uui-color-interactive-emphasis);
+                /* A solid surface like uaui-toggle-group beside it, so the pair matches on the backoffice's grey background */
+                --uui-button-background-color: var(--uui-color-surface);
+                --uui-button-background-color-hover: var(--uui-color-surface-emphasis);
             }
 
             uui-button {
