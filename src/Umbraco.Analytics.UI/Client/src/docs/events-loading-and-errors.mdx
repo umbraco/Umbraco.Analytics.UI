@@ -8,25 +8,20 @@ import { Meta } from "@storybook/addon-docs/blocks";
 
 All events bubble. None is composed, so they don't cross shadow roots.
 
-<table>
-  <thead>
-    <tr><th>Element</th><th>Event</th><th><code>detail</code></th></tr>
-  </thead>
-  <tbody>
-    <tr><td><code>uaui-toggle-group</code></td><td><code>change</code></td><td><code>{"{ value }"}</code></td></tr>
-    <tr><td><code>uaui-group-by</code></td><td><code>change</code></td><td><code>{"{ value }"}</code></td></tr>
-    <tr><td><code>uaui-date-range</code></td><td><code>change</code></td><td><code>{"{ value, compare }"}</code></td></tr>
-    <tr><td><code>uaui-time-series-chart</code></td><td><code>marker-click</code></td><td><code>{"{ id }"}</code></td></tr>
-    <tr><td><code>uaui-error-state</code></td><td><code>retry</code></td><td>none</td></tr>
-    <tr><td><code>uaui-time-series-chart</code></td><td><code>retry</code></td><td>none</td></tr>
-    <tr><td><code>uaui-data-table</code></td><td><code>retry</code></td><td>none</td></tr>
-    <tr><td><code>uaui-kpi-tile</code></td><td><code>selected</code>, <code>deselected</code></td><td><code>{"{}"}</code> (cancelable)</td></tr>
-    <tr><td><code>uaui-search-field</code></td><td><code>search</code></td><td><code>{"{ query }"}</code></td></tr>
-    <tr><td><code>uaui-data-table</code></td><td><code>sort-change</code></td><td><code>{"{ key, direction }"}</code></td></tr>
-    <tr><td><code>uaui-data-table</code></td><td><code>page-change</code></td><td><code>{"{ page, pageSize }"}</code></td></tr>
-    <tr><td><code>uaui-data-table</code></td><td><code>row-click</code></td><td><code>{"{ row }"}</code></td></tr>
-  </tbody>
-</table>
+| Element | Event | `detail` |
+|---|---|---|
+| `uaui-toggle-group` | `change` | `{ value }` |
+| `uaui-group-by` | `change` | `{ value }` |
+| `uaui-date-range` | `change` | `{ value, compare }` |
+| `uaui-time-series-chart` | `marker-click` | `{ id }` |
+| `uaui-error-state` | `retry` | none |
+| `uaui-time-series-chart` | `retry` | none |
+| `uaui-data-table` | `retry` | none |
+| `uaui-kpi-tile` | `selected`, `deselected` | `{}` (cancelable) |
+| `uaui-search-field` | `search` | `{ query }` |
+| `uaui-data-table` | `sort-change` | `{ key, direction }` |
+| `uaui-data-table` | `page-change` | `{ page, pageSize }` |
+| `uaui-data-table` | `row-click` | `{ row }` |
 
 Elements set their own `value`, `sort`, `page` and `query` before raising the event, as UUI inputs do.
 

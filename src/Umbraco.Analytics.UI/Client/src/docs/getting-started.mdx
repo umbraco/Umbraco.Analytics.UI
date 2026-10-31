@@ -12,15 +12,10 @@ The components only draw. You fetch the data and pass it in.
 
 The package comes in two parts.
 
-<table>
-  <thead>
-    <tr><th>Package</th><th>Feed</th><th>What it does</th></tr>
-  </thead>
-  <tbody>
-    <tr><td><code>Umbraco.Analytics.UI</code></td><td>NuGet</td><td>Puts the components on the site and adds <code>@umbraco/analytics-ui</code> to the backoffice import map. Every product on a site shares this one copy.</td></tr>
-    <tr><td><code>@umbraco/analytics-ui</code></td><td>npm</td><td>Types only. Add it as a dev dependency.</td></tr>
-  </tbody>
-</table>
+| Package | Feed | What it does |
+|---|---|---|
+| `Umbraco.Analytics.UI` | NuGet | Puts the components on the site and adds `@umbraco/analytics-ui` to the backoffice import map. Every product on a site shares this one copy. |
+| `@umbraco/analytics-ui` | npm | Types only. Add it as a dev dependency. |
 
 1. Reference the NuGet package from your project, with a range that stays on one CMS major (see [Versioning](?path=/docs/guides-versioning--docs) for why the upper bound is `19.999.999`):
 
@@ -160,19 +155,14 @@ const points = uauiDateBuckets(range, "week").map(({ start, days }) => ({ date: 
 html`<uaui-time-series-chart .compareLabel=${compare && uauiFormatDateRange(this.localize, compare)}></uaui-time-series-chart>`;
 ```
 
-<table>
-  <thead>
-    <tr><th>Function</th><th>Gives</th></tr>
-  </thead>
-  <tbody>
-    <tr><td><code>uauiPreviousPeriod(range)</code></td><td>The same number of days straight before <code>range</code>.</td></tr>
-    <tr><td><code>uauiPreviousYear(range)</code></td><td>The same dates one year earlier.</td></tr>
-    <tr><td><code>uauiCompareFor(mode, range)</code></td><td>A <code>UauiCompare</code> for <code>previous-period</code> or <code>previous-year</code>. <code>undefined</code> for <code>custom</code>.</td></tr>
-    <tr><td><code>uauiDaysIn(range)</code></td><td>Every ISO date in <code>range</code>, both ends included.</td></tr>
-    <tr><td><code>{"uauiDateBuckets(range, groupBy, { weekStart })"}</code></td><td><code>{"{ start, days }[]"}</code> for <code>day</code>, <code>week</code> or <code>month</code>, the same buckets <code>uaui-group-by</code> offers.</td></tr>
-    <tr><td><code>{"uauiFormatDateRange(localize, range, { showYear })"}</code></td><td>Text such as "May 25, 2026 to Jun 23, 2026" in the user's culture.</td></tr>
-  </tbody>
-</table>
+| Function | Gives |
+|---|---|
+| `uauiPreviousPeriod(range)` | The same number of days straight before `range`. |
+| `uauiPreviousYear(range)` | The same dates one year earlier. |
+| `uauiCompareFor(mode, range)` | A `UauiCompare` for `previous-period` or `previous-year`. `undefined` for `custom`. |
+| `uauiDaysIn(range)` | Every ISO date in `range`, both ends included. |
+| `uauiDateBuckets(range, groupBy, { weekStart })` | `{ start, days }[]` for `day`, `week` or `month`, the same buckets `uaui-group-by` offers. |
+| `uauiFormatDateRange(localize, range, { showYear })` | Text such as "May 25, 2026 to Jun 23, 2026" in the user's culture. |
 
 Weeks start on Monday. For another first day, pass `weekStart` to `uauiDateBuckets` and the same value as `week-start` on the chart. It is 1 (Monday) to 7 (Sunday), like `new Intl.Locale(culture).getWeekInfo().firstDay`. Any other value is read as Monday.
 
