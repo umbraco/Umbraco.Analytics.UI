@@ -159,4 +159,14 @@ describe("Feature: Toggle group", () => {
             expect(await audit(highContrastCss)).toHaveNoViolations();
         });
     });
+
+    describe("Scenario: the corners", () => {
+        it("rounds the selected option concentric with the group, so the gap is even all round", async () => {
+            const el = await renderElement(template(), "uaui-toggle-group");
+            const group = getComputedStyle(shadow(el).querySelector(".group")!);
+            const inset = parseFloat(group.borderTopWidth) + parseFloat(group.paddingTop);
+            const expected = Math.max(0, parseFloat(group.borderTopLeftRadius) - inset);
+            expect(parseFloat(getComputedStyle(option(el, "Model")).borderTopLeftRadius)).toBe(expected);
+        });
+    });
 });

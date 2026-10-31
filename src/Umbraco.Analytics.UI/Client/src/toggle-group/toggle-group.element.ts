@@ -101,7 +101,8 @@ export class UauiToggleGroupElement extends UmbLitElement {
                 font: inherit;
                 font-size: 13px;
                 font-weight: 600;
-                border-radius: var(--uui-border-radius-2);
+                /* Concentric with the group: its radius less the 1px border and 3px padding, so the gap is even all round. */
+                border-radius: max(0px, calc(var(--uui-border-radius-3) - 4px));
                 cursor: pointer;
                 transition:
                     background 80ms,
