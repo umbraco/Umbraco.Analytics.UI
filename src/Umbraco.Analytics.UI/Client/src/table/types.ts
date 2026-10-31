@@ -47,6 +47,14 @@ export type UauiTableColumn = {
     meta?: UauiTableColumnMeta;
     /** Formats the numbers of the number, percent, share and status cells, e.g. `{ style: "currency", currency: "EUR" }`. */
     valueFormat?: Intl.NumberFormatOptions;
+    /**
+     * Formats the dates of the date cell, e.g. `{ day: "numeric", month: "short" }`. Defaults to `{ dateStyle: "medium" }`.
+     * The cell shows days, not times, so use `dateStyle` or the date fields only (`weekday`, `era`, `year`, `month`,
+     * `day`). `timeStyle` or time fields (`hour`, `minute`, `second`) show midnight, e.g. "12:00 AM". `timeZone` is
+     * ignored, as a day is never moved by a timezone. Options `Intl` rejects, such as `dateStyle` mixed with `month`
+     * or `hour`, fall back to the default instead of breaking the cell.
+     */
+    dateFormat?: Intl.DateTimeFormatOptions;
     /** Text alignment of the header and cells. Defaults to `"start"`: numeric columns usually want `"end"`. */
     align?: "start" | "end";
     /** The column's width as a CSS length, e.g. `"27%"` or `"120px"`, as `uui-table-column` takes it. Without it the browser sizes the column. */
@@ -57,10 +65,11 @@ export type UauiTableColumn = {
     sortable?: boolean;
     /**
      * How the table sorts this column in `client` mode: `"number"` (non-numbers last), `"text"` (the editor's
-     * culture, the default), or your own compare function on two cell values, which sorts ascending. Missing
-     * values (`undefined` or `null`) always go last. The first click sorts `"number"` columns biggest first, others ascending.
+     * culture, the default), `"date"` (ISO dates or date-times by their day, as the date cell reads them; anything
+     * else last), or your own compare function on two cell values, which sorts ascending. Missing values (`undefined`
+     * or `null`) always go last. The first click sorts `"number"` columns biggest first, others ascending (dates oldest first).
      */
-    sortAs?: "number" | "text" | ((a: unknown, b: unknown) => number);
+    sortAs?: "number" | "text" | "date" | ((a: unknown, b: unknown) => number);
 };
 
 /**

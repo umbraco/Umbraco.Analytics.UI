@@ -25,6 +25,7 @@ export const UAUI_TABLE_CELL: {
     readonly percent: "uaui-percent-cell";
     readonly share: "uaui-share-cell";
     readonly status: "uaui-status-cell";
+    readonly date: "uaui-date-cell";
 };
 
 // @public
@@ -89,6 +90,20 @@ export function uauiDateBuckets(range: UauiDateSpan, groupBy: UauiGroupBy, optio
 export type UauiDateBucketsOptions = {
     weekStart?: UauiWeekStart;
 };
+
+// @public
+export class UauiDateCellElement extends UmbLitElement implements UauiTableCellElement {
+    column: UauiTableColumn;
+    item: Record<string, unknown>;
+    loading: boolean;
+    // (undocumented)
+    render(): TemplateResult | typeof nothing;
+    // (undocumented)
+    static styles: CSSResultGroup;
+    value: unknown;
+    // (undocumented)
+    protected willUpdate(changed: PropertyValues<this>): void;
+}
 
 // @public
 export type UauiDatePreset = {
@@ -428,11 +443,12 @@ export type UauiTableColumn = {
     elementName?: string;
     meta?: UauiTableColumnMeta;
     valueFormat?: Intl.NumberFormatOptions;
+    dateFormat?: Intl.DateTimeFormatOptions;
     align?: "start" | "end";
     width?: string;
     searchable?: boolean;
     sortable?: boolean;
-    sortAs?: "number" | "text" | ((a: unknown, b: unknown) => number);
+    sortAs?: "number" | "text" | "date" | ((a: unknown, b: unknown) => number);
 };
 
 // @public

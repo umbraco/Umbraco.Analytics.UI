@@ -437,11 +437,34 @@ describe("Feature: the Commerce analytics page", () => {
             expect(boxTable(page, "Top products").columns.map((c) => c.label)).toEqual(["Product", "SKU", "Quantity sold"]);
         });
 
-        it("shows what Commerce's popular discounts answer has, status and dates in words", () => {
+        it("shows what Commerce's popular discounts answer has, status in words and dates as ISO dates", () => {
             const table = boxTable(page, "Popular discounts");
             expect(table.columns.map((c) => c.label)).toEqual(["Discount", "Status", "Valid from", "Valid to", "Times used"]);
             expect(table.rows.map((r) => r.statusText)).toContain("Inactive");
-            expect(table.rows.some((r) => r.validFromText !== "" && r.validToText !== "")).toBe(true);
+            expect(table.rows.some((r) => r.startDate === "2026-06-01" && r.expiryDate === "2026-08-31")).toBe(true);
+        });
+
+        it("shows valid from and to in date cells sorted by date, open-ended dates empty", () => {
+            const table = boxTable(page, "Popular discounts");
+            for (const label of ["Valid from", "Valid to"]) {
+                expect(table.columns.find((c) => c.label === label), label).toMatchObject({ elementName: "uaui-date-cell", sortable: true, sortAs: "date" });
+            }
+            const summer = dataRows(table).find((row) => deepText(row).includes("Summer sale"))!;
+            const days = deepQueryAll<HTMLElement>(summer, "uaui-date-cell").map((c) => c.shadowRoot!.querySelector("time")?.getAttribute("datetime"));
+            expect(days).toEqual(["2026-06-01", "2026-08-31"]);
+            const welcome = dataRows(table).find((row) => deepText(row).includes("Welcome offer"))!;
+            expect(deepQueryAll<HTMLElement>(welcome, "uaui-date-cell").map((c) => deepText(c).trim())).toEqual(["", ""]);
+        });
+
+        it("sorts by valid from, oldest first, open-ended discounts last", async () => {
+            const table = boxTable(page, "Popular discounts") as TestTable & { sort?: { key: string; direction: string } };
+            const header = [...shadow(table).querySelectorAll<HTMLElement>("uaui-table-sort-button")].find((b) => deepText(b).includes("Valid from"))!;
+            (header.shadowRoot?.querySelector("button") ?? header).click();
+            await expect.poll(() => table.sort).toEqual({ key: "startDate", direction: "asc" });
+            await settle(table);
+            const names = dataRows(table).map((row) => deepText(row.querySelector("uui-table-cell")!).trim());
+            expect(names.slice(0, 3)).toEqual(["Free shipping over 50", "Spring bundle saver", "Summer sale"]);
+            expect(names.slice(3).sort()).toEqual(["Loyalty reward", "Welcome offer"]);
         });
 
         it("shows each discount's status in a status cell, active as positive and inactive as default", () => {

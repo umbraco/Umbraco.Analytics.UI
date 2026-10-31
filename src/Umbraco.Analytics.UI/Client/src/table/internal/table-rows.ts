@@ -1,6 +1,6 @@
 // The table's row rules as pure functions: which rows match a search, their order, the page shown, the stats and the
 // compare-row index. No Lit and no DOM, so each rule has a fast unit test. `uaui-data-table` caches the results.
-import { asNumber, asText } from "./cell-values.js";
+import { asIsoDay, asNumber, asText } from "./cell-values.js";
 import type {
     UauiTableColumn,
     UauiTableColumnStats,
@@ -74,18 +74,28 @@ function getCollator(lang: string): Intl.Collator {
 
 /**
  * A copy of `rows` in the column's order: stable, with empty values last in both directions. `sortAs` picks
- * numbers, text (compared in the language, ignoring case and accents) or the column's own comparer. Never changes `rows`.
+ * numbers, text (compared in the language, ignoring case and accents), dates (by their ISO day, so a value that isn't
+ * one counts as empty) or the column's own comparer. Never changes `rows`.
  */
 export function sortRows(rows: UauiTableRow[], column: UauiTableColumn, direction: UauiTableSortDirection, lang: string): UauiTableRow[] {
     const sortAs = column.sortAs ?? "text";
     const collator = getCollator(lang);
     const sign = direction === "desc" ? -1 : 1;
     const compare =
-        typeof sortAs === "function" ? sortAs : sortAs === "number" ? (x: unknown, y: unknown) => (x as number) - (y as number) : (x: unknown, y: unknown) => collator.compare(String(x), String(y));
+        typeof sortAs === "function"
+            ? sortAs
+            : sortAs === "number"
+              ? (x: unknown, y: unknown) => (x as number) - (y as number)
+              : sortAs === "date"
+                ? // ISO days sort as plain strings: "2026-06-01" < "2026-06-12".
+                  (x: unknown, y: unknown) => ((x as string) < (y as string) ? -1 : (x as string) > (y as string) ? 1 : 0)
+                : (x: unknown, y: unknown) => collator.compare(String(x), String(y));
     const sortValue = (row: UauiTableRow): unknown => {
         const value = row[column.key];
         if (typeof sortAs === "function") return value ?? undefined;
-        return sortAs === "number" ? asNumber(value) : asText(value) || undefined;
+        if (sortAs === "number") return asNumber(value);
+        if (sortAs === "date") return asIsoDay(value);
+        return asText(value) || undefined;
     };
     return [...rows].sort((a, b) => {
         const x = sortValue(a);

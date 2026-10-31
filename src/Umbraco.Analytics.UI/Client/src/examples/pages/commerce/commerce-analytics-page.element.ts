@@ -175,12 +175,12 @@ const buyerColumns: UauiTableColumn[] = [
 ];
 
 // What Commerce's popular discounts endpoint answers: the discount, whether it is active and when it is valid, and how
-// often it was used, with its change. The page turns the status and dates into words.
+// often it was used, with its change. The page turns the status into words; the date cells format the ISO dates.
 const discountColumns: UauiTableColumn[] = [
     { key: "name", label: "Discount", sortable: true, sortAs: "text" },
     { key: "statusText", label: "Status", elementName: UAUI_TABLE_CELL.status, meta: { toneKey: "statusTone" } },
-    { key: "validFromText", label: "Valid from" },
-    { key: "validToText", label: "Valid to" },
+    { key: "startDate", label: "Valid from", elementName: UAUI_TABLE_CELL.date, sortable: true, sortAs: "date" },
+    { key: "expiryDate", label: "Valid to", elementName: UAUI_TABLE_CELL.date, sortable: true, sortAs: "date" },
     { key: "usageCount", label: "Times used", elementName: UAUI_TABLE_CELL.share, width: "30%", valueFormat: COUNT, sortable: true, sortAs: "number" },
 ];
 
@@ -467,15 +467,12 @@ export class ExampleCommerceAnalyticsPageElement extends UmbLitElement {
         </div>`;
     }
 
-    // The status and validity dates in words, the way Commerce writes them under the discount's name.
+    // The status in words, the way Commerce writes it under the discount's name. The validity dates stay ISO dates for the date cells.
     #discountRows(discounts: DiscountRow[] | undefined) {
-        const date = (iso: string | undefined) => (iso ? this.localize.date(`${iso}T00:00:00`, { dateStyle: "medium" }) : "");
         return (discounts ?? []).map((d) => ({
             ...d,
             statusText: d.isActive ? "Active" : "Inactive",
             statusTone: d.isActive ? "positive" : "default",
-            validFromText: date(d.startDate),
-            validToText: date(d.expiryDate),
         }));
     }
 

@@ -115,6 +115,16 @@ describe("Feature: the table's row rules", () => {
             const rows = [{ id: 1, v: Number.NaN }, { id: 2, v: 2 }, { id: 3, v: 1 }];
             expect(ids(sortRows(rows, col("v", { sortAs: "number" }), "asc", "en"))).toEqual([3, 2, 1]);
         });
+        it("sorts ISO dates by their day with sortAs date, reading a date-time as written", () => {
+            const rows = [{ id: 1, v: "2026-06-01" }, { id: 2, v: "2026-01-15T23:30:00-05:00" }, { id: 3, v: "2025-12-31" }];
+            expect(ids(sortRows(rows, col("v", { sortAs: "date" }), "asc", "en"))).toEqual([3, 2, 1]);
+            expect(ids(sortRows(rows, col("v", { sortAs: "date" }), "desc", "en"))).toEqual([1, 2, 3]);
+        });
+        it("puts missing and invalid dates last in both directions with sortAs date", () => {
+            const rows = [{ id: 1 }, { id: 2, v: "2026-02-30" }, { id: 3, v: "2026-06-01" }, { id: 4, v: "soon" }, { id: 5, v: "2026-01-01" }];
+            expect(ids(sortRows(rows, col("v", { sortAs: "date" }), "asc", "en"))).toEqual([5, 3, 1, 2, 4]);
+            expect(ids(sortRows(rows, col("v", { sortAs: "date" }), "desc", "en"))).toEqual([3, 5, 1, 2, 4]);
+        });
         it("compares text in the language, ignoring case and accents", () => {
             const rows = [{ id: 1, v: "b" }, { id: 2, v: "Á" }, { id: 3, v: "a" }];
             expect(ids(sortRows(rows, col("v"), "asc", "en"))).toEqual([2, 3, 1]);
@@ -136,6 +146,9 @@ describe("Feature: the table's row rules", () => {
         });
         it("starts number columns descending", () => {
             expect(nextSortDirection(undefined, col("v", { sortAs: "number" }))).toBe("desc");
+        });
+        it("starts date columns ascending, oldest first", () => {
+            expect(nextSortDirection(undefined, col("v", { sortAs: "date" }))).toBe("asc");
         });
         it("flips ascending to descending on the sorted column", () => {
             expect(nextSortDirection({ key: "v", direction: "asc" }, col("v"))).toBe("desc");

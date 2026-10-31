@@ -7,6 +7,7 @@ import "./number-cell.element.js";
 import "./percent-cell.element.js";
 import "./share-cell.element.js";
 import "./status-cell.element.js";
+import "./date-cell.element.js";
 import "../data-table.element.js";
 
 // Each public cell used on its own, as the table uses it: `column`, `item` and `value` are set, `loading` draws the
@@ -43,6 +44,8 @@ const statusColumn: UauiTableColumn = {
     valueFormat: { style: "unit", unit: "day", unitDisplay: "long", maximumFractionDigits: 0 },
     meta: { toneKey: "tone", textKey: "text" },
 };
+const dateColumn: UauiTableColumn = { key: "validFrom", label: "Valid from", sortAs: "date" };
+const longDateColumn: UauiTableColumn = { ...dateColumn, dateFormat: { weekday: "short", day: "numeric", month: "long", year: "numeric" } };
 
 /** `uaui-text-cell` (`UAUI_TABLE_CELL.text`, the default): strings, numbers and booleans as plain text. */
 export const Text: Story = {
@@ -137,6 +140,31 @@ export const Status: Story = {
     },
 };
 
+/**
+ * `uaui-date-cell` (`UAUI_TABLE_CELL.date`): an ISO date as a date in the editor's culture, formatted with the column's
+ * `dateFormat` (default `{ dateStyle: "medium" }`). A date-time is read as its day, as written, so no timezone moves it.
+ * A missing or invalid date shows nothing. Sort the column with `sortAs: "date"` (missing dates last); search looks in
+ * the ISO value.
+ */
+export const DateCell: Story = {
+    name: "Date",
+    render: () =>
+        html`<div style="display: grid; gap: var(--uui-size-space-3)">
+            <uaui-date-cell .column=${dateColumn} .item=${{ validFrom: "2026-06-01" }} .value=${"2026-06-01"}></uaui-date-cell>
+            <uaui-date-cell .column=${dateColumn} .item=${{ validFrom: "2026-06-01T23:30:00-05:00" }} .value=${"2026-06-01T23:30:00-05:00"}></uaui-date-cell>
+            <uaui-date-cell .column=${longDateColumn} .item=${{ validFrom: "2026-06-01" }} .value=${"2026-06-01"}></uaui-date-cell>
+            <uaui-date-cell lang="da-DK" .column=${dateColumn} .item=${{ validFrom: "2026-06-01" }} .value=${"2026-06-01"}></uaui-date-cell>
+        </div>`,
+    parameters: {
+        docs: {
+            source: {
+                code: `const column = {\n    key: "validFrom",\n    label: "Valid from",\n    elementName: UAUI_TABLE_CELL.date,\n    dateFormat: { dateStyle: "medium" },\n    sortable: true,\n    sortAs: "date",\n};\nconst row = { validFrom: "2026-06-01" };\n\n<uaui-date-cell .column=\${column} .item=\${row} .value=\${row.validFrom}></uaui-date-cell>`,
+                language: "html",
+            },
+        },
+    },
+};
+
 /** With `loading` every cell draws its own placeholder, as tall as a loaded cell, so a table doesn't jump when its data arrives. */
 export const Loading: Story = {
     render: () =>
@@ -147,6 +175,7 @@ export const Loading: Story = {
             <uaui-percent-cell loading .column=${percentColumn}></uaui-percent-cell>
             <uaui-share-cell loading .column=${shareColumn}></uaui-share-cell>
             <uaui-status-cell loading .column=${statusColumn}></uaui-status-cell>
+            <uaui-date-cell loading .column=${dateColumn}></uaui-date-cell>
         </div>`,
     parameters: { docs: { source: { code: `<uaui-text-cell loading .column=\${column}></uaui-text-cell>`, language: "html" } } },
 };
