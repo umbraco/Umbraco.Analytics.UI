@@ -22,22 +22,35 @@ import { UauiTableContextController } from "./internal/table-context.controller.
 import "../internal/pager/compact-pager.element.js";
 import "./internal/table-skeleton-cell.element.js";
 import "./internal/table-sort-button.element.js";
-import { asNumber, asText } from "./internal/cell-values.js";
+import {
+    DEFAULT_PAGE_SIZE,
+    clampPage,
+    computeStats,
+    countRows,
+    findCompareRow,
+    indexCompareRows,
+    nextSortDirection,
+    normalizePageSize,
+    pageCountOf,
+    pageOfRows,
+    pageSizeOptions,
+    searchNeedle,
+    searchRows,
+    showsPager,
+    sortRows,
+    type UauiTableRow,
+} from "./internal/table-rows.js";
 import type {
     UauiTableCellElement,
     UauiTableColumn,
-    UauiTableColumnStats,
     UauiTableStatsInput,
     UauiTableMode,
     UauiTablePageChangeDetail,
     UauiTableRowClickDetail,
     UauiTableSortChangeDetail,
     UauiTableSort,
-    UauiTableStats,
 } from "./types.js";
 import type { UauiSearchDetail } from "../search-field/search-field.element.js";
-
-type UauiTableRow = Record<string, unknown>;
 
 interface DerivedFrom {
     columns: UauiTableColumn[];
@@ -51,34 +64,9 @@ interface DerivedFrom {
 /** Native controls that keep a click or key press to themselves, as in `uui-table-row`'s `selectable`. */
 const INTERACTIVE_TAGS = new Set(["A", "BUTTON", "INPUT", "TEXTAREA", "SELECT"]);
 
-/** The page sizes the footer offers. The first is also the size under which a table never needs a footer. */
-const PAGE_SIZES = [10, 25, 50, 100];
-const DEFAULT_PAGE_SIZE = PAGE_SIZES[0];
-
 /** The cell element a column names, the text cell when it names none. */
 function cellElementName(column: UauiTableColumn): string {
     return column.elementName || UAUI_TABLE_CELL.text;
-}
-
-/** A row's identity for matching: strings and numbers only. Anything else never matches. */
-function rowIdentity(value: unknown): string | undefined {
-    return typeof value === "string" || typeof value === "number" ? String(value) : undefined;
-}
-
-const collators = new Map<string, Intl.Collator>();
-/** A collator for the language, built once: `localeCompare` builds one per comparison, too slow for hundreds of rows. */
-function getCollator(lang: string): Intl.Collator {
-    let collator = collators.get(lang);
-    if (!collator) {
-        collator = new Intl.Collator(lang, { sensitivity: "base" });
-        collators.set(lang, collator);
-    }
-    return collator;
-}
-
-/** The text of the columns a search looks in: `searchable` columns, or every column when none is marked. Text values only. */
-function searchTextOf(row: UauiTableRow, columns: UauiTableColumn[]): string {
-    return columns.map((column) => (typeof row[column.key] === "string" ? (row[column.key] as string) : "")).join("\n");
 }
 
 /** Slot names of the column toolbar: `toolbar-<column key>`, and `toolbar-start` for the first column whatever its key. */
@@ -266,7 +254,7 @@ export class UauiDataTableElement extends UmbLitElement {
         const lang = this.localize.lang();
         const prev = this.#derivedFrom;
         if (!prev || prev.compareRows !== this.compareRows || prev.rowKey !== this.rowKey) {
-            this.#compareByKey = this.#indexCompareRows(this.compareRows, this.rowKey);
+            this.#compareByKey = indexCompareRows(this.compareRows, this.rowKey);
             this.#context.setCompare((item) => this.#compareRowFor(item));
         }
         if (
@@ -277,41 +265,26 @@ export class UauiDataTableElement extends UmbLitElement {
             prev.lang !== lang
         ) {
             this.#context.setColumns(this.columns);
-            this.#context.setStats(this.#computeStats(this.columns, this.rows));
+            this.#context.setStats(computeStats(this.columns, this.rows, this.stats));
         }
         this.#derivedFrom = { columns: this.columns, rows: this.rows, compareRows: this.compareRows, rowKey: this.rowKey, stats: this.stats, lang };
     }
 
-    #indexCompareRows(compareRows: UauiTableRow[], rowKey?: string): Map<string, UauiTableRow> {
-        const byKey = new Map<string, UauiTableRow>();
-        if (!rowKey) return byKey;
-        for (const row of compareRows) {
-            const key = rowIdentity(row[rowKey]);
-            if (key !== undefined) byKey.set(key, row);
-        }
-        return byKey;
-    }
-
     /** The compare row that matches the row, or undefined when there is no `rowKey` or no matching row. */
     #compareRowFor(row: UauiTableRow): UauiTableRow | undefined {
-        if (!this.rowKey) return undefined;
-        const key = rowIdentity(row[this.rowKey]);
-        return key === undefined ? undefined : this.#compareByKey.get(key);
+        return findCompareRow(this.#compareByKey, this.rowKey, row);
     }
 
     /** The rows to draw: the searched rows, sorted, cut down to the current page in client mode. */
     get #visibleRows(): UauiTableRow[] {
         const rows = this.#sortedRows;
         if (this.mode !== "client") return rows;
-        const size = this.#pageSize;
-        const start = (this.#currentPage - 1) * size;
-        return rows.slice(start, start + size);
+        return pageOfRows(rows, this.#currentPage, this.#pageSize);
     }
 
     /** `pageSize`, or the default when it isn't a whole number of at least 1. */
     get #pageSize(): number {
-        const size = Math.floor(this.pageSize);
-        return Number.isFinite(size) && size >= 1 ? size : DEFAULT_PAGE_SIZE;
+        return normalizePageSize(this.pageSize);
     }
 
     /** A `search` event came from the toolbar slot or a column toolbar slot: take its query and go back to page 1, since the matches are other rows. */
@@ -328,43 +301,37 @@ export class UauiDataTableElement extends UmbLitElement {
      */
     get #searchedRows(): UauiTableRow[] {
         const lang = this.localize.lang();
-        const needle = typeof this.query === "string" ? this.query.trim().toLocaleLowerCase(lang) : "";
+        const needle = searchNeedle(this.query, lang);
         if (this.mode !== "client" || !needle) return this.rows;
         const cached = this.#searched;
         if (cached && cached.rows === this.rows && cached.columns === this.columns && cached.needle === needle && cached.lang === lang) return cached.searchedRows;
-        const marked = this.columns.filter((column) => column.searchable);
-        const searchColumns = marked.length > 0 ? marked : this.columns;
-        const searchedRows = this.rows.filter((row) => searchTextOf(row, searchColumns).toLocaleLowerCase(lang).includes(needle));
+        const searchedRows = searchRows(this.rows, this.columns, needle, lang);
         this.#searched = { rows: this.rows, columns: this.columns, needle, lang, searchedRows };
         return searchedRows;
     }
 
     /** How many rows there are across every page. */
     get #totalRows(): number {
-        if (this.mode !== "server") return this.#searchedRows.length;
-        const total = asNumber(this.totalRows);
-        return total === undefined ? this.rows.length : Math.max(0, Math.floor(total));
+        return countRows(this.mode, this.#searchedRows.length, this.rows.length, this.totalRows);
     }
 
     get #pageCount(): number {
-        return Math.max(1, Math.ceil(this.#totalRows / this.#pageSize));
+        return pageCountOf(this.#totalRows, this.#pageSize);
     }
 
     /** `page`, kept between the first page and the last. */
     get #currentPage(): number {
-        const page = Math.floor(this.page);
-        return Number.isFinite(page) ? Math.min(Math.max(page, 1), this.#pageCount) : 1;
+        return clampPage(this.page, this.#pageCount);
     }
 
     /** The footer has nothing to offer when the rows fit the smallest size: even the smallest choice wouldn't make a second page. */
     get #showPager(): boolean {
-        return this.#totalRows > Math.min(this.#pageSize, PAGE_SIZES[0]);
+        return showsPager(this.#totalRows, this.#pageSize);
     }
 
     /** The page sizes to offer: the standard ones, plus the current size when it's another number. */
     get #pageSizeOptions(): number[] {
-        const size = this.#pageSize;
-        return PAGE_SIZES.includes(size) ? PAGE_SIZES : [...PAGE_SIZES, size].sort((a, b) => a - b);
+        return pageSizeOptions(this.#pageSize);
     }
 
     /** Sets the page and size the editor chose, then raises `page-change` so a product can load them. */
@@ -387,23 +354,7 @@ export class UauiDataTableElement extends UmbLitElement {
         const lang = this.localize.lang();
         const cached = this.#sorted;
         if (cached && cached.rows === rows && cached.sort === sort && cached.lang === lang && cached.column === column) return cached.sortedRows;
-        const sortAs = column.sortAs ?? "text";
-        const collator = getCollator(lang);
-        const sign = sort.direction === "desc" ? -1 : 1;
-        const compare =
-            typeof sortAs === "function" ? sortAs : sortAs === "number" ? (x: unknown, y: unknown) => (x as number) - (y as number) : (x: unknown, y: unknown) => collator.compare(String(x), String(y));
-        const sortValue = (row: UauiTableRow): unknown => {
-            const value = row[column.key];
-            if (typeof sortAs === "function") return value ?? undefined;
-            return sortAs === "number" ? asNumber(value) : asText(value) || undefined;
-        };
-        const sortedRows = [...rows].sort((a, b) => {
-            const x = sortValue(a);
-            const y = sortValue(b);
-            // Empty values go last in both directions, so only real values flip with the sign.
-            if (x === undefined || y === undefined) return x === y ? 0 : x === undefined ? 1 : -1;
-            return sign * compare(x, y);
-        });
+        const sortedRows = sortRows(rows, column, sort.direction, lang);
         this.#sorted = { rows, sort, lang, column, sortedRows };
         return sortedRows;
     }
@@ -411,7 +362,7 @@ export class UauiDataTableElement extends UmbLitElement {
     /** The first click on a column sorts numbers biggest first and text A to Z. Later clicks flip the direction. */
     #sortBy(column: UauiTableColumn) {
         const current = this.sort;
-        const direction = current?.key === column.key ? (current.direction === "asc" ? "desc" : "asc") : column.sortAs === "number" ? "desc" : "asc";
+        const direction = nextSortDirection(current, column);
         this.sort = { key: column.key, direction };
         this.page = 1;
         this.dispatchEvent(new CustomEvent<UauiTableSortChangeDetail>("sort-change", { bubbles: true, detail: { key: column.key, direction } }));
@@ -434,28 +385,6 @@ export class UauiDataTableElement extends UmbLitElement {
             this.querySelector(`:scope > [slot="${START_SLOT}"]`) !== null ||
             this.columns.some((column) => this.querySelector(`:scope > [slot="${CSS.escape(`${SLOT_PREFIX}${column.key}`)}"]`) !== null)
         );
-    }
-
-    /** Each column's total and largest number, from `stats` where given, else from the rows the table holds. */
-    #computeStats(columns: UauiTableColumn[], rows: UauiTableRow[]): UauiTableStats {
-        const stats: Record<string, UauiTableColumnStats> = {};
-        for (const { key } of columns) {
-            let total = 0;
-            let max = 0;
-            let any = false;
-            for (const row of rows) {
-                const value = asNumber(row[key]);
-                if (value === undefined) continue;
-                any = true;
-                total += value;
-                max = Math.max(max, value);
-            }
-            const given = this.stats?.[key];
-            total = asNumber(given?.total) ?? total;
-            max = asNumber(given?.max) ?? max;
-            if (any || given !== undefined) stats[key] = { total, max };
-        }
-        return stats;
     }
 
     /** One cell element per row and column, reused while the column keeps its element name, as the CMS `umb-table` does. */
