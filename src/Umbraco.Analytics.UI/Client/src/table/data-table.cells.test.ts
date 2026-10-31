@@ -8,7 +8,7 @@ import darkCss from "@umbraco-ui/uui/themes/dark.css?inline";
 import highContrastCss from "@umbraco-ui/uui/themes/high-contrast.css?inline";
 import { render } from "vitest-browser-lit";
 import { axeRun } from "../internal/test/a11y.js";
-import { deepQuery, deepText, renderElement, settle, shadow, type UauiTestElement } from "../internal/test/dom.js";
+import { deepQuery, deepQueryAll, deepText, renderElement, settle, shadow, type UauiTestElement } from "../internal/test/dom.js";
 import "./data-table.element.js";
 import "./cells/index.js";
 import type { UauiShareCellElement } from "./cells/share-cell.element.js";
@@ -131,6 +131,27 @@ describe("Feature: table cells are elements", () => {
             cell.compareValue = 20;
             await settle(cell);
             expect(deepQuery(cell.shadowRoot!, "uaui-delta-badge")).not.toBe(null);
+        });
+    });
+
+    describe("Scenario: a share cell in a narrow column", () => {
+        it("keeps the value on one line, without breaking the number", async () => {
+            // Like the AI usage table: several share columns beside number columns that never wrap, in too little room.
+            const columns: UauiTableColumn[] = [
+                { key: "url", label: "Model", width: "28%" },
+                { key: "requests", label: "Requests", elementName: UAUI_TABLE_CELL.share, width: "24%" },
+                { key: "tokens", label: "Tokens", elementName: UAUI_TABLE_CELL.share, width: "24%" },
+                { key: "duration", label: "Avg duration", elementName: UAUI_TABLE_CELL.number, align: "end" },
+            ];
+            const rows = [{ url: "gpt-5", requests: 1204, tokens: 14404373, duration: 1250000 }];
+            const el = await renderElement(
+                html`<div style="width: 420px"><uaui-data-table .columns=${columns} .rows=${rows} .compareRows=${[{ url: "gpt-5", requests: 1100, tokens: 12665000, duration: 1300000 }]} row-key="url"></uaui-data-table></div>`,
+                "uaui-data-table",
+            );
+            await settle(el);
+            const value = deepQueryAll<HTMLElement>(shadow(el), ".share-value")[1];
+            // A flex item is one box however its text wraps, so measure its height against one line.
+            expect(value.getBoundingClientRect().height).toBeLessThanOrEqual(parseFloat(getComputedStyle(value).lineHeight));
         });
     });
 

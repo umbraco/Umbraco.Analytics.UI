@@ -131,11 +131,15 @@ export class UauiShareCellElement extends UmbLitElement implements UauiTableCell
                 min-width: 92px;
             }
 
+            /* One line, like the number and percent cells: the table's overflow-wrap: anywhere (for long URLs) would
+               otherwise break the number mid-digit. The column grows to fit instead. */
             .share-top {
                 display: flex;
                 align-items: baseline;
                 gap: 6px;
                 height: var(--_uaui-table-line, 20px);
+                white-space: nowrap;
+                overflow-wrap: normal;
             }
 
             .end .share-top {
