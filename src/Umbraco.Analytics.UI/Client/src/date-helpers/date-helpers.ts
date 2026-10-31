@@ -1,8 +1,15 @@
 import type { UmbLocalizationController } from "@umbraco-cms/backoffice/localization-api";
 import type { UauiCompare, UauiDateRange } from "../date-range/types.js";
 import type { UauiGroupBy } from "../group-by/group-by.element.js";
-import { compareRangeFor, dateBuckets, daysIn, previousPeriodRange, previousYearRange, type UauiWeekStart } from "../internal/date/date-math.js";
+import { compareRangeFor, dateBuckets, daysIn, previousPeriodRange, previousYearRange } from "../internal/date/date-math.js";
 import { displayIsoDate, displayIsoDateWithoutYear } from "../internal/date/format-date.js";
+
+/**
+ * The day a week starts on, as an ISO weekday number: 1 is Monday, 2 Tuesday, up to 7 for Sunday. The same numbering as
+ * `Intl.Locale.prototype.getWeekInfo().firstDay`, so a product can pass the editor's culture straight through:
+ * `new Intl.Locale(culture).getWeekInfo().firstDay`. Anything else is read as Monday.
+ */
+export type UauiWeekStart = 1 | 2 | 3 | 4 | 5 | 6 | 7;
 
 /** The two ISO dates every helper reads. A `UauiDateRange` or a `UauiCompare` fits. */
 export type UauiDateSpan = Pick<UauiDateRange, "from" | "to">;

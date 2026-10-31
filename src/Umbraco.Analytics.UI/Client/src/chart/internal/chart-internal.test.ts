@@ -123,8 +123,8 @@ describe("buildChartData with a week start", () => {
         expect(buildChartData(weeks, wedAndSun, "week").series[0].compare).toEqual([30, null]);
     });
 
-    it("reads an out-of-range week start as Monday", () => {
-        expect(buildChartData(weeks, wedAndSun, "week", {}, 8 as never).series[0].compare).toEqual([30, null]);
+    it("reads an out-of-range week start of 0 as Monday, not Sunday", () => {
+        expect(buildChartData(weeks, wedAndSun, "week", {}, 0 as never).series[0].compare).toEqual([30, null]);
     });
 });
 

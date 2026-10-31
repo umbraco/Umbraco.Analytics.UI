@@ -9,5 +9,5 @@ export {
     type UauiDateBucketsOptions,
     type UauiDateSpan,
     type UauiFormatDateRangeOptions,
+    type UauiWeekStart,
 } from "./date-helpers.js";
-export type { UauiWeekStart } from "../internal/date/date-math.js";

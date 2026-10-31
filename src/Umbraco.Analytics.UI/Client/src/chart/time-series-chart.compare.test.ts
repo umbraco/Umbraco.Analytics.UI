@@ -150,32 +150,42 @@ describe("Feature: compare with another period", () => {
     describe("Scenario: grouped by week with a week start", () => {
         const weeks = { id: "pv", label: "Pageviews", points: [{ date: "2026-05-31", value: 1 }, { date: "2026-06-07", value: 2 }] };
         const wedAndSun = { id: "pv", label: "Pageviews", points: [{ date: "2026-05-06", value: 5 }, { date: "2026-05-10", value: 6 }] };
-        const hoverSecondWeek = async (weekStart: string) => {
+        const hoverWeek = async (weekStart: string, index: number) => {
             const el = await renderElement(
                 html`<uaui-time-series-chart kind="line" group-by="week" week-start=${weekStart} .series=${[weeks]} .compareSeries=${[wedAndSun]}
                     style="width:400px"></uaui-time-series-chart>`,
                 "uaui-time-series-chart",
             );
             const canvas = shadow(el).querySelector("canvas")!;
-            const x = Chart.getChart(canvas)!.getDatasetMeta(0).data[1].x;
+            const x = Chart.getChart(canvas)!.getDatasetMeta(0).data[index].x;
             await userEvent.hover(page.elementLocator(canvas), { position: { x, y: canvas.getBoundingClientRect().height / 2 } });
             await expect.poll(() => tooltip(el)?.style.visibility).toBe("visible");
             return el;
         };
 
         it("aligns the compare point to the Sunday week for a week start of 7", async () => {
-            const el = await hoverSecondWeek("7");
+            const el = await hoverWeek("7", 1);
             expect(deepQuery(tooltip(el).shadowRoot!, ".tooltip-compare .tooltip-sub")?.textContent).toMatch(/May.*10|10.*May/);
         });
 
-        it("has no compare point in the second Monday week for a week start of 1", async () => {
-            const el = await hoverSecondWeek("1");
-            expect(deepQuery(tooltip(el).shadowRoot!, ".tooltip-compare .tooltip-sub")?.textContent ?? "").not.toMatch(/10/);
+        // The Wednesday (5) and the Sunday (6) are one Monday week, so the first week's compare is 11 and the second has none.
+        const compareValue = (el: Element) => deepQuery(tooltip(el).shadowRoot!, ".tooltip-compare .tooltip-value")?.textContent;
+        const compareRow = (el: Element) => deepQuery(tooltip(el).shadowRoot!, ".tooltip-compare");
+
+        it("adds the Wednesday and the Sunday into the first Monday week for a week start of 1", async () => {
+            expect(compareValue(await hoverWeek("1", 0))).toBe("11");
         });
 
-        it("reads a week start of 8 as Monday", async () => {
-            const el = await hoverSecondWeek("8");
-            expect(deepQuery(tooltip(el).shadowRoot!, ".tooltip-compare .tooltip-sub")?.textContent ?? "").not.toMatch(/10/);
+        it("has no compare point in the second Monday week for a week start of 1", async () => {
+            expect(compareRow(await hoverWeek("1", 1))).toBeNull();
+        });
+
+        it("reads a week start of 0 as Monday", async () => {
+            expect(compareValue(await hoverWeek("0", 0))).toBe("11");
+        });
+
+        it("reads a week start that is not a number as Monday", async () => {
+            expect(compareValue(await hoverWeek("abc", 0))).toBe("11");
         });
     });
 });

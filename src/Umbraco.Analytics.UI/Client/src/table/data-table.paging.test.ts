@@ -476,8 +476,12 @@ describe("Feature: page through rows", () => {
             expect(shares(await withStats({ views: { max: 200 } }))).toEqual(["(66.7%)", "(33.3%)"]);
         });
 
-        it("uses both when both are given", async () => {
+        it("takes the share from the total when both are given", async () => {
             expect(shares(await withStats({ views: { total: 200, max: 100 } }))).toEqual(["(25.0%)", "(12.5%)"]);
+        });
+
+        it("takes the bar from the max when both are given", async () => {
+            expect(barWidths(await withStats({ views: { total: 200, max: 100 } }))).toEqual(["50%", "25%"]);
         });
 
         it("uses the rows for both when an entry is empty", async () => {

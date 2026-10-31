@@ -200,7 +200,8 @@ describe("Feature: event markers", () => {
         });
     });
 
-    describe("Scenario: grouped by week starting on Sunday", () => {
+    describe("Scenario: markers on points bucketed into Sunday weeks", () => {
+        // Guards that bucketMarkers does not assume Monday weeks: with a Monday bucketStart the Saturday marker would be dropped.
         const sundayWeeks = [{ id: "pv", label: "Pageviews", points: [
             { date: "2026-05-31", value: 120 }, { date: "2026-06-07", value: 280 }, { date: "2026-06-14", value: 140 },
         ] }];

@@ -13,7 +13,7 @@ Shared backoffice charts, tables, KPI tiles and filters for the analytics sectio
 
 ## Elements
 
-Live previews of every element, all states, and full example pages (Commerce, Engage, Umbraco AI) are in [Storybook](https://umbraco.github.io/Umbraco.Analytics.UI/). Usage and API are in the [package README](src/Umbraco.Analytics.UI/Client/README.md).
+Usage and API are in [Storybook](https://umbraco.github.io/Umbraco.Analytics.UI/): guides, live previews of every element and state, and full example pages (Commerce, Engage, Umbraco AI). Install steps are in the [package README](src/Umbraco.Analytics.UI/Client/README.md).
 
 | Element | What it does |
 |---|---|
@@ -37,7 +37,7 @@ Also public: `UAUI_TABLE_CELL` (the cell element names), `UAUI_TABLE_CONTEXT` (w
 
 | Package | Feed | Purpose |
 |---|---|---|
-| `Umbraco.Analytics.UI` | NuGet | Puts the files on the site. Products reference it with a one-major range, e.g. `[19.0.0, 20.0.0)`. |
+| `Umbraco.Analytics.UI` | NuGet | Puts the files on the site. Products reference it with a range that stays on one major, e.g. `[19.0.0, 19.999.999)` (not `20.0.0`, which lets a 20 prerelease in). |
 | `@umbraco/analytics-ui` | npm | Types only. Products add it as a dev dependency and mark `@umbraco/analytics-ui` as external in Vite. |
 
 Both share the version in `version.json`. The package major tracks the CMS major.
@@ -71,7 +71,7 @@ npm run lint
 
 Tooling matches Umbraco UI (UUI): Storybook 10 with the light, dark and high-contrast backoffice themes, and Vitest browser mode with Playwright, `vitest-browser-lit` and an axe-core accessibility matcher.
 
-The README test (`src/internal/readme/readme.test.ts`) fails when a public element is missing from either README. Add new elements to both.
+The README test (`src/internal/readme/readme.test.ts`) fails when a public element is missing from either README, or when a Storybook link in a README or guide page points at a page that doesn't exist. Add new elements to both READMEs. The guides are MDX pages in `Client/src/docs/`.
 
 Each component lives in its own folder:
 

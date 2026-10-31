@@ -14,7 +14,8 @@ import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import "../empty-state/empty-state.element.js";
 import "../error-state/error-state.element.js";
 import type { UauiGroupBy } from "../group-by/group-by.element.js";
-import { dateOnly, resolveWeekStart, type UauiWeekStart } from "../internal/date/date-math.js";
+import type { UauiWeekStart } from "../date-helpers/date-helpers.js";
+import { dateOnly, resolveWeekStart } from "../internal/date/date-math.js";
 import { formatIsoDate } from "../internal/date/format-date.js";
 import { getNumberFormat } from "../internal/format/number-format.js";
 import { getLoadingMode, isBusy } from "../internal/loading/loading-mode.js";
@@ -202,6 +203,7 @@ export class UauiTimeSeriesChartElement extends UmbLitElement {
      * as `Intl.Locale.prototype.getWeekInfo().firstDay`, so the editor's culture can be passed straight through:
      * `new Intl.Locale(culture).getWeekInfo().firstDay`. It decides which week a compare point falls in, so give
      * `uauiDateBuckets` the same value. Defaults to 1 (Monday). A value that isn't a whole number from 1 to 7 is read as Monday.
+     * If it doesn't match how the product bucketed its points, the compare line can shift by a week when one period starts on the week-start day.
      */
     @property({ type: Number, attribute: "week-start" })
     weekStart: UauiWeekStart = 1;

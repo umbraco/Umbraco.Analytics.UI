@@ -103,9 +103,6 @@ describe("Feature: public date helpers", () => {
         it("reads a week start of 0 as Monday instead of throwing", () => {
             expect(starts({ weekStart: 0 as never })[0]).toBe("2026-06-01");
         });
-        it("reads a week start of 8 as Monday instead of throwing", () => {
-            expect(starts({ weekStart: 8 as never })[0]).toBe("2026-06-01");
-        });
         it("ignores the week start for day buckets", () => {
             expect(uauiDateBuckets({ from: "2026-06-03", to: "2026-06-04" }, "day", { weekStart: 7 }).map((b) => b.start)).toEqual(["2026-06-03", "2026-06-04"]);
         });

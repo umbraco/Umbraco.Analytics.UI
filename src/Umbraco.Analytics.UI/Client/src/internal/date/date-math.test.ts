@@ -164,9 +164,6 @@ describe("bucketStart for weeks", () => {
         expect(bucketStart("2026-06-10", "week", 0 as never)).toBe("2026-06-08");
     });
 
-    it("reads a week start of 8 as Monday", () => {
-        expect(bucketStart("2026-06-10", "week", 8 as never)).toBe("2026-06-08");
-    });
 });
 
 describe("bucketOffset for weeks with a week start", () => {
@@ -182,6 +179,14 @@ describe("bucketOffset for weeks with a week start", () => {
 describe("resolveWeekStart", () => {
     it("keeps a whole number from 1 to 7", () => {
         expect(resolveWeekStart(7)).toBe(7);
+    });
+
+    it("reads 0 as Monday", () => {
+        expect(resolveWeekStart(0)).toBe(1);
+    });
+
+    it("reads a number above 7 as Monday", () => {
+        expect(resolveWeekStart(8)).toBe(1);
     });
 
     it("reads a fraction as Monday", () => {

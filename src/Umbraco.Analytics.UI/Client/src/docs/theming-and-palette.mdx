@@ -1,0 +1,63 @@
+import { Meta } from "@storybook/addon-docs/blocks";
+
+<Meta title="Guides/Theming and palette" />
+
+# Theming and palette
+
+The components use Umbraco UI (UUI) tokens only, so they follow the backoffice theme: light, dark and high contrast. Switch the theme in the toolbar above to check any page here.
+
+Colours come from `--uaui-*` custom properties that are worked out from the UUI tokens. See [Foundation > Theme](?path=/story/foundation-theme--swatches) for every colour, in each theme.
+
+## Using the palette in your own elements
+
+To colour your own cell, legend or chart key the same way, add `UauiPaletteStyles` to the element's styles and read the resolved name:
+
+```ts
+import { css, html, LitElement } from "@umbraco-cms/backoffice/external/lit";
+import { UauiPaletteStyles } from "@umbraco/analytics-ui";
+
+class MyLegend extends LitElement {
+  render() {
+    return html`<span class="dot"></span>`;
+  }
+
+  static styles = [
+    UauiPaletteStyles,
+    css`
+      .dot {
+        background-color: var(--uaui-color-series-1);
+      }
+    `,
+  ];
+}
+```
+
+The colour is the one our share bars use, in the light, dark and high contrast themes.
+
+## Names to read, and names to override
+
+<table>
+  <thead>
+    <tr><th>Read this</th><th>For</th><th>Override it with</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>--uaui-color-series-1</code> to <code>--uaui-color-series-4</code></td><td>lines and bars</td><td><code>--uaui-series-1</code> to <code>--uaui-series-4</code></td></tr>
+    <tr><td><code>--uaui-color-fill-1</code> to <code>--uaui-color-fill-4</code></td><td>area fills (use at low opacity)</td><td><code>--uaui-series-N</code></td></tr>
+    <tr><td><code>--uaui-color-bar-1</code> to <code>--uaui-color-bar-4</code></td><td>livelier bars</td><td><code>--uaui-bar-N</code>, then <code>--uaui-series-N</code></td></tr>
+    <tr><td><code>--uaui-color-compare</code></td><td>the compare period</td><td><code>--uaui-compare</code></td></tr>
+    <tr><td><code>--uaui-color-compare-bar</code></td><td>the compare bar (45% of compare)</td><td><code>--uaui-compare</code></td></tr>
+    <tr><td><code>--uaui-color-marker</code>, <code>--uaui-color-marker-hover</code></td><td>chart markers</td><td><code>--uaui-marker</code></td></tr>
+    <tr><td><code>--uaui-color-gap-positive</code>, <code>--uaui-color-gap-negative</code></td><td>shading between a series and its compare line</td><td><code>--uaui-gap-positive</code>, <code>--uaui-gap-negative</code></td></tr>
+    <tr><td><code>--uaui-color-tint-positive</code>, <code>-negative</code>, <code>-neutral</code></td><td>pill and track backgrounds</td><td><code>{"--uaui-tint-*"}</code></td></tr>
+    <tr><td><code>--uaui-color-text-positive</code>, <code>-negative</code>, <code>-neutral</code></td><td>text on those tints</td><td><code>{"--uaui-text-*"}</code></td></tr>
+  </tbody>
+</table>
+
+- `--uaui-color-*` are read-only. Override with `--uaui-*` only. Setting `--uaui-color-*` is unsupported.
+- To override, set `--uaui-*` (for example `--uaui-series-1: #0a7`) on an ancestor, so it reaches both your elements and ours. Setting it on your own `:host` only changes your element.
+- The block sets `color-scheme` on the element's `:host`. Its subtree inherits it, slotted children included, which aligns native controls and scrollbars with the UUI theme. With no UUI theme it resets to `normal`.
+- The palette is tested to 3:1 for lines and bars in all three themes. If you override a colour, you own its contrast.
+
+## Everything else is a UUI token
+
+The components set no colours of their own besides these. Spacing, borders, text and surfaces come from `--uui-*` tokens, so a theme that changes them changes the components too. Don't hard-code a colour next to a component: use a UUI token or a `--uaui-color-*` name.

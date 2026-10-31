@@ -1,4 +1,5 @@
-import { bucketOffset, dateOnly, type BucketUnit, type UauiWeekStart } from "../../internal/date/date-math.js";
+import type { UauiWeekStart } from "../../date-helpers/date-helpers.js";
+import { bucketOffset, dateOnly, type BucketUnit } from "../../internal/date/date-math.js";
 import type { UauiChartKind, UauiSeries } from "../types.js";
 
 export interface UauiChartData {

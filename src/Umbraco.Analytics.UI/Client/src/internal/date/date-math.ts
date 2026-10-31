@@ -1,6 +1,8 @@
 // Pure date maths shared by the date range picker and the chart. Dates are ISO "yyyy-mm-dd" strings in and out,
 // built from year/month/day parts so a timezone never shifts a day.
 
+import type { UauiWeekStart } from "../../date-helpers/date-helpers.js";
+
 const pad = (n: number, width = 2) => String(n).padStart(width, "0");
 
 /** Formats year, month (1-12) and day as an ISO date. */
@@ -121,13 +123,6 @@ export function daysIn(range: Range): string[] {
 
 /** How a chart groups its points. The same three values as `UauiGroupBy`. */
 export type BucketUnit = "day" | "week" | "month";
-
-/**
- * The day a week starts on, as an ISO weekday number: 1 is Monday, 2 Tuesday, up to 7 for Sunday. The same numbering as
- * `Intl.Locale.prototype.getWeekInfo().firstDay`, so a product can pass the editor's culture straight through:
- * `new Intl.Locale(culture).getWeekInfo().firstDay`. Anything else is read as Monday.
- */
-export type UauiWeekStart = 1 | 2 | 3 | 4 | 5 | 6 | 7;
 
 /** The week start used when none is given, or when the one given is not a whole number from 1 to 7. */
 export const DEFAULT_WEEK_START: UauiWeekStart = 1;
