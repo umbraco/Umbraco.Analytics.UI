@@ -184,11 +184,20 @@ const discountColumns: UauiTableColumn[] = [
     { key: "usageCount", label: "Times used", elementName: UAUI_TABLE_CELL.share, width: "30%", valueFormat: COUNT, sortable: true, sortAs: "number" },
 ];
 
-// Commerce's refund breakdown has no per-product change, so the table gets no compare rows.
+// Each product's refund rate is compared with last period's breakdown, in points (5% to 6% is +1 pp), and a rise is bad.
 const refundColumns: UauiTableColumn[] = [
     { key: "productName", label: "Product", sortable: true, sortAs: "text" },
     { key: "sku", label: "SKU" },
-    { key: "refundRate", label: "Refund rate", elementName: UAUI_TABLE_CELL.number, valueFormat: PERCENT, align: "end", sortable: true, sortAs: "number" },
+    {
+        key: "refundRate",
+        label: "Refund rate",
+        elementName: UAUI_TABLE_CELL.number,
+        valueFormat: PERCENT,
+        align: "end",
+        sortable: true,
+        sortAs: "number",
+        meta: { deltaUnit: "points", lowerIsBetter: true },
+    },
     { key: "topReasonText", label: "Top reason" },
 ];
 
@@ -524,6 +533,7 @@ export class ExampleCommerceAnalyticsPageElement extends UmbLitElement {
                 row-key="sku"
                 .columns=${refundColumns}
                 .rows=${this._refundRows}
+                .compareRows=${this._compareData?.refunds.productBreakdown ?? []}
                 empty-headline="No refunds in this period"
                 ?loading=${this._loading}
                 ?error=${this._error}

@@ -17,6 +17,7 @@ import type { UauiTimeSeriesChartElement } from "../../../chart/time-series-char
 import type { UauiKpiTileElement } from "../../../kpi-tile/kpi-tile.element.js";
 import type { UauiFunnelElement } from "../../../funnel/funnel.element.js";
 import type { UauiStatElement } from "../../../stat/stat.element.js";
+import type { UauiDeltaBadgeElement } from "../../../delta-badge/delta-badge.element.js";
 import type { UauiTableColumn } from "../../../table/types.js";
 
 /** Renders the page and waits until every part has its data. */
@@ -387,10 +388,22 @@ describe("Feature: the Commerce analytics page", () => {
             expect(table.rows.every((r) => typeof r.topReasonText === "string" && r.topReasonText !== "")).toBe(true);
         });
 
-        it("shows no per-product change, as Commerce's breakdown has none", () => {
+        it("compares each product's refund rate with last period's, in points, where a rise is bad", () => {
             const table = boxTable(page, "Refunds");
-            expect(table.compareRows).toHaveLength(0);
-            expect(deepQuery(shadow(table), "uaui-delta-badge")).toBe(null);
+            expect(table.compareRows.length).toBeGreaterThan(0);
+            const rate = table.columns.find((c) => c.key === "refundRate")!;
+            expect(rate.meta).toMatchObject({ deltaUnit: "points", lowerIsBetter: true });
+        });
+
+        it("shows a product whose rate went from 5% to 6% as +1 pp, a decline", async () => {
+            const table = boxTable(page, "Refunds");
+            table.rows = [{ productReference: "p1", productName: "Test tee", sku: "TT-1", refundRate: 6, topReasonText: "Wrong item sent" }];
+            table.compareRows = [{ productReference: "p1", productName: "Test tee", sku: "TT-1", refundRate: 5 }];
+            await settle(table);
+            const badge = deepQuery<UauiDeltaBadgeElement>(shadow(table), "uaui-delta-badge")!;
+            expect(badge.unit).toBe("points");
+            expect(badge.sentiment).toBe("negative");
+            expect(deepText(shadow(badge)).replace(/\s+/g, " ")).toContain("+1 pp");
         });
     });
 

@@ -29,13 +29,15 @@ export class UauiPercentCellElement extends UmbLitElement implements UauiTableCe
     @property({ attribute: false })
     value: unknown;
 
-    #format?: { column: UauiTableColumn; lang: string; format: Intl.NumberFormat };
+    #format?: { column: UauiTableColumn; lang: string; format: Intl.NumberFormat; badgeColumn: UauiTableColumn };
 
     protected override willUpdate(changed: PropertyValues<this>) {
         super.willUpdate(changed);
         const lang = this.localize.lang();
         if (this.#format?.column !== this.column || this.#format.lang !== lang) {
-            this.#format = { column: this.column, lang, format: getNumberFormat(lang, { ...percentFormatOptions, ...this.column.valueFormat }) };
+            const valueFormat = { ...percentFormatOptions, ...this.column.valueFormat };
+            // The badge gets the format the cell shows, so with `meta.deltaUnit: "points"` it reads the value as a fraction.
+            this.#format = { column: this.column, lang, format: getNumberFormat(lang, valueFormat), badgeColumn: { ...this.column, valueFormat } };
         }
     }
 
@@ -47,7 +49,7 @@ export class UauiPercentCellElement extends UmbLitElement implements UauiTableCe
         if (this.loading) return html`<uaui-table-skeleton-cell .align=${this.column.align ?? "start"}></uaui-table-skeleton-cell>`;
         const value = asNumber(this.value);
         if (value === undefined) return nothing;
-        return html`<span class="value">${this.#format!.format.format(value)}<uaui-table-compare-badge .column=${this.column} .item=${this.item} .value=${this.value}></uaui-table-compare-badge></span>`;
+        return html`<span class="value">${this.#format!.format.format(value)}<uaui-table-compare-badge .column=${this.#format!.badgeColumn} .item=${this.item} .value=${this.value}></uaui-table-compare-badge></span>`;
     }
 
     static override styles: CSSResultGroup = css`

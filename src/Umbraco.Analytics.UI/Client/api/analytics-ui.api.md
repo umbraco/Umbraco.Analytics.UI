@@ -420,6 +420,7 @@ export type UauiTableColumn = {
 // @public
 export interface UauiTableColumnMeta {
     color?: UauiColorSlot;
+    deltaUnit?: UauiDeltaUnit;
     hrefKey?: string;
     lowerIsBetter?: boolean;
 }

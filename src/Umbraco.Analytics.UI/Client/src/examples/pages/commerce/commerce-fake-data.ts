@@ -256,6 +256,7 @@ function refundsFor(range: UauiDateRange, totals: Totals, sold: ProductRow[]): R
         .map((row): RefundRow | undefined => {
             const product = products.find((p) => p.sku === row.sku)!;
             const refunded = Math.round(row.totalQuantity * product.refunds * wobble(range, `${row.sku}:refunds`));
+            // Products with no refunds are left out, like Commerce's endpoint, so one going from none to some has no compare row and no badge.
             if (!refunded) return undefined;
             const reason = refundReasons[Math.floor(noise(`${range.from}:${row.sku}:reason`) * refundReasons.length)];
             return { productReference: row.productReference, productName: row.name, sku: row.sku, refundRate: rate(refunded, row.totalQuantity), topReason: reason };

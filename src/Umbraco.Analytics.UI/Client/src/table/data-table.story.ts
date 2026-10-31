@@ -119,6 +119,41 @@ export const CompareBadges: Story = {
         </uui-box>`,
 };
 
+const rateColumns: UauiTableColumn[] = [
+    { key: "name", label: "Product" },
+    { key: "orders", label: "Orders", elementName: UAUI_TABLE_CELL.number, align: "end", width: "25%" },
+    { key: "refundRate", label: "Refund rate", elementName: UAUI_TABLE_CELL.percent, align: "end", width: "25%", meta: { deltaUnit: "points", lowerIsBetter: true } },
+];
+
+const rateRows = [
+    { name: "Umbraco hoodie", orders: 1240, refundRate: 0.06 },
+    { name: "Dev mug", orders: 860, refundRate: 0.011 },
+    { name: "Sticker pack", orders: 2310, refundRate: 0.004 },
+];
+
+const rateCompareRows = [
+    { name: "Umbraco hoodie", orders: 1100, refundRate: 0.05 },
+    { name: "Dev mug", orders: 900, refundRate: 0.019 },
+    { name: "Sticker pack", orders: 2000, refundRate: 0.004 },
+];
+
+/** A rate column compares in percentage points with `meta: { deltaUnit: "points" }`: a refund rate going from 5% to 6% is "+1 pp", not "+20%". With `lowerIsBetter` too, that rise is a decline (red). The orders column keeps the default, a percent change. */
+export const CompareInPoints: Story = {
+    name: "Compare in points",
+    render: () =>
+        html`<uui-box headline="Products" style="--uui-box-default-padding: 0">
+            <uaui-data-table label="Products" .columns=${rateColumns} .rows=${rateRows} .compareRows=${rateCompareRows} row-key="name"></uaui-data-table>
+        </uui-box>`,
+    parameters: {
+        docs: {
+            source: {
+                code: `{ key: "refundRate", label: "Refund rate", elementName: UAUI_TABLE_CELL.percent, meta: { deltaUnit: "points", lowerIsBetter: true } }`,
+                language: "ts",
+            },
+        },
+    },
+};
+
 /** Click a header to sort: the first click on a number column sorts biggest first, a second click flips it. In `client` mode (the default) the table sorts the rows itself and raises `sort-change`. Shares stay a share of the whole column. */
 export const Sortable: Story = {
     args: {

@@ -49,7 +49,7 @@ export class UauiShareCellElement extends UmbLitElement implements UauiTableCell
     @property({ type: Number })
     color?: UauiColorSlot;
 
-    /** The same row's value in the comparison period. Shows a change badge, unless it is missing or 0. Defaults to the table's compare row (see `uaui-table-compare-badge`). */
+    /** The same row's value in the comparison period. Shows a change badge, unless it is missing or, for a percent change, 0. Defaults to the table's compare row (see `uaui-table-compare-badge`). */
     @property({ type: Number, attribute: "compare-value" })
     compareValue?: number;
 

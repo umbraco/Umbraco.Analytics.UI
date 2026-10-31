@@ -1,4 +1,5 @@
 import type { UauiColorSlot } from "../theme/types.js";
+import type { UauiDeltaUnit } from "../delta-badge/delta-badge.element.js";
 
 /**
  * Per-column settings that the cells and `uaui-table-compare-badge` read, so `UauiTableColumn` doesn't grow a field per cell.
@@ -13,6 +14,13 @@ export interface UauiTableColumnMeta {
     color?: UauiColorSlot;
     /** Whether a fall in this column is good, e.g. refund rate or duration. A compare badge then shows a fall as an improvement. */
     lowerIsBetter?: boolean;
+    /**
+     * What a compare badge measures the change in: `"percent"` (the default), the percent change, or `"points"`, the
+     * difference in percentage points, for rate columns (a refund rate going from 5% to 6% is +1 pp, not +20%). Values
+     * shown as percentages of a fraction (the percent cell, or `valueFormat.style: "percent"`) count 0.05 as 5%. Any
+     * other value is read as `"percent"`.
+     */
+    deltaUnit?: UauiDeltaUnit;
 }
 
 /** One column of a `uaui-data-table`. */
@@ -28,7 +36,7 @@ export type UauiTableColumn = {
      * See `UauiTableCellElement`. Cells that need more than that read the table's `UAUI_TABLE_CONTEXT`.
      */
     elementName?: string;
-    /** Settings the cells read: `hrefKey`, `color`, `lowerIsBetter`. See `UauiTableColumnMeta`. */
+    /** Settings the cells read: `hrefKey`, `color`, `lowerIsBetter`, `deltaUnit`. See `UauiTableColumnMeta`. */
     meta?: UauiTableColumnMeta;
     /** Formats the numbers of the number, percent and share cells, e.g. `{ style: "currency", currency: "EUR" }`. */
     valueFormat?: Intl.NumberFormatOptions;
