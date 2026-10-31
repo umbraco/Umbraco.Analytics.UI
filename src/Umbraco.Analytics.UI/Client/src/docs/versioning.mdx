@@ -1,0 +1,22 @@
+import { Meta } from "@storybook/addon-docs/blocks";
+
+<Meta title="Guides/Versioning" />
+
+# Versioning
+
+- **The package major is the CMS major.** 19.x is for Umbraco CMS 19. Minor and patch numbers are this package's own.
+- **One version per site.** Engage, Commerce and Umbraco AI all load the same copy from the import map, so what one product relies on, every product gets.
+- **Minor releases never break.** Element names, attributes, events and exported types stay the same. Only a new CMS major can break them, and code is marked `@deprecated` a full major before it goes.
+
+Reference the NuGet package with a range that stays on one major, such as `[19.0.0, 19.999.999)`. Raise the lower bound to the minor you build against.
+
+Use `19.999.999` as the upper bound, not `20.0.0`. NuGet counts `20.0.0-alpha.1` as lower than `20.0.0`, so `[19.0.0, 20.0.0)` would let a 20 prerelease onto a site.
+
+## Prereleases
+
+Prerelease versions end in `-alpha.N`, `-beta.N` or `-rc.N`, such as `19.1.0-rc.1`. They are published to the MyGet feeds for NuGet and npm:
+
+- `umbraconightly`: nightly builds from any branch.
+- `umbracoprereleases`: prereleases.
+
+Stable releases go to NuGet.org and npm.

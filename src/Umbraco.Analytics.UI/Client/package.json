@@ -1,5 +1,5 @@
 {
-  "name": "@umbraco-analytics/ui",
+  "name": "@umbraco/analytics-ui",
   "version": "19.0.0-alpha.1",
   "type": "module",
   "types": "./types/umbraco-analytics-ui-public.d.ts",
@@ -20,6 +20,7 @@
     "build": "npm run build:api && npm run build:app",
     "build:app": "tsc -p tsconfig.app.json && vite build",
     "build:api": "tsc -p tsconfig.api.json && api-extractor run -c api-extractor.json --typescript-compiler-folder ./node_modules/typescript --local",
+    "check:size": "node ./devops/check-bundle-size.js",
     "check:api": "tsc -p tsconfig.api.json && api-extractor run -c api-extractor.json --typescript-compiler-folder ./node_modules/typescript",
     "prepack:api": "node ./devops/publish/sync-package-version.js && node ./devops/publish/cleanse-pkg.js && npx mkdirp ./artifacts",
     "pack:api": "npm pack --pack-destination ./artifacts",
@@ -27,11 +28,14 @@
     "build-and-pack:api": "npm run build:api && npm run pack:api",
     "watch": "vite build --watch",
     "test": "vitest run",
+    "test:perf": "vitest run --config vitest.perf.config.ts",
     "test:watch": "vitest",
     "lint": "eslint src .storybook",
     "analyze": "web-component-analyzer \"src/**/*.element.ts\" --outFile custom-elements.json",
     "storybook": "npm run analyze && storybook dev -p 6006",
     "storybook:build": "npm run analyze && storybook build",
+    "test:screenshots": "sh ./devops/screenshots/run-in-container.sh",
+    "test:screenshots:update": "sh ./devops/screenshots/run-in-container.sh --update",
     "test:ci": "vitest run --reporter=default --reporter=junit --outputFile.junit=./test-results/junit.xml"
   },
   "peerDependencies": {
@@ -56,12 +60,17 @@
     "eslint-plugin-wc": "^3.1.0",
     "mkdirp": "^3.0.1",
     "playwright": "^1.64.1",
+    "remark-gfm": "^4.0.1",
     "storybook": "^10.6.5",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.72.1",
-    "vite": "^8.3.2",
+    "vite": "^8.3.3",
     "vitest": "^5.0.5",
     "vitest-browser-lit": "^1.0.1",
     "web-component-analyzer": "^2.0.0"
+  },
+  "overrides": {
+    "dompurify": "^3.4.17",
+    "js-yaml": "^4.3.2"
   }
 }

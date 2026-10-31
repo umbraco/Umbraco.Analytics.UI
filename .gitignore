@@ -183,6 +183,8 @@ DocProject/Help/html
 
 # Click-Once directory
 publish/
+# ...but not the npm packing scripts the pipeline runs
+!src/Umbraco.Analytics.UI/Client/devops/publish/
 
 # Publish Web Output
 *.[Pp]ublish.xml

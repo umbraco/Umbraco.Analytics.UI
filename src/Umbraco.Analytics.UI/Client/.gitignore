@@ -29,3 +29,7 @@ temp
 storybook-static
 custom-elements.json
 test-results
+.vitest
+
+# Screenshot baselines are made in the Linux container only (npm run test:screenshots:update)
+__screenshots__/**/*-darwin.png

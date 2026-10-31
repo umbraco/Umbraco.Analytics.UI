@@ -9,7 +9,7 @@
     "semVer": 2
   },
   "publicReleaseRefSpec": [
-    "^refs/heads/main$",
+    "^refs/heads/v\\d+/main$",
     "^refs/tags/release-"
   ],
   "cloudBuild": {

@@ -6,11 +6,11 @@ None. The package has no server code. Products call their own APIs and pass data
 
 ## Frontend components
 
-All elements live in `src/Umbraco.Analytics.UI/Client/src/<name>/` and are exported from `@umbraco-analytics/ui`. Every element:
+All elements live in `src/Umbraco.Analytics.UI/Client/src/<name>/` and are exported from `@umbraco/analytics-ui`. Every element:
 
 - extends `UmbLitElement` and localizes every visible string, `aria-label` and placeholder
-- uses `--uui-*` tokens and the `--uan-*` tokens in ARCHITECTURE.md, and reads correctly in the light, dark and high-contrast themes
-- raises events as `CustomEvent`s that bubble and are `composed`, with the payload in `detail`
+- uses `--uui-*` tokens and reads colours through the `--uaui-color-*` read tokens (ARCHITECTURE.md decision 6), and reads correctly in the light, dark and high-contrast themes
+- raises events as `CustomEvent`s that bubble but are not `composed`, like UUI's `change`, with the payload in `detail` (an exported `Uaui…Detail` type). The exception is `retry` (`uaui-error-state` and the chart and table that re-raise it): a plain `Event` that bubbles, is not `composed` and has no detail. The KPI tile's `selected`/`deselected` are bubbling, cancelable, non-composed `CustomEvent`s with `detail` `{}`, like `UUISelectableEvent`
 - passes an axe audit in its tests and in every Storybook story
 - takes corner radius from `--uui-border-radius-*` tokens, so it follows the v18+ rounded backoffice
 
@@ -19,14 +19,34 @@ Screenshots are from the Phase 1 design ([`docs/design/phase-1`](../../design/ph
 ### Shared types
 
 ```ts
-type UanPoint = { date: string; value: number };              // date: ISO "2026-06-11"
-type UanSeries = { id: string; label: string; points: UanPoint[] };
-type UanMarker = { id: string; date: string; title: string; description?: string };
-type UanGroupBy = "day" | "week" | "month";
-type UanChartKind = "line" | "area" | "bar" | "stacked-bar";
-type UanDateRange = { from: string; to: string; preset?: string };
-type UanCompare = { mode: "previous-period" | "previous-year" | "custom"; from: string; to: string };
+type UauiPoint = { date: string; value: number };              // date: ISO "2026-06-11"
+type UauiSeries = { id: string; label: string; points: UauiPoint[]; color?: UauiColorSlot }; // color: palette slot, defaults to the series' position
+type UauiMarker = { id: string; date: string; title: string; description?: string };
+type UauiColorSlot = 1 | 2 | 3 | 4;                           // --uaui-series-1 to --uaui-series-4
+type UauiGroupBy = "day" | "week" | "month";
+type UauiChartKind = "line" | "area" | "bar" | "stacked-bar";
+type UauiDateRange = { from: string; to: string; preset?: string };
+type UauiCompare = { mode: "previous-period" | "previous-year" | "custom"; from: string; to: string };
+type UauiDateSpan = { from: string; to: string };              // any range; a UauiDateRange or UauiCompare fits
+type UauiDateBucket = { start: string; days: string[] };       // start: where the chart plots the bucket; days: only the days inside the range
+type UauiFunnelStep = { id: string; label: string; value: number }; // one funnel step; compare steps match by id
+
+// Event details
+type UauiGroupByChangeDetail = { value: UauiGroupBy };
+type UauiDateRangeChangeDetail = { value: UauiDateRange; compare?: UauiCompare };
+type UauiMarkerClickDetail = { id: string };
+type UauiToggleGroupChangeDetail = { value: string };
+type UauiSearchDetail = { query: string };
 ```
+
+**Date helpers** (public functions in `src/date-helpers/`, for products that use them without the picker; weeks start on Monday unless `weekStart` says otherwise; nothing reads the locale for you):
+
+- `uauiPreviousPeriod(range)`: the same number of days straight before `range` (`UauiDateSpan`, or `undefined` for an invalid range).
+- `uauiPreviousYear(range)`: the same dates one year earlier (`UauiDateSpan` or `undefined`).
+- `uauiCompareFor(mode, range)`: a full `UauiCompare` for `previous-period` or `previous-year`. `custom` and invalid ranges give `undefined`.
+- `uauiDaysIn(range)`: every day in the range, both ends included.
+- `uauiDateBuckets(range, groupBy, { weekStart })`: `UauiDateBucket[]`. `start` is the day, the first day of the week or the 1st of the month. `days` holds only days inside the range. `weekStart` (`UauiWeekStart`, optional) is an ISO weekday number, 1 (Monday, the default) to 7 (Sunday), the numbering of `Intl.Locale.getWeekInfo().firstDay`, so a product can pass the editor's culture straight through. A value that isn't a whole number from 1 to 7 is read as Monday, never thrown on.
+- `uauiFormatDateRange(localize, range, { showYear })`: the range as "May 25, 2026 to Jun 23, 2026", the label the date range button and the chart's `compare-label` use. It takes `this.localize`, so it follows the user's culture and the translated "{0} to {1}" term. `showYear: false` leaves the year off.
 
 ### 1. Panes: `uui-box`, not a new element
 
@@ -37,11 +57,11 @@ Products wrap each chart and table in the backoffice's own `uui-box`. It already
 - the headline (property or `headline` slot, where the icon goes as a `uui-icon`)
 - `header-actions` for the group-by, notes and date range controls
 - the divider under the header
-- `--uui-box-default-padding: 0` for a table that runs edge to edge
+- `--uui-box-default-padding: 0` for every chart and table, so they run edge to edge. Each pads its own content, and the reload loading bar then sits directly under the header divider, full width
 
 Storybook gets a "Pane" story showing this recipe, a chart and a table in one `uui-box`, so every product builds it the same way. There's no divider between a chart and a table that follows it, which the recipe shows.
 
-### 2. `uan-kpi-tile`: KPI tile
+### 2. `uaui-kpi-tile`: KPI tile
 
 ![KPI tiles](../../design/phase-1/screenshots/kpi-size.png)
 
@@ -49,134 +69,229 @@ Storybook gets a "Pane" story showing this recipe, a chart and a table in one `u
   - `label`
   - `value` (pre-formatted string)
   - `icon`
-  - `delta`, `delta-unit` and `lower-is-better` (passed to `uan-delta-badge`)
+  - `delta`, `delta-unit` and `lower-is-better` (passed to `uaui-delta-badge`). Or `current` and `previous` in place of `delta`, and the badge works out the change; `delta` wins.
   - `selectable`, `selected`
+  - `no-data`: the metric has no data for the period (see below)
+  - `error`: the data could not be loaded (see below)
 - One style only: a card with the icon in a pink square, as in every Phase 1 screenshot.
-- Not used for table totals ("TOTAL PAGEVIEWS 272 +8.4%"). Those are a label and a number, which the product writes in the table's `toolbar` slot, using `uan-delta-badge` for the change.
-- **Selectable:** when `selectable`, the tile is a button. Clicking it raises `select` with `{}`, and `selected` draws its active state. This lets a row of tiles switch which metric a chart shows, like Engage's `AnStatPanes`.
+- Not used for table totals ("TOTAL PAGEVIEWS 272 +8.4%"). Those are a label and a number, which the product slots into the table's column toolbar (`toolbar-<column key>`, §7), using `uaui-stat` for the label, number and change.
+- **Selectable:** follows UUI's `SelectableMixin` (as `uui-card` uses), so product code reads the same as for UUI cards. This lets a row of tiles switch which metric a chart shows, like Engage's `AnStatPanes`.
+  - When `selectable`, the tile is a toggle button with `aria-pressed` (UUI cards don't expose their state to screen readers; this does).
+  - Clicking, Enter or Space on an unselected tile raises a cancelable `selected` event, then sets `selected` unless the event was cancelled.
+  - On a selected tile it raises a cancelable `deselected` event, then clears `selected`, unless the event was cancelled or `deselectable` is false (default true). A product keeping exactly one tile selected sets `deselectable` false and clears the others on `selected`.
+  - A selected tile with `deselectable` false raises nothing when pressed. This departs from `uui-card`, which raises `selected` again.
+  - Look matches `uui-card`: a 2px `--uui-color-selected` border just outside the card with a soft glow when selected; the same border at 33% on hover when not selected, 80% on hover when selected; focus is a separate `--uui-color-focus` outline.
+- **No data:** `no-data` shows a dash (hidden from screen readers) with the hidden text "No data for this period" (`uauiAnalytics_kpiNoData`; the shared empty-state "No data yet" reads oddly for a past period) and no change badge. The tile keeps its height and stays selectable. With `loading` it keeps the dash and is busy. It is a boolean on purpose: an unset `value` means "not loaded yet", and a formatted "0" is a real value.
+- **Error:** `error` shows the label, a dash and no badge, with the hidden text "Something went wrong". The tile has no Retry button (a row of tiles would each show one) and stays selectable. `error` wins over `no-data` and `loading`, and the tile is not busy.
 - Tiles in one row keep the same height, even when a label wraps. The badge sits below the value when the tile is too narrow to fit both on one line (as in `kpi-size.png`).
 
-### 3. `uan-delta-badge`: change badge (exists, needs restyling)
+### 3. `uaui-delta-badge`: change badge (exists, needs restyling)
 
 - Restyle to the design's tinted pill: a green or red tint behind the text, 13px bold, `4px 8px` padding. Flat values use a neutral tint.
 - Add `size`: `"md"` (default) | `"sm"` (for table cells).
 - Keep the current behaviour: signed number, `percent` or `points`, `lower-is-better`, rounding to `max-decimals`. Number formatting moves to `this.localize.number`.
+- Add `current` and `previous`: the badge works out the change itself when `value` isn't set. Percent change against the size of `previous` (unknown when `previous` is 0, so nothing is drawn), or with `unit="points"` the difference between two percentages. `value` wins when both are given. `uaui-table-compare-badge` passes its two numbers through instead of doing the maths.
 
-### 4. `uan-time-series-chart`
+### 4. `uaui-time-series-chart`
 
 ![Line chart with comparison and markers](../../design/phase-1/screenshots/cmp-diff.png)
 ![Stacked bar chart with comparison](../../design/phase-1/screenshots/vis-cmp.png)
 ![Marker tooltip](../../design/phase-1/screenshots/an-pin-tip.png)
 
 - Properties:
-  - `kind` (`UanChartKind`)
-  - `series` (`UanSeries[]`)
-  - `compare-series` (`UanSeries[]`, matched to `series` by `id`)
+  - `kind` (`UauiChartKind`)
+  - `series` (`UauiSeries[]`)
+  - `compare-series` (`UauiSeries[]`, matched to `series` by `id`)
   - `compare-label`
-  - `markers` (`UanMarker[]`)
-  - `group-by` (`UanGroupBy`, sets the x-axis label format)
+  - `markers` (`UauiMarker[]`)
+  - `group-by` (`UauiGroupBy`, sets the x-axis label format)
+  - `week-start` (`UauiWeekStart`, 1 to 7, default 1 = Monday): the day weeks start on when `group-by` is `week`. Decides which week a compare point sits in, so give it the same value as `uauiDateBuckets`. Anything but a whole number from 1 to 7 is read as Monday
   - `value-format` (`Intl.NumberFormatOptions`)
+  - `range` (`UauiDateRange`), `compare` (`UauiCompare`): the period starts, to align compare points (see Comparison)
+  - `lower-is-better` (boolean, reflected, default false): see Lower is better
   - `loading`
   - `empty-headline`, `empty-description`
+  - `error`, `error-headline`, `error-description`, `retryable`: see Error
+- **Error:** `error` replaces the plot, legend and hidden table with `uaui-error-state` (§8), passing on `error-headline`, `error-description` and `retryable`. The canvas stays in the DOM, hidden, so a retry doesn't rebuild the chart. The chart re-raises the state's `retry` from its own host. Precedence is error, then loading, then empty: an element in error is not `aria-busy` and shows no skeleton or loading bar. `error` is a plain property, so the product decides what an error is.
 - **Comparison, by kind:**
-  - `line` and `area`: a dashed `--uan-compare` line, with the gap between the two lines shaded.
-  - `bar` and `stacked-bar`: the comparison total is drawn as a bar behind each current bar.
-  - Comparison points line up by position (day 1 with day 1), not by date. The two ranges are different dates.
+  - `line` and `area`: a dashed `--uaui-compare` line, with the gap between the two lines shaded.
+  - `bar` and `stacked-bar`: the comparison total is drawn as a bar behind each date's bars. For bar kinds, all compare series are summed per date and aligned by bucket offset like any compare series (no `id` matching), and the current total for that date is shown in the tooltip and hidden table whenever it's compared against two or more series.
+  - Comparison points line up by bucket offset, not by date: the Nth day, week or month (per `group-by`) from the compare range start sits under the Nth from the current range start. The chart takes optional `range` (`UauiDateRange`) and `compare` (`UauiCompare`) for those starts, as `uaui-date-range` emits them; without them each side starts at its first point, which misaligns when sparse data omits the first buckets. A shorter compare leaves trailing dates empty. Points on the same date add up (series, compare and compare total alike).
+- **Lower is better:** `lower-is-better` is for a metric where a fall is good (refund rate, bounce rate, average duration). It flips the gap shading (below the compare line uses `--uaui-gap-positive`, above uses `--uaui-gap-negative`; those tokens mean good and bad) and is passed to every change badge in the tooltip, rows and bar total alike. One chart-level flag, since one chart shows one metric and its series are breakdowns of it.
 - **Tooltip:** hovering a point shows a dark tooltip with the date, each series' value and, when comparing, the comparison value and a delta.
 - **Markers:** each marker shows as a dot on the x-axis, with a dashed line up the chart.
   - Hovering or focusing a dot shows its title and description.
-  - Clicking or pressing Enter raises `marker-click` with `{ id }`.
+  - Clicking or pressing Enter raises `marker-click` with `{ id }` (`UauiMarkerClickDetail`).
   - Dots are keyboard-focusable, in date order.
-- **Legend:** one entry per series, plus the comparison range when comparing.
+- **Legend:** one entry per series, plus the comparison range when comparing. A single series with no comparison has no legend, as in the design.
+- **Height:** the plot height comes from the public CSS property `--uaui-chart-height` (default 260px). The loading skeleton uses the same value.
+- **Padding:** the chart pads its own content with the public CSS property `--uaui-chart-padding` (default the design's 12px 24px 28px). The reload loading bar sits outside that padding, at the element's top edge and full width.
 - **Other rules:**
   - The y-axis starts at 0, with about 5 ticks on round numbers.
   - X-axis labels rotate when crowded and never overlap.
   - Bar kinds have no smoothing.
 - **Accessibility:** a visually hidden table holds the same data, for screen readers.
 
-### 5. `uan-group-by`: Day / Week / Month switch
+### 5. `uaui-group-by` and `uaui-toggle-group`: Day / Week / Month switch
 
-- Properties: `value` (`UanGroupBy`), `options` (defaults to all three).
-- A radio group. Arrow keys move between options. Changing raises `change` with `{ value }`.
+**`uaui-toggle-group`** (public) is a toggle group: a row of options with exactly one selected at a time (single choice, never several), built as a radio group. UUI has no such control (`uui-button-group` has no selection, `uui-tabs` switches panels, `uui-radio-group` draws radio circles).
 
-### 6. `uan-date-range`: date range picker
+- Properties: `value` (the selected option's `value`), `options` (`{ value, label }[]`) and `label` (the group's accessible name, not shown).
+- Arrow keys move the selection and focus to the next or previous option, wrapping at the ends. Only the selected option is in the tab order (the first when `value` matches no option).
+- Clicking another option sets `value` and raises `change` with `{ value }` (`UauiToggleGroupChangeDetail`). Clicking the selected option raises nothing.
+- Put it in a `uui-box`'s `header-actions` slot.
+
+**`uaui-group-by`** is `uaui-toggle-group` with the day, week and month options.
+
+- Properties: `value` (`UauiGroupBy`), `options` (defaults to all three).
+- It re-raises its own `change` with `{ value }` (`UauiGroupByChangeDetail`).
+
+### 6. `uaui-date-range`: date range picker
 
 ![Date range button with comparison](../../design/phase-1/screenshots/cmp-diff.png)
 ![Date range dialog](../../design/phase-1/screenshots/01-dr-modal.png)
 
 - Properties:
-  - `value` (`UanDateRange`)
-  - `compare` (`UanCompare | undefined`)
+  - `value` (`UauiDateRange`)
+  - `compare` (`UauiCompare | undefined`)
   - `presets` (defaults to last 7 days, last 30 days, last month, last year and custom; a product can pass its own, such as AI's last 24 hours)
-  - `allow-compare` (default true)
+  - `allow-compare` (default true). A plain boolean attribute, like `deselectable` and UUI's: it can't say false, so turn it off with the property, `.allowCompare=${false}`
   - `max-date` (default today)
-- The button opens `uan-date-range-modal` through the backoffice modal manager.
-  - **Save** closes the dialog and raises `change` with `{ value, compare }`.
+  - `today` (an ISO date). Presets, the default `value` and the default `max-date` count from it. Unset uses the clock, and text that isn't a real date is ignored, so a typo can't break the picker. `max-date` still wins for the latest allowed date. A `value` the product sets stays as given. Examples set it so presets match their fixed data.
+- With a comparison on, the button stays as tall as `uaui-group-by` (40px) and shows two lines: the range on line 1, "vs Apr 25, 2026 to May 24, 2026" on line 2, small and in a lighter grey (text-alt mixed 70% with the surface: 5.3:1 light and high contrast, 6.3:1 dark). Line 2 always shows the year. With a comparison, line 1 is 1px smaller than the default text size. The button's accessible name is the purpose plus both lines as shown. Both lines are cut with an ellipsis in a narrow header. Without a comparison the button is unchanged.
+- The button opens `uaui-date-range-modal` through the backoffice modal manager.
+  - **Save** closes the dialog and raises `change` with `{ value, compare }` (`UauiDateRangeChangeDetail`).
   - **Close** discards the edits.
 - **Presets:** choosing one fills both dates. Editing either date switches the preset to "Custom".
 - **Compare:** turning it on shows the compare mode. "Previous period" and "Previous year" fill the comparison dates. "Custom" shows two more date fields.
 - **The mistake:** an end date before the start, or a date after `max-date`, shows an inline error under the field and disables Save.
 
-### 7. `uan-data-table`
+### 7. `uaui-data-table`
 
 ![Table with share columns](../../design/phase-1/screenshots/an-table.png)
 
 - Properties:
-  - `columns`: `{ key, label, type, sortable?, align? }[]`, where `type` is `"text" | "link" | "number" | "percent" | "share"`
+  - `label`: the table's accessible name (e.g. "Top pages"), as `label` is across UUI. Not shown. It names the `uui-table` (`aria-label`), the pager's navigation landmark ("{label}, pagination", `uauiAnalytics_pagerLabelNamed`) and, while the columns overflow, the scroll region ("{label}, scroll sideways to see more columns", `uauiAnalytics_tableScrollRegionNamed`), so two tables on one page have unique landmarks (axe `landmark-unique`). Set it whenever a page has more than one table. Without it the table has no name and the pager and scroll region keep "Pagination" and "Table, scroll sideways to see more columns". The label is trimmed before use, so a label of only spaces counts as none. Changing or removing it later updates all three names.
+  - `columns`: `{ key, label, elementName?, meta?, valueFormat?, dateFormat?, align?, width?, sortable?, sortAs?, searchable? }[]`. `elementName` picks the cell (default the text cell; constants in `UAUI_TABLE_CELL`). `valueFormat` is per column (`Intl.NumberFormatOptions`), and so is `dateFormat` (`Intl.DateTimeFormatOptions`, for date cells). `width` is a CSS width, as in the CMS `umb-table`. `meta` holds what cells read: `hrefKey`, `toneKey` and `textKey` (status cells), `color` (1 to 4, a share bar's palette slot), and for compare badges `lowerIsBetter` and `deltaUnit` (`"percent"`, the default, or `"points"`).
   - `rows`: `Record<string, unknown>[]`
-  - `compare-rows` (matched by a `row-key` property)
-  - `value-format` (per column, optional)
+  - `compare-rows`, matched to `rows` by `row-key` (below). When several compare rows share a key, the last wins
+  - `row-key` / `rowKey`: `string | string[]`. The attribute always names one field (a space or comma is part of the name, so `row-key="sku"` and any existing key read as before). Set the property to an array when one field doesn't identify a row (e.g. `["productReference", "productVariantReference"]`): rows match when every field matches. Values are strings or numbers, compared as text. With several fields the identity is the values as a JSON array, so `["a b", "c"]` never matches `["a", "b c"]`; a field a row lacks (`undefined` or `null`) counts as empty text, but a row with none of the fields, or a field of another kind, never matches. With one field (string or one-item array) a row without it never matches, as before. An empty string or array is no key. The key is only used to match compare rows: rows are drawn and their cells kept per row object, and `row-click` passes the row itself
+  - `stats`: `{ [columnKey]: { total, max } }` (`UauiTableStatsInput`) across every page, for share percents and bar scales in `server` mode. An entry may give just `total` or just `max` (`UauiTableStatsInput`, a partial `UauiTableColumnStats`): each field missing, or the whole entry, falls back to the sum or largest value of the rows the table holds. `UAUI_TABLE_CONTEXT` always gives cells both fields worked out
   - `sort` (`{ key, direction }`)
   - `mode` (`"client"` | `"server"`)
-  - `page`, `page-size`, `total`
+  - `page`, `page-size`, `total-rows` (the row count across every page, `server` mode)
+  - `reset-page-on-rows` / `resetPageOnRows` (boolean, default off, `client` mode): go back to page 1 when `rows` is replaced (see Paging)
+  - `query` (the search text; the table sets it from a `uaui-search-field` in the `toolbar`, `toolbar-start` or a `toolbar-<key>` slot)
+  - `clickable-rows` (makes rows openable and raises `row-click`)
   - `loading`
   - `empty-headline`, `empty-description`
-- Slots: `toolbar`, for the search box and totals above the header.
-- **`share` columns:** show the value, its percent of the column total, and a thin bar scaled to the column's largest value.
-  - The first share column uses `--uan-series-1`, the second `--uan-series-2`.
-  - When comparing, a small delta badge sits after the value.
-- **`link` columns:** render an anchor. The row's `href` comes from the column's `hrefKey`.
+  - `error`, `error-headline`, `error-description`, `retryable`
+- **Error:** `error` shows `uaui-error-state` (§8) in place of the rows, passing on `error-headline`, `error-description` and `retryable`. The header stays. The rows, column toolbar, skeleton, "No results" and pager go. The table re-raises the state's `retry` from its own host. Precedence is error, then loading, then empty: the table in error is not `aria-busy` and shows no skeleton or loading bar. `error` is a plain property, so the product decides what an error is.
+- **Loading:** cells take an optional `loading` flag and draw their own placeholder, so loading rows match loaded rows. A cell without `loading` gets a generic placeholder.
+- **Cells are elements**, as in the CMS `umb-table`: each gets `column`, `item` (the row) and `value`. A column names its cell with `elementName` (default the text cell); the package ships ready-made cells (`uaui-share-cell` and others, with exported name constants). Columns have no `type`: alignment is `align`, sorting is `sortAs` (number, text, date or a compare function). Cells that need table-wide data (column total and max, compare rows) read it from the table's context, so the table doesn't special-case any cell.
+- Slots: the toolbar is one idea, filled full width or column by column. `toolbar` is the full-width slot, for a search box alone (or any free layout above the header). `toolbar-start` is the first column's cell and `toolbar-<column key>` is any column's cell, for a search in the first column and a total over each number column. `footer` is left of the pager. **Empty slotted content:** in every slot, a plain HTML element with no element children and only whitespace text counts as nothing slotted, so the toolbar, column toolbar or footer stays hidden for it (the footer still shows for the pager). An empty footer is visually hidden (the package's 1px clipped technique, with no padding or border, so no visible gap; no pager is drawn then, so no focus stop), not `display: none`, so a slotted live region stays in the accessibility tree while empty. The column toolbar is a table row and is still `hidden` when empty, so put a live region in the footer or `toolbar` slot. The table watches its slotted content with a `MutationObserver` while connected (disconnected when it's removed, looked at again when it's put back), so the row appears when the element gains text or an element and hides when it's emptied again, with no `slotchange`, and follows an element whose `slot` attribute changes into or out of a slot. This lets a page keep a `role="status"` live region mounted, empty until it has something to announce. Anything that draws itself counts as content whatever its children: custom elements (even before they upgrade), a forwarded `<slot>` (a product wrapping the table), elements with a shadow root, images, form controls, `hr`, `meter`, `progress`, media, SVG and MathML.
+- **Column toolbar:** content slotted as `toolbar-<column key>` sits in that column's cell, so it lines up with the header and the numbers below and takes the column's `align`. `toolbar-start` is always the first column's cell, whatever its key, so every product writes `<uaui-search-field slot="toolbar-start">`; if it and `toolbar-<first column key>` are both filled, both show in that cell, `toolbar-start` first. A column keyed `start` makes the name ambiguous, so `toolbar-start` always means the first column's cell and a column keyed `start` shares it (it has no slot of its own, and the slot is drawn once). It is a row of the table, above the column headings (below the `toolbar`, if any), and is not sorted, searched or paged. It stays hidden while nothing is slotted for a column the table has (or in `toolbar-start`). Content that arrives later shows it. A slot for an unknown column draws nothing. In `error` it is hidden.
+- **`uaui-stat`** (public, its own element, as it reads nothing from the table) is the piece for a total in the column toolbar: a small uppercase `label`, a `value` string shown as given, and a `uaui-delta-badge` (size `sm`) from `delta`, or from `current` and `previous` with `delta-unit` and `lower-is-better`, the same names and rules as `uaui-kpi-tile`. It takes the `text-align` of its cell. Its `layout` (reflected, like the badge's `size`) is `stacked` (default: the label on its own line above the value and badge, for the column toolbar) or `inline` (label, value and badge on one line on their baseline, the label muted and not in capitals, for a `uui-box` `header-actions` slot, as in the funnel pane recipe, §10). A `uaui-search-field` in `toolbar-start` or a `toolbar-<column key>` slot drives the table like one in `toolbar`.
+- **Padding:** the cells pad themselves. The `toolbar` slot pads itself with the public CSS property `--uaui-table-padding` (default `12px 24px`), only when something is slotted. The reload loading bar sits outside it at the element's top edge, full width, so put the table in a `uui-box` with `--uui-box-default-padding: 0`.
+- **Narrow screens:** when the columns don't fit, only they scroll sideways (a scroll area round the column toolbar, headings and rows, `overflow-x: auto`). No column is pinned. The `toolbar` and `footer` slots, the pager, the empty and error states and the loading bar stay outside it, full width. `uui-table` clips its own overflow, so the table keeps at least its content's width (`min-width: min-content`) and `width` behaves as before whenever the columns fit. **Keyboard:** only while the columns overflow, the scroll area is `role="region"` with `tabindex="0"` and the name `uauiAnalytics_tableScrollRegion` ("Table, scroll sideways to see more columns", or "{label}, scroll sideways to see more columns" when the table has a `label`, so it never repeats the table's own name), with a UUI-style focus ring, so the arrow keys scroll it (WCAG 2.1.1). A `ResizeObserver` on the scroll area and the table adds and removes these as the width or content changes. A table that fits gets no extra tab stop.
+- **Share cells (`UAUI_TABLE_CELL.share`):** show the value, its percent of the column total, and a thin bar scaled to the column's largest value.
+  - The first share column uses `--uaui-series-1`, the second `--uaui-series-2`.
+  - When comparing, a compare badge sits after the value.
+- **Compare badges:** number, percent and share cells show a change badge when the table has a compare row for the row. `uaui-table-compare-badge` is the public piece behind them, and a product's own cell uses it with `column`, `item` and `value`. A column's `meta.lowerIsBetter` makes a fall positive. A column's `meta.deltaUnit: "points"` shows the change in percentage points instead of a percent change, for rate columns (5% to 6% is +1 pp, not +20%); any other value is read as `"percent"`. With points, a column shown as a percentage of a fraction (`valueFormat.style: "percent"`, which the percent cell has by default) holds fractions, so 0.05 to 0.06 is +1 pp; other columns hold the percentage itself (5 to 6 is +1 pp). On a share cell the points are of the value, not of its share of the total.
+- **Link cells (`UAUI_TABLE_CELL.link`):** render an anchor. The row's `href` comes from the column's `meta.hrefKey`.
+- **Status cells (`UAUI_TABLE_CELL.status`, `uaui-status-cell`):** show the value as a small tinted label with a tone, for a row's state ("Active", "Out of stock", "12 days"). The tones are `uui-tag`'s colours, `default`, `positive`, `warning` and `danger` (`UauiStatusTone`). The product picks both per row, in row fields the column's meta names, as `hrefKey` does: `meta.toneKey` holds the tone (missing, unknown or not text is `default`) and `meta.textKey` the words. Without words (missing, empty or only spaces) the cell shows the value: a number formatted with the column's `valueFormat`, anything else as text; with neither it draws nothing. The words carry the meaning and the tone only repeats it, so meaning is never colour alone. Search and sort use the value (`column.key`, with `sortAs` and `searchable`), not the shown words, as for every cell: a days-left column sorts by days even where a row reads "Out of stock", and searching "Out of stock" finds nothing unless the value itself is that text. The label is our own pill, not `uui-tag`: the solid `uui-tag` fills are heavy in a table and UUI's high contrast semantic colours don't reach 4.5:1 as text on a tint, so it uses the palette's tint and text tokens (`default` the neutral pair, `danger` the negative pair, and a new `warning` pair), 4.5:1 in light, dark and high contrast. It has the compare badge's `sm` size and radius (11.5px, `1px 5px`, `--uui-border-radius-1`), so the two look alike in one row. No compare badge.
+- **Date cells (`UAUI_TABLE_CELL.date`, `uaui-date-cell`):** show an ISO date (`yyyy-mm-dd`) as a date in the backoffice user's culture with `Intl.DateTimeFormat`, formatted with the column's `dateFormat` (`Intl.DateTimeFormatOptions`, default `{ dateStyle: "medium" }`, "Jun 1, 2026"), as `valueFormat` does for numbers. A date-time (`2026-06-01T23:30:00-05:00`, or with a space for the `T`) is read as its day as written, as the package's other date code does, so no timezone moves it a day: the cell formats midnight UTC of that day in UTC, and a `timeZone` in `dateFormat` is ignored. Use `dateStyle` or date fields only (`weekday`, `era`, `year`, `month`, `day`); `timeStyle` or time fields show midnight ("12:00 AM"). Options `Intl` rejects (`dateStyle` mixed with `month` or `hour`) fall back to the default, cached per options, instead of breaking the cell. A date-time needs a real time part after the `T` or space (`hh:mm`); "2026-06-01 soon" is not a date. A missing value, or one that isn't a real ISO date (`2026-02-30`, a timestamp number, other text), draws nothing, as the number cell does. It is wrapped in `<time datetime="yyyy-mm-dd">`. Formatters are cached per language and options. `sortAs: "date"` sorts by the same ISO day (date-times by their day, ties keep their order); missing and invalid dates go last in both directions, and the first click sorts oldest first. Search looks in the ISO value, as for every cell ("2026-06" finds June), not the shown text ("Jun" doesn't). No compare badge.
 - **Sorting:** clicking a sortable header toggles the direction and raises `sort-change`. In `client` mode the table also sorts itself.
-- **Paging:** the footer has "Show rows" (10, 25, 50, 100) and "1–10 of 272". It raises `page-change` with `{ page, pageSize }`, and in `client` mode it also pages itself. The footer is hidden when everything fits on one page.
-- **Search:** `uan-data-table` exports `uan-table-search` for the toolbar. It raises `search` with `{ query }`, 300ms after typing stops. In `client` mode the table filters rows on any `text` or `link` column.
-- **Rows:** a row is clickable only when the product listens for `row-click`. Then it's keyboard-reachable and raises `row-click` with `{ row }`.
+- **Paging:** the footer is an internal compact pager (`uaui-compact-pager`, no table wording; its text comes from the `pager*` keys, so a product rewords it with its own localization). It has "Per page" (10, 25, 50, 100) and "1–10 of 272". It is a navigation landmark named "Pagination", or "{label}, pagination" when the table has a `label` (the table passes it on), so two paged tables on one page don't repeat a landmark. It raises `page-change` with `{ page, pageSize }`, and in `client` mode it also pages itself. The footer is hidden when the rows fit on one page at the smallest page size the editor could need (row count ≤ the smaller of the current page size and 10), so a table at 50 rows per page can still go back to 10. **New rows:** by default a new `rows` array keeps `page`, and a page past the last one shows the last (the `page` property keeps its value; only what is drawn is clamped). With `reset-page-on-rows` set, in `client` mode, a new `rows` array (another array, not the same one re-assigned or changed in place) sets `page` to 1, for a product that reloads its rows for a new date range. A `page` set in the same update as the new rows wins, and the first render never resets, so a page a product restores with its first rows is kept. It raises no `page-change`, as a sort or search going back to page 1 raises none: the product replaced the rows, so a product that stores the page sets its own to 1 too. `server` mode ignores it, as the product loads each page (`UauiTableServerController` has `reload({ resetPage })`). The mode is the one in the update the new rows arrive in: switching from `client` to `server` with new rows in one update doesn't reset, from `server` to `client` does. Keep the rows array stable: a binding like `.rows=${data.map(...)}` makes a new array on every host render, so with the flag on any unrelated re-render jumps to page 1. Work the rows out when the data changes and bind that array, as the Commerce example does in `willUpdate`. A sort or search goes back to page 1 whatever the setting, as before.
+- **Search:** The package exports `uaui-search-field` for the table's toolbar slots. It raises `search` with `{ query }`, 300ms after typing stops. In `client` mode the table filters rows on columns marked `searchable`; if none are marked, on every column's text.
+- **`UauiTableServerController`** (public) runs the server side of a `server` table, so a page doesn't write the wiring again. It is a Lit `ReactiveController` that works on any host: create it on the page, attach it with `${ref(controller.attach)}`, and don't bind the properties it sets.
+  - **Options:** `load(state, signal)` (required, returns the rows and any fields of your own), `sort`, `page` (default 1), `pageSize` (default 10), `query`, `onError(error)` and `retryable` (default true).
+  - **Sets on the table:** `mode="server"`, `sort`, `page`, `pageSize`, `query`, `rows`, `compareRows`, `totalRows`, `stats`, `loading`, `error` and `retryable`. `result` hands back the last good answer with your own fields.
+  - **When it loads:** when the host connects, and on the table's `sort-change`, `page-change` and `search`. A sort or search goes back to page 1, and a search with the same query loads nothing. `reload({ resetPage })` is for changes it can't see, such as the date range.
+  - **Newer wins:** a newer request aborts the one before it (the `AbortSignal` passed to `load`), and a late answer is also dropped by a request counter, because a loader may ignore the signal. An aborted request is not an error.
+  - **Failure:** any other rejection sets `error` (on the controller and the table), keeps the old rows in `result`, clears `loading` and calls `onError`. The table's `retry` calls `reload()`. The error clears when the next request starts, so a retry shows the skeleton or the old rows under a loading bar.
+  - **Disconnected host:** it starts nothing (`reload` and table events do nothing). The host leaving aborts the request, and the state is loaded as it is on reconnect.
+- **Rows:** a row is clickable only when the product sets `clickable-rows` (an element can't tell whether `row-click` has a listener). Then it's keyboard-reachable (Enter or Space) and raises `row-click` with `{ row }`. Clicks on links and buttons inside a row stay with them.
 
-### 8. `uan-empty-state` and loading
+### 8. `uaui-empty-state`, `uaui-error-state` and loading
 
-- **`uan-empty-state`:** properties `headline`, `description`, `icon`. The data elements use it when they have no data. A product can also place it on its own.
+- **`uaui-empty-state`:** properties `headline`, `description`, `icon`. The data elements use it when they have no data. A product can also place it on its own.
+- **`uaui-error-state`:** a separate public element (not a variant of the empty state: an error needs a role, a Retry action and an event). Same layout and look as the empty state, with an alert icon.
+  - Properties: `headline`, `description`, `icon` and `retryable` (default false).
+  - Without `headline` or `description` it shows "Something went wrong" and "The data could not be loaded." An empty string hides that line.
+  - `retryable` shows a Retry button that raises `retry` (a plain `Event`, bubbling, not composed, no detail). Without it there is no button.
+  - The text is announced when it appears (`role="alert"`).
+  - The chart and table show it when `error` is set. The KPI tile shows a dash instead.
 - **Loading:** each data element (chart, table, KPI tile) has a `loading` property.
   - On first load it shows a skeleton the same size as the loaded element, so the page doesn't jump.
   - While reloading with data already shown, the old data stays visible under a thin loading bar at the top.
 
 ### 9. Theme and localization
 
-- Exports the series and tint tokens as CSS custom properties on each element's `:host`. Products can override them on a parent element.
-- Ships `en` translations for every built-in string under `uanAnalytics_*`. Products can override them with their own `localization` extension.
+- Products override the `--uaui-*` colour names on any parent element. Elements read resolved `--uaui-color-*` copies (ARCHITECTURE.md decision 6). Default colours have a light and a dark shade, each at least 3:1 against the surface.
+- Ships `en` translations for its own strings under `uauiAnalytics_*`. Generic verbs reuse Umbraco's keys (`buttons_save`, `general_close`, `general_loading`, `general_search`), so they're translated wherever the backoffice is. The package's `localization` extension has weight 200, so a product's own `localization` extension at the default weight (100) always overrides it.
+
+### 10. `uaui-funnel`: conversion funnel
+
+![Funnel with comparison](../../design/funnel/funnel-compare.png)
+![Funnel tooltip](../../design/funnel/funnel-compare-tooltip.png)
+
+Design: [`docs/design/funnel`](../../design/funnel/README.md) (no comparison, comparing, tooltip, dark). Source: the "C2" boards on the [funnel canvas](https://claude.ai/artifact/SeWMqQ9vaifk1Yb9Qej2pH) (private; ask for access), where the other boards are rejected options kept for the record.
+
+Used by Engage (conversion funnel beside the orders chart, about 360px wide) and Commerce (cart conversion box, about 560px). Commerce's `cart-conversion-rates` endpoint already returns its three steps (carts created, reached checkout, finalized) for both periods.
+
+- Properties:
+  - `steps` (`UauiFunnelStep[]`, in funnel order)
+  - `compare-steps` (`UauiFunnelStep[]`, matched to `steps` by `id`)
+  - `current-label`, `compare-label`: the two periods' names for the legend and tooltip (e.g. from `uauiFormatDateRange`). Not `label`: in UUI and in `uaui-kpi-tile` and `uaui-stat`, `label` names the element itself.
+  - `value-format` (`Intl.NumberFormatOptions`, for the counts)
+  - `loading`
+  - `empty-headline`, `empty-description`
+  - `error`, `error-headline`, `error-description`, `retryable`: as on the chart (§4), with the same error > loading > empty precedence
+- **Layout:** one row per step: the label on the left, a centred bar in the middle, the count on the right (tabular figures, right-aligned). Labels wrap; the count column never does. It works from 280px wide.
+- **Bars:** width is the step's value against the largest value in `steps` and `compare-steps`, so bars are honest and both periods share one scale. One colour, `--uaui-color-bar-1`. A value above 0 always draws at least 2px. A step of 0 draws no bar.
+- **Links between steps:** a pale trapezoid joins each bar to the next (decoration, a light neutral tint). On it sits the share that moved on: this step's value divided by the previous step's, as a percent with one decimal (`Intl`). When the previous step is 0 it shows a dash. The link is 36px tall, so the rate line clears the bars and the brackets' 5px overhang above and below.
+- **What stays off the main view:** % of the first step and per-step count changes, which are in the tooltip and the hidden table, and "dropped off" counts (the previous step's value minus this one, or 0 when this step is larger than the previous one, as Engage steps that are not strict subsets can be), which are in the hidden table only.
+- **Comparison** (when `compare-steps` is set):
+  - Each matched step with a compare value above 0 gets a bracket at the compare value's width: 2px `--uaui-color-compare` lines at both ends, 5px taller than the bar above and below, with a 1px `--uui-color-surface` gap on each side so it shows inside the bar too.
+  - Each link gets a small `uaui-delta-badge` (`size="sm"`, `unit="points"`) for this period's step rate against the compare one. The badge sits on the surface colour, not the link's tint, so its text keeps 4.5:1.
+  - A legend sits above the bars: a small solid bar with `current-label`, and a small neutral bar with a compare tick at each end (a copy of the brackets) with `compare-label`. The tooltip uses the same swatches. With no comparison there is no legend, as for a single-series chart.
+  - A step with no match in `compare-steps` gets no bracket and no badge.
+- **Overall conversion** is not drawn by the funnel. The pane recipe (§1) puts it in the `uui-box` `header-actions` slot with `<uaui-stat layout="inline">` (label "Overall", the last step over the first as the value, `delta-unit="points"` with `current` and `previous`). The funnel story shows the recipe.
+- **Tooltip:** hovering a row, or focusing it, shows the chart's dark tooltip (shared placement helper), in the chart tooltip's layout: the step label, this period's count, the compare count with a % change badge, % of the first step ("Of {0}", the first step's label, e.g. "Of Visitors"), and the share from the previous step. No drop-off count. It opens below the step's bar, centred on it; above when below would overflow the element and above fits; otherwise on the side with more room. Then it is kept inside the element: never past its top, bottom, left or right edge.
+- **Keyboard:** the rows are one tab stop. Up and Down move between steps (roving `tabindex`), and the focused step shows its tooltip. Escape hides it.
+- **Loading:** a skeleton with one grey bar per step (the length of `steps`, or 4 when there are none yet) at the loaded height. Reloading keeps the old funnel under the loading bar.
+- **Empty:** no steps, or a first step of 0, shows `uaui-empty-state`.
+- **Accessibility:** a visually hidden table holds step, count, % of first step, share from the previous step and dropped off (never below 0), plus the compare count, share and dropped off when comparing. The first step's "from previous" cells are blank; any other missing figure (where the funnel shows a dash, or a step has no compare value) reads "No value". The visible element is a labelled group ("Funnel"). Each step is named "{label}: {value}" and has an `aria-describedby` description with the tooltip's facts, since the tooltip is `aria-hidden`: "{current-label}: {value}", then when comparing "{compare-label}: {compare value}, {change}, {improvement / decline / no change}" (just "{compare-label}: {compare value}" when the tooltip shows no badge), then for later steps "Of {first step}: {share}" and "From previous step: {share or No value}", joined by ". ". The description is `hidden` (read only through `aria-describedby`), so the reading order, which already has the table, doesn't get it twice; it is rebuilt with the data.
+- **Localization:** new keys for the group name, the hidden table caption and headers (including "Of first step" and "Dropped off"), its "No value" cell, the tooltip lines ("Of {0}", "From previous step"), and the step description's lines and separator (`funnelDescription*`; the change words reuse the delta badge's keys). Generic words reuse Umbraco keys.
+- No events in v1. A `step-click` can be added later without breaking anything.
 
 ### The five moments
 
 | Moment | Applies? | What the elements do |
 |---|---|---|
-| First run | Yes | Data elements show `uan-empty-state` with the product's `empty-headline` and `empty-description`. Defaults: "No data yet" / "Try a wider date range." |
+| First run | Yes | Data elements show `uaui-empty-state` with the product's `empty-headline` and `empty-description`. Defaults: "No data yet" / "Try a wider date range." |
 | The mistake | Date range only | Inline field error, Save disabled. The other elements take no input that can be wrong. |
+| An error | Yes | The chart and table show `uaui-error-state`, with Retry when `retryable`. The tile shows a dash. Error wins over loading and empty. |
 | The wait | Yes | A skeleton on first load. On reload, the old data stays under a loading bar. |
 | The finish | Date range only | The dialog closes and the button shows the new range. No toast: the data updating is the confirmation. |
 | The return | Product's job | Elements don't store state. Products keep the date range, group-by, sort and page size between visits. `change` events carry everything needed to save them. |
 
 ### Later: not in v1
 
-**`uan-funnel` (conversion funnel).** Parked until a product commits to using it. Today none does:
+The funnel moved into v1 (§10).
 
-- Engage's funnel is on Campaign Reporting, which exists only in the design.
-- Commerce's cart conversion widget is a line chart and a table. A funnel would mean redesigning it.
+**Pane grid (maybe).** The Commerce example lays its boxes out in a two-column grid where each box takes one column or both (`span`), collapsing to one column on narrow pages. That is one example arrangement, not a package layout: page layout stays with each product (BRIEF non-goals). Only Commerce wants columns today; revisit a shared grid element if Engage or AI do too. Adding it later is a new element, so it won't break anything.
 
-When it comes back, the starting point is [`funnel-final.png`](../../design/phase-1/screenshots/funnel-final.png) and the "Conversion funnel" notes in [`design-notes.md`](../../design/phase-1/design-notes.md). Confirm with design which label style is final, the banners in `funnel-final.png` or the plain labels in `commerce-final.png`. Adding it is a new element, so it won't break anything.
+**KPI tile sub-count (maybe).** A small line under a tile's figure (e.g. "38 of 284 carts"). Only Commerce's abandoned carts wants it, and its example shows those counts in a two-step funnel instead. Revisit if a second product needs it.
 
 ## Non-functional targets
 
 - **Accessibility:** zero axe violations in every story, in light and dark. Every interactive part (KPI tile when selectable, markers, group-by, sort headers, pager, rows) is reachable and usable by keyboard.
 - **Contrast:** text, badges and chart labels are at least 4.5:1 against their background in light, dark and high-contrast.
-- **Public API:** no Chart.js type appears in `api/ui.api.md`.
-- > ASSUMPTION: the chart renders 6 series × 366 daily points in under 100ms on a mid-range laptop.
-- > ASSUMPTION: in `client` mode the table stays responsive (sort or page in under 50ms) up to 1,000 rows. Above that, products use `server` mode.
-- > ASSUMPTION: the built bundle, including Chart.js, is under 120 KB gzipped.
+- **Public API:** no Chart.js type appears in `api/analytics-ui.api.md`.
+- **Chart speed:** the chart renders 6 series × 366 daily points in under 100ms on a mid-range laptop.
+- **Table speed:** in `client` mode the table stays responsive (sort or page in under 50ms) up to 1,000 rows. Above that, products use `server` mode.
+- **Bundle size:** the built bundle, including Chart.js, is under 120 KB gzipped.
+
+The last three were agreed by the user on 30-10-2026 after T23 measured them. `test:perf` and `check:size` guard them in CI.

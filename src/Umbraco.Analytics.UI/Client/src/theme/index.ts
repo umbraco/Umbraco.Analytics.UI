@@ -1,2 +1,2 @@
-// Placeholder. See the proposal for what belongs here.
-export {};
+export * from "./tokens.css.js";
+export type { UauiColorSlot } from "./types.js";

@@ -1,8 +1,16 @@
 // CHT-2 — Compare with another period
-import { beforeEach, describe, expect, it } from "vitest";
+// Canvas-only outcomes are checked with screenshot comparison (toMatchScreenshot): see screenshotIt.
+import { Chart } from "chart.js";
+/// <reference types="vite/client" />
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { page, userEvent } from "vitest/browser";
 import { html } from "@umbraco-cms/backoffice/external/lit";
-import { renderElement, shadow, type UanTestElement } from "../internal/test/pending.js";
+import darkCss from "@umbraco-ui/uui/themes/dark.css?inline";
+import { render } from "vitest-browser-lit";
+import { screenshotIt } from "../internal/test/screenshot.js";
+import { deepQuery, deepText, renderElement, shadow, type UauiTestElement } from "../internal/test/dom.js";
+import type { UauiDeltaBadgeElement } from "../delta-badge/delta-badge.element.js";
+import "./time-series-chart.element.js";
 
 const current = { id: "pv", label: "Pageviews", points: [
     { date: "2026-05-25", value: 60 }, { date: "2026-05-26", value: 90 }, { date: "2026-05-27", value: 120 },
@@ -12,48 +20,187 @@ const previous = { id: "pv", label: "Pageviews", points: [
 ] };
 const compareLabel = "Apr 25, 2026 – May 24, 2026";
 
-const renderChart = () =>
+const renderChart = (kind = "line") =>
     renderElement(
-        html`<uan-time-series-chart kind="line" .series=${[current]} .compareSeries=${[previous]}
-            compare-label=${compareLabel} style="width:600px"></uan-time-series-chart>`,
-        "uan-time-series-chart",
+        html`<uaui-time-series-chart kind=${kind} .series=${[current]} .compareSeries=${[previous]}
+            compare-label=${compareLabel} style="width:400px"></uaui-time-series-chart>`,
+        "uaui-time-series-chart",
     );
+
+const legendText = (el: Element) => deepText(deepQuery(shadow(el), "uaui-chart-legend")!);
+const tooltip = (el: Element) => shadow(el).querySelector("uaui-chart-tooltip") as HTMLElement;
 
 describe("Feature: compare with another period", () => {
     describe("Scenario: a line chart with a compare series", () => {
-        let el: UanTestElement;
+        let el: UauiTestElement;
         beforeEach(async () => {
             el = await renderChart();
         });
 
-        it.skip("draws the compare series as a dashed --uan-compare line", async () => {
-            await expect.element(page.elementLocator(el)).toMatchScreenshot("chart-compare-dashed");
+        screenshotIt("draws a dashed --uaui-compare line with the gap to the series shaded", async () => {
+            await expect.element(page.elementLocator(el)).toMatchScreenshot("chart-compare-dashed-gap");
         });
 
-        it.skip("shades the gap between the lines", async () => {
-            await expect.element(page.elementLocator(el)).toMatchScreenshot("chart-compare-gap");
+        it("puts the first compare point under the first current point", () => {
+            expect(deepQuery<HTMLTableElement>(shadow(el), "table")!.tBodies[0].rows[0].textContent).toMatch(/60[\s\S]*50/);
         });
 
-        it.skip("puts the first compare point under the first current point", () => {
-            expect(shadow(el).querySelector("table")!.tBodies[0].rows[0].textContent).toMatch(/60[\s\S]*50/);
+        it("shows the compare range in the legend", () => {
+            expect(legendText(el)).toContain(compareLabel);
         });
 
-        it.skip("shows the compare range in the legend", () => {
-            expect(shadow(el).querySelector("[part~='legend']")?.textContent).toContain(compareLabel);
+        it("names the compare column in the hidden table", () => {
+            expect(deepQuery(shadow(el), "table thead")?.textContent).toContain("Pageviews (compare)");
+        });
+    });
+
+    describe("Scenario: hovering a date whose compare value is 0", () => {
+        it("shows no change badge in the compare row", async () => {
+            const zero = { ...previous, points: previous.points.map((point) => ({ ...point, value: 0 })) };
+            const el = await renderElement(
+                html`<uaui-time-series-chart .series=${[current]} .compareSeries=${[zero]} style="width:400px"></uaui-time-series-chart>`,
+                "uaui-time-series-chart",
+            );
+            const canvas = shadow(el).querySelector("canvas")!;
+            const x = Chart.getChart(canvas)!.getDatasetMeta(0).data[2].x;
+            await userEvent.hover(page.elementLocator(canvas), { position: { x, y: canvas.getBoundingClientRect().height / 2 } });
+            await expect.poll(() => tooltip(el)?.style.visibility).toBe("visible");
+            expect(deepQuery(tooltip(el).shadowRoot!, ".tooltip-compare uaui-delta-badge")).toBeNull();
+        });
+    });
+
+    describe("Scenario: a line chart with a compare series in the dark theme", () => {
+        let theme: HTMLStyleElement;
+        let host: HTMLElement;
+        beforeEach(async () => {
+            theme = document.createElement("style");
+            theme.textContent = darkCss;
+            document.head.appendChild(theme);
+            host = render(
+                html`<div style="background: var(--uui-color-surface); width: 400px">
+                    <uaui-time-series-chart kind="line" .series=${[current]} .compareSeries=${[previous]}
+                        compare-label=${compareLabel}></uaui-time-series-chart>
+                </div>`,
+            ).container.querySelector("div")!;
+            await host.querySelector("uaui-time-series-chart")!.updateComplete;
+        });
+        afterEach(() => theme.remove());
+
+        screenshotIt("shades the gap so it can be seen on the dark surface", async () => {
+            await expect.element(page.elementLocator(host)).toMatchScreenshot("chart-compare-gap-dark");
+        });
+    });
+
+    describe("Scenario: an area chart with a compare series", () => {
+        let el: UauiTestElement;
+        beforeEach(async () => {
+            el = await renderChart("area");
+        });
+
+        screenshotIt("shades the gap instead of filling under the line", async () => {
+            await expect.element(page.elementLocator(el)).toMatchScreenshot("chart-compare-area");
         });
     });
 
     describe("Scenario: hovering a date while comparing", () => {
-        let el: UanTestElement;
+        let el: UauiTestElement;
         beforeEach(async () => {
             el = await renderChart();
             const canvas = shadow(el).querySelector("canvas")!;
-            const box = canvas.getBoundingClientRect();
-            await userEvent.hover(page.elementLocator(canvas), { position: { x: box.width - 2, y: box.height / 2 } });
+            const x = Chart.getChart(canvas)!.getDatasetMeta(0).data[2].x;
+            await userEvent.hover(page.elementLocator(canvas), { position: { x, y: canvas.getBoundingClientRect().height / 2 } });
+            await expect.poll(() => tooltip(el)?.style.visibility).toBe("visible");
         });
 
-        it.skip("shows the current value, the compare value and a change badge", () => {
-            expect(shadow(el).querySelector("[part~='tooltip'] uan-delta-badge")).not.toBe(null);
+        it("shows the current value", () => {
+            expect(deepQuery(tooltip(el).shadowRoot!, ".tooltip-value")?.textContent).toBe("120");
+        });
+
+        it("shows the compare value", () => {
+            expect(deepQuery(tooltip(el).shadowRoot!, ".tooltip-compare .tooltip-value")?.textContent).toBe("110");
+        });
+
+        it("names the compare point by its own date", () => {
+            expect(deepQuery(tooltip(el).shadowRoot!, ".tooltip-compare .tooltip-sub")?.textContent).toMatch(/Apr.*27|27.*Apr/);
+        });
+
+        it("shows the change as a badge", () => {
+            const badge = deepQuery(tooltip(el).shadowRoot!, "uaui-delta-badge") as UauiDeltaBadgeElement;
+            expect(deepText(badge)).toContain("+9.1%");
+        });
+    });
+
+    describe("Scenario: hovering a date with long series labels", () => {
+        it("keeps the labels inside the tooltip", async () => {
+            const long = "Pageviews from organic search, paid campaigns and direct visits";
+            const el = await renderElement(
+                html`<uaui-time-series-chart kind="line" .series=${[{ ...current, label: long }, { ...current, id: "b", label: "Sessions" }]}
+                    .compareSeries=${[previous]} compare-label=${compareLabel} style="width:400px"></uaui-time-series-chart>`,
+                "uaui-time-series-chart",
+            );
+            const canvas = shadow(el).querySelector("canvas")!;
+            const x = Chart.getChart(canvas)!.getDatasetMeta(0).data[2].x;
+            await userEvent.hover(page.elementLocator(canvas), { position: { x, y: canvas.getBoundingClientRect().height / 2 } });
+            await expect.poll(() => tooltip(el)?.style.visibility).toBe("visible");
+            const label = deepQuery(tooltip(el).shadowRoot!, ".tooltip-label")!.getBoundingClientRect();
+            expect(label.right).toBeLessThanOrEqual(tooltip(el).getBoundingClientRect().right);
+        });
+    });
+    describe("Scenario: hovering a week while the compare weeks are offset", () => {
+        it("shows the matched compare date", async () => {
+            const weeks = { id: "pv", label: "Pageviews", points: [{ date: "2026-06-01", value: 1 }, { date: "2026-06-08", value: 2 }] };
+            const before = { id: "pv", label: "Pageviews", points: [{ date: "2026-05-06", value: 5 }, { date: "2026-05-11", value: 6 }] };
+            const el = await renderElement(
+                html`<uaui-time-series-chart kind="line" group-by="week" .series=${[weeks]} .compareSeries=${[before]}
+                    style="width:400px"></uaui-time-series-chart>`,
+                "uaui-time-series-chart",
+            );
+            const canvas = shadow(el).querySelector("canvas")!;
+            const x = Chart.getChart(canvas)!.getDatasetMeta(0).data[1].x;
+            await userEvent.hover(page.elementLocator(canvas), { position: { x, y: canvas.getBoundingClientRect().height / 2 } });
+            await expect.poll(() => tooltip(el)?.style.visibility).toBe("visible");
+            expect(deepQuery(tooltip(el).shadowRoot!, ".tooltip-compare .tooltip-sub")?.textContent).toMatch(/May.*11|11.*May/);
+        });
+    });
+    describe("Scenario: grouped by week with a week start", () => {
+        const weeks = { id: "pv", label: "Pageviews", points: [{ date: "2026-05-31", value: 1 }, { date: "2026-06-07", value: 2 }] };
+        const wedAndSun = { id: "pv", label: "Pageviews", points: [{ date: "2026-05-06", value: 5 }, { date: "2026-05-10", value: 6 }] };
+        const hoverWeek = async (weekStart: string, index: number) => {
+            const el = await renderElement(
+                html`<uaui-time-series-chart kind="line" group-by="week" week-start=${weekStart} .series=${[weeks]} .compareSeries=${[wedAndSun]}
+                    style="width:400px"></uaui-time-series-chart>`,
+                "uaui-time-series-chart",
+            );
+            const canvas = shadow(el).querySelector("canvas")!;
+            const x = Chart.getChart(canvas)!.getDatasetMeta(0).data[index].x;
+            await userEvent.hover(page.elementLocator(canvas), { position: { x, y: canvas.getBoundingClientRect().height / 2 } });
+            await expect.poll(() => tooltip(el)?.style.visibility).toBe("visible");
+            return el;
+        };
+
+        it("aligns the compare point to the Sunday week for a week start of 7", async () => {
+            const el = await hoverWeek("7", 1);
+            expect(deepQuery(tooltip(el).shadowRoot!, ".tooltip-compare .tooltip-sub")?.textContent).toMatch(/May.*10|10.*May/);
+        });
+
+        // The Wednesday (5) and the Sunday (6) are one Monday week, so the first week's compare is 11 and the second has none.
+        const compareValue = (el: Element) => deepQuery(tooltip(el).shadowRoot!, ".tooltip-compare .tooltip-value")?.textContent;
+        const compareRow = (el: Element) => deepQuery(tooltip(el).shadowRoot!, ".tooltip-compare");
+
+        it("adds the Wednesday and the Sunday into the first Monday week for a week start of 1", async () => {
+            expect(compareValue(await hoverWeek("1", 0))).toBe("11");
+        });
+
+        it("has no compare point in the second Monday week for a week start of 1", async () => {
+            expect(compareRow(await hoverWeek("1", 1))).toBeNull();
+        });
+
+        it("reads a week start of 0 as Monday", async () => {
+            expect(compareValue(await hoverWeek("0", 0))).toBe("11");
+        });
+
+        it("reads a week start that is not a number as Monday", async () => {
+            expect(compareValue(await hoverWeek("abc", 0))).toBe("11");
         });
     });
 });

@@ -6,5 +6,7 @@
     "declaration": true,
     "declarationMap": true,
     "emitDeclarationOnly" : true
-  }
+  },
+  "include": [ "src/**/*.ts" ],
+  "exclude": [ "src/**/*.test.ts", "src/**/*.story.ts", "src/internal/test/**", "src/internal/story/**" ]
 }

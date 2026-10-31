@@ -39,13 +39,17 @@ parameters:
     type: boolean
     default: false # SBOM is still generated for release/hotfix branches and release-* tags
 
-# TODO: service connections, release environment and npm scope are placeholders copied from
-# Umbraco.Commerce until the owning team and npm scope are agreed.
+# Runs in the "Umbraco Extensions" Azure DevOps project. NuGet uses the template's default connection names
+# (MyGet - Nightly, MyGet - Pre-releases, NuGet); the project's npm MyGet connections are named below.
+# TODO before the first public npm release: an npmjs.org connection (npm_service_connection, default "NPM").
+# TODO before the first public release: a release approval environment (release_environment) and the
+# Dependency-Track variable group for SBOM uploads (sbom_dt_variable_group); the project has neither yet.
+# The package is @umbraco/analytics-ui, in Umbraco's shared @umbraco npm scope.
 extends:
   template: devops/templates/azure-pipelines-template.yml@build
   parameters:
     product_name: Umbraco.Analytics.UI
-    npm_scope: '@umbraco-analytics'
+    npm_scope: '@umbraco'
     prerelease: ${{ parameters.prerelease }}
     # Prerelease tags (e.g. release-19.0.0-rc.1) only go to MyGet, never NuGet.org/npmjs.org
     ${{ if and(eq(parameters.release, 'auto'), startsWith(variables['Build.SourceBranch'], 'refs/tags/release-'), contains(replace(variables['Build.SourceBranch'], 'refs/tags/release-', ''), '-')) }}:
@@ -64,14 +68,17 @@ extends:
             displayName: Lint, test and build Storybook
             pool:
               vmImage: ubuntu-latest
+            # The Playwright image has Node and all three browsers. Chart screenshot baselines are made in
+            # this same image (npm run test:screenshots), so it must match the playwright version in
+            # package-lock.json and the image in run-in-container.sh and storybook.yml. Bump all of them together.
+            container: mcr.microsoft.com/playwright:v1.64.1-noble
+            variables:
+              # The Umbraco.Build template sets this to a cache folder on the agent, which would hide the
+              # browsers baked into the image, so no browser could launch.
+              PLAYWRIGHT_BROWSERS_PATH: /ms-playwright
             steps:
               - checkout: self
                 fetchDepth: 1
-
-              - task: UseNode@1
-                displayName: Use Node $(nodeVersion)
-                inputs:
-                  version: $(nodeVersion)
 
               - script: npm run ci:install-client
                 displayName: NPM Install
@@ -79,13 +86,15 @@ extends:
               - script: npm run ci:lint-client
                 displayName: Lint
 
-              # PLAYWRIGHT_BROWSERS_PATH is set by the template
-              - script: cd ./src/Umbraco.Analytics.UI/Client && npx playwright install --with-deps chromium firefox webkit
-                displayName: Install Playwright browsers
-
-              # TF_BUILD makes vite.config.ts run every browser engine, not just Chromium
+              # TF_BUILD makes vite.config.ts run every browser engine, not just Chromium. Screenshot specs
+              # run in Chromium on Linux only (the image) and skip in Firefox and WebKit.
               - script: npm run ci:test-client
                 displayName: Run client tests
+
+              # The timing specs run alone (Chromium, one file at a time): sharing the runner with three
+              # engines would make them flaky. vite.config.ts leaves them out of the step above on CI.
+              - script: npm run ci:test-perf-client
+                displayName: Run client performance tests
 
               - task: PublishTestResults@2
                 displayName: Publish test results
@@ -104,14 +113,8 @@ extends:
                 displayName: Publish Storybook artifact
     sbom_generate: ${{ parameters.sbom_generate }}
     sbom_upload: ${{ startsWith(variables['Build.SourceBranch'], 'refs/tags/release-') }}
-    sbom_dt_variable_group: dependency-track
     # The client is bundled into the NuGet package (Chart.js included), so its dependencies ship too
     sbom_npm_paths:
       - src/Umbraco.Analytics.UI/Client
-    nuget_nightly_service_connection: Myget - Umbraco Nightly
-    nuget_prereleases_service_connection: Myget - Umbraco Prereleases
-    nuget_service_connection: Umbraco NuGet
-    release_environment: Umbraco Commerce Release
-    npm_nightly_service_connection: MyGet NPM - Umbraco Nightly
-    npm_prereleases_service_connection: MyGet NPM - Umbraco Preleases
-    npm_service_connection: NPM - Umbraco Commerce Release
+    npm_nightly_service_connection: npm - Nightly
+    npm_prereleases_service_connection: npm - Pre-releases

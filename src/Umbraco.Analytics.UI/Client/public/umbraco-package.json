@@ -2,10 +2,26 @@
   "id": "Umbraco.Analytics.UI",
   "name": "Umbraco Analytics UI",
   "version": "",
-  "extensions": [],
+  "extensions": [
+    {
+      "type": "localization",
+      "alias": "Uaui.Localization.En",
+      "name": "Uaui English",
+      "weight": 200,
+      "js": "/App_Plugins/Umbraco.Analytics.UI/lang/en.js",
+      "meta": { "culture": "en" }
+    },
+    {
+      "type": "modal",
+      "alias": "Uaui.Modal.DateRange",
+      "name": "Uaui Date Range Modal",
+      "element": "/App_Plugins/Umbraco.Analytics.UI/umbraco-analytics-ui.js",
+      "elementName": "uaui-date-range-modal"
+    }
+  ],
   "importmap": {
     "imports": {
-      "@umbraco-analytics/ui": "/App_Plugins/Umbraco.Analytics.UI/umbraco-analytics-ui.js"
+      "@umbraco/analytics-ui": "/App_Plugins/Umbraco.Analytics.UI/umbraco-analytics-ui.js"
     }
   }
 }

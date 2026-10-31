@@ -1,4 +1,4 @@
-import { defineConfig } from "vitest/config";
+import { configDefaults, defineConfig } from "vitest/config";
 import { playwright } from "@vitest/browser-playwright";
 
 // Same browser matrix as Umbraco UI: Chromium locally, all three engines on CI.
@@ -10,9 +10,13 @@ const browserInstances = isCI
 export default defineConfig({
     build: {
         lib: {
-            entry: "src/index.ts",
+            // The translations are a second entry so the backoffice can load lang/en.js on its own.
+            entry: {
+                "umbraco-analytics-ui": "src/index.ts",
+                "lang/en": "src/lang/en.ts",
+            },
             formats: ["es"],
-            fileName: "umbraco-analytics-ui"
+            fileName: (_format: string, entryName: string) => `${entryName}.js`
         },
         outDir: '../wwwroot/',
         emptyOutDir: true,
@@ -25,6 +29,13 @@ export default defineConfig({
     },
     test: {
         include: ["src/**/*.test.ts"],
+        // Timing specs are flaky while three engines share a small CI runner, so CI runs them alone
+        // (`npm run test:perf`, vitest.perf.config.ts). Locally they stay in the normal run.
+        exclude: isCI ? [...configDefaults.exclude, "src/internal/perf/**"] : configDefaults.exclude,
+        // Three browser engines run at once on CI, and a canvas screenshot waits for the chart to settle,
+        // so give a loaded machine more time than the defaults (15s per test, 1s per poll).
+        testTimeout: 30_000,
+        expect: { poll: { timeout: 5_000 } },
         browser: {
             enabled: true,
             provider: playwright(),

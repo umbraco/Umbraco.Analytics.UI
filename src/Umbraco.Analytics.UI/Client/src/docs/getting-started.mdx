@@ -1,0 +1,189 @@
+import { Meta } from "@storybook/addon-docs/blocks";
+
+<Meta title="Guides/Getting started" />
+
+# Getting started
+
+Umbraco Analytics UI is a set of shared backoffice charts, tables, KPI tiles and filters. Engage, Commerce and Umbraco AI use them for their analytics sections, and so can your own backoffice extension.
+
+The components only draw. You fetch the data and pass it in.
+
+## Install
+
+The package comes in two parts.
+
+| Package | Feed | What it does |
+|---|---|---|
+| `Umbraco.Analytics.UI` | NuGet | Puts the components on the site and adds `@umbraco/analytics-ui` to the backoffice import map. Every product on a site shares this one copy. |
+| `@umbraco/analytics-ui` | npm | Types only. Add it as a dev dependency. |
+
+1. Reference the NuGet package from your project, with a range that stays on one CMS major (see [Versioning](?path=/docs/guides-versioning--docs) for why the upper bound is `19.999.999`):
+
+   ```xml
+   <PackageReference Include="Umbraco.Analytics.UI" Version="[19.0.0, 19.999.999)" />
+   ```
+
+2. Add the types as a dev dependency:
+
+   ```bash
+   npm install -D @umbraco/analytics-ui
+   ```
+
+3. Mark it as external in your bundler, so you use the backoffice's copy instead of bundling your own. For Vite:
+
+   ```ts
+   rollupOptions: {
+     external: [/^@umbraco-cms\//, /^@umbraco\/analytics-ui(\/|$)/],
+   }
+   ```
+
+## Import the elements
+
+The import map points `@umbraco/analytics-ui` at the copy on the site. One import registers every `uaui-*` element:
+
+```ts
+import "@umbraco/analytics-ui";
+```
+
+Helpers, types and constants come from the same place:
+
+```ts
+import { uauiDateBuckets, UAUI_TABLE_CELL, type UauiSeries } from "@umbraco/analytics-ui";
+```
+
+In a template, a name that starts with `.`, like `.series`, sets a property. Pass objects and arrays that way.
+
+Put charts and tables in a `uui-box` with `--uui-box-default-padding: 0`. They pad themselves.
+
+## A KPI tile
+
+You format the value. `delta` is the change against the comparison period: `18.7` is +18.7%.
+
+```ts
+html`<uaui-kpi-tile label="Revenue" value="€ 4,837.40" icon="icon-coin-dollar" .delta=${18.7}></uaui-kpi-tile>`;
+```
+
+## A chart with a date range and group by
+
+The date range and the group by switch raise `change`. You load new points when either changes. The chart takes the range and the comparison so the two periods line up.
+
+```ts
+import type {
+  UauiCompare,
+  UauiDateRange,
+  UauiDateRangeChangeDetail,
+  UauiGroupBy,
+  UauiGroupByChangeDetail,
+  UauiSeries,
+} from "@umbraco/analytics-ui";
+
+@state() private _range: UauiDateRange = { from: "2026-06-01", to: "2026-06-30" };
+@state() private _compare?: UauiCompare;
+@state() private _groupBy: UauiGroupBy = "day";
+@state() private _series: UauiSeries[] = [];
+
+render() {
+  return html`<uui-box headline="Visitors" style="--uui-box-default-padding: 0">
+    <uaui-date-range
+      slot="header-actions"
+      .value=${this._range}
+      @change=${(e: CustomEvent<UauiDateRangeChangeDetail>) => {
+        this._range = e.detail.value;
+        this._compare = e.detail.compare;
+        this.#load();
+      }}
+    ></uaui-date-range>
+    <uaui-group-by
+      slot="header-actions"
+      .value=${this._groupBy}
+      @change=${(e: CustomEvent<UauiGroupByChangeDetail>) => {
+        this._groupBy = e.detail.value;
+        this.#load();
+      }}
+    ></uaui-group-by>
+    <uaui-time-series-chart
+      kind="area"
+      group-by=${this._groupBy}
+      .series=${this._series}
+      .range=${this._range}
+      .compare=${this._compare}
+    ></uaui-time-series-chart>
+  </uui-box>`;
+}
+```
+
+Each series is `{ id, label, points: [{ date, value }] }`, with dates as `YYYY-MM-DD`. Points are not grouped for you: send one point per bucket, at the bucket's first day. `uauiDateBuckets` (below) gives you those buckets.
+
+For a metric where a fall is good (refund rate, bounce rate, average duration), add `lower-is-better` to the chart, as on `uaui-kpi-tile`. The gap shading against the compare line and the change badges in the tooltip then read a fall as good. It covers every series and the total, since one chart shows one metric.
+
+## A table
+
+Each column names the cell that shows it.
+
+```ts
+import { UAUI_TABLE_CELL, type UauiTableColumn, type UauiTableRowClickDetail } from "@umbraco/analytics-ui";
+
+const columns: UauiTableColumn[] = [
+  { key: "title", label: "Page", elementName: UAUI_TABLE_CELL.link, meta: { hrefKey: "url" }, searchable: true },
+  { key: "views", label: "Views", elementName: UAUI_TABLE_CELL.share, align: "end", sortable: true, sortAs: "number" },
+];
+const rows = [{ title: "Home", url: "https://example.com/", views: 1240 }];
+
+html`<uaui-data-table
+  label="Top pages"
+  .columns=${columns}
+  .rows=${rows}
+  row-key="url"
+  clickable-rows
+  @row-click=${(e: CustomEvent<UauiTableRowClickDetail>) => this.#open(e.detail.row)}
+></uaui-data-table>`;
+```
+
+`row-key` names the field that identifies a row, so `compareRows` (last period's rows) can be matched to `rows`. When it takes more than one field, set the property to an array, such as `.rowKey=${["productReference", "productVariantReference"]}`: a row matches when every field matches, and a field a row lacks counts as empty.
+
+Replace `rows` and `columns` with new arrays to update the table. Changing them in place isn't noticed.
+
+## Date helpers
+
+Small functions for the dates around the picker, so each product doesn't write its own. A range is `{ from, to }` in ISO dates: a `UauiDateRange` or a `UauiCompare` fits. A range that isn't valid (an unreal date, or `to` before `from`) gives `undefined`, or an empty list for the day and bucket helpers.
+
+```ts
+import { uauiCompareFor, uauiDateBuckets, uauiFormatDateRange } from "@umbraco/analytics-ui";
+
+const range = { from: "2026-05-25", to: "2026-06-23" };
+const compare = uauiCompareFor("previous-period", range); // { mode, from: "2026-04-25", to: "2026-05-24" }
+
+// One chart point per bucket, plotted at the bucket's `start`.
+const points = uauiDateBuckets(range, "week").map(({ start, days }) => ({ date: start, value: sum(days) }));
+
+// The label `uaui-date-range` shows, for the chart's compareLabel. Pass your element's `this.localize`.
+html`<uaui-time-series-chart .compareLabel=${compare && uauiFormatDateRange(this.localize, compare)}></uaui-time-series-chart>`;
+```
+
+| Function | Gives |
+|---|---|
+| `uauiPreviousPeriod(range)` | The same number of days straight before `range`. |
+| `uauiPreviousYear(range)` | The same dates one year earlier. |
+| `uauiCompareFor(mode, range)` | A `UauiCompare` for `previous-period` or `previous-year`. `undefined` for `custom`. |
+| `uauiDaysIn(range)` | Every ISO date in `range`, both ends included. |
+| `uauiDateBuckets(range, groupBy, { weekStart })` | `{ start, days }[]` for `day`, `week` or `month`, the same buckets `uaui-group-by` offers. |
+| `uauiFormatDateRange(localize, range, { showYear })` | Text such as "May 25, 2026 to Jun 23, 2026" in the user's culture. |
+
+Weeks start on Monday. For another first day, pass `weekStart` to `uauiDateBuckets` and the same value as `week-start` on the chart. It is 1 (Monday) to 7 (Sunday), like `new Intl.Locale(culture).getWeekInfo().firstDay`. Any other value is read as Monday.
+
+## Full pages
+
+These pages rebuild the Commerce, Engage and Umbraco AI analytics screens from the elements, with the code beside each:
+
+- [Commerce](?path=/docs/examples-pages-commerce--docs)
+- [Engage](?path=/docs/examples-pages-engage--docs)
+- [Umbraco AI](?path=/docs/examples-pages-umbraco-ai--docs)
+
+More worked examples are under Examples in the sidebar, such as a [custom table cell](?path=/docs/examples-custom-cell-with-table-context--docs) and a [server-side paged table](?path=/docs/examples-paged-server--docs).
+
+## Next
+
+- [Theming and palette](?path=/docs/guides-theming-and-palette--docs)
+- [Events, loading and errors](?path=/docs/guides-events-loading-and-errors--docs)
+- [Translations](?path=/docs/guides-translations--docs)
+- [Versioning](?path=/docs/guides-versioning--docs)

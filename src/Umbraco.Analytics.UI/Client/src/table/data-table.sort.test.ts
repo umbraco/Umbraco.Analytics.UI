@@ -1,55 +1,70 @@
 // TBL-2 — Sort by a column
+/// <reference types="vite/client" />
 import { beforeEach, describe, expect, it } from "vitest";
-import { html } from "@umbraco-cms/backoffice/external/lit";
-import { nextEvent, recordEvents, renderElement, shadow, type UanTestElement } from "../internal/test/pending.js";
+import { html, ifDefined } from "@umbraco-cms/backoffice/external/lit";
+import "@umbraco-cms/backoffice/external/uui";
+import darkCss from "@umbraco-ui/uui/themes/dark.css?inline";
+import highContrastCss from "@umbraco-ui/uui/themes/high-contrast.css?inline";
+import { render } from "vitest-browser-lit";
+import { axeRun } from "../internal/test/a11y.js";
+import { deepQueryAll, deepText, nextEvent, recordEvents, renderElement, shadow, type UauiTestElement } from "../internal/test/dom.js";
+import "./data-table.element.js";
 import { nameColumns } from "./table-fixtures.js";
+import { UAUI_TABLE_CELL } from "./cells/cell-names.js";
 
 const rows = [{ name: "Contact", views: 62 }, { name: "Home", views: 210 }];
 const header = (el: Element, label: string) =>
     [...shadow(el).querySelectorAll("uui-table-head-cell")].find((h) => h.textContent?.includes(label)) as HTMLElement;
-const firstName = (el: Element) => shadow(el).querySelector("uui-table-row:not([part~='header']) uui-table-cell")?.textContent?.trim();
+const firstName = (el: Element) => deepText(shadow(el).querySelector("uui-table-row:not([part~='header']):not(.column-toolbar) uui-table-cell")!).trim();
+const names = (el: Element) =>
+    [...shadow(el).querySelectorAll("uui-table-row:not(.column-toolbar) uui-table-cell:first-child")].map((c) => deepText(c).trim());
+const sortButton = (el: Element, label: string) => header(el, label).querySelector("uaui-table-sort-button")?.shadowRoot?.querySelector("button") as HTMLButtonElement;
+const textColumns = [
+    { key: "name", label: "Name", sortable: true },
+    { key: "views", label: "Views", elementName: UAUI_TABLE_CELL.number, sortable: true, sortAs: "number", align: "end" },
+];
 
 describe("Feature: sort by a column", () => {
     describe("Scenario: clicking a sortable header", () => {
         let detail: unknown;
         beforeEach(async () => {
             const el = await renderElement(
-                html`<uan-data-table .columns=${nameColumns} .rows=${rows} .sort=${{ key: "views", direction: "desc" }}></uan-data-table>`,
-                "uan-data-table",
+                html`<uaui-data-table .columns=${nameColumns} .rows=${rows} .sort=${{ key: "views", direction: "desc" }}></uaui-data-table>`,
+                "uaui-data-table",
             );
             const event = nextEvent(el, "sort-change");
             header(el, "Views").click();
             detail = (await event).detail;
         });
 
-        it.skip("raises sort-change with the other direction", () => {
+        it("raises sort-change with the other direction", () => {
             expect(detail).toEqual({ key: "views", direction: "asc" });
         });
     });
 
     describe("Scenario: client mode", () => {
-        let el: UanTestElement;
+        let el: UauiTestElement;
         beforeEach(async () => {
             el = await renderElement(
-                html`<uan-data-table mode="client" .columns=${nameColumns} .rows=${rows} .sort=${{ key: "views", direction: "desc" }}></uan-data-table>`,
-                "uan-data-table",
+                html`<uaui-data-table mode="client" .columns=${nameColumns} .rows=${rows} .sort=${{ key: "views", direction: "desc" }}></uaui-data-table>`,
+                "uaui-data-table",
             );
         });
 
-        it.skip("puts the most-viewed row first", () => {
+        it("puts the most-viewed row first", () => {
             expect(firstName(el)).toBe("Home");
         });
     });
 
     describe("Scenario: server mode", () => {
-        let el: UanTestElement;
+        let el: UauiTestElement;
         beforeEach(async () => {
-            el = await renderElement(html`<uan-data-table mode="server" .columns=${nameColumns} .rows=${rows}></uan-data-table>`, "uan-data-table");
+            el = await renderElement(html`<uaui-data-table mode="server" .columns=${nameColumns} .rows=${rows}></uaui-data-table>`, "uaui-data-table");
             header(el, "Views").click();
             await el.updateComplete;
         });
 
-        it.skip("keeps the rows in the order given", () => {
+        it("keeps the rows in the order given", () => {
             expect(firstName(el)).toBe("Contact");
         });
     });
@@ -57,13 +72,236 @@ describe("Feature: sort by a column", () => {
     describe("Scenario (sad path): a column that isn't sortable", () => {
         let events: Event[];
         beforeEach(async () => {
-            const el = await renderElement(html`<uan-data-table .columns=${nameColumns} .rows=${rows}></uan-data-table>`, "uan-data-table");
+            const el = await renderElement(html`<uaui-data-table .columns=${nameColumns} .rows=${rows}></uaui-data-table>`, "uaui-data-table");
             events = recordEvents(el, "sort-change");
             header(el, "Name").click();
         });
 
-        it.skip("raises no sort-change", () => {
+        it("raises no sort-change", () => {
             expect(events).toHaveLength(0);
+        });
+    });
+
+    describe("Scenario: the sort indicator", () => {
+        it("marks the sorted column aria-sort descending", async () => {
+            const el = await renderElement(
+                html`<uaui-data-table .columns=${nameColumns} .rows=${rows} .sort=${{ key: "views", direction: "desc" }}></uaui-data-table>`,
+                "uaui-data-table",
+            );
+            expect(header(el, "Views").getAttribute("aria-sort")).toBe("descending");
+        });
+
+        it("marks an unsorted sortable column aria-sort none", async () => {
+            const el = await renderElement(html`<uaui-data-table .columns=${nameColumns} .rows=${rows}></uaui-data-table>`, "uaui-data-table");
+            expect(header(el, "Views").getAttribute("aria-sort")).toBe("none");
+        });
+
+        it("gives a column that isn't sortable no aria-sort", async () => {
+            const el = await renderElement(html`<uaui-data-table .columns=${nameColumns} .rows=${rows}></uaui-data-table>`, "uaui-data-table");
+            expect(header(el, "Name").hasAttribute("aria-sort")).toBe(false);
+        });
+
+        it("updates aria-sort after a click", async () => {
+            const el = await renderElement(
+                html`<uaui-data-table .columns=${nameColumns} .rows=${rows} .sort=${{ key: "views", direction: "desc" }}></uaui-data-table>`,
+                "uaui-data-table",
+            );
+            header(el, "Views").click();
+            await el.updateComplete;
+            expect(header(el, "Views").getAttribute("aria-sort")).toBe("ascending");
+        });
+
+        it("sets the sort property itself", async () => {
+            const el = await renderElement(html`<uaui-data-table .columns=${nameColumns} .rows=${rows}></uaui-data-table>`, "uaui-data-table");
+            header(el, "Views").click();
+            expect(el.sort).toEqual({ key: "views", direction: "desc" });
+        });
+    });
+
+    describe("Scenario: a keyboard user sorts", () => {
+        it("has a button in a sortable header", async () => {
+            const el = await renderElement(html`<uaui-data-table .columns=${nameColumns} .rows=${rows}></uaui-data-table>`, "uaui-data-table");
+            expect(sortButton(el, "Views")).toBeInstanceOf(HTMLButtonElement);
+        });
+
+        it("raises sort-change once when the button is activated", async () => {
+            const el = await renderElement(html`<uaui-data-table .columns=${nameColumns} .rows=${rows}></uaui-data-table>`, "uaui-data-table");
+            const events = recordEvents(el, "sort-change");
+            sortButton(el, "Views").click();
+            expect(events).toHaveLength(1);
+        });
+
+        it("can be focused", async () => {
+            const el = await renderElement(html`<uaui-data-table .columns=${nameColumns} .rows=${rows}></uaui-data-table>`, "uaui-data-table");
+            sortButton(el, "Views").focus();
+            expect(header(el, "Views").querySelector("uaui-table-sort-button")!.shadowRoot!.activeElement).toBe(sortButton(el, "Views"));
+        });
+
+        it("centres the sort symbol on the label", async () => {
+            const el = await renderElement(html`<uaui-data-table .columns=${nameColumns} .rows=${rows} .sort=${{ key: "views", direction: "asc" }}></uaui-data-table>`, "uaui-data-table");
+            const root = header(el, "Views").querySelector("uaui-table-sort-button")!.shadowRoot!;
+            const label = root.querySelector(".label")!.getBoundingClientRect();
+            const symbol = root.querySelector("uui-symbol-sort")!.getBoundingClientRect();
+            expect(Math.abs(symbol.top + symbol.height / 2 - (label.top + label.height / 2))).toBeLessThanOrEqual(2);
+        });
+
+        it("has no button in a header that isn't sortable", async () => {
+            const el = await renderElement(html`<uaui-data-table .columns=${nameColumns} .rows=${rows}></uaui-data-table>`, "uaui-data-table");
+            expect(deepQueryAll(header(el, "Name"), "button")).toHaveLength(0);
+        });
+    });
+
+    describe("Scenario: the first click on a new column", () => {
+        it("sorts a number column descending", async () => {
+            const el = await renderElement(html`<uaui-data-table .columns=${textColumns} .rows=${rows}></uaui-data-table>`, "uaui-data-table");
+            const event = nextEvent(el, "sort-change");
+            header(el, "Views").click();
+            expect((await event).detail).toEqual({ key: "views", direction: "desc" });
+        });
+
+        it("sorts a text column ascending", async () => {
+            const el = await renderElement(html`<uaui-data-table .columns=${textColumns} .rows=${rows}></uaui-data-table>`, "uaui-data-table");
+            const event = nextEvent(el, "sort-change");
+            header(el, "Name").click();
+            expect((await event).detail).toEqual({ key: "name", direction: "asc" });
+        });
+    });
+
+    describe("Scenario: client mode ordering", () => {
+        const sorted = async (data: Record<string, unknown>[], sort: { key: string; direction: string }, lang?: string) => {
+            const el = await renderElement(
+                html`<uaui-data-table lang=${ifDefined(lang)} .columns=${textColumns} .rows=${data} .sort=${sort}></uaui-data-table>`,
+                "uaui-data-table",
+            );
+            return names(el);
+        };
+
+        it("sorts numbers numerically, not as text", async () => {
+            const data = [{ name: "a", views: 9 }, { name: "b", views: 100 }, { name: "c", views: 20 }];
+            expect(await sorted(data, { key: "views", direction: "asc" })).toEqual(["a", "c", "b"]);
+        });
+
+        it("keeps equal rows in their given order", async () => {
+            const data = [{ name: "a", views: 5 }, { name: "b", views: 5 }, { name: "c", views: 5 }];
+            expect(await sorted(data, { key: "views", direction: "desc" })).toEqual(["a", "b", "c"]);
+        });
+
+        it("puts missing values last when ascending", async () => {
+            const data = [{ name: "a" }, { name: "b", views: 1 }, { name: "c", views: 2 }];
+            expect(await sorted(data, { key: "views", direction: "asc" })).toEqual(["b", "c", "a"]);
+        });
+
+        it("puts missing values last when descending", async () => {
+            const data = [{ name: "a" }, { name: "b", views: 1 }, { name: "c", views: 2 }];
+            expect(await sorted(data, { key: "views", direction: "desc" })).toEqual(["c", "b", "a"]);
+        });
+
+        it("sorts text with the locale's collation", async () => {
+            const data = [{ name: "Zebra" }, { name: "Ægir" }, { name: "Apple" }];
+            expect(await sorted(data, { key: "name", direction: "asc" }, "da")).toEqual(["Apple", "Zebra", "Ægir"]);
+        });
+
+        it("sorts text without regard to case", async () => {
+            const data = [{ name: "b" }, { name: "A" }, { name: "c" }];
+            expect(await sorted(data, { key: "name", direction: "asc" })).toEqual(["A", "b", "c"]);
+        });
+
+        it("re-sorts when new rows arrive", async () => {
+            const el = await renderElement(
+                html`<uaui-data-table .columns=${textColumns} .rows=${rows} .sort=${{ key: "views", direction: "desc" }}></uaui-data-table>`,
+                "uaui-data-table",
+            );
+            el.rows = [{ name: "New", views: 1 }, { name: "Top", views: 500 }];
+            await el.updateComplete;
+            expect(firstName(el)).toBe("Top");
+        });
+
+        it("does not change the rows array it was given", async () => {
+            const data = [{ name: "Contact", views: 62 }, { name: "Home", views: 210 }];
+            await sorted(data, { key: "views", direction: "desc" });
+            expect(data[0].name).toBe("Contact");
+        });
+    });
+
+    describe("Scenario: server mode with a sort", () => {
+        it("leaves the rows in order even when sort is set", async () => {
+            const el = await renderElement(
+                html`<uaui-data-table mode="server" .columns=${nameColumns} .rows=${rows} .sort=${{ key: "views", direction: "desc" }}></uaui-data-table>`,
+                "uaui-data-table",
+            );
+            expect(firstName(el)).toBe("Contact");
+        });
+
+        it("still raises sort-change on a click", async () => {
+            const el = await renderElement(html`<uaui-data-table mode="server" .columns=${nameColumns} .rows=${rows}></uaui-data-table>`, "uaui-data-table");
+            const event = nextEvent(el, "sort-change");
+            header(el, "Views").click();
+            expect((await event).detail).toEqual({ key: "views", direction: "desc" });
+        });
+    });
+
+    describe("Scenario: a column with a compare function in sortAs", () => {
+        it("sorts by that function", async () => {
+            const columns = [{ key: "name", label: "Name", sortable: true, sortAs: (a: unknown, b: unknown) => String(a).length - String(b).length }];
+            const el = await renderElement(
+                html`<uaui-data-table .columns=${columns} .rows=${[{ name: "Contact" }, { name: "Home" }]} .sort=${{ key: "name", direction: "asc" }}></uaui-data-table>`,
+                "uaui-data-table",
+            );
+            expect(names(el)).toEqual(["Home", "Contact"]);
+        });
+    });
+
+    describe("Scenario: a column with no sortAs", () => {
+        it("sorts its values as text", async () => {
+            const columns = [{ key: "name", label: "Name", sortable: true }];
+            const el = await renderElement(
+                html`<uaui-data-table .columns=${columns} .rows=${[{ name: "b" }, { name: "A" }]} .sort=${{ key: "name", direction: "asc" }}></uaui-data-table>`,
+                "uaui-data-table",
+            );
+            expect(names(el)).toEqual(["A", "b"]);
+        });
+    });
+
+    describe("Scenario: shares when sorted", () => {
+        it("keeps each row's share of the column total", async () => {
+            const el = await renderElement(
+                html`<uaui-data-table .columns=${[{ key: "name", label: "Name" }, { key: "views", label: "Views", elementName: UAUI_TABLE_CELL.share, sortable: true, sortAs: "number" }]} .rows=${rows} .sort=${{ key: "views", direction: "desc" }}></uaui-data-table>`,
+                "uaui-data-table",
+            );
+            expect(deepQueryAll(shadow(el), ".share-percent")[0]?.textContent).toBe("(77.2%)");
+        });
+    });
+
+    describe("Scenario: a11y audit with a sorted column", () => {
+        async function audit(themeCss?: string) {
+            const theme = document.createElement("style");
+            if (themeCss) {
+                theme.textContent = themeCss;
+                document.head.appendChild(theme);
+            }
+            try {
+                const host = render(
+                    html`<div style="background: var(--uui-color-surface); color: var(--uui-color-text); width: 700px">
+                        <uaui-data-table .columns=${nameColumns} .rows=${rows} .sort=${{ key: "views", direction: "desc" }}></uaui-data-table>
+                    </div>`,
+                ).container.querySelector("div")!;
+                await host.querySelector("uaui-data-table")!.updateComplete;
+                return await axeRun(host);
+            } finally {
+                theme.remove();
+            }
+        }
+
+        it("passes in the light theme", async () => {
+            expect(await audit()).toHaveNoViolations();
+        });
+
+        it("passes in the dark theme", async () => {
+            expect(await audit(darkCss)).toHaveNoViolations();
+        });
+
+        it("passes in the high contrast theme", async () => {
+            expect(await audit(highContrastCss)).toHaveNoViolations();
         });
     });
 });

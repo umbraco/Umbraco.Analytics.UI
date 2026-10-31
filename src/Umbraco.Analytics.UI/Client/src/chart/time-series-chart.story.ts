@@ -1,0 +1,154 @@
+import type { Meta, StoryObj } from "@storybook/web-components-vite";
+import { html } from "@umbraco-cms/backoffice/external/lit";
+import type { UauiTimeSeriesChartElement } from "./time-series-chart.element.js";
+import "./time-series-chart.element.js";
+import {
+    compareRangeLabel,
+    markers,
+    newVisitors,
+    pageviews,
+    pageviewsPrevious,
+    previousVisitors,
+    returningVisitors,
+    revenue,
+    sessions,
+    sessionsPrevious,
+    sundayWeeks,
+    sundayWeeksPrevious,
+} from "./internal/chart-fixtures.js";
+
+const meta: Meta<UauiTimeSeriesChartElement> = {
+    title: "Components/Time Series Chart",
+    component: "uaui-time-series-chart",
+    args: {
+        kind: "line",
+        series: [pageviews],
+        compareSeries: [],
+        compareLabel: undefined,
+        lowerIsBetter: false,
+        markers: [],
+        groupBy: "day",
+        weekStart: 1,
+        valueFormat: undefined,
+        loading: false,
+        error: false,
+        errorHeadline: undefined,
+        errorDescription: undefined,
+        retryable: false,
+        emptyHeadline: undefined,
+        emptyDescription: undefined,
+    },
+    argTypes: {
+        kind: { control: "inline-radio", options: ["line", "area", "bar", "stacked-bar"] },
+        groupBy: { control: "inline-radio", options: ["day", "week", "month"] },
+        weekStart: { control: "inline-radio", options: [1, 2, 3, 4, 5, 6, 7], description: "ISO weekday: 1 is Monday, 7 is Sunday" },
+    },
+    render: (args) =>
+        html`<uui-box headline="Pageviews over time" style="--uui-box-default-padding: 0">
+            <uaui-time-series-chart
+                .kind=${args.kind}
+                .series=${args.series}
+                .compareSeries=${args.compareSeries}
+                .compareLabel=${args.compareLabel}
+                .lowerIsBetter=${args.lowerIsBetter}
+                .markers=${args.markers}
+                .groupBy=${args.groupBy}
+                .weekStart=${args.weekStart}
+                .valueFormat=${args.valueFormat}
+                .loading=${args.loading}
+                .error=${args.error}
+                .errorHeadline=${args.errorHeadline}
+                .errorDescription=${args.errorDescription}
+                .retryable=${args.retryable}
+                .emptyHeadline=${args.emptyHeadline}
+                .emptyDescription=${args.emptyDescription}></uaui-time-series-chart>
+        </uui-box>`,
+};
+
+export default meta;
+type Story = StoryObj<UauiTimeSeriesChartElement>;
+
+export const Line: Story = {};
+
+export const Area: Story = { args: { kind: "area" } };
+
+/** Axis, tooltip and screen reader table all use the product's `value-format` in the editor's culture. */
+export const Currency: Story = {
+    args: { kind: "area", series: [revenue], valueFormat: { style: "currency", currency: "EUR" } },
+};
+
+/** First load, nothing to show yet: a skeleton the size of the chart. */
+export const Loading: Story = { args: { series: [], loading: true } };
+
+/** Reloading with data already shown: the old data stays under a thin loading bar. */
+export const Reloading: Story = { args: { loading: true } };
+
+/** No points: the empty state, with the product's own text when it sets one. */
+export const Empty: Story = {
+    args: { series: [], emptyHeadline: "No pageviews yet", emptyDescription: "Views appear here once visitors arrive." },
+};
+
+/** The load failed: the error state in place of the plot, with Retry when `retryable` (it raises `retry`). Error wins over loading and empty. */
+export const LoadFailed: Story = { args: { error: true, retryable: true } };
+
+/** Two series get a legend. */
+export const TwoSeries: Story = { args: { series: [pageviews, sessions] } };
+
+/** One series against the previous period: a dashed line, the gap shaded (green where above, red where below; see Lower is better) and a legend. */
+export const Compare: Story = {
+    args: { series: [pageviews], compareSeries: [pageviewsPrevious], compareLabel: compareRangeLabel },
+};
+
+/**
+ * For a metric where a fall is good (refund rate, bounce rate, average duration), set `lower-is-better`: the gap is green
+ * where the series is below the compare line and red where above, and the tooltip's change badges read a fall as an
+ * improvement. It applies to every series and the total, because one chart shows one metric.
+ */
+export const LowerIsBetter: Story = {
+    name: "Lower is better",
+    args: {
+        series: [{ ...pageviews, id: "duration", label: "Average duration (ms)" }],
+        compareSeries: [{ ...pageviewsPrevious, id: "duration", label: "Average duration (ms)" }],
+        compareLabel: compareRangeLabel,
+        lowerIsBetter: true,
+    },
+};
+
+/** Each series is matched to its compare series by `id`; they share the one compare colour and label. */
+export const CompareTwoSeries: Story = {
+    name: "Compare, two series",
+    args: { series: [pageviews, sessions], compareSeries: [pageviewsPrevious, sessionsPrevious], compareLabel: compareRangeLabel },
+};
+
+/**
+ * Weeks that start on Sunday (`week-start="7"`, the same as `Intl.Locale.getWeekInfo().firstDay` for en-US): the
+ * points are the Sundays of `uauiDateBuckets(range, "week", { weekStart: 7 })` and the compare weeks line up on them.
+ */
+export const SundayWeekStart: Story = {
+    name: "Sunday week start",
+    args: { groupBy: "week", weekStart: 7, series: [sundayWeeks], compareSeries: [sundayWeeksPrevious], compareLabel: compareRangeLabel },
+};
+
+/** One bar per date. */
+export const Bar: Story = { args: { kind: "bar", series: [sessions] } };
+
+/** Series stack into one bar per date; the tooltip adds a total. */
+export const StackedBar: Story = {
+    name: "Stacked bar",
+    args: { kind: "stacked-bar", series: [returningVisitors, newVisitors] },
+};
+
+/** The compare series are added up per date and drawn as one lighter, wider bar behind each current bar. */
+export const StackedWithCompare: Story = {
+    name: "Stacked with compare",
+    args: { kind: "stacked-bar", series: [returningVisitors, newVisitors], compareSeries: [previousVisitors], compareLabel: compareRangeLabel },
+};
+
+/** Each event is a dot on the x-axis with a dashed line. Hover or Tab to one for its date, title and description; click or Enter raises `marker-click`. Two events on 18 Jun share a dot with a count. */
+export const Markers: Story = { args: { kind: "area", markers } };
+
+/** Markers work on every kind. */
+export const MarkersOnStackedBar: Story = {
+    name: "Markers on stacked bar",
+    args: { kind: "stacked-bar", series: [returningVisitors, newVisitors], markers },
+};

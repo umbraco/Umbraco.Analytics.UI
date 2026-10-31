@@ -3,11 +3,13 @@ name: Test & Storybook
 on:
   push:
     branches:
-      - main
+      - v19/main
   pull_request:
     branches:
-      - main
+      - v19/dev
+      - v19/main
       - release/*
+      - hotfix/*
   workflow_dispatch:
 
 defaults:
@@ -17,25 +19,38 @@ defaults:
 jobs:
   test:
     runs-on: ubuntu-latest
+    # The Playwright image has Node and all three browsers. Chart screenshot baselines are made in this
+    # same image (npm run test:screenshots), so it must match the playwright version in package-lock.json
+    # and the image in run-in-container.sh and azure-pipelines.yml. Bump all of them together.
+    container: mcr.microsoft.com/playwright:v1.64.1-noble
+    env:
+      # GitHub container jobs run as root but set HOME to /github/home, which root doesn't own in this
+      # image, so Firefox refuses to start. Playwright's documented workaround.
+      HOME: /root
     steps:
       - uses: actions/checkout@v5
-      - uses: actions/setup-node@v5
+      - uses: actions/cache@v4
         with:
-          node-version-file: .nvmrc
-          cache: npm
-          cache-dependency-path: src/Umbraco.Analytics.UI/Client/package-lock.json
+          path: /root/.npm
+          key: npm-${{ runner.os }}-${{ hashFiles('src/Umbraco.Analytics.UI/Client/package-lock.json') }}
+          restore-keys: npm-${{ runner.os }}-
       - run: npm ci
       - run: npm run lint
       - run: npm run build
+      # Fails if the built bundle is over the gzip budget in the plan's SPEC.md
+      - run: npm run check:size
       # Fails if the public API changed and api/*.api.md was not updated and committed
       - run: npm run check:api
-      - run: npx playwright install --with-deps chromium firefox webkit
       - run: npm test
+      # Timing specs: CI leaves them out of `npm test` so three engines don't compete for the runner
+      - run: npm run test:perf
 
   storybook:
     # Publishes to GitHub Pages. Needs Settings > Pages > Source set to "GitHub Actions",
     # and either a public repo or a GitHub plan that allows Pages on private repos.
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    # One Storybook site for the newest major. When v20 arrives, publish each supported major into its
+    # own folder (e.g. a gh-pages branch with /v19/).
+    if: github.event_name == 'push' && github.ref == 'refs/heads/v19/main'
     needs: test
     runs-on: ubuntu-latest
     permissions:

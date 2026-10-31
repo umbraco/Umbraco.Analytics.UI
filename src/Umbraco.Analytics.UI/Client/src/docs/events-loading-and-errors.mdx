@@ -1,0 +1,94 @@
+import { Meta } from "@storybook/addon-docs/blocks";
+
+<Meta title="Guides/Events, loading and errors" />
+
+# Events, loading and errors
+
+## Events
+
+All events bubble. None is composed, so they don't cross shadow roots.
+
+| Element | Event | `detail` |
+|---|---|---|
+| `uaui-toggle-group` | `change` | `{ value }` |
+| `uaui-group-by` | `change` | `{ value }` |
+| `uaui-date-range` | `change` | `{ value, compare }` |
+| `uaui-time-series-chart` | `marker-click` | `{ id }` |
+| `uaui-error-state` | `retry` | none |
+| `uaui-time-series-chart` | `retry` | none |
+| `uaui-data-table` | `retry` | none |
+| `uaui-kpi-tile` | `selected`, `deselected` | `{}` (cancelable) |
+| `uaui-search-field` | `search` | `{ query }` |
+| `uaui-data-table` | `sort-change` | `{ key, direction }` |
+| `uaui-data-table` | `page-change` | `{ page, pageSize }` |
+| `uaui-data-table` | `row-click` | `{ row }` |
+
+Elements set their own `value`, `sort`, `page` and `query` before raising the event, as UUI inputs do.
+
+Each detail has a type you can import, such as `UauiDateRangeChangeDetail`, `UauiGroupByChangeDetail`, `UauiToggleGroupChangeDetail`, `UauiMarkerClickDetail`, `UauiSearchDetail`, `UauiTableSortChangeDetail`, `UauiTablePageChangeDetail` and `UauiTableRowClickDetail`:
+
+```ts
+import type { UauiGroupByChangeDetail } from "@umbraco/analytics-ui";
+
+html`<uaui-group-by
+  .value=${this._groupBy}
+  @change=${(e: CustomEvent<UauiGroupByChangeDetail>) => (this._groupBy = e.detail.value)}
+></uaui-group-by>`;
+```
+
+## Loading, empty and error
+
+The chart, the table and the KPI tile show the state of your load. You set it, they draw it.
+
+- `loading`: a skeleton on the first load, or a loading bar over the old data when reloading.
+- Empty: no data, so the chart and table show `uaui-empty-state`. The KPI tile takes `no-data` and shows a dash instead of "0".
+- `error`: the load failed.
+
+When more than one is set, `error` wins over `loading`, and `loading` over the empty state. On the KPI tile, `error` also wins over `no-data` and `value`.
+
+### Errors and Retry
+
+Set `error` on a chart or a table. The chart shows `uaui-error-state` in place of the plot. The table keeps its header and shows it in place of the rows and pager.
+
+```ts
+html`<uaui-data-table
+  .columns=${columns}
+  .rows=${rows}
+  ?error=${this._failed}
+  retryable
+  @retry=${() => this.#load()}
+></uaui-data-table>`;
+```
+
+- `retryable` shows a Retry button. It raises `retry` on the chart or table.
+- `error-headline` and `error-description` reword the message. Without them it says "Something went wrong" and "The data could not be loaded."
+- The KPI tile only shows a dash and tells screen readers "Something went wrong". It has no Retry. A page of tiles with no chart or table should show its own alert.
+
+You can also use [`uaui-error-state`](?path=/docs/components-error-state--docs) and [`uaui-empty-state`](?path=/docs/components-empty-state--docs) on their own.
+
+## Server mode tables: `UauiTableServerController`
+
+With `mode="server"` the table never sorts, filters or pages. It raises `sort-change`, `page-change` and `search`, and you load the rows. Set `total-rows` (the row count across every page) and pass `.stats` so shares and bars stay right across pages.
+
+`UauiTableServerController` wires that up so you only write the loader. It keeps the sort, page, page size and search, goes back to page 1 on a sort or search, aborts the request a newer one replaces (the `AbortSignal` it passes to `load`), drops an answer that arrives late, and sets `rows`, `compareRows`, `totalRows`, `stats`, `loading` and `error` on the table.
+
+```ts
+import { ref } from "@umbraco-cms/backoffice/external/lit";
+import { UauiTableServerController } from "@umbraco/analytics-ui";
+
+#pages = new UauiTableServerController(this, {
+  sort: { key: "views", direction: "desc" },
+  load: async ({ sort, page, pageSize, query }, signal) => {
+    const response = await fetch(`/api/pages?page=${encodeURIComponent(page)}&size=${encodeURIComponent(pageSize)}&q=${encodeURIComponent(query)}`, { signal });
+    return await response.json(); // { rows, totalRows, stats?, compareRows? }, plus any fields of your own
+  },
+});
+
+html`<uaui-data-table ${ref(this.#pages.attach)} .columns=${columns}></uaui-data-table>`;
+```
+
+- It loads when the host connects. Call `this.#pages.reload({ resetPage: true })` when something the loader reads changes, such as the date range.
+- `result` is the last answer, including your own fields. `loading` and `error` are there too, and the host redraws when they change.
+- A failed request calls `onError` and shows the table's error state with Retry, which calls `reload()`. The next request clears it.
+
+See it working in [Examples > Paged server](?path=/docs/examples-paged-server--docs).
