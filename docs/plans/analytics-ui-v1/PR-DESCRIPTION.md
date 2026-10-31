@@ -1,57 +1,15 @@
 [Plan folder](https://github.com/umbraco/Umbraco.Analytics.UI/tree/d61d934cb810a86a1bc7037d61f48b4ddbf24c85/docs/plans/analytics-ui-v1)
 
-> [!IMPORTANT]
-> **7 choices were made without you.** Please check each one. Everything here is public API or visible behaviour, so it is cheap to change now and breaking to change after 19.0.0 ships.
+> [!NOTE]
+> **7 choices were made during the build. All are now decided.**
 >
-> **1. Design: `stats` entries need both `total` and `max`**\
-> Plan said: `stats` is `{ [columnKey]: { total, max } }` for server mode. Nothing about partial entries.\
-> Built: [`UauiTableColumnStats` has both fields required](https://github.com/umbraco/Umbraco.Analytics.UI/blob/d61d934cb810a86a1bc7037d61f48b4ddbf24c85/src/Umbraco.Analytics.UI/Client/src/table/types.ts#L98). A product that only knows the grand total has to compute a max too. The builder logged this as waiting for sign-off.
->
-> - **A. Accept `Partial<UauiTableColumnStats>` per entry, and fall back to the rows for a missing field** *(recommended)*. Loosening later is non-breaking, but doing it now saves every product a workaround.
-> - B. Keep both required.
->
-> **2. Design: `UauiTableServerController` owns 12 table properties**\
-> Plan said: nothing about a server-mode helper. It came from a T22 follow-up.\
-> Built: [the controller sets `mode`, `sort`, `page`, `pageSize`, `query`, `rows`, `compareRows`, `totalRows`, `stats`, `loading`, `error` and `retryable` on the table directly](https://github.com/umbraco/Umbraco.Analytics.UI/blob/d61d934cb810a86a1bc7037d61f48b4ddbf24c85/src/Umbraco.Analytics.UI/Client/src/table/table-server.controller.ts#L222). A page attaches it with `${ref(controller.attach)}` and must not bind those properties itself, or the two fight.
->
-> - **A. Keep it.** It is small, works on any Lit host, and the docs say which properties it owns *(recommended)*.
-> - B. Make the controller expose the values and let the page bind them. More template code, but nothing hidden.
-> - C. Drop it from the public API for v1 and keep it in the examples only.
->
-> **3. Design: errors are a separate `uaui-error-state` element**\
-> Plan said: nothing about an error state. It came from a T22 follow-up.\
-> Built: [a new public element](https://github.com/umbraco/Umbraco.Analytics.UI/blob/d61d934cb810a86a1bc7037d61f48b4ddbf24c85/src/Umbraco.Analytics.UI/Client/src/error-state/error-state.element.ts#L16) with `role="alert"` and an optional Retry button, not a `variant="error"` on `uaui-empty-state`. The CMS has neither to copy.
->
-> - **A. Keep the separate element.** Only the error needs a role, a button and an event *(recommended)*.
-> - B. Fold it into `uaui-empty-state` as a variant, so products learn one element.
->
-> **4. Design: `allow-compare` can't be turned off in HTML**\
-> Plan said: `allow-compare` (default true).\
-> Built: [a plain `{ type: Boolean }` attribute that defaults to true](https://github.com/umbraco/Umbraco.Analytics.UI/blob/d61d934cb810a86a1bc7037d61f48b4ddbf24c85/src/Umbraco.Analytics.UI/Client/src/date-range/date-range.element.ts#L47). `allow-compare="false"` still means true, so the only way off is `.allowCompare=${false}`. The docs say so.
->
-> - **A. Keep it.** Same pattern as UUI's `deselectable`, and products use Lit property bindings anyway *(recommended)*.
-> - B. Rename to `hide-compare`, default false, so the attribute works in plain HTML.
->
-> **5. Behavior: weeks always start on Monday**\
-> Plan said: nothing about the first day of the week.\
-> Built: [week buckets start on Monday for every culture](https://github.com/umbraco/Umbraco.Analytics.UI/blob/d61d934cb810a86a1bc7037d61f48b4ddbf24c85/src/Umbraco.Analytics.UI/Client/src/internal/date/date-math.ts#L130). This drives the chart's week grouping, marker buckets and the public `uauiDateBuckets` helper. A US editor would expect Sunday.
->
-> - **A. Keep Monday for v1 and add an optional `weekStart` later.** Adding it is non-breaking *(recommended)*.
-> - B. Follow the editor's culture now. The same data would then group differently per editor.
->
-> **6. Behavior: points on the same date add up**\
-> Plan said: nothing about two points with one date.\
-> Built: [the chart sums them](https://github.com/umbraco/Umbraco.Analytics.UI/blob/d61d934cb810a86a1bc7037d61f48b4ddbf24c85/src/Umbraco.Analytics.UI/Client/src/chart/internal/chart-data.ts#L43), for series, compare points and the compare total. Right for counts, wrong for rates and averages; the TSDoc warns products to aggregate those first. Last-wins was rejected because the compare total can't mix the two rules.
->
-> - **A. Keep summing, as documented** *(recommended)*.
-> - B. Last point wins, and the compare total uses the same rule.
->
-> **7. UI: a KPI tile with no data says "No data yet" for a past period**\
-> Plan said: `no-data` shows a dash with the hidden text "No data yet".\
-> Built: [the tile reuses the empty-state key `uauiAnalytics_emptyHeadline`](https://github.com/umbraco/Umbraco.Analytics.UI/blob/d61d934cb810a86a1bc7037d61f48b4ddbf24c85/src/Umbraco.Analytics.UI/Client/src/kpi-tile/kpi-tile.element.ts#L138). A screen reader hears "No data yet" for last year too, which reads oddly. The text is hidden, so sighted editors only see the dash.
->
-> - **A. Add a tile-specific key, such as "No data for this period"** *(recommended)*. One extra translation.
-> - B. Keep the shared key, so one override rewords every no-data message.
+> 1. **`stats` entries:** a product may give only `total` or only `max` per column (`UauiTableStatsInput`); the missing one comes from the rows.
+> 2. **`UauiTableServerController`:** kept. It sets the table's server-mode properties itself, as documented.
+> 3. **`uaui-error-state`:** kept as its own element.
+> 4. **`allow-compare`:** kept as a plain Boolean, like UUI's `deselectable`. Turn it off with `.allowCompare=${false}`.
+> 5. **Week start:** added now. `week-start` on the chart and `uauiDateBuckets(range, groupBy, { weekStart })`, ISO 1 (Monday) to 7 (Sunday), the same numbers as `Intl.Locale#getWeekInfo().firstDay`. Default Monday.
+> 6. **Points on the same date:** kept. They add up, as documented.
+> 7. **KPI tile with no data:** its hidden text is now "No data for this period".
 
 ## Why the change
 
