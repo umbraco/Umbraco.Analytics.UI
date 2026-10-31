@@ -18,6 +18,7 @@ import "../internal/loading/skeleton.element.js";
 import { UauiPaletteStyles } from "../theme/index.js";
 import "./cells/index.js";
 import { UAUI_TABLE_CELL } from "./cells/cell-names.js";
+import { UauiScrollOverflowController } from "./internal/scroll-overflow.controller.js";
 import { UauiTableContextController } from "./internal/table-context.controller.js";
 import "../internal/pager/compact-pager.element.js";
 import "./internal/table-skeleton-cell.element.js";
@@ -248,6 +249,9 @@ export class UauiDataTableElement extends UmbLitElement {
     #searched?: { rows: UauiTableRow[]; columns: UauiTableColumn[]; needle: string; lang: string; searchedRows: UauiTableRow[] };
     /** The compare rows by their `rowKey` value, rebuilt when `compareRows` or `rowKey` change. */
     #compareByKey = new Map<string, UauiTableRow>();
+
+    /** Whether the columns don't fit, so the scroll area scrolls sideways and has to be reachable by keyboard. */
+    #overflow = new UauiScrollOverflowController(this, ".scroll", "uui-table");
 
     protected override willUpdate(changed: PropertyValues<this>) {
         super.willUpdate(changed);
@@ -521,9 +525,17 @@ export class UauiDataTableElement extends UmbLitElement {
         const mode = getLoadingMode(this.loading, hasData, this.error);
         const busy = isBusy(this.loading, this.error);
         const showColumnToolbar = this.#hasColumnToolbar && !this.error;
+        const scrollFocusable = this.#overflow.focusable;
         return html`<div class="region ${this.#hasToolbar ? "has-toolbar" : ""} ${showColumnToolbar ? "has-column-toolbar" : ""}">
             ${mode === "reload" ? html`<uaui-loading-bar></uaui-loading-bar>` : nothing}
             <div class="toolbar"><slot name="toolbar" @slotchange=${() => this.requestUpdate()} @search=${this.#onSearch}></slot></div>
+            <div
+                class="scroll"
+                role=${ifDefined(scrollFocusable ? "region" : undefined)}
+                tabindex=${ifDefined(scrollFocusable ? "0" : undefined)}
+                aria-label=${ifDefined(scrollFocusable ? this.localize.term("uauiAnalytics_tableScrollRegion") : undefined)}
+                @focus=${() => this.#overflow.focus()}
+                @blur=${() => this.#overflow.blur()}>
             <uui-table aria-busy=${busy ? "true" : "false"}>
                 ${this.columns.map((column) => html`<uui-table-column style=${ifDefined(column.width ? `width: ${column.width}` : undefined)}></uui-table-column>`)}
                 ${this.#renderColumnToolbar()}
@@ -534,6 +546,7 @@ export class UauiDataTableElement extends UmbLitElement {
                       ? Array.from({ length: SKELETON_ROWS }, (_, index) => this.#renderSkeletonRow(index))
                       : this.#visibleRows.map((row) => this.#renderRow(row))}
             </uui-table>
+            </div>
             ${this.error ? this.#renderErrorState() : this.#renderEmptyState(mode, hasData)}
             ${this.#renderFooter(this.#showPager && mode !== "skeleton" && !this.error)}
         </div>`;
@@ -646,10 +659,30 @@ export class UauiDataTableElement extends UmbLitElement {
                 z-index: 3;
             }
 
-            /* uui-table draws its own border and corners. The surrounding box does both, edge to edge. */
+            /*
+             * Only the columns scroll, sideways and only when they don't fit, so the data stays reachable. No pinned
+             * columns. The toolbar, footer, states and loading bar stay outside it, at full width.
+             */
+            .scroll {
+                overflow-x: auto;
+            }
+
+            /* Reachable by keyboard only while it scrolls. Inset, as the region clips an outer ring. */
+            .scroll:focus-visible {
+                outline: calc(2px * var(--uui-show-focus-outline, 1)) solid var(--uui-color-focus);
+                outline-offset: -2px;
+            }
+
+            /*
+             * uui-table draws its own border and corners. The surrounding box does both, edge to edge.
+             * UUI clips its own overflow (as umb-table does), which would hide the columns that don't fit: the table
+             * instead never gets narrower than its content, so the scroll area has something to scroll.
+             */
             uui-table {
                 border: none;
                 border-radius: 0;
+                overflow: visible;
+                min-width: min-content;
             }
 
             /*

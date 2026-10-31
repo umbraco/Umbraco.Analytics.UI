@@ -95,5 +95,9 @@ export default {
         pagerPosition: "{0}–{1} of {2}",
         pagerPreviousPage: "Previous page",
         pagerNextPage: "Next page",
+
+        // Data table
+        // Names the scrolling table area, only while its columns don't fit.
+        tableScrollRegion: "Table, scroll sideways to see more columns",
     },
 } satisfies UmbLocalizationDictionary;

@@ -93,6 +93,17 @@ export const Columns: Story = {
         </uui-box>`,
 };
 
+/** When the columns don't fit, only they scroll sideways: the toolbar, footer and loading bar stay full width and no column is pinned. The scroll area is then a named region reachable with Tab, so a keyboard can scroll it with the arrow keys. A table that fits has none of that. Here a 420px wrapper. */
+export const Narrow: Story = {
+    args: { columns: mixedColumns, rows: mixedRows },
+    render: (args) =>
+        html`<div style="width: 420px">
+            <uui-box headline="Products" style="--uui-box-default-padding: 0">
+                <uaui-data-table .columns=${args.columns} .rows=${args.rows}></uaui-data-table>
+            </uui-box>
+        </div>`,
+};
+
 /** Compare rows matched by `row-key`: a small change badge follows each share value. A row with no match, or a compare value of zero, has no badge. */
 export const CompareBadges: Story = {
     name: "Compare badges",
