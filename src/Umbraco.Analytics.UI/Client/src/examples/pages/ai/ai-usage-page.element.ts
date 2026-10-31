@@ -302,8 +302,9 @@ export class ExampleAiUsagePageElement extends UmbLitElement {
                 gap: var(--uui-size-4);
                 padding: var(--uui-size-layout-1);
             }
-            h2 {
-                margin: 0;
+            /* UUI's .uui-h3 (written .uui-h3.uui-h3, so a plain h2 rule loses) adds a 24px bottom margin, which pushed the title above the controls' centre. Keep its -2px optical inset. */
+            .actions h2.uui-h3 {
+                margin-block: 0;
             }
             .controls {
                 display: flex;
