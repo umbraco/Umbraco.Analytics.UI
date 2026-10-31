@@ -296,7 +296,7 @@ export function uauiPreviousPeriod(range: UauiDateSpan): UauiDateSpan | undefine
 export function uauiPreviousYear(range: UauiDateSpan): UauiDateSpan | undefined;
 
 // @public
-export type UauiSearchFieldDetail = {
+export type UauiSearchDetail = {
     query: string;
 };
 

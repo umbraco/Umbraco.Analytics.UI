@@ -3,7 +3,7 @@ import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { getLoadingMode, isBusy } from "../internal/loading/index.js";
 import { UauiVisuallyHiddenStyles } from "../internal/a11y/visually-hidden.css.js";
 import { UauiPaletteStyles } from "../theme/index.js";
-import { uauiDeltaChange } from "../delta-badge/delta-change.js";
+import { deltaChange } from "../internal/delta/delta-change.js";
 import type { UauiDeltaUnit } from "../delta-badge/delta-badge.element.js";
 import "../delta-badge/delta-badge.element.js";
 
@@ -115,7 +115,7 @@ export class UauiKpiTileElement extends UmbLitElement {
 
     // Whether there is a change to show: the same rule the badge uses, so no empty badge takes up room.
     #hasChange(): boolean {
-        return Number.isFinite(uauiDeltaChange(this.delta, this.current, this.previous, this.deltaUnit));
+        return Number.isFinite(deltaChange(this.delta, this.current, this.previous, this.deltaUnit));
     }
 
     override render(): TemplateResult {

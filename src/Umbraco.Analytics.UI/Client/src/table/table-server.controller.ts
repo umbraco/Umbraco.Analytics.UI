@@ -1,7 +1,7 @@
 import type { ReactiveController, ReactiveControllerHost } from "@umbraco-cms/backoffice/external/lit";
 import type { UauiDataTableElement } from "./data-table.element.js";
 import type { UauiTablePageChangeDetail, UauiTableSort, UauiTableSortChangeDetail, UauiTableStatsInput } from "./types.js";
-import type { UauiSearchFieldDetail } from "../search-field/search-field.element.js";
+import type { UauiSearchDetail } from "../search-field/search-field.element.js";
 
 /** Shared so a table with no answer yet keeps the same arrays and doesn't work its columns out again. */
 const NO_ROWS: Record<string, unknown>[] = [];
@@ -174,7 +174,7 @@ export class UauiTableServerController<TResult extends UauiTableServerResult = U
     };
 
     #onSearch = (event: Event) => {
-        const query = (event as CustomEvent<UauiSearchFieldDetail>).detail?.query;
+        const query = (event as CustomEvent<UauiSearchDetail>).detail?.query;
         if (typeof query !== "string" || query === this.#state.query) return;
         this.#state = { ...this.#state, query, page: 1 };
         void this.#run();

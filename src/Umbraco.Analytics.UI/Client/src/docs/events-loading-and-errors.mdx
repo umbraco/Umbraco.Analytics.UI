@@ -25,7 +25,7 @@ All events bubble. None is composed, so they don't cross shadow roots.
 
 Elements set their own `value`, `sort`, `page` and `query` before raising the event, as UUI inputs do.
 
-Each detail has a type you can import, such as `UauiDateRangeChangeDetail`, `UauiGroupByChangeDetail`, `UauiToggleGroupChangeDetail` and `UauiMarkerClickDetail`:
+Each detail has a type you can import, such as `UauiDateRangeChangeDetail`, `UauiGroupByChangeDetail`, `UauiToggleGroupChangeDetail`, `UauiMarkerClickDetail`, `UauiSearchDetail`, `UauiTableSortChangeDetail`, `UauiTablePageChangeDetail` and `UauiTableRowClickDetail`:
 
 ```ts
 import type { UauiGroupByChangeDetail } from "@umbraco/analytics-ui";
@@ -79,7 +79,7 @@ import { UauiTableServerController } from "@umbraco/analytics-ui";
 #pages = new UauiTableServerController(this, {
   sort: { key: "views", direction: "desc" },
   load: async ({ sort, page, pageSize, query }, signal) => {
-    const response = await fetch(`/api/pages?page=${page}&size=${pageSize}&q=${query}`, { signal });
+    const response = await fetch(`/api/pages?page=${encodeURIComponent(page)}&size=${encodeURIComponent(pageSize)}&q=${encodeURIComponent(query)}`, { signal });
     return await response.json(); // { rows, totalRows, stats?, compareRows? }, plus any fields of your own
   },
 });

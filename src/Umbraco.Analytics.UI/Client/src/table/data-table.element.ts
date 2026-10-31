@@ -31,18 +31,13 @@ import type {
     UauiTableMode,
     UauiTablePageChangeDetail,
     UauiTableRowClickDetail,
+    UauiTableSortChangeDetail,
     UauiTableSort,
     UauiTableStats,
 } from "./types.js";
-import type { UauiSearchFieldDetail } from "../search-field/search-field.element.js";
+import type { UauiSearchDetail } from "../search-field/search-field.element.js";
 
 type UauiTableRow = Record<string, unknown>;
-
-/** A column with everything the cells need, worked out once per change of columns, rows or language. */
-interface DerivedColumn {
-    column: UauiTableColumn;
-    align: "start" | "end";
-}
 
 interface DerivedFrom {
     columns: UauiTableColumn[];
@@ -260,7 +255,6 @@ export class UauiDataTableElement extends UmbLitElement {
 
     /** Provides the columns, stats and compare lookup to the cells, as `UAUI_TABLE_CONTEXT`. */
     #context = new UauiTableContextController(this);
-    #derived: DerivedColumn[] = [];
     #sorted?: { rows: UauiTableRow[]; sort: UauiTableSort; column: UauiTableColumn; lang: string; sortedRows: UauiTableRow[] };
     #derivedFrom?: DerivedFrom;
     #searched?: { rows: UauiTableRow[]; columns: UauiTableColumn[]; needle: string; lang: string; searchedRows: UauiTableRow[] };
@@ -282,9 +276,8 @@ export class UauiDataTableElement extends UmbLitElement {
             prev.stats !== this.stats ||
             prev.lang !== lang
         ) {
-            this.#derived = this.#derive(this.columns);
             this.#context.setColumns(this.columns);
-            this.#context.setStats(this.#computeStats(this.columns, this.#statsRows));
+            this.#context.setStats(this.#computeStats(this.columns, this.rows));
         }
         this.#derivedFrom = { columns: this.columns, rows: this.rows, compareRows: this.compareRows, rowKey: this.rowKey, stats: this.stats, lang };
     }
@@ -306,14 +299,6 @@ export class UauiDataTableElement extends UmbLitElement {
         return key === undefined ? undefined : this.#compareByKey.get(key);
     }
 
-    /**
-     * The rows that column totals and bar scales are worked out from: all the rows the table holds, never
-     * just the page on screen. In `server` mode that is the page the product passed, unless `stats` says more.
-     */
-    get #statsRows(): UauiTableRow[] {
-        return this.rows;
-    }
-
     /** The rows to draw: the searched rows, sorted, cut down to the current page in client mode. */
     get #visibleRows(): UauiTableRow[] {
         const rows = this.#sortedRows;
@@ -331,7 +316,7 @@ export class UauiDataTableElement extends UmbLitElement {
 
     /** A `search` event came from the toolbar slot or a column toolbar slot: take its query and go back to page 1, since the matches are other rows. */
     #onSearch = (event: Event) => {
-        const query = (event as CustomEvent<UauiSearchFieldDetail>).detail?.query;
+        const query = (event as CustomEvent<UauiSearchDetail>).detail?.query;
         if (typeof query !== "string") return;
         this.query = query;
         this.page = 1;
@@ -429,7 +414,7 @@ export class UauiDataTableElement extends UmbLitElement {
         const direction = current?.key === column.key ? (current.direction === "asc" ? "desc" : "asc") : column.sortAs === "number" ? "desc" : "asc";
         this.sort = { key: column.key, direction };
         this.page = 1;
-        this.dispatchEvent(new CustomEvent("sort-change", { bubbles: true, detail: { key: column.key, direction } }));
+        this.dispatchEvent(new CustomEvent<UauiTableSortChangeDetail>("sort-change", { bubbles: true, detail: { key: column.key, direction } }));
     }
 
     /** Whether anything is slotted into `toolbar`. `:host(:has())` can't tell, and a slot can't be styled by its content. */
@@ -449,15 +434,6 @@ export class UauiDataTableElement extends UmbLitElement {
             this.querySelector(`:scope > [slot="${START_SLOT}"]`) !== null ||
             this.columns.some((column) => this.querySelector(`:scope > [slot="${CSS.escape(`${SLOT_PREFIX}${column.key}`)}"]`) !== null)
         );
-    }
-
-    /** How many skeleton rows to draw on first load. */
-    get #skeletonRowCount(): number {
-        return SKELETON_ROWS;
-    }
-
-    #derive(columns: UauiTableColumn[]): DerivedColumn[] {
-        return columns.map((column) => ({ column, align: column.align ?? "start" }));
     }
 
     /** Each column's total and largest number, from `stats` where given, else from the rows the table holds. */
@@ -485,42 +461,41 @@ export class UauiDataTableElement extends UmbLitElement {
     /** One cell element per row and column, reused while the column keeps its element name, as the CMS `umb-table` does. */
     #cellElements = new WeakMap<UauiTableRow, Map<string, HTMLElement>>();
 
-    #renderCell(derived: DerivedColumn, row: UauiTableRow): HTMLElement {
-        const { column } = derived;
-        const elementName = cellElementName(column);
+    /** The element cached under `id`, created again when the column's element name has changed. */
+    #cellElement(cache: Map<string, HTMLElement>, id: string, elementName: string): HTMLElement & Partial<UauiTableCellElement> {
+        let element = cache.get(id);
+        if (!element || element.tagName.toLowerCase() !== elementName.toLowerCase()) {
+            element = document.createElement(elementName);
+            cache.set(id, element);
+        }
+        return element;
+    }
+
+    #renderCell(column: UauiTableColumn, row: UauiTableRow): HTMLElement {
         let rowCache = this.#cellElements.get(row);
         if (!rowCache) {
             rowCache = new Map();
             this.#cellElements.set(row, rowCache);
         }
-        let element = rowCache.get(column.key);
-        if (!element || element.tagName.toLowerCase() !== elementName.toLowerCase()) {
-            element = document.createElement(elementName);
-            rowCache.set(column.key, element);
-        }
-        const cell = element as HTMLElement & Partial<UauiTableCellElement>;
+        const cell = this.#cellElement(rowCache, column.key, cellElementName(column));
         cell.column = column;
         cell.item = row;
         cell.value = row[column.key];
-        return element;
+        return cell;
     }
 
-    #renderHeaderCell(derived: DerivedColumn): TemplateResult {
-        const { column } = derived;
-        if (!column.sortable) return html`<uui-table-head-cell class=${this.#cellClass(derived)}>${column.label}</uui-table-head-cell>`;
+    #renderHeaderCell(column: UauiTableColumn): TemplateResult {
+        const align = column.align ?? "start";
+        if (!column.sortable) return html`<uui-table-head-cell class=${align}>${column.label}</uui-table-head-cell>`;
         const active = this.sort?.key === column.key;
         const descending = this.sort?.direction === "desc";
         // The click handler is on the cell, so the whole header sorts. The button is what a keyboard reaches.
         return html`<uui-table-head-cell
-            class="${this.#cellClass(derived)} sortable"
+            class="${align} sortable"
             aria-sort=${active ? (descending ? "descending" : "ascending") : "none"}
             @click=${() => this.#sortBy(column)}>
-            <uaui-table-sort-button .active=${active} .descending=${descending} .align=${derived.align}>${column.label}</uaui-table-sort-button>
+            <uaui-table-sort-button .active=${active} .descending=${descending} .align=${align}>${column.label}</uaui-table-sort-button>
         </uui-table-head-cell>`;
-    }
-
-    #cellClass(derived: DerivedColumn): string {
-        return derived.align === "end" ? "end" : "start";
     }
 
     /** A click on a link, button or form control inside the row belongs to that control. */
@@ -556,8 +531,8 @@ export class UauiDataTableElement extends UmbLitElement {
             tabindex=${ifDefined(clickable ? "0" : undefined)}
             @click=${clickable ? (event: MouseEvent) => this.#onRowClick(event, row) : undefined}
             @keydown=${clickable ? (event: KeyboardEvent) => this.#onRowKeydown(event, row) : undefined}>
-            ${this.#derived.map(
-                (derived) => html`<uui-table-cell class=${this.#cellClass(derived)}>${this.#renderCell(derived, row)}</uui-table-cell>`,
+            ${this.columns.map(
+                (column) => html`<uui-table-cell class=${column.align ?? "start"}>${this.#renderCell(column, row)}</uui-table-cell>`,
             )}
         </uui-table-row>`;
     }
@@ -571,8 +546,8 @@ export class UauiDataTableElement extends UmbLitElement {
      * The loading placeholder of a column: its own cell element with `loading` set, when the element is defined
      * and has a `loading` property, else the generic one-line placeholder. A cell defined later swaps in on its own.
      */
-    #renderSkeletonCell(derived: DerivedColumn, row: number, column: number): TemplateResult | HTMLElement {
-        const elementName = cellElementName(derived.column);
+    #renderSkeletonCell(column: UauiTableColumn, row: number): TemplateResult | HTMLElement {
+        const elementName = cellElementName(column);
         const definition = customElements.get(elementName);
         if (!definition && !this.#waitingFor.has(elementName)) {
             this.#waitingFor.add(elementName);
@@ -582,29 +557,24 @@ export class UauiDataTableElement extends UmbLitElement {
             });
         }
         if (!definition || !("loading" in definition.prototype)) {
-            return html`<uaui-table-skeleton-cell .width=${SKELETON_WIDTHS[(row + column) % SKELETON_WIDTHS.length]} .align=${derived.align}></uaui-table-skeleton-cell>`;
+            return html`<uaui-table-skeleton-cell .align=${column.align ?? "start"}></uaui-table-skeleton-cell>`;
         }
-        const id = `${row}:${derived.column.key}`;
-        let element = this.#skeletonElements.get(id);
-        if (!element || element.tagName.toLowerCase() !== elementName.toLowerCase()) {
-            element = document.createElement(elementName);
-            this.#skeletonElements.set(id, element);
-        }
-        const cell = element as HTMLElement & Partial<UauiTableCellElement>;
-        cell.column = derived.column;
+        const cell = this.#cellElement(this.#skeletonElements, `${row}:${column.key}`, elementName);
+        cell.column = column;
         cell.item = {};
         cell.value = undefined;
         cell.loading = true;
-        return element;
+        return cell;
     }
 
     #renderSkeletonRow(index: number): TemplateResult {
         return html`<uui-table-row>
-            ${this.#derived.map((derived, column) => {
+            ${this.columns.map((column, columnIndex) => {
+                const align = column.align ?? "start";
                 // Numbers sit at the end of their cell and are short, so their block is too.
-                const width = derived.align === "end" ? 40 : SKELETON_WIDTHS[(index + column) % SKELETON_WIDTHS.length];
-                return html`<uui-table-cell class=${this.#cellClass(derived)} style="--_uaui-skeleton-width: ${width}%">
-                    ${this.#renderSkeletonCell(derived, index, column)}
+                const width = align === "end" ? 40 : SKELETON_WIDTHS[(index + columnIndex) % SKELETON_WIDTHS.length];
+                return html`<uui-table-cell class=${align} style="--_uaui-skeleton-width: ${width}%">
+                    ${this.#renderSkeletonCell(column, index)}
                 </uui-table-cell>`;
             })}
         </uui-table-row>`;
@@ -624,13 +594,13 @@ export class UauiDataTableElement extends UmbLitElement {
             ${mode === "reload" ? html`<uaui-loading-bar></uaui-loading-bar>` : nothing}
             <div class="toolbar"><slot name="toolbar" @slotchange=${() => this.requestUpdate()} @search=${this.#onSearch}></slot></div>
             <uui-table aria-busy=${busy ? "true" : "false"}>
-                ${this.#derived.map((derived) => html`<uui-table-column style=${ifDefined(derived.column.width ? `width: ${derived.column.width}` : undefined)}></uui-table-column>`)}
+                ${this.columns.map((column) => html`<uui-table-column style=${ifDefined(column.width ? `width: ${column.width}` : undefined)}></uui-table-column>`)}
                 ${this.#renderColumnToolbar()}
-                <uui-table-head>${this.#derived.map((derived) => this.#renderHeaderCell(derived))}</uui-table-head>
+                <uui-table-head>${this.columns.map((column) => this.#renderHeaderCell(column))}</uui-table-head>
                 ${this.error
                     ? nothing
                     : mode === "skeleton"
-                      ? Array.from({ length: this.#skeletonRowCount }, (_, index) => this.#renderSkeletonRow(index))
+                      ? Array.from({ length: SKELETON_ROWS }, (_, index) => this.#renderSkeletonRow(index))
                       : this.#visibleRows.map((row) => this.#renderRow(row))}
             </uui-table>
             ${this.error ? this.#renderErrorState() : this.#renderEmptyState(mode, hasData)}
@@ -648,9 +618,9 @@ export class UauiDataTableElement extends UmbLitElement {
     #renderColumnToolbar(): TemplateResult {
         const slot = (name: string) => html`<slot name=${name} @slotchange=${() => this.requestUpdate()} @search=${this.#onSearch}></slot>`;
         return html`<uui-table-row class="column-toolbar" ?hidden=${!this.#hasColumnToolbar || this.error}>
-            ${this.#derived.map((derived, index) => {
-                const name = `${SLOT_PREFIX}${derived.column.key}`;
-                return html`<uui-table-cell class=${this.#cellClass(derived)}>
+            ${this.columns.map((column, index) => {
+                const name = `${SLOT_PREFIX}${column.key}`;
+                return html`<uui-table-cell class=${column.align ?? "start"}>
                     ${index === 0 ? slot(START_SLOT) : nothing}${name === START_SLOT ? nothing : slot(name)}
                 </uui-table-cell>`;
             })}

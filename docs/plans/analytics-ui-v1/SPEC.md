@@ -35,6 +35,7 @@ type UauiGroupByChangeDetail = { value: UauiGroupBy };
 type UauiDateRangeChangeDetail = { value: UauiDateRange; compare?: UauiCompare };
 type UauiMarkerClickDetail = { id: string };
 type UauiToggleGroupChangeDetail = { value: string };
+type UauiSearchDetail = { query: string };
 ```
 
 **Date helpers** (public functions in `src/date-helpers/`, for products that use them without the picker; weeks start on Monday unless `weekStart` says otherwise; nothing reads the locale for you):
@@ -72,7 +73,7 @@ Storybook gets a "Pane" story showing this recipe, a chart and a table in one `u
   - `no-data`: the metric has no data for the period (see below)
   - `error`: the data could not be loaded (see below)
 - One style only: a card with the icon in a pink square, as in every Phase 1 screenshot.
-- Not used for table totals ("TOTAL PAGEVIEWS 272 +8.4%"). Those are a label and a number, which the product slots into the table's column toolbar (`toolbar-<column key>`, §7), using `uaui-delta-badge` for the change.
+- Not used for table totals ("TOTAL PAGEVIEWS 272 +8.4%"). Those are a label and a number, which the product slots into the table's column toolbar (`toolbar-<column key>`, §7), using `uaui-table-total` for the label, number and change.
 - **Selectable:** follows UUI's `SelectableMixin` (as `uui-card` uses), so product code reads the same as for UUI cards. This lets a row of tiles switch which metric a chart shows, like Engage's `AnStatPanes`.
   - When `selectable`, the tile is a toggle button with `aria-pressed` (UUI cards don't expose their state to screen readers; this does).
   - Clicking, Enter or Space on an unselected tile raises a cancelable `selected` event, then sets `selected` unless the event was cancelled.

@@ -119,7 +119,7 @@ Each series is `{ id, label, points: [{ date, value }] }`, with dates as `YYYY-M
 Each column names the cell that shows it.
 
 ```ts
-import { UAUI_TABLE_CELL, type UauiTableColumn } from "@umbraco/analytics-ui";
+import { UAUI_TABLE_CELL, type UauiTableColumn, type UauiTableRowClickDetail } from "@umbraco/analytics-ui";
 
 const columns: UauiTableColumn[] = [
   { key: "title", label: "Page", elementName: UAUI_TABLE_CELL.link, meta: { hrefKey: "url" }, searchable: true },
@@ -132,7 +132,7 @@ html`<uaui-data-table
   .rows=${rows}
   row-key="url"
   clickable-rows
-  @row-click=${(e: CustomEvent<{ row: Record<string, unknown> }>) => this.#open(e.detail.row)}
+  @row-click=${(e: CustomEvent<UauiTableRowClickDetail>) => this.#open(e.detail.row)}
 ></uaui-data-table>`;
 ```
 

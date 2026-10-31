@@ -3,7 +3,7 @@ import type { UUIInputElement, UUIInputEvent } from "@umbraco-cms/backoffice/ext
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 
 /** The detail of the `search` event of `uaui-search-field`: what the editor typed. Empty when the box was cleared. */
-export type UauiSearchFieldDetail = {
+export type UauiSearchDetail = {
     query: string;
 };
 
@@ -47,7 +47,7 @@ export class UauiSearchFieldElement extends UmbLitElement {
 
     #raise() {
         clearTimeout(this.#timer);
-        this.dispatchEvent(new CustomEvent<UauiSearchFieldDetail>("search", { bubbles: true, detail: { query: this.value } }));
+        this.dispatchEvent(new CustomEvent<UauiSearchDetail>("search", { bubbles: true, detail: { query: this.value } }));
     }
 
     #onInput(event: UUIInputEvent) {

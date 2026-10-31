@@ -1,6 +1,6 @@
 import { css, customElement, html, nothing, property, type CSSResultGroup, type TemplateResult } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
-import { uauiDeltaChange } from "../delta-badge/delta-change.js";
+import { deltaChange } from "../internal/delta/delta-change.js";
 import type { UauiDeltaUnit } from "../delta-badge/delta-badge.element.js";
 import "../delta-badge/delta-badge.element.js";
 
@@ -55,7 +55,7 @@ export class UauiTableTotalElement extends UmbLitElement {
 
     // Whether there is a change to show: the same rule the badge uses, so no empty badge takes up room.
     #hasChange(): boolean {
-        return Number.isFinite(uauiDeltaChange(this.delta, this.current, this.previous, this.deltaUnit));
+        return Number.isFinite(deltaChange(this.delta, this.current, this.previous, this.deltaUnit));
     }
 
     override render(): TemplateResult {

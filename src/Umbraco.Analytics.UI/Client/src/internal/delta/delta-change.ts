@@ -1,4 +1,4 @@
-import type { UauiDeltaUnit } from "./delta-badge.element.js";
+import type { UauiDeltaUnit } from "../../delta-badge/delta-badge.element.js";
 
 /**
  * The change a delta shows, shared by the badge and by the elements that decide whether to draw one. `value` wins
@@ -6,7 +6,7 @@ import type { UauiDeltaUnit } from "./delta-badge.element.js";
  * for "points", the percent change for "percent" (unknown when `previous` is 0). Undefined when unknown.
  * Internal: not exported from the package.
  */
-export function uauiDeltaChange(
+export function deltaChange(
     value: number | undefined,
     current: number | undefined,
     previous: number | undefined,

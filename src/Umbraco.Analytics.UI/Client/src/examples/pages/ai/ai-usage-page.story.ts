@@ -16,7 +16,7 @@ import {
     type UauiSeries,
     type UauiTableColumn,
     type UauiTablePageChangeDetail,
-    type UauiSearchFieldDetail,
+    type UauiSearchDetail,
     type UauiTableSort,
     type UauiTableSortChangeDetail,
 } from "@umbraco/analytics-ui";
