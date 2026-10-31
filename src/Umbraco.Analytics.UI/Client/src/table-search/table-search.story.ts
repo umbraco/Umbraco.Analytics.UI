@@ -1,19 +1,19 @@
 import type { Meta, StoryObj } from "@storybook/web-components-vite";
 import { html } from "@umbraco-cms/backoffice/external/lit";
-import type { UaxTableSearchElement } from "./table-search.element.js";
+import type { UauiTableSearchElement } from "./table-search.element.js";
 import "./table-search.element.js";
 
-const meta: Meta<UaxTableSearchElement> = {
+const meta: Meta<UauiTableSearchElement> = {
     title: "Components/Table Search",
-    component: "uax-table-search",
+    component: "uaui-table-search",
     args: { value: "" },
-    render: (args) => html`<uax-table-search .value=${args.value}></uax-table-search>`,
+    render: (args) => html`<uaui-table-search .value=${args.value}></uaui-table-search>`,
 };
 
 export default meta;
-type Story = StoryObj<UaxTableSearchElement>;
+type Story = StoryObj<UauiTableSearchElement>;
 
-/** Type, and `search` is raised 300ms after you stop. Inside a `uax-data-table`'s `toolbar` slot the table filters itself; see Components › Data Table › Search. */
+/** Type, and `search` is raised 300ms after you stop. Inside a `uaui-data-table`'s `toolbar` slot the table filters itself; see Components › Data Table › Search. */
 export const Default: Story = {};
 
 /** With text in the box a compact clear button appears. Clicking it empties the box and raises `search` at once with an empty query. */

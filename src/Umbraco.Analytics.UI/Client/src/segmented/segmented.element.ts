@@ -1,12 +1,12 @@
 import { css, customElement, html, ifDefined, property, repeat, type CSSResultGroup, type TemplateResult } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
-import { UaxPaletteStyles } from "../theme/index.js";
+import { UauiPaletteStyles } from "../theme/index.js";
 
-/** One choice of `uax-segmented`: the `value` it reports and the `label` it shows. */
-export type UaxSegmentedOption = { value: string; label: string };
+/** One choice of `uaui-segmented`: the `value` it reports and the `label` it shows. */
+export type UauiSegmentedOption = { value: string; label: string };
 
-/** The detail of the `change` event of `uax-segmented`: the option the editor picked. */
-export type UaxSegmentedChangeDetail = { value: string };
+/** The detail of the `change` event of `uaui-segmented`: the option the editor picked. */
+export type UauiSegmentedChangeDetail = { value: string };
 
 /**
  * A segmented control: a row of options where exactly one is selected, built as a radio group.
@@ -14,18 +14,18 @@ export type UaxSegmentedChangeDetail = { value: string };
  * Arrow keys move the selection and focus to the next or previous option, wrapping at the ends, as in
  * `uui-radio-group`. Only the selected option is in the tab order. Put it in a `uui-box`'s `header-actions` slot.
  *
- * @element uax-segmented
- * @fires change - The editor picked a different option. Bubbles, not cancelable. `detail` is `{ value }` (`UaxSegmentedChangeDetail`).
+ * @element uaui-segmented
+ * @fires change - The editor picked a different option. Bubbles, not cancelable. `detail` is `{ value }` (`UauiSegmentedChangeDetail`).
  */
-@customElement("uax-segmented")
-export class UaxSegmentedElement extends UmbLitElement {
+@customElement("uaui-segmented")
+export class UauiSegmentedElement extends UmbLitElement {
     /** The selected option's `value`. Picking an option updates it, as `uui-radio-group` does, then raises `change`. */
     @property({ type: String, reflect: true })
     value = "";
 
     /** The options to show, in order. */
     @property({ attribute: false })
-    options: UaxSegmentedOption[] = [];
+    options: UauiSegmentedOption[] = [];
 
     /** The accessible name of the group, read by screen readers. Not shown. */
     @property({ type: String })
@@ -34,7 +34,7 @@ export class UaxSegmentedElement extends UmbLitElement {
     #select(value: string) {
         if (value === this.value) return;
         this.value = value;
-        this.dispatchEvent(new CustomEvent<UaxSegmentedChangeDetail>("change", { bubbles: true, detail: { value } }));
+        this.dispatchEvent(new CustomEvent<UauiSegmentedChangeDetail>("change", { bubbles: true, detail: { value } }));
     }
 
     #onKeydown(e: KeyboardEvent, index: number) {
@@ -70,13 +70,13 @@ export class UaxSegmentedElement extends UmbLitElement {
     }
 
     static override styles: CSSResultGroup = [
-        UaxPaletteStyles,
+        UauiPaletteStyles,
         css`
             :host {
                 display: inline-flex;
                 /* Design's selected segment is space cadet. That vanishes on the dark surface, so dark uses malibu light. */
-                --_uax-segmented-selected-bg: light-dark(var(--uui-palette-space-cadet), var(--uui-palette-malibu-light));
-                --_uax-segmented-selected-fg: light-dark(var(--uui-palette-white), var(--uui-palette-space-cadet));
+                --_uaui-segmented-selected-bg: light-dark(var(--uui-palette-space-cadet), var(--uui-palette-malibu-light));
+                --_uaui-segmented-selected-fg: light-dark(var(--uui-palette-white), var(--uui-palette-space-cadet));
             }
 
             .group {
@@ -111,8 +111,8 @@ export class UaxSegmentedElement extends UmbLitElement {
             }
 
             button[aria-checked="true"] {
-                background: var(--_uax-segmented-selected-bg);
-                color: var(--_uax-segmented-selected-fg);
+                background: var(--_uaui-segmented-selected-bg);
+                color: var(--_uaui-segmented-selected-fg);
             }
 
             button:focus-visible {
@@ -131,6 +131,6 @@ export class UaxSegmentedElement extends UmbLitElement {
 
 declare global {
     interface HTMLElementTagNameMap {
-        "uax-segmented": UaxSegmentedElement;
+        "uaui-segmented": UauiSegmentedElement;
     }
 }

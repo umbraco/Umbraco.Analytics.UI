@@ -13,11 +13,11 @@ export type CompactPagerChangeDetail = { page: number; pageSize: number };
  * When Next lands on the last page (or Previous on the first) and the focused button becomes disabled, focus moves
  * to the other nav button, so a keyboard user isn't dropped as with `uui-pagination`.
  *
- * @element uax-compact-pager
+ * @element uaui-compact-pager
  * @fires page-change - The editor picked another page or page size. `detail` is `{ page, pageSize }`. Doesn't bubble.
  */
-@customElement("uax-compact-pager")
-export class UaxCompactPagerElement extends UmbLitElement {
+@customElement("uaui-compact-pager")
+export class UauiCompactPagerElement extends UmbLitElement {
     /** The page shown, starting at 1. */
     @property({ type: Number })
     page = 1;
@@ -72,22 +72,22 @@ export class UaxCompactPagerElement extends UmbLitElement {
         const format = getNumberFormat(this.localize.lang()).format;
         const from = (page - 1) * size + 1;
         const to = Math.min(total, page * size);
-        return html`<div class="pager" role="navigation" aria-label=${this.localize.term("uaxAnalytics_pagerLabel")}>
+        return html`<div class="pager" role="navigation" aria-label=${this.localize.term("uauiAnalytics_pagerLabel")}>
             <div class="page-size">
-                <span aria-hidden="true">${this.localize.term("uaxAnalytics_pagerPageSize")}</span>
+                <span aria-hidden="true">${this.localize.term("uauiAnalytics_pagerPageSize")}</span>
                 <uui-select
                     name="page-size"
-                    label=${this.localize.term("uaxAnalytics_pagerPageSize")}
+                    label=${this.localize.term("uauiAnalytics_pagerPageSize")}
                     .options=${this.pageSizes.map((option) => ({ name: String(option), value: String(option), selected: option === size }))}
                     .value=${String(size)}
                     @change=${this.#onPageSizeChange}></uui-select>
             </div>
-            <div class="range" aria-live="polite">${this.localize.term("uaxAnalytics_pagerPosition", format(from), format(to), format(total))}</div>
+            <div class="range" aria-live="polite">${this.localize.term("uauiAnalytics_pagerPosition", format(from), format(to), format(total))}</div>
             <div class="nav">
                 <uui-button
                     class="previous"
                     compact
-                    label=${this.localize.term("uaxAnalytics_pagerPreviousPage")}
+                    label=${this.localize.term("uauiAnalytics_pagerPreviousPage")}
                     ?disabled=${page <= 1}
                     @click=${() => page > 1 && this.#step(-1)}>
                     <uui-icon name="icon-navigation-left"></uui-icon>
@@ -95,7 +95,7 @@ export class UaxCompactPagerElement extends UmbLitElement {
                 <uui-button
                     class="next"
                     compact
-                    label=${this.localize.term("uaxAnalytics_pagerNextPage")}
+                    label=${this.localize.term("uauiAnalytics_pagerNextPage")}
                     ?disabled=${page >= this.#pageCount}
                     @click=${() => page < this.#pageCount && this.#step(1)}>
                     <uui-icon name="icon-navigation-right"></uui-icon>
@@ -139,6 +139,6 @@ export class UaxCompactPagerElement extends UmbLitElement {
 
 declare global {
     interface HTMLElementTagNameMap {
-        "uax-compact-pager": UaxCompactPagerElement;
+        "uaui-compact-pager": UauiCompactPagerElement;
     }
 }

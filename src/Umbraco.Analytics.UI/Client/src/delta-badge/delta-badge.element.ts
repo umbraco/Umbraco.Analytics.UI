@@ -1,13 +1,13 @@
 import { css, customElement, html, nothing, property, type CSSResultGroup, type TemplateResult } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
-import { UaxVisuallyHiddenStyles } from "../internal/a11y/visually-hidden.css.js";
-import { UaxPaletteStyles } from "../theme/index.js";
+import { UauiVisuallyHiddenStyles } from "../internal/a11y/visually-hidden.css.js";
+import { UauiPaletteStyles } from "../theme/index.js";
 
 /** What a delta is measured in: a percent change, or a change in percentage points. */
-export type UaxDeltaUnit = "percent" | "points";
+export type UauiDeltaUnit = "percent" | "points";
 
 /** The size of a delta badge. `sm` is for table cells. */
-export type UaxDeltaBadgeSize = "md" | "sm";
+export type UauiDeltaBadgeSize = "md" | "sm";
 
 /**
  * Shows the change in a value against a comparison period, e.g. "▲ 12.4%".
@@ -17,17 +17,17 @@ export type UaxDeltaBadgeSize = "md" | "sm";
  *
  * Green means good. For metrics where a drop is good (refund rate, bounce rate), set `lower-is-better`.
  *
- * @element uax-delta-badge
- * @cssprop --uax-delta-badge-font-size - Font size. Defaults to 13px ("md") or 11.5px ("sm").
- * @cssprop --uax-tint-positive - Background of a good change. Defaults to a tint of `--uui-color-positive`.
- * @cssprop --uax-tint-negative - Background of a bad change. Defaults to a tint of `--uui-color-danger`.
- * @cssprop --uax-tint-neutral - Background of a change that rounds to zero.
- * @cssprop --uax-text-positive - Text colour of a good change. Defaults to forest green (dark theme: jungle green), which passes 4.5:1 on the tint.
- * @cssprop --uax-text-negative - Text colour of a bad change. Defaults to dark maroon (dark theme: spanish pink), which passes 4.5:1 on the tint.
- * @cssprop --uax-text-neutral - Text colour of a change that rounds to zero. Defaults to `--uui-color-text-alt`.
+ * @element uaui-delta-badge
+ * @cssprop --uaui-delta-badge-font-size - Font size. Defaults to 13px ("md") or 11.5px ("sm").
+ * @cssprop --uaui-tint-positive - Background of a good change. Defaults to a tint of `--uui-color-positive`.
+ * @cssprop --uaui-tint-negative - Background of a bad change. Defaults to a tint of `--uui-color-danger`.
+ * @cssprop --uaui-tint-neutral - Background of a change that rounds to zero.
+ * @cssprop --uaui-text-positive - Text colour of a good change. Defaults to forest green (dark theme: jungle green), which passes 4.5:1 on the tint.
+ * @cssprop --uaui-text-negative - Text colour of a bad change. Defaults to dark maroon (dark theme: spanish pink), which passes 4.5:1 on the tint.
+ * @cssprop --uaui-text-neutral - Text colour of a change that rounds to zero. Defaults to `--uui-color-text-alt`.
  */
-@customElement("uax-delta-badge")
-export class UaxDeltaBadgeElement extends UmbLitElement {
+@customElement("uaui-delta-badge")
+export class UauiDeltaBadgeElement extends UmbLitElement {
     /**
      * The change. 12.4 means +12.4% (or +12.4 percentage points when `unit` is "points"). 0 is "no change".
      * Unset means unknown: nothing is drawn.
@@ -37,7 +37,7 @@ export class UaxDeltaBadgeElement extends UmbLitElement {
 
     /** Whether `value` is a percent change or a change in percentage points. */
     @property({ type: String })
-    unit: UaxDeltaUnit = "percent";
+    unit: UauiDeltaUnit = "percent";
 
     /** Shows a fall as good (green) and a rise as bad (red). */
     @property({ type: Boolean, attribute: "lower-is-better", reflect: true })
@@ -49,7 +49,7 @@ export class UaxDeltaBadgeElement extends UmbLitElement {
 
     /** Pill size. "sm" is for table cells. */
     @property({ type: String, reflect: true })
-    size: UaxDeltaBadgeSize = "md";
+    size: UauiDeltaBadgeSize = "md";
 
     /** The direction of the change. "flat" when the value rounds to zero. */
     get direction(): "up" | "down" | "flat" {
@@ -74,17 +74,17 @@ export class UaxDeltaBadgeElement extends UmbLitElement {
         const options = { maximumFractionDigits: this.maxDecimals, signDisplay: "exceptZero" } as const;
         // Percent style lets the culture place the sign and spacing ("+12.4%" in en, "+12,4 %" in da-DK).
         return this.unit === "points"
-            ? this.localize.term("uaxAnalytics_deltaPercentagePoints", this.localize.number(rounded, options))
+            ? this.localize.term("uauiAnalytics_deltaPercentagePoints", this.localize.number(rounded, options))
             : this.localize.number(rounded / 100, { ...options, style: "percent" });
     }
 
     #sentimentLabel() {
         const key = {
-            positive: "uaxAnalytics_deltaImprovement",
-            negative: "uaxAnalytics_deltaDecline",
-            neutral: "uaxAnalytics_deltaNoChange",
+            positive: "uauiAnalytics_deltaImprovement",
+            negative: "uauiAnalytics_deltaDecline",
+            neutral: "uauiAnalytics_deltaNoChange",
         }[this.sentiment];
-        return this.localize.term("uaxAnalytics_deltaSentimentSuffix", this.localize.term(key));
+        return this.localize.term("uauiAnalytics_deltaSentimentSuffix", this.localize.term(key));
     }
 
     override render(): TemplateResult | typeof nothing {
@@ -101,8 +101,8 @@ export class UaxDeltaBadgeElement extends UmbLitElement {
     }
 
     static override styles: CSSResultGroup = [
-        UaxPaletteStyles,
-        UaxVisuallyHiddenStyles,
+        UauiPaletteStyles,
+        UauiVisuallyHiddenStyles,
         css`
             :host {
                 display: inline-flex;
@@ -115,7 +115,7 @@ export class UaxDeltaBadgeElement extends UmbLitElement {
                 gap: var(--uui-size-space-1);
                 padding: 4px 8px;
                 border-radius: var(--uui-border-radius-1);
-                font-size: var(--uax-delta-badge-font-size, 13px);
+                font-size: var(--uaui-delta-badge-font-size, 13px);
                 font-weight: 700;
                 font-variant-numeric: tabular-nums;
                 white-space: nowrap;
@@ -123,7 +123,7 @@ export class UaxDeltaBadgeElement extends UmbLitElement {
 
             :host([size="sm"]) .badge {
                 padding: 1px 5px;
-                font-size: var(--uax-delta-badge-font-size, 11.5px);
+                font-size: var(--uaui-delta-badge-font-size, 11.5px);
             }
 
             .arrow {
@@ -131,18 +131,18 @@ export class UaxDeltaBadgeElement extends UmbLitElement {
             }
 
             [data-sentiment="positive"] {
-                color: var(--uax-color-text-positive);
-                background: var(--uax-color-tint-positive);
+                color: var(--uaui-color-text-positive);
+                background: var(--uaui-color-tint-positive);
             }
 
             [data-sentiment="negative"] {
-                color: var(--uax-color-text-negative);
-                background: var(--uax-color-tint-negative);
+                color: var(--uaui-color-text-negative);
+                background: var(--uaui-color-tint-negative);
             }
 
             [data-sentiment="neutral"] {
-                color: var(--uax-color-text-neutral);
-                background: var(--uax-color-tint-neutral);
+                color: var(--uaui-color-text-neutral);
+                background: var(--uaui-color-tint-neutral);
             }
         `,
     ];
@@ -150,6 +150,6 @@ export class UaxDeltaBadgeElement extends UmbLitElement {
 
 declare global {
     interface HTMLElementTagNameMap {
-        "uax-delta-badge": UaxDeltaBadgeElement;
+        "uaui-delta-badge": UauiDeltaBadgeElement;
     }
 }

@@ -1,4 +1,4 @@
-// T25: compare badges come from one piece, `uax-table-compare-badge`, which cells compose; column `meta` says what is better
+// T25: compare badges come from one piece, `uaui-table-compare-badge`, which cells compose; column `meta` says what is better
 /// <reference types="vite/client" />
 import { describe, expect, it } from "vitest";
 import { customElement, html, property } from "@umbraco-cms/backoffice/external/lit";
@@ -11,17 +11,17 @@ import { axeRun } from "../internal/test/a11y.js";
 import { deepQueryAll, renderElement, shadow } from "../internal/test/dom.js";
 import "./data-table.element.js";
 import "./table-compare-badge.element.js";
-import { UAX_TABLE_CELL } from "./cells/cell-names.js";
-import type { UaxTableCellElement, UaxTableColumn } from "./types.js";
+import { UAUI_TABLE_CELL } from "./cells/cell-names.js";
+import type { UauiTableCellElement, UauiTableColumn } from "./types.js";
 
 @customElement("example-product-cell")
-class ExampleProductCellElement extends UmbLitElement implements UaxTableCellElement {
-    @property({ attribute: false }) column: UaxTableColumn = { key: "value", label: "" };
+class ExampleProductCellElement extends UmbLitElement implements UauiTableCellElement {
+    @property({ attribute: false }) column: UauiTableColumn = { key: "value", label: "" };
     @property({ attribute: false }) item: Record<string, unknown> = {};
     @property({ attribute: false }) value: unknown;
 
     override render() {
-        return html`${String(this.value)}<uax-table-compare-badge .column=${this.column} .item=${this.item} .value=${this.value}></uax-table-compare-badge>`;
+        return html`${String(this.value)}<uaui-table-compare-badge .column=${this.column} .item=${this.item} .value=${this.value}></uaui-table-compare-badge>`;
     }
 }
 
@@ -33,10 +33,10 @@ declare global {
 
 type Badge = HTMLElement & { value?: number; sentiment: string };
 
-const columns = (duration: Partial<UaxTableColumn> = {}): UaxTableColumn[] => [
+const columns = (duration: Partial<UauiTableColumn> = {}): UauiTableColumn[] => [
     { key: "name", label: "Name" },
-    { key: "rate", label: "Rate", elementName: UAX_TABLE_CELL.percent, align: "end" },
-    { key: "ms", label: "Duration", elementName: UAX_TABLE_CELL.number, align: "end", ...duration },
+    { key: "rate", label: "Rate", elementName: UAUI_TABLE_CELL.percent, align: "end" },
+    { key: "ms", label: "Duration", elementName: UAUI_TABLE_CELL.number, align: "end", ...duration },
     { key: "orders", label: "Orders", elementName: "example-product-cell" },
 ];
 const rows = [
@@ -47,12 +47,12 @@ const compareRows = [{ name: "A", rate: 0.4, ms: 100, orders: 8 }];
 
 const table = (cols = columns(), compare: unknown[] = compareRows) =>
     renderElement(
-        html`<uax-data-table .columns=${cols} .rows=${rows} .compareRows=${compare} row-key="name"></uax-data-table>`,
-        "uax-data-table",
+        html`<uaui-data-table .columns=${cols} .rows=${rows} .compareRows=${compare} row-key="name"></uaui-data-table>`,
+        "uaui-data-table",
     );
 
 const badges = (el: Element, row: number, column: number) =>
-    deepQueryAll(shadow(el).querySelectorAll("uui-table-row:not(.summary)")[row].querySelectorAll("uui-table-cell")[column], "uax-delta-badge") as Badge[];
+    deepQueryAll(shadow(el).querySelectorAll("uui-table-row:not(.summary)")[row].querySelectorAll("uui-table-cell")[column], "uaui-delta-badge") as Badge[];
 
 describe("Feature: compare badge in value cells", () => {
     describe("Scenario: a number cell whose row has a compare row", () => {
@@ -91,7 +91,7 @@ describe("Feature: compare badge in value cells", () => {
         });
     });
 
-    describe("Scenario: a product cell that uses uax-table-compare-badge", () => {
+    describe("Scenario: a product cell that uses uaui-table-compare-badge", () => {
         it("shows a badge", async () => {
             expect(badges(await table(), 0, 3)).toHaveLength(1);
         });
@@ -107,14 +107,14 @@ describe("Feature: compare badge in value cells", () => {
             try {
                 const host = render(
                     html`<div style="background: var(--uui-color-surface); color: var(--uui-color-text); width: 700px">
-                        <uax-data-table
+                        <uaui-data-table
                             .columns=${columns({ meta: { lowerIsBetter: true } })}
                             .rows=${rows}
                             .compareRows=${compareRows}
-                            row-key="name"></uax-data-table>
+                            row-key="name"></uaui-data-table>
                     </div>`,
                 ).container.querySelector("div")!;
-                await host.querySelector("uax-data-table")!.updateComplete;
+                await host.querySelector("uaui-data-table")!.updateComplete;
                 return await axeRun(host);
             } finally {
                 theme.remove();

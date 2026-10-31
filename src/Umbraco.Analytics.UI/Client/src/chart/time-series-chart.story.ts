@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/web-components-vite";
 import { html } from "@umbraco-cms/backoffice/external/lit";
-import type { UaxTimeSeriesChartElement } from "./time-series-chart.element.js";
+import type { UauiTimeSeriesChartElement } from "./time-series-chart.element.js";
 import "./time-series-chart.element.js";
 import {
     compareRangeLabel,
@@ -15,9 +15,9 @@ import {
     sessionsPrevious,
 } from "./internal/chart-fixtures.js";
 
-const meta: Meta<UaxTimeSeriesChartElement> = {
+const meta: Meta<UauiTimeSeriesChartElement> = {
     title: "Components/Time Series Chart",
-    component: "uax-time-series-chart",
+    component: "uaui-time-series-chart",
     args: {
         kind: "line",
         series: [pageviews],
@@ -40,7 +40,7 @@ const meta: Meta<UaxTimeSeriesChartElement> = {
     },
     render: (args) =>
         html`<uui-box headline="Pageviews over time" style="--uui-box-default-padding: 0">
-            <uax-time-series-chart
+            <uaui-time-series-chart
                 .kind=${args.kind}
                 .series=${args.series}
                 .compareSeries=${args.compareSeries}
@@ -54,12 +54,12 @@ const meta: Meta<UaxTimeSeriesChartElement> = {
                 .errorDescription=${args.errorDescription}
                 .retryable=${args.retryable}
                 .emptyHeadline=${args.emptyHeadline}
-                .emptyDescription=${args.emptyDescription}></uax-time-series-chart>
+                .emptyDescription=${args.emptyDescription}></uaui-time-series-chart>
         </uui-box>`,
 };
 
 export default meta;
-type Story = StoryObj<UaxTimeSeriesChartElement>;
+type Story = StoryObj<UauiTimeSeriesChartElement>;
 
 export const Line: Story = {};
 

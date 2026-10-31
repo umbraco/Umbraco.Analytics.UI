@@ -1,7 +1,7 @@
 import { css } from "@umbraco-cms/backoffice/external/lit";
 
 /** Internal. A `.visually-hidden` class: text for screen readers only. Its positioned parent clips it. */
-export const UaxVisuallyHiddenStyles = css`
+export const UauiVisuallyHiddenStyles = css`
     .visually-hidden {
         position: absolute;
         width: 1px;

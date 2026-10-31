@@ -1,9 +1,9 @@
-// Shared rows and columns for the uax-data-table specs.
-import { UAX_TABLE_CELL } from "./cells/cell-names.js";
+// Shared rows and columns for the uaui-data-table specs.
+import { UAUI_TABLE_CELL } from "./cells/cell-names.js";
 export const pageColumns = [
-    { key: "url", label: "Page URL", elementName: UAX_TABLE_CELL.link, meta: { hrefKey: "url" } },
-    { key: "pageviews", label: "Pageviews", elementName: UAX_TABLE_CELL.share, sortable: true, sortAs: "number" },
-    { key: "sessions", label: "Page sessions", elementName: UAX_TABLE_CELL.share, sortable: true, sortAs: "number" },
+    { key: "url", label: "Page URL", elementName: UAUI_TABLE_CELL.link, meta: { hrefKey: "url" } },
+    { key: "pageviews", label: "Pageviews", elementName: UAUI_TABLE_CELL.share, sortable: true, sortAs: "number" },
+    { key: "sessions", label: "Page sessions", elementName: UAUI_TABLE_CELL.share, sortable: true, sortAs: "number" },
 ];
 
 export const pageRows = [
@@ -17,5 +17,5 @@ export const manyRows = (count: number) =>
 
 export const nameColumns = [
     { key: "name", label: "Name" },
-    { key: "views", label: "Views", elementName: UAX_TABLE_CELL.number, sortable: true, sortAs: "number", align: "end" },
+    { key: "views", label: "Views", elementName: UAUI_TABLE_CELL.number, sortable: true, sortAs: "number", align: "end" },
 ];

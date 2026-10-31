@@ -7,9 +7,9 @@ import darkCss from "@umbraco-ui/uui/themes/dark.css?inline";
 import highContrastCss from "@umbraco-ui/uui/themes/high-contrast.css?inline";
 import { render } from "vitest-browser-lit";
 import { axeRun } from "../internal/test/a11y.js";
-import { recordEvents, renderElement, shadow, type UaxTestElement } from "../internal/test/dom.js";
+import { recordEvents, renderElement, shadow, type UauiTestElement } from "../internal/test/dom.js";
 import "./table-search.element.js";
-import type { UaxTableSearchElement } from "./table-search.element.js";
+import type { UauiTableSearchElement } from "./table-search.element.js";
 
 const input = (el: Element) => shadow(el).querySelector("uui-input") as HTMLElement & { value: string };
 /** Sets the text the way typing does: the value changes, then `input` is raised from the uui-input. */
@@ -21,9 +21,9 @@ const type = (el: Element, text: string) => {
 
 describe("Feature: table search box", () => {
     describe("Scenario: how it is built", () => {
-        let el: UaxTestElement;
+        let el: UauiTestElement;
         beforeEach(async () => {
-            el = await renderElement(html`<uax-table-search></uax-table-search>`, "uax-table-search");
+            el = await renderElement(html`<uaui-table-search></uaui-table-search>`, "uaui-table-search");
         });
 
         it("puts the search icon in the input's prepend slot", () => {
@@ -42,7 +42,7 @@ describe("Feature: table search box", () => {
     describe("Scenario: typing quickly", () => {
         let events: Event[];
         beforeEach(async () => {
-            const el = await renderElement(html`<uax-table-search></uax-table-search>`, "uax-table-search");
+            const el = await renderElement(html`<uaui-table-search></uaui-table-search>`, "uaui-table-search");
             events = recordEvents(el, "search");
             // Only the timers are faked, after render, so the debounce is driven by the test and not by the machine's speed.
             vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
@@ -62,10 +62,10 @@ describe("Feature: table search box", () => {
     });
 
     describe("Scenario: clearing the box", () => {
-        let el: UaxTestElement;
+        let el: UauiTestElement;
         let events: Event[];
         beforeEach(async () => {
-            el = await renderElement(html`<uax-table-search value="contact"></uax-table-search>`, "uax-table-search");
+            el = await renderElement(html`<uaui-table-search value="contact"></uaui-table-search>`, "uaui-table-search");
             events = recordEvents(el, "search");
             (input(el).querySelector("[slot='append']") as HTMLElement).click();
             await el.updateComplete;
@@ -90,10 +90,10 @@ describe("Feature: table search box", () => {
             try {
                 const host = render(
                     html`<div style="background: var(--uui-color-surface); padding: 8px">
-                        <uax-table-search value="contact"></uax-table-search>
+                        <uaui-table-search value="contact"></uaui-table-search>
                     </div>`,
                 ).container.querySelector("div")!;
-                await host.querySelector<UaxTableSearchElement>("uax-table-search")!.updateComplete;
+                await host.querySelector<UauiTableSearchElement>("uaui-table-search")!.updateComplete;
                 return await axeRun(host);
             } finally {
                 theme.remove();

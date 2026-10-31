@@ -1,7 +1,7 @@
 import { bucketOffset, dateOnly, type BucketUnit } from "../../internal/date/date-math.js";
-import type { UaxChartKind, UaxSeries } from "../types.js";
+import type { UauiChartKind, UauiSeries } from "../types.js";
 
-export interface UaxChartData {
+export interface UauiChartData {
     /** Every date in any series, ascending. */
     dates: string[];
     /**
@@ -21,10 +21,10 @@ export interface UaxChartData {
 }
 
 /** The series with each point's date cut to its calendar day, so a date-time point lands on the day it names. */
-const dayPoints = (s: UaxSeries): UaxSeries => ({ ...s, points: s.points.map((p) => ({ ...p, date: dateOnly(p.date) })) });
+const dayPoints = (s: UauiSeries): UauiSeries => ({ ...s, points: s.points.map((p) => ({ ...p, date: dateOnly(p.date) })) });
 
 /** The sorted dates of the series' points, each once. */
-const sortedDates = (series: UaxSeries[]) => [...new Set(series.flatMap((s) => s.points.map((p) => p.date)))].sort();
+const sortedDates = (series: UauiSeries[]) => [...new Set(series.flatMap((s) => s.points.map((p) => p.date)))].sort();
 
 /**
  * The bucket number of each date, counted from the bucket of `anchor` (the first date when there is none). A date
@@ -35,20 +35,20 @@ function offsetsOf(dates: string[], unit: BucketUnit, anchor = dates[0]): number
 }
 
 /** The first day of each side's period, when the product knows it. Without one a side starts at its first point. */
-export interface UaxChartAnchors {
+export interface UauiChartAnchors {
     from?: string;
     compareFrom?: string;
 }
 
 /** Points on the same date add up, whichever series the rule is applied to. */
-function sumByDate(points: UaxSeries["points"]): Map<string, number> {
+function sumByDate(points: UauiSeries["points"]): Map<string, number> {
     const sums = new Map<string, number>();
     for (const p of points) sums.set(p.date, (sums.get(p.date) ?? 0) + p.value);
     return sums;
 }
 
 /** Compare values added up per bucket offset, with the earliest real date seen in each. */
-function compareByOffset(points: UaxSeries["points"], unit: BucketUnit, start: string) {
+function compareByOffset(points: UauiSeries["points"], unit: BucketUnit, start: string) {
     const byOffset = new Map<number, { value: number; date: string }>();
     const position = new Map([...new Set(points.map((p) => p.date))].sort().map((d, i) => [d, i]));
     [...points]
@@ -69,7 +69,7 @@ function compareByOffset(points: UaxSeries["points"], unit: BucketUnit, start: s
  * start. A start is `anchors.from` or `anchors.compareFrom` when given, else the first date of that side. Compare
  * points whose offset has no current date are dropped, and current dates with no compare point stay `null`.
  */
-export function buildChartData(rawSeries: UaxSeries[], rawCompareSeries: UaxSeries[] = [], groupBy: BucketUnit = "day", anchors: UaxChartAnchors = {}): UaxChartData {
+export function buildChartData(rawSeries: UauiSeries[], rawCompareSeries: UauiSeries[] = [], groupBy: BucketUnit = "day", anchors: UauiChartAnchors = {}): UauiChartData {
     const series = rawSeries.map(dayPoints);
     const compareSeries = rawCompareSeries.map(dayPoints);
     const dates = sortedDates(series);
@@ -103,7 +103,7 @@ export function buildChartData(rawSeries: UaxSeries[], rawCompareSeries: UaxSeri
 }
 
 /** The total of each date: the sum of the series' values, or `null` where every series is missing a point. */
-export function seriesTotals(data: UaxChartData): (number | null)[] {
+export function seriesTotals(data: UauiChartData): (number | null)[] {
     return data.dates.map((_, i) => {
         const present = data.series.map((s) => s.values[i]).filter((v): v is number => v !== null);
         return present.length ? present.reduce((a, b) => a + b, 0) : null;
@@ -111,7 +111,7 @@ export function seriesTotals(data: UaxChartData): (number | null)[] {
 }
 
 /** True when every plotted value, compare values included, is a whole number. */
-export function allWhole(data: UaxChartData): boolean {
+export function allWhole(data: UauiChartData): boolean {
     const values = [...data.series.flatMap((s) => [...s.values, ...(s.compare ?? [])]), ...(data.compareTotal?.values ?? [])];
     return values.every((v) => v === null || Number.isInteger(v));
 }
@@ -120,7 +120,7 @@ export function allWhole(data: UaxChartData): boolean {
  * The largest value the y-axis has to reach, or 0 when there are none. Lines count every series and its compare
  * line. `stacked-bar` counts each date's total; `bar` counts each series' value. Both count the compare total.
  */
-export function maxValue(data: UaxChartData, kind: UaxChartKind = "line"): number {
+export function maxValue(data: UauiChartData, kind: UauiChartKind = "line"): number {
     if (kind === "bar" || kind === "stacked-bar") {
         const current = kind === "bar" ? data.series.flatMap((s) => s.values) : seriesTotals(data);
         return Math.max(0, ...[...current, ...(data.compareTotal?.values ?? [])].filter((v): v is number => v !== null));

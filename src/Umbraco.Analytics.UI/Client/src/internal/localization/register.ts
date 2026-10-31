@@ -3,14 +3,14 @@ import { umbLocalizationRegistry } from "@umbraco-cms/backoffice/localization";
 import type { UmbLocalizationDictionary } from "@umbraco-cms/backoffice/localization-api";
 import en from "../../lang/en.js";
 
-export const UAX_EN_ALIAS = "Uax.Localization.En";
-const BACKOFFICE_EN_ALIAS = "Uax.Localization.BackofficeEn";
+export const UAUI_EN_ALIAS = "Uaui.Localization.En";
+const BACKOFFICE_EN_ALIAS = "Uaui.Localization.BackofficeEn";
 
 /**
  * Lower weights are merged last and win. The package sits at 200 so a product's own
  * `localization` extension at the default weight (100) always overrides it.
  */
-export const UAX_LOCALIZATION_WEIGHT = 200;
+export const UAUI_LOCALIZATION_WEIGHT = 200;
 
 /**
  * Registers the package's English translations the way its `localization` extension does, for
@@ -18,22 +18,22 @@ export const UAX_LOCALIZATION_WEIGHT = 200;
  * dictionary to make the Umbraco keys elements reuse (`buttons_save`, `general_close`, ...)
  * resolve too; it sits behind the package so it never overrides it.
  */
-export function registerUaxLocalization(backofficeEn?: UmbLocalizationDictionary): void {
+export function registerUauiLocalization(backofficeEn?: UmbLocalizationDictionary): void {
     if (backofficeEn && !umbExtensionsRegistry.isRegistered(BACKOFFICE_EN_ALIAS)) {
         umbExtensionsRegistry.register({
             type: "localization",
             alias: BACKOFFICE_EN_ALIAS,
-            name: "Backoffice English (Uax test and Storybook)",
-            weight: UAX_LOCALIZATION_WEIGHT + 100,
+            name: "Backoffice English (Uaui test and Storybook)",
+            weight: UAUI_LOCALIZATION_WEIGHT + 100,
             meta: { culture: "en", localizations: backofficeEn },
         });
     }
-    if (!umbExtensionsRegistry.isRegistered(UAX_EN_ALIAS)) {
+    if (!umbExtensionsRegistry.isRegistered(UAUI_EN_ALIAS)) {
         umbExtensionsRegistry.register({
             type: "localization",
-            alias: UAX_EN_ALIAS,
-            name: "Uax English",
-            weight: UAX_LOCALIZATION_WEIGHT,
+            alias: UAUI_EN_ALIAS,
+            name: "Uaui English",
+            weight: UAUI_LOCALIZATION_WEIGHT,
             meta: { culture: "en", localizations: en },
         });
     }

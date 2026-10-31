@@ -8,16 +8,16 @@ import "./commerce-analytics-page.element.js";
 const imports = `import { css, customElement, html, property, state } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import {
-    UAX_TABLE_CELL,
-    uaxFormatDateRange,
-    type UaxCompare,
-    type UaxDateRange,
-    type UaxSeries,
-    type UaxTableColumn,
-    type UaxTablePageChangeDetail,
-    type UaxTableSearchDetail,
-    type UaxTableSort,
-    type UaxTableSortChangeDetail,
+    UAUI_TABLE_CELL,
+    uauiFormatDateRange,
+    type UauiCompare,
+    type UauiDateRange,
+    type UauiSeries,
+    type UauiTableColumn,
+    type UauiTablePageChangeDetail,
+    type UauiTableSearchDetail,
+    type UauiTableSort,
+    type UauiTableSortChangeDetail,
 } from "@umbraco-analytics/ui";
 // Your API client: loadSnapshot, loadBuyers, loadBuyerCompare and their types. In this story they are a fake, generated from the dates.
 import { loadBuyerCompare, loadBuyers, loadSnapshot, type BuyerPage, type BuyerRow, type Day, type Snapshot, type Totals } from "./commerce-api.js";`;
@@ -33,9 +33,9 @@ export default meta;
 
 // The host stands in for the backoffice's modal manager, which the date range dialog opens through.
 const render = (latency?: number, failing = false) => html`
-    <uax-test-modal-host>
+    <uaui-test-modal-host>
         <example-commerce-analytics-page latency=${ifDefined(latency)} ?failing=${failing}></example-commerce-analytics-page>
-    </uax-test-modal-host>
+    </uaui-test-modal-host>
 `;
 
 /**

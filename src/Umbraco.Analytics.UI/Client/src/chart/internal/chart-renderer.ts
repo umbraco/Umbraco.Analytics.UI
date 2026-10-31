@@ -1,12 +1,12 @@
 import { Chart, type ChartConfiguration, type PointElement, type Plugin } from "chart.js";
-import type { UaxChartKind } from "../types.js";
-import type { UaxChartColors } from "./chart-colors.js";
-import { createMarkersPlugin, type UaxMarkerPin, type UaxMarkerPlacement, type UaxMarkersState } from "./markers-plugin.js";
+import type { UauiChartKind } from "../types.js";
+import type { UauiChartColors } from "./chart-colors.js";
+import { createMarkersPlugin, type UauiMarkerPin, type UauiMarkerPlacement, type UauiMarkersState } from "./markers-plugin.js";
 import "./register.js";
 
 /** What the renderer draws. Our own shape: Chart.js types stay inside `src/chart/internal`. */
-export interface UaxChartModel {
-    kind: UaxChartKind;
+export interface UauiChartModel {
+    kind: UauiChartKind;
     labels: string[];
     /** For the line kinds, `compare` is drawn as a dashed line, with the gap to `values` shaded. */
     datasets: { label: string; values: (number | null)[]; compare?: (number | null)[] }[];
@@ -16,13 +16,13 @@ export interface UaxChartModel {
     yMax: number;
     yStep: number;
     formatTick: (value: number) => string;
-    colors: UaxChartColors;
+    colors: UauiChartColors;
     /** One dot on the x-axis per entry. */
-    markers?: UaxMarkerPin[];
+    markers?: UauiMarkerPin[];
 }
 
 /** The date the pointer is on, and where to anchor a tooltip (canvas pixels). */
-export interface UaxChartHover {
+export interface UauiChartHover {
     index: number;
     x: number;
     y: number;
@@ -32,30 +32,30 @@ export interface UaxChartHover {
 const MAX_BAR_WIDTH = 28;
 const COMPARE_BAR_EXTRA_WIDTH = 12;
 
-const isBarKind = (kind: UaxChartKind) => kind === "bar" || kind === "stacked-bar";
+const isBarKind = (kind: UauiChartKind) => kind === "bar" || kind === "stacked-bar";
 
 /** Above this many points per series, dots would crowd the line, so only the hovered point shows. */
 const MAX_POINTS_WITH_DOTS = 45;
 
 /**
- * The one place that talks to Chart.js. The element hands it a `UaxChartModel` and listens for hover;
+ * The one place that talks to Chart.js. The element hands it a `UauiChartModel` and listens for hover;
  * the tooltip itself is HTML, drawn by the element. Create it once per canvas and call `update` for
  * every change, including loading toggles: it is only destroyed when the element disconnects.
  */
-export class UaxChartRenderer {
+export class UauiChartRenderer {
     #chart?: Chart;
     #family?: "line" | "bar";
-    #colors?: UaxChartColors;
-    #lastHover?: UaxChartHover;
+    #colors?: UauiChartColors;
+    #lastHover?: UauiChartHover;
     #canvas: HTMLCanvasElement;
-    #onHover: (hover: UaxChartHover | undefined) => void;
-    #markers: UaxMarkersState;
+    #onHover: (hover: UauiChartHover | undefined) => void;
+    #markers: UauiMarkersState;
 
     /** `onMarkerLayout` is told where the marker dots are drawn, after every layout in which they moved. */
     constructor(
         canvas: HTMLCanvasElement,
-        onHover: (hover: UaxChartHover | undefined) => void,
-        onMarkerLayout: (placements: UaxMarkerPlacement[]) => void = () => {},
+        onHover: (hover: UauiChartHover | undefined) => void,
+        onMarkerLayout: (placements: UauiMarkerPlacement[]) => void = () => {},
     ) {
         this.#canvas = canvas;
         this.#onHover = onHover;
@@ -72,7 +72,7 @@ export class UaxChartRenderer {
     /** Chart.js can't change a chart's type, so moving between the line and bar kinds builds a new chart. */
     #create(family: "line" | "bar"): Chart {
         const hoverLine: Plugin = {
-            id: "uaxHoverLine",
+            id: "uauiHoverLine",
             beforeDatasetsDraw: (chart) => {
                 const active = chart.getActiveElements()[0]?.element;
                 if (!active || !this.#colors) return;
@@ -137,7 +137,7 @@ export class UaxChartRenderer {
         return new Chart(this.#canvas, config);
     }
 
-    update(model: UaxChartModel): void {
+    update(model: UauiChartModel): void {
         this.#colors = model.colors;
         this.#markers.colors = model.colors;
         this.#markers.pins = model.markers ?? [];
@@ -182,7 +182,7 @@ export class UaxChartRenderer {
     }
 
     // The datasets are built as plain objects: Chart.js types the dataset by chart type, and the two families differ.
-    #lineDatasets(model: UaxChartModel) {
+    #lineDatasets(model: UauiChartModel) {
         const { colors } = model;
         const showDots = model.labels.length <= MAX_POINTS_WITH_DOTS;
         // Compare lines come after every series, so each series keeps its dataset index.
@@ -239,7 +239,7 @@ export class UaxChartRenderer {
      * not grouped with the others and drawn first (a higher `order` is drawn earlier), so it sits behind them,
      * wider than the group.
      */
-    #barDatasets(model: UaxChartModel) {
+    #barDatasets(model: UauiChartModel) {
         const { colors } = model;
         const stacked = model.kind === "stacked-bar";
         const groupWidth = stacked ? MAX_BAR_WIDTH : MAX_BAR_WIDTH * Math.max(model.datasets.length, 1);

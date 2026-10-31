@@ -10,7 +10,7 @@ import darkCss from "@umbraco-ui/uui/themes/dark.css?inline";
 import highContrastCss from "@umbraco-ui/uui/themes/high-contrast.css?inline";
 import { page, userEvent } from "vitest/browser";
 import { Chart } from "chart.js";
-import { deepQuery, renderElement, settle, shadow, type UaxTestElement } from "../internal/test/dom.js";
+import { deepQuery, renderElement, settle, shadow, type UauiTestElement } from "../internal/test/dom.js";
 import "../delta-badge/delta-badge.element.js";
 import "../chart/time-series-chart.element.js";
 import "../group-by/group-by.element.js";
@@ -68,17 +68,17 @@ const TEXT: Pair[] = [
     { name: "text-alt on row hover", fg: "var(--uui-color-text-alt)", bg: "var(--uui-color-surface-emphasis)" },
     { name: "link on surface", fg: "var(--uui-color-interactive)", bg: "var(--uui-color-surface)" },
     { name: "link hover on surface", fg: "var(--uui-color-interactive-emphasis)", bg: "var(--uui-color-surface)" },
-    { name: "badge text-positive on tint-positive", fg: "var(--uax-color-text-positive)", bg: "var(--uax-color-tint-positive)" },
-    { name: "badge text-negative on tint-negative", fg: "var(--uax-color-text-negative)", bg: "var(--uax-color-tint-negative)" },
-    { name: "badge text-neutral on tint-neutral", fg: "var(--uax-color-text-neutral)", bg: "var(--uax-color-tint-neutral)" },
+    { name: "badge text-positive on tint-positive", fg: "var(--uaui-color-text-positive)", bg: "var(--uaui-color-tint-positive)" },
+    { name: "badge text-negative on tint-negative", fg: "var(--uaui-color-text-negative)", bg: "var(--uaui-color-tint-negative)" },
+    { name: "badge text-neutral on tint-neutral", fg: "var(--uaui-color-text-neutral)", bg: "var(--uaui-color-tint-neutral)" },
 ];
 
 /** The palette's own tokens against the surface: lines and dots that carry meaning, WCAG AA graphical objects, 3:1. */
 const GRAPHICS: Pair[] = [
-    ...[1, 2, 3, 4].map((n) => ({ name: `series-${n} line on surface`, fg: `var(--uax-color-series-${n})`, bg: "var(--uui-color-surface)" })),
-    { name: "compare line on surface", fg: "var(--uax-color-compare)", bg: "var(--uui-color-surface)" },
-    { name: "marker dot on surface", fg: "var(--uax-color-marker)", bg: "var(--uui-color-surface)" },
-    { name: "marker hover dot on surface", fg: "var(--uax-color-marker-hover)", bg: "var(--uui-color-surface)" },
+    ...[1, 2, 3, 4].map((n) => ({ name: `series-${n} line on surface`, fg: `var(--uaui-color-series-${n})`, bg: "var(--uui-color-surface)" })),
+    { name: "compare line on surface", fg: "var(--uaui-color-compare)", bg: "var(--uui-color-surface)" },
+    { name: "marker dot on surface", fg: "var(--uaui-color-marker)", bg: "var(--uui-color-surface)" },
+    { name: "marker hover dot on surface", fg: "var(--uaui-color-marker-hover)", bg: "var(--uui-color-surface)" },
 ];
 
 /**
@@ -105,10 +105,10 @@ describe("Feature: contrast in every theme", () => {
 
     for (const [theme, themeCss] of Object.entries(themes)) {
         describe(`Scenario: the ${theme} theme`, () => {
-            let host: UaxTestElement;
+            let host: UauiTestElement;
             beforeEach(async () => {
                 themeStyle.textContent = themeCss;
-                host = await renderElement(html`<uax-delta-badge .value=${1}></uax-delta-badge>`, "uax-delta-badge");
+                host = await renderElement(html`<uaui-delta-badge .value=${1}></uaui-delta-badge>`, "uaui-delta-badge");
             });
 
             /** A custom property that holds `light-dark()` isn't evaluated until used, so apply it as `color` and read it back. */
@@ -148,20 +148,20 @@ describe("Feature: contrast in every theme", () => {
             });
 
             describe("the chart tooltip, as rendered", () => {
-                let chart: UaxTestElement;
-                const tooltip = () => shadow(chart).querySelector("uax-chart-tooltip") as HTMLElement;
+                let chart: UauiTestElement;
+                const tooltip = () => shadow(chart).querySelector("uaui-chart-tooltip") as HTMLElement;
                 const hoverDate = async (index: number) => {
                     const canvas = shadow(chart).querySelector("canvas")!;
                     const x = Chart.getChart(canvas)!.getDatasetMeta(0).data[index].x;
                     await userEvent.hover(page.elementLocator(canvas), { position: { x, y: canvas.getBoundingClientRect().height / 2 } });
                     await expect.poll(() => tooltip().style.visibility).toBe("visible");
                     // The badge shows this date's change, once the tooltip has rendered it.
-                    await expect.poll(() => deepQuery(tooltip().shadowRoot!, "uax-delta-badge")?.shadowRoot?.querySelector(".badge")).not.toBeNull();
+                    await expect.poll(() => deepQuery(tooltip().shadowRoot!, "uaui-delta-badge")?.shadowRoot?.querySelector(".badge")).not.toBeNull();
                 };
                 beforeEach(async () => {
                     chart = await renderElement(
-                        html`<uax-time-series-chart kind="line" .series=${[current]} .compareSeries=${[previous]} style="width:400px"></uax-time-series-chart>`,
-                        "uax-time-series-chart",
+                        html`<uaui-time-series-chart kind="line" .series=${[current]} .compareSeries=${[previous]} style="width:400px"></uaui-time-series-chart>`,
+                        "uaui-time-series-chart",
                     );
                 });
 
@@ -176,7 +176,7 @@ describe("Feature: contrast in every theme", () => {
                 for (const [index, sentiment] of [[0, "positive"], [1, "negative"], [2, "neutral"]] as const) {
                     it(`gives the ${sentiment} badge in the tooltip at least 4.5:1`, async () => {
                         await hoverDate(index);
-                        const badge = deepQuery(tooltip().shadowRoot!, "uax-delta-badge")!.shadowRoot!.querySelector(".badge")!;
+                        const badge = deepQuery(tooltip().shadowRoot!, "uaui-delta-badge")!.shadowRoot!.querySelector(".badge")!;
                         expect(badge.getAttribute("data-sentiment")).toBe(sentiment);
                         const back = over(computed(tooltip(), "backgroundColor"), surface());
                         check("text", `tooltip ${sentiment} badge`, between(computed(badge, "color"), computed(badge, "backgroundColor"), back));
@@ -186,7 +186,7 @@ describe("Feature: contrast in every theme", () => {
 
             describe("the group-by control, as rendered", () => {
                 it("gives the selected segment's text at least 4.5:1 and its fill at least 3:1 on the surface", async () => {
-                    const el = await renderElement(html`<uax-group-by value="day"></uax-group-by>`, "uax-group-by");
+                    const el = await renderElement(html`<uaui-group-by value="day"></uaui-group-by>`, "uaui-group-by");
                     await settle(el);
                     const selected = deepQuery(el.shadowRoot!, 'button[aria-checked="true"]')!;
                     const fill = computed(selected, "backgroundColor");
@@ -196,11 +196,11 @@ describe("Feature: contrast in every theme", () => {
             });
 
             describe("the KPI tile, as rendered", () => {
-                let tile: UaxTestElement;
+                let tile: UauiTestElement;
                 beforeEach(async () => {
                     tile = await renderElement(
-                        html`<uax-kpi-tile label="Pageviews" value="1,204" icon="icon-chart" selectable selected></uax-kpi-tile>`,
-                        "uax-kpi-tile",
+                        html`<uaui-kpi-tile label="Pageviews" value="1,204" icon="icon-chart" selectable selected></uaui-kpi-tile>`,
+                        "uaui-kpi-tile",
                     );
                 });
 

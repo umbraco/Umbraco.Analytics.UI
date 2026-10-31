@@ -7,13 +7,13 @@ import "../../../delta-badge/delta-badge.element.js";
 import "../../../group-by/group-by.element.js";
 import "../../../table/data-table.element.js";
 import "../../../table-search/table-search.element.js";
-import type { UaxSeries } from "../../../chart/types.js";
-import { uaxCompareFor, uaxFormatDateRange } from "../../../date-helpers/index.js";
-import type { UaxCompare, UaxDateRange } from "../../../date-range/types.js";
-import type { UaxGroupBy } from "../../../group-by/group-by.element.js";
-import { UAX_TABLE_CELL } from "../../../table/cells/cell-names.js";
-import { UaxTableServerController } from "../../../table/table-server.controller.js";
-import type { UaxTableColumn, UaxTableServerState, UaxTableSort } from "../../../table/index.js";
+import type { UauiSeries } from "../../../chart/types.js";
+import { uauiCompareFor, uauiFormatDateRange } from "../../../date-helpers/index.js";
+import type { UauiCompare, UauiDateRange } from "../../../date-range/types.js";
+import type { UauiGroupBy } from "../../../group-by/group-by.element.js";
+import { UAUI_TABLE_CELL } from "../../../table/cells/cell-names.js";
+import { UauiTableServerController } from "../../../table/table-server.controller.js";
+import type { UauiTableColumn, UauiTableServerState, UauiTableSort } from "../../../table/index.js";
 import {
     fetchChartSeries,
     fetchCompareSeries,
@@ -28,20 +28,20 @@ import { wait } from "../fake-latency.js";
 
 // #region page
 // A product localizes labels, headlines and column names with this.localize.term(...). The examples keep English for readability.
-const pageColumns: UaxTableColumn[] = [
-    { key: "url", label: "Page URL", elementName: UAX_TABLE_CELL.link, meta: { hrefKey: "url" }, sortable: true },
-    { key: "pageviews", label: "Pageviews", elementName: UAX_TABLE_CELL.share, width: "27%", sortable: true, sortAs: "number" },
-    { key: "sessions", label: "Page sessions", elementName: UAX_TABLE_CELL.share, width: "27%", sortable: true, sortAs: "number" },
+const pageColumns: UauiTableColumn[] = [
+    { key: "url", label: "Page URL", elementName: UAUI_TABLE_CELL.link, meta: { hrefKey: "url" }, sortable: true },
+    { key: "pageviews", label: "Pageviews", elementName: UAUI_TABLE_CELL.share, width: "27%", sortable: true, sortAs: "number" },
+    { key: "sessions", label: "Page sessions", elementName: UAUI_TABLE_CELL.share, width: "27%", sortable: true, sortAs: "number" },
 ];
 
-const visitorColumns: UaxTableColumn[] = [
+const visitorColumns: UauiTableColumn[] = [
     { key: "type", label: "User type", sortable: true },
-    { key: "visitors", label: "Visitors", elementName: UAX_TABLE_CELL.share, width: "27%", sortable: true, sortAs: "number" },
-    { key: "sessions", label: "Sessions", elementName: UAX_TABLE_CELL.share, width: "27%", sortable: true, sortAs: "number" },
+    { key: "visitors", label: "Visitors", elementName: UAUI_TABLE_CELL.share, width: "27%", sortable: true, sortAs: "number" },
+    { key: "sessions", label: "Sessions", elementName: UAUI_TABLE_CELL.share, width: "27%", sortable: true, sortAs: "number" },
 ];
 
 // The visitors table is `client` mode, so the table sorts its three rows itself.
-const visitorSort: UaxTableSort = { key: "visitors", direction: "desc" };
+const visitorSort: UauiTableSort = { key: "visitors", direction: "desc" };
 
 const percentChange = (current: number, previous?: number) =>
     previous ? ((current - previous) / previous) * 100 : undefined;
@@ -64,12 +64,12 @@ export class ExampleEngageAnalyticsPageElement extends UmbLitElement {
     @property({ type: Boolean })
     failing = false;
 
-    @state() private _range: UaxDateRange = { from: "2026-05-25", to: "2026-06-23" };
-    @state() private _compare?: UaxCompare = uaxCompareFor("previous-period", { from: "2026-05-25", to: "2026-06-23" });
-    @state() private _groupBy: UaxGroupBy = "day";
+    @state() private _range: UauiDateRange = { from: "2026-05-25", to: "2026-06-23" };
+    @state() private _compare?: UauiCompare = uauiCompareFor("previous-period", { from: "2026-05-25", to: "2026-06-23" });
+    @state() private _groupBy: UauiGroupBy = "day";
 
-    @state() private _series: UaxSeries[] = [];
-    @state() private _compareSeries: UaxSeries[] = [];
+    @state() private _series: UauiSeries[] = [];
+    @state() private _compareSeries: UauiSeries[] = [];
     @state() private _chartLoading = true;
     @state() private _chartError = false;
     @state() private _visitors?: { rows: VisitorTypeRow[]; compareRows: VisitorTypeRow[]; visitors: { current: number; previous?: number } };
@@ -82,13 +82,13 @@ export class ExampleEngageAnalyticsPageElement extends UmbLitElement {
 
     // The pageviews table is paged by the server: the controller keeps its sort, page, page size and search, drops stale
     // answers and gives the table its rows, loading and totals. Made on connect, when the view is known.
-    #pages?: UaxTableServerController<PagesResult>;
+    #pages?: UauiTableServerController<PagesResult>;
 
     override connectedCallback() {
         super.connectedCallback();
         this.#loadChart();
         if (this.view === "pageviews") {
-            this.#pages ??= new UaxTableServerController<PagesResult>(this, {
+            this.#pages ??= new UauiTableServerController<PagesResult>(this, {
                 sort: { key: "pageviews", direction: "desc" },
                 load: (state, signal) => this.#loadPages(state, signal),
             });
@@ -113,7 +113,7 @@ export class ExampleEngageAnalyticsPageElement extends UmbLitElement {
         this._chartLoading = false;
     }
 
-    async #loadPages(state: Readonly<UaxTableServerState>, signal: AbortSignal): Promise<PagesResult> {
+    async #loadPages(state: Readonly<UauiTableServerState>, signal: AbortSignal): Promise<PagesResult> {
         await wait(this.latency);
         signal.throwIfAborted();
         if (this.failing) throw new Error("The pages request failed.");
@@ -137,7 +137,7 @@ export class ExampleEngageAnalyticsPageElement extends UmbLitElement {
     }
 
     // The editor saved the date range dialog: new dates, and a comparison range or none. Back to page 1.
-    #onDateRangeChange(event: CustomEvent<{ value: UaxDateRange; compare?: UaxCompare }>) {
+    #onDateRangeChange(event: CustomEvent<{ value: UauiDateRange; compare?: UauiCompare }>) {
         this._range = event.detail.value;
         this._compare = event.detail.compare;
         this.#loadChart();
@@ -146,7 +146,7 @@ export class ExampleEngageAnalyticsPageElement extends UmbLitElement {
     }
 
     // Group by only changes the chart's buckets: the table keeps its rows.
-    #onGroupByChange(event: CustomEvent<{ value: UaxGroupBy }>) {
+    #onGroupByChange(event: CustomEvent<{ value: UauiGroupBy }>) {
         this._groupBy = event.detail.value;
         this.#loadChart();
     }
@@ -158,14 +158,14 @@ export class ExampleEngageAnalyticsPageElement extends UmbLitElement {
         return html`<span slot=${`summary-${labelKey}`}>${label}</span>
             <span slot=${`summary-${valueKey}`} class="total">
                 ${this.localize.number(total.current)}
-                ${change === undefined ? nothing : html`<uax-delta-badge size="sm" .value=${change}></uax-delta-badge>`}
+                ${change === undefined ? nothing : html`<uaui-delta-badge size="sm" .value=${change}></uaui-delta-badge>`}
             </span>`;
     }
 
     #renderTable() {
         if (this.view === "visitors") {
             const visitors = this._visitors;
-            return html`<uax-data-table
+            return html`<uaui-data-table
                 .columns=${visitorColumns}
                 .rows=${visitors?.rows ?? []}
                 .compareRows=${visitors?.compareRows ?? []}
@@ -173,18 +173,18 @@ export class ExampleEngageAnalyticsPageElement extends UmbLitElement {
                 row-key="type"
                 ?loading=${this._tableLoading}>
                 ${visitors ? this.#renderTotal("type", "visitors", "Total visitors", visitors.visitors) : nothing}
-            </uax-data-table>`;
+            </uaui-data-table>`;
         }
         const pages = this.#pages?.result;
-        return html`<uax-data-table
+        return html`<uaui-data-table
             ${ref(this.#pages?.attach)}
             .columns=${pageColumns}
             row-key="url"
             empty-headline="No pages found"
             empty-description="No page matches your search.">
-            <div slot="toolbar"><uax-table-search></uax-table-search></div>
+            <div slot="toolbar"><uaui-table-search></uaui-table-search></div>
             ${pages ? this.#renderTotal("url", "pageviews", "Total pageviews", pages.pageviews) : nothing}
-        </uax-data-table>`;
+        </uaui-data-table>`;
     }
 
     override render() {
@@ -193,12 +193,12 @@ export class ExampleEngageAnalyticsPageElement extends UmbLitElement {
             <div class="actions">
                 <h2 class="uui-h3">${visitors ? "Visitors" : "Pageviews"}</h2>
                 <div class="controls">
-                    <uax-group-by .value=${this._groupBy} @change=${this.#onGroupByChange}></uax-group-by>
-                    <uax-date-range
+                    <uaui-group-by .value=${this._groupBy} @change=${this.#onGroupByChange}></uaui-group-by>
+                    <uaui-date-range
                         .value=${this._range}
                         .compare=${this._compare}
                         today="2026-06-29"
-                        @change=${this.#onDateRangeChange}></uax-date-range>
+                        @change=${this.#onDateRangeChange}></uaui-date-range>
                 </div>
             </div>
 
@@ -206,19 +206,19 @@ export class ExampleEngageAnalyticsPageElement extends UmbLitElement {
                 headline=${visitors ? "New and returning visitors over time" : "Pageviews over time"}
                 headline-variant="h3"
                 style="--uui-box-default-padding: 0">
-                <uax-time-series-chart
+                <uaui-time-series-chart
                     .kind=${visitors ? "stacked-bar" : "area"}
                     .series=${this._series}
                     .compareSeries=${this._compareSeries}
                     .range=${this._range}
                     .compare=${this._compare}
-                    .compareLabel=${this._compare ? uaxFormatDateRange(this.localize, this._compare) : undefined}
+                    .compareLabel=${this._compare ? uauiFormatDateRange(this.localize, this._compare) : undefined}
                     .markers=${markers}
                     .groupBy=${this._groupBy}
                     ?loading=${this._chartLoading}
                     ?error=${this._chartError}
                     retryable
-                    @retry=${() => this.#loadChart()}></uax-time-series-chart>
+                    @retry=${() => this.#loadChart()}></uaui-time-series-chart>
                 ${this.#renderTable()}
             </uui-box>
         `;

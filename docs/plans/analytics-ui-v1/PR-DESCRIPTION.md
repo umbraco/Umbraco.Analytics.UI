@@ -5,12 +5,12 @@
 >
 > **1. Design: `stats` entries need both `total` and `max`**\
 > Plan said: `stats` is `{ [columnKey]: { total, max } }` for server mode. Nothing about partial entries.\
-> Built: [`UaxTableColumnStats` has both fields required](https://github.com/umbraco/Umbraco.Analytics.UI/blob/1426f44ea58d2765832b7801a0021768a949465a/src/Umbraco.Analytics.UI/Client/src/table/types.ts#L98). A product that only knows the grand total has to compute a max too. The builder logged this as waiting for sign-off.
+> Built: [`UauiTableColumnStats` has both fields required](https://github.com/umbraco/Umbraco.Analytics.UI/blob/1426f44ea58d2765832b7801a0021768a949465a/src/Umbraco.Analytics.UI/Client/src/table/types.ts#L98). A product that only knows the grand total has to compute a max too. The builder logged this as waiting for sign-off.
 >
-> - **A. Accept `Partial<UaxTableColumnStats>` per entry, and fall back to the rows for a missing field** *(recommended)*. Loosening later is non-breaking, but doing it now saves every product a workaround.
+> - **A. Accept `Partial<UauiTableColumnStats>` per entry, and fall back to the rows for a missing field** *(recommended)*. Loosening later is non-breaking, but doing it now saves every product a workaround.
 > - B. Keep both required.
 >
-> **2. Design: `UaxTableServerController` owns 12 table properties**\
+> **2. Design: `UauiTableServerController` owns 12 table properties**\
 > Plan said: nothing about a server-mode helper. It came from a T22 follow-up.\
 > Built: [the controller sets `mode`, `sort`, `page`, `pageSize`, `query`, `rows`, `compareRows`, `totalRows`, `stats`, `loading`, `error` and `retryable` on the table directly](https://github.com/umbraco/Umbraco.Analytics.UI/blob/1426f44ea58d2765832b7801a0021768a949465a/src/Umbraco.Analytics.UI/Client/src/table/table-server.controller.ts#L221). A page attaches it with `${ref(controller.attach)}` and must not bind those properties itself, or the two fight.
 >
@@ -18,12 +18,12 @@
 > - B. Make the controller expose the values and let the page bind them. More template code, but nothing hidden.
 > - C. Drop it from the public API for v1 and keep it in the examples only.
 >
-> **3. Design: errors are a separate `uax-error-state` element**\
+> **3. Design: errors are a separate `uaui-error-state` element**\
 > Plan said: nothing about an error state. It came from a T22 follow-up.\
-> Built: [a new public element](https://github.com/umbraco/Umbraco.Analytics.UI/blob/1426f44ea58d2765832b7801a0021768a949465a/src/Umbraco.Analytics.UI/Client/src/error-state/error-state.element.ts#L16) with `role="alert"` and an optional Retry button, not a `variant="error"` on `uax-empty-state`. The CMS has neither to copy.
+> Built: [a new public element](https://github.com/umbraco/Umbraco.Analytics.UI/blob/1426f44ea58d2765832b7801a0021768a949465a/src/Umbraco.Analytics.UI/Client/src/error-state/error-state.element.ts#L16) with `role="alert"` and an optional Retry button, not a `variant="error"` on `uaui-empty-state`. The CMS has neither to copy.
 >
 > - **A. Keep the separate element.** Only the error needs a role, a button and an event *(recommended)*.
-> - B. Fold it into `uax-empty-state` as a variant, so products learn one element.
+> - B. Fold it into `uaui-empty-state` as a variant, so products learn one element.
 >
 > **4. Design: `allow-compare` can't be turned off in HTML**\
 > Plan said: `allow-compare` (default true).\
@@ -34,7 +34,7 @@
 >
 > **5. Behavior: weeks always start on Monday**\
 > Plan said: nothing about the first day of the week.\
-> Built: [week buckets start on Monday for every culture](https://github.com/umbraco/Umbraco.Analytics.UI/blob/1426f44ea58d2765832b7801a0021768a949465a/src/Umbraco.Analytics.UI/Client/src/internal/date/date-math.ts#L130). This drives the chart's week grouping, marker buckets and the public `uaxDateBuckets` helper. A US editor would expect Sunday.
+> Built: [week buckets start on Monday for every culture](https://github.com/umbraco/Umbraco.Analytics.UI/blob/1426f44ea58d2765832b7801a0021768a949465a/src/Umbraco.Analytics.UI/Client/src/internal/date/date-math.ts#L130). This drives the chart's week grouping, marker buckets and the public `uauiDateBuckets` helper. A US editor would expect Sunday.
 >
 > - **A. Keep Monday for v1 and add an optional `weekStart` later.** Adding it is non-breaking *(recommended)*.
 > - B. Follow the editor's culture now. The same data would then group differently per editor.
@@ -48,7 +48,7 @@
 >
 > **7. UI: a KPI tile with no data says "No data yet" for a past period**\
 > Plan said: `no-data` shows a dash with the hidden text "No data yet".\
-> Built: [the tile reuses the empty-state key `uaxAnalytics_emptyHeadline`](https://github.com/umbraco/Umbraco.Analytics.UI/blob/1426f44ea58d2765832b7801a0021768a949465a/src/Umbraco.Analytics.UI/Client/src/kpi-tile/kpi-tile.element.ts#L120). A screen reader hears "No data yet" for last year too, which reads oddly. The text is hidden, so sighted editors only see the dash.
+> Built: [the tile reuses the empty-state key `uauiAnalytics_emptyHeadline`](https://github.com/umbraco/Umbraco.Analytics.UI/blob/1426f44ea58d2765832b7801a0021768a949465a/src/Umbraco.Analytics.UI/Client/src/kpi-tile/kpi-tile.element.ts#L120). A screen reader hears "No data yet" for last year too, which reads oddly. The text is hidden, so sighted editors only see the dash.
 >
 > - **A. Add a tile-specific key, such as "No data for this period"** *(recommended)*. One extra translation.
 > - B. Keep the shared key, so one override rewords every no-data message.
@@ -110,7 +110,7 @@ All commands run in `src/Umbraco.Analytics.UI/Client`.
    - Components › Date Range: open the dialog, set an end date before the start. An inline error shows and Save is disabled. Turn Compare on and save: the button shows a second "vs …" line and stays 40px tall.
    - Components › Data Table › Paged (client): sort, change "Per page", page to the end. Focus stays on a pager button.
    - Switch the Storybook theme to dark and high contrast on any of the above. Colours change, and text stays readable.
-7. Optional: add the package to a CMS 19 site (project reference), render `uax-date-range` in a test dashboard, and open the dialog. It opens with no console errors, and "No data yet" comes from the package's translations.
+7. Optional: add the package to a CMS 19 site (project reference), render `uaui-date-range` in a test dashboard, and open the dialog. It opens with no console errors, and "No data yet" comes from the package's translations.
 
 ## Good to know
 
@@ -131,40 +131,40 @@ src/Umbraco.Analytics.UI/Client/
 ├── public/umbraco-package.json # changed: localization + modal extensions
 └── src/
     ├── index.ts               # the public barrel: everything below except internal/ and examples/
-    ├── kpi-tile/              # uax-kpi-tile
-    ├── delta-badge/           # uax-delta-badge (restyled)
-    ├── chart/                 # uax-time-series-chart, Chart.js kept private
+    ├── kpi-tile/              # uaui-kpi-tile
+    ├── delta-badge/           # uaui-delta-badge (restyled)
+    ├── chart/                 # uaui-time-series-chart, Chart.js kept private
     │   └── internal/          # tooltip, marker tooltip, legend, hidden data table
-    ├── table/                 # uax-data-table, server controller, table context
+    ├── table/                 # uaui-data-table, server controller, table context
     │   ├── cells/             # text, link, number, percent, share cells
     │   └── internal/          # sort button, share bar, skeleton cell
-    ├── table-search/          # uax-table-search
-    ├── date-range/            # uax-date-range button + dialog (dialog internal)
-    ├── date-helpers/          # uaxPreviousPeriod, uaxDateBuckets, uaxFormatDateRange, ...
-    ├── segmented/             # uax-segmented
-    ├── group-by/              # uax-group-by, built on uax-segmented
-    ├── empty-state/           # uax-empty-state
-    ├── error-state/           # uax-error-state
-    ├── theme/                 # UaxPaletteStyles, --uax-* tokens
+    ├── table-search/          # uaui-table-search
+    ├── date-range/            # uaui-date-range button + dialog (dialog internal)
+    ├── date-helpers/          # uauiPreviousPeriod, uauiDateBuckets, uauiFormatDateRange, ...
+    ├── segmented/             # uaui-segmented
+    ├── group-by/              # uaui-group-by, built on uaui-segmented
+    ├── empty-state/           # uaui-empty-state
+    ├── error-state/           # uaui-error-state
+    ├── theme/                 # UauiPaletteStyles, --uaui-* tokens
     ├── lang/                  # en translations + localization guard specs
     ├── internal/              # pager, loading, date maths, formats, test helpers
     └── examples/              # Storybook only: Engage, Commerce, AI pages
 ```
 
-The public API, by kind. Event details are exported as `Uax…Detail` types. Every event bubbles and is not composed.
+The public API, by kind. Event details are exported as `Uaui…Detail` types. Every event bubbles and is not composed.
 
-- **Elements:** `uax-kpi-tile`, `uax-delta-badge`, `uax-time-series-chart`, `uax-data-table`, `uax-table-search`, `uax-table-compare-badge`, `uax-date-range`, `uax-segmented`, `uax-group-by`, `uax-empty-state`, `uax-error-state`
-- **Table cells:** `uax-text-cell`, `uax-link-cell`, `uax-number-cell`, `uax-percent-cell`, `uax-share-cell`, named in `UAX_TABLE_CELL`
-- **Table extras:** `UaxTableServerController`, `UAX_TABLE_CONTEXT`, `UaxTableColumnMeta` (products merge their own keys in)
-- **Functions:** `uaxPreviousPeriod`, `uaxPreviousYear`, `uaxCompareFor`, `uaxDaysIn`, `uaxDateBuckets`, `uaxFormatDateRange`
-- **Styles:** `UaxPaletteStyles`, with `--uax-*` names to override and `--uax-color-*` names to read
+- **Elements:** `uaui-kpi-tile`, `uaui-delta-badge`, `uaui-time-series-chart`, `uaui-data-table`, `uaui-table-search`, `uaui-table-compare-badge`, `uaui-date-range`, `uaui-segmented`, `uaui-group-by`, `uaui-empty-state`, `uaui-error-state`
+- **Table cells:** `uaui-text-cell`, `uaui-link-cell`, `uaui-number-cell`, `uaui-percent-cell`, `uaui-share-cell`, named in `UAUI_TABLE_CELL`
+- **Table extras:** `UauiTableServerController`, `UAUI_TABLE_CONTEXT`, `UauiTableColumnMeta` (products merge their own keys in)
+- **Functions:** `uauiPreviousPeriod`, `uauiPreviousYear`, `uauiCompareFor`, `uauiDaysIn`, `uauiDateBuckets`, `uauiFormatDateRange`
+- **Styles:** `UauiPaletteStyles`, with `--uaui-*` names to override and `--uaui-color-*` names to read
 - **Events:** `selected`/`deselected` (tile), `change` (date range, group by, segmented), `marker-click`, `sort-change`, `page-change`, `search`, `row-click`, `retry` (a plain `Event`)
 
 How a server-mode table loads a page. The page owns the loader; the controller owns the table's paging state.
 
 ```text
 page element
-└── new UaxTableServerController(host, { load, pageSize })
+└── new UauiTableServerController(host, { load, pageSize })
     ├── attach(table)                  # via ${ref(controller.attach)}
     │   └── listens for sort-change, page-change, search
     ├── hostConnected → #load
@@ -185,14 +185,15 @@ What the package adds to the backoffice. Nothing an editor sees on its own.
 
 | Change | Type | Name | Where it appears |
 |---|---|---|---|
-| **New** | Localization | Uax English (weight 200) | Package strings; a product's own at weight 100 wins |
-| **New** | Modal | Date range dialog | Opened by `uax-date-range` |
+| **New** | Localization | Uaui English (weight 200) | Package strings; a product's own at weight 100 wins |
+| **New** | Modal | Date range dialog | Opened by `uaui-date-range` |
 | | Import map | `@umbraco-analytics/ui` | One shared copy for every product on a site |
 
 <details>
 <summary>Checked and fine (24)</summary>
 
 - Prefix `uan` → `uax` for elements, types, CSS and keys (user decision).
+- Prefix `uax` → `uaui`, same scope (user decision).
 - Paired light and dark palette, CMS 19 pink, brighter dark selected border (user decisions).
 - KPI tile selection copies UUI's `SelectableMixin`, keeps `aria-pressed`, and a selected non-deselectable tile raises nothing (user decisions).
 - Screenshot specs run in the Linux Playwright container only (user decision).
@@ -201,12 +202,12 @@ What the package adds to the backoffice. Nothing an editor sees on its own.
 - Storybook Examples and Internal sections; Internal stories left out of the published build (user decisions).
 - Page examples for Engage, Commerce and AI, with Slow and Failing API stories (user decisions).
 - Table footer section and public `footer` slot (user decision).
-- `--uax-color-*` read names and `UaxPaletteStyles` (user decision).
+- `--uaui-color-*` read names and `UauiPaletteStyles` (user decision).
 - T25 to T41 follow-ups: compare badge and column `meta`, segmented control, chart `.range`/`.compare`, two-line date button, "Per page", CMS dashboard header styles, localization rule (user picks).
 - Performance and bundle targets agreed and guarded by `test:perf` and `check:size`.
 - `stats` and `totalRows` names from the whole-feature review.
-- `UaxTableColumnMeta` uses interface merging, so a typo in a built-in key fails to compile ([types.ts](https://github.com/umbraco/Umbraco.Analytics.UI/blob/1426f44ea58d2765832b7801a0021768a949465a/src/Umbraco.Analytics.UI/Client/src/table/types.ts#L9)).
-- `uaxFormatDateRange` takes any `{ date, term }` object, so it follows the editor's culture and translated term ([date-helpers.ts](https://github.com/umbraco/Umbraco.Analytics.UI/blob/1426f44ea58d2765832b7801a0021768a949465a/src/Umbraco.Analytics.UI/Client/src/date-helpers/date-helpers.ts#L61)).
+- `UauiTableColumnMeta` uses interface merging, so a typo in a built-in key fails to compile ([types.ts](https://github.com/umbraco/Umbraco.Analytics.UI/blob/1426f44ea58d2765832b7801a0021768a949465a/src/Umbraco.Analytics.UI/Client/src/table/types.ts#L9)).
+- `uauiFormatDateRange` takes any `{ date, term }` object, so it follows the editor's culture and translated term ([date-helpers.ts](https://github.com/umbraco/Umbraco.Analytics.UI/blob/1426f44ea58d2765832b7801a0021768a949465a/src/Umbraco.Analytics.UI/Client/src/date-helpers/date-helpers.ts#L61)).
 - `retry` is a plain bubbling `Event` with no detail, as there is nothing to carry ([error-state.element.ts](https://github.com/umbraco/Umbraco.Analytics.UI/blob/1426f44ea58d2765832b7801a0021768a949465a/src/Umbraco.Analytics.UI/Client/src/error-state/error-state.element.ts#L35)).
 - KPI tile in error has no Retry, so a row of tiles doesn't show four buttons.
 - `marker-click` is not composed, like every other event ([time-series-chart.element.ts](https://github.com/umbraco/Umbraco.Analytics.UI/blob/1426f44ea58d2765832b7801a0021768a949465a/src/Umbraco.Analytics.UI/Client/src/chart/time-series-chart.element.ts#L534)).

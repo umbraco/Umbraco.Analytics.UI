@@ -1,2 +1,2 @@
 export * from "./tokens.css.js";
-export type { UaxColorSlot } from "./types.js";
+export type { UauiColorSlot } from "./types.js";

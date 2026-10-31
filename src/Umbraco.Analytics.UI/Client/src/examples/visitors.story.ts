@@ -4,12 +4,12 @@ import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { regionSource, sourceDocs } from "../internal/story/source.js";
 import raw from "./visitors.story.ts?raw";
 import "../table/data-table.element.js";
-import { UAX_TABLE_CELL } from "../table/cells/cell-names.js";
-import type { UaxTableCellElement, UaxTableColumn } from "../table/types.js";
+import { UAUI_TABLE_CELL } from "../table/cells/cell-names.js";
+import type { UauiTableCellElement, UauiTableColumn } from "../table/types.js";
 
 const imports = `import { css, customElement, html, property } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
-import { UAX_TABLE_CELL, type UaxTableCellElement, type UaxTableColumn } from "@umbraco-analytics/ui";`;
+import { UAUI_TABLE_CELL, type UauiTableCellElement, type UauiTableColumn } from "@umbraco-analytics/ui";`;
 
 // #region cell
 /**
@@ -17,8 +17,8 @@ import { UAX_TABLE_CELL, type UaxTableCellElement, type UaxTableColumn } from "@
  * `umb-table` does for its cells. This one shows a coloured dot and the visitor type.
  */
 @customElement("example-visitor-type-cell")
-class ExampleVisitorTypeCellElement extends UmbLitElement implements UaxTableCellElement {
-    @property({ attribute: false }) column: UaxTableColumn = { key: "type", label: "" };
+class ExampleVisitorTypeCellElement extends UmbLitElement implements UauiTableCellElement {
+    @property({ attribute: false }) column: UauiTableColumn = { key: "type", label: "" };
     @property({ attribute: false }) item: Record<string, unknown> = {};
     @property({ attribute: false }) value: unknown;
 
@@ -45,10 +45,10 @@ class ExampleVisitorTypeCellElement extends UmbLitElement implements UaxTableCel
 
 // #region table
 // Name your element in `elementName`. The share columns use the built-in cell.
-const columns: UaxTableColumn[] = [
+const columns: UauiTableColumn[] = [
     { key: "type", label: "User type", elementName: "example-visitor-type-cell" },
-    { key: "visitors", label: "Visitors", elementName: UAX_TABLE_CELL.share, width: "27%" },
-    { key: "sessions", label: "Sessions", elementName: UAX_TABLE_CELL.share, width: "27%" },
+    { key: "visitors", label: "Visitors", elementName: UAUI_TABLE_CELL.share, width: "27%" },
+    { key: "sessions", label: "Sessions", elementName: UAUI_TABLE_CELL.share, width: "27%" },
 ];
 
 const rows = [
@@ -58,7 +58,7 @@ const rows = [
 
 const renderVisitors = () => html`
     <uui-box headline="Visitors" style="--uui-box-default-padding: 0">
-        <uax-data-table .columns=${columns} .rows=${rows}></uax-data-table>
+        <uaui-data-table .columns=${columns} .rows=${rows}></uaui-data-table>
     </uui-box>
 `;
 // #endregion

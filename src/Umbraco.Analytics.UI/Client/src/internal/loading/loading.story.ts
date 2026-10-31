@@ -6,7 +6,7 @@ import "./skeleton.element.js";
 import "./loading-bar.element.js";
 
 /** Story-only element: a stand-in data element that uses the loading parts as a chart or table will. */
-class UaxLoadingDemoElement extends LitElement {
+class UauiLoadingDemoElement extends LitElement {
     static override properties = { loading: { type: Boolean }, rows: { type: Array } };
     loading = false;
     rows: string[] = [];
@@ -14,9 +14,9 @@ class UaxLoadingDemoElement extends LitElement {
     override render() {
         const mode = getLoadingMode(this.loading, this.rows.length > 0);
         return html`<div class="region" aria-busy=${this.loading ? "true" : "false"}>
-            ${mode === "reload" ? html`<uax-loading-bar></uax-loading-bar>` : nothing}
+            ${mode === "reload" ? html`<uaui-loading-bar></uaui-loading-bar>` : nothing}
             ${mode === "skeleton"
-                ? html`<uax-skeleton></uax-skeleton>`
+                ? html`<uaui-skeleton></uaui-skeleton>`
                 : html`<ul>
                       ${this.rows.map((row) => html`<li>${row}</li>`)}
                   </ul>`}
@@ -26,19 +26,19 @@ class UaxLoadingDemoElement extends LitElement {
     static override styles = css`
         :host {
             display: block;
-            --_uax-skeleton-height: 160px;
+            --_uaui-skeleton-height: 160px;
         }
         .region {
             position: relative;
             box-sizing: border-box;
-            min-height: var(--_uax-skeleton-height);
+            min-height: var(--_uaui-skeleton-height);
             padding: var(--uui-size-space-4);
             border-radius: var(--uui-border-radius-3);
             background: var(--uui-color-surface);
             color: var(--uui-color-text);
             overflow: hidden;
         }
-        uax-skeleton {
+        uaui-skeleton {
             height: 128px;
         }
         ul {
@@ -52,8 +52,8 @@ class UaxLoadingDemoElement extends LitElement {
     `;
 }
 
-if (!customElements.get("uax-loading-demo")) {
-    customElements.define("uax-loading-demo", UaxLoadingDemoElement);
+if (!customElements.get("uaui-loading-demo")) {
+    customElements.define("uaui-loading-demo", UauiLoadingDemoElement);
 }
 
 const rows = ["Home", "Contact", "Pricing"];
@@ -62,35 +62,35 @@ const meta: Meta = {
     title: "Internal/Loading",
     tags: ["internal"],
     parameters: {
-        docs: { description: { component: notPublicApi("`uax-skeleton` and `uax-loading-bar` are the loading parts the data elements share.") } },
+        docs: { description: { component: notPublicApi("`uaui-skeleton` and `uaui-loading-bar` are the loading parts the data elements share.") } },
     },
 };
 
 export default meta;
 type Story = StoryObj;
 
-/** First load, no data yet: a skeleton the height the host declares with `--_uax-skeleton-height`. */
+/** First load, no data yet: a skeleton the height the host declares with `--_uaui-skeleton-height`. */
 export const FirstLoad: Story = {
-    render: () => html`<uax-loading-demo loading></uax-loading-demo>`,
+    render: () => html`<uaui-loading-demo loading></uaui-loading-demo>`,
 };
 
 /** Reload with data shown: the old data stays, under a thin bar on the top edge. */
 export const Reload: Story = {
-    render: () => html`<uax-loading-demo loading .rows=${rows}></uax-loading-demo>`,
+    render: () => html`<uaui-loading-demo loading .rows=${rows}></uaui-loading-demo>`,
 };
 
 /** Loaded: neither part shows. */
 export const Loaded: Story = {
-    render: () => html`<uax-loading-demo .rows=${rows}></uax-loading-demo>`,
+    render: () => html`<uaui-loading-demo .rows=${rows}></uaui-loading-demo>`,
 };
 
 /** Every state together, for checking all three themes at once. */
 export const AllStates: Story = {
     render: () =>
         html`<div style="display: grid; gap: var(--uui-size-space-4)">
-            <uax-loading-demo loading></uax-loading-demo>
-            <uax-loading-demo loading .rows=${rows}></uax-loading-demo>
-            <uax-loading-demo .rows=${rows}></uax-loading-demo>
+            <uaui-loading-demo loading></uaui-loading-demo>
+            <uaui-loading-demo loading .rows=${rows}></uaui-loading-demo>
+            <uaui-loading-demo .rows=${rows}></uaui-loading-demo>
         </div>`,
 };
 
@@ -99,7 +99,7 @@ export const SkeletonRows: Story = {
     render: () =>
         html`<div style="background: var(--uui-color-surface); padding: var(--uui-size-space-4); display: grid; gap: 12px">
             ${[85, 80, 75, 70].map(
-                (width) => html`<uax-skeleton style="height: 16px; width: ${width}%"></uax-skeleton>`,
+                (width) => html`<uaui-skeleton style="height: 16px; width: ${width}%"></uaui-skeleton>`,
             )}
         </div>`,
 };

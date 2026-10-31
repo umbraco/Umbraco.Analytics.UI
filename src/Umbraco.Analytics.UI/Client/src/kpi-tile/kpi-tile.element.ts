@@ -1,9 +1,9 @@
 import { css, customElement, html, nothing, property, type CSSResultGroup, type TemplateResult } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { getLoadingMode, isBusy } from "../internal/loading/index.js";
-import { UaxVisuallyHiddenStyles } from "../internal/a11y/visually-hidden.css.js";
-import { UaxPaletteStyles } from "../theme/index.js";
-import type { UaxDeltaUnit } from "../delta-badge/delta-badge.element.js";
+import { UauiVisuallyHiddenStyles } from "../internal/a11y/visually-hidden.css.js";
+import { UauiPaletteStyles } from "../theme/index.js";
+import type { UauiDeltaUnit } from "../delta-badge/delta-badge.element.js";
 import "../delta-badge/delta-badge.element.js";
 
 /**
@@ -20,15 +20,15 @@ import "../delta-badge/delta-badge.element.js";
  * Leave `delta` unset when there is nothing to compare with (no badge); a `delta` of 0 is "no change" and
  * shows a neutral badge.
  *
- * @element uax-kpi-tile
+ * @element uaui-kpi-tile
  * @fires selected - A selectable, unselected tile was pressed. Cancelable: cancel it to keep the tile unselected.
  * @fires deselected - A selectable, selected tile was pressed while `deselectable`. Cancelable: cancel it to keep the tile selected.
- * @cssprop --uax-kpi-icon-bg - Background of the icon square. Defaults to spanish pink in every theme.
- * @cssprop --uax-kpi-selected - Colour of the selection border. Defaults to `--uui-color-selected` in light and high contrast, and to malibu light in dark, where the UUI colour is under 3:1 on the surface.
- * @cssprop --uax-kpi-icon-fg - Icon colour. Defaults to space cadet, which passes 3:1 on the default square. A product that overrides either owns that contrast.
+ * @cssprop --uaui-kpi-icon-bg - Background of the icon square. Defaults to spanish pink in every theme.
+ * @cssprop --uaui-kpi-selected - Colour of the selection border. Defaults to `--uui-color-selected` in light and high contrast, and to malibu light in dark, where the UUI colour is under 3:1 on the surface.
+ * @cssprop --uaui-kpi-icon-fg - Icon colour. Defaults to space cadet, which passes 3:1 on the default square. A product that overrides either owns that contrast.
  */
-@customElement("uax-kpi-tile")
-export class UaxKpiTileElement extends UmbLitElement {
+@customElement("uaui-kpi-tile")
+export class UauiKpiTileElement extends UmbLitElement {
     /** What the number is, e.g. "Revenue". */
     @property({ type: String })
     label = "";
@@ -61,7 +61,7 @@ export class UaxKpiTileElement extends UmbLitElement {
 
     /** Whether `delta` is a percent change or a change in percentage points. */
     @property({ type: String, attribute: "delta-unit" })
-    deltaUnit: UaxDeltaUnit = "percent";
+    deltaUnit: UauiDeltaUnit = "percent";
 
     /** Shows a fall as good (green) and a rise as bad (red), e.g. for refund rate. */
     @property({ type: Boolean, attribute: "lower-is-better", reflect: true })
@@ -110,24 +110,24 @@ export class UaxKpiTileElement extends UmbLitElement {
                 : nothing}
             <span class="content" aria-busy=${busy ? "true" : "false"}>
                 ${mode === "skeleton"
-                    ? html`<uax-skeleton></uax-skeleton>`
+                    ? html`<uaui-skeleton></uaui-skeleton>`
                     : html`<span class="body">
                           <span class="label">${this.label}</span>
                           <span class="row">
                               ${this.error || this.noData
                                   ? html`<span class="value no-data"
                                         ><span aria-hidden="true">—</span
-                                        ><span class="visually-hidden">${this.localize.term(this.error ? "uaxAnalytics_errorHeadline" : "uaxAnalytics_emptyHeadline")}</span></span
+                                        ><span class="visually-hidden">${this.localize.term(this.error ? "uauiAnalytics_errorHeadline" : "uauiAnalytics_emptyHeadline")}</span></span
                                     >`
                                   : hasValue
                                     ? html`<span class="value">${this.value}</span>`
                                     : nothing}
                               ${this.error || this.noData || !Number.isFinite(this.delta)
                                   ? nothing
-                                  : html`<uax-delta-badge
+                                  : html`<uaui-delta-badge
                                         .value=${this.delta}
                                         .unit=${this.deltaUnit}
-                                        .lowerIsBetter=${this.lowerIsBetter}></uax-delta-badge>`}
+                                        .lowerIsBetter=${this.lowerIsBetter}></uaui-delta-badge>`}
                           </span>
                       </span>`}
             </span>`;
@@ -145,21 +145,21 @@ export class UaxKpiTileElement extends UmbLitElement {
     }
 
     static override styles: CSSResultGroup = [
-        UaxPaletteStyles,
-        UaxVisuallyHiddenStyles,
+        UauiPaletteStyles,
+        UauiVisuallyHiddenStyles,
         css`
             :host {
                 display: block;
                 height: 100%;
                 /* Content height of a tile with the badge beside the value: the icon square. */
-                --_uax-skeleton-height: 48px;
+                --_uaui-skeleton-height: 48px;
                 /* Pink square with a dark glyph in every theme (series-2 is maroon in light, so a dark glyph
                    on it fails 3:1). Both palette colours are theme-independent: space-cadet on spanish-pink
                    is 12.5:1. A product that overrides either public name owns the 3:1 between them. */
-                --_uax-kpi-icon-bg: var(--uax-kpi-icon-bg, var(--uui-palette-spanish-pink));
-                --_uax-kpi-icon-fg: var(--uax-kpi-icon-fg, var(--uui-palette-space-cadet));
-                --_uax-kpi-selected: var(
-                    --uax-kpi-selected,
+                --_uaui-kpi-icon-bg: var(--uaui-kpi-icon-bg, var(--uui-palette-spanish-pink));
+                --_uaui-kpi-icon-fg: var(--uaui-kpi-icon-fg, var(--uui-palette-space-cadet));
+                --_uaui-kpi-selected: var(
+                    --uaui-kpi-selected,
                     light-dark(var(--uui-color-selected), var(--uui-palette-malibu-light))
                 );
             }
@@ -205,11 +205,11 @@ export class UaxKpiTileElement extends UmbLitElement {
                 width: 100%;
                 height: 100%;
                 box-sizing: border-box;
-                border: 2px solid var(--_uax-kpi-selected);
+                border: 2px solid var(--_uaui-kpi-selected);
                 border-radius: calc(var(--uui-border-radius-3) + 2px);
                 box-shadow:
-                    0 0 4px 0 var(--_uax-kpi-selected),
-                    inset 0 0 2px 0 var(--_uax-kpi-selected);
+                    0 0 4px 0 var(--_uaui-kpi-selected),
+                    inset 0 0 2px 0 var(--_uaui-kpi-selected);
             }
 
             button.tile[aria-pressed="true"] .select-border {
@@ -268,15 +268,15 @@ export class UaxKpiTileElement extends UmbLitElement {
                 width: 48px;
                 height: 48px;
                 border-radius: 9px;
-                background: var(--_uax-kpi-icon-bg);
-                color: var(--_uax-kpi-icon-fg);
+                background: var(--_uaui-kpi-icon-bg);
+                color: var(--_uaui-kpi-icon-fg);
                 font-size: 20px;
             }
 
             .content {
                 flex: 1;
                 min-width: 0;
-                min-height: var(--_uax-skeleton-height);
+                min-height: var(--_uaui-skeleton-height);
                 display: flex;
                 flex-direction: column;
                 justify-content: center;
@@ -325,6 +325,6 @@ export class UaxKpiTileElement extends UmbLitElement {
 
 declare global {
     interface HTMLElementTagNameMap {
-        "uax-kpi-tile": UaxKpiTileElement;
+        "uaui-kpi-tile": UauiKpiTileElement;
     }
 }

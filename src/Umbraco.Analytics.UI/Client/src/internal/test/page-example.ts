@@ -1,13 +1,13 @@
 import { html, type TemplateResult } from "@umbraco-cms/backoffice/external/lit";
 import { expect } from "vitest";
 import { renderWithModals } from "./modal-host.js";
-import { deepQuery, settle, type UaxTestElement } from "./dom.js";
+import { deepQuery, settle, type UauiTestElement } from "./dom.js";
 
 /**
  * Renders a page example under a modal host (the date range dialog needs one), 1200px wide like a
  * backoffice workspace, and returns the element matching `tag`, once it has updated.
  */
-export function renderPageExample(template: TemplateResult, tag: string): Promise<UaxTestElement> {
+export function renderPageExample(template: TemplateResult, tag: string): Promise<UauiTestElement> {
     return renderWithModals(html`<div style="width: 1200px">${template}</div>`, tag);
 }
 
@@ -33,14 +33,14 @@ export async function withTheme<T>(themeCss: string | undefined, run: () => Prom
 }
 
 /**
- * Drives the real date range dialog of a page: opens it from the page's `uax-date-range`, sets each named field
+ * Drives the real date range dialog of a page: opens it from the page's `uaui-date-range`, sets each named field
  * (`from`, `to`, `preset`) and presses Save. `compare: "off"` turns the comparison off.
  */
 export async function saveDateRange(page: Element, fields: Record<string, string>): Promise<void> {
-    const dateRange = page.shadowRoot!.querySelector("uax-date-range")!;
+    const dateRange = page.shadowRoot!.querySelector("uaui-date-range")!;
     (dateRange.shadowRoot!.querySelector("uui-button") as HTMLElement).click();
-    await expect.poll(() => deepQuery<UaxTestElement>(document, "uax-date-range-modal")).not.toBe(null);
-    const modal = deepQuery<UaxTestElement>(document, "uax-date-range-modal")!;
+    await expect.poll(() => deepQuery<UauiTestElement>(document, "uaui-date-range-modal")).not.toBe(null);
+    const modal = deepQuery<UauiTestElement>(document, "uaui-date-range-modal")!;
     await modal.updateComplete;
     for (const [name, value] of Object.entries(fields)) {
         const field = deepQuery<HTMLInputElement>(modal.shadowRoot!, `[name='${name}']`);

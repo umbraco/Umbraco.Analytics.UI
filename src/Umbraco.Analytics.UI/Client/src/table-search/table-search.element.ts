@@ -1,24 +1,24 @@
 import { css, customElement, html, nothing, property, query, type CSSResultGroup, type TemplateResult } from "@umbraco-cms/backoffice/external/lit";
 import type { UUIInputElement, UUIInputEvent } from "@umbraco-cms/backoffice/external/uui";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
-import type { UaxTableSearchDetail } from "../table/types.js";
+import type { UauiTableSearchDetail } from "../table/types.js";
 
 /** How long typing has to stop before `search` is raised. */
 const DEBOUNCE_MS = 300;
 
 /**
- * A search box for the `toolbar` slot of `uax-data-table`. It raises `search` with the text, 300ms after typing
+ * A search box for the `toolbar` slot of `uaui-data-table`. It raises `search` with the text, 300ms after typing
  * stops. A table it sits in picks the event up and sets its own `query`, so there is nothing to wire for a
  * `client` table. In `server` mode listen for `search` and load the rows that match.
  *
  * Built like the picker search field of the CMS (`umb-picker-search-field`): a `uui-input` with the search icon in
  * its `prepend` slot and, once there is text, a compact clear button in `append`.
  *
- * @element uax-table-search
+ * @element uaui-table-search
  * @fires search - The text changed and typing stopped. Bubbles, not composed or cancelable, like `sort-change`. `detail` is `{ query }`. Clearing the box raises it at once.
  */
-@customElement("uax-table-search")
-export class UaxTableSearchElement extends UmbLitElement {
+@customElement("uaui-table-search")
+export class UauiTableSearchElement extends UmbLitElement {
     /**
      * The text in the box. Typing updates it, as `uui-input` does. Setting it from code does not raise `search`:
      * a product that restores or clears it sets the table's `query` too.
@@ -42,7 +42,7 @@ export class UaxTableSearchElement extends UmbLitElement {
 
     #raise() {
         clearTimeout(this.#timer);
-        this.dispatchEvent(new CustomEvent<UaxTableSearchDetail>("search", { bubbles: true, detail: { query: this.value } }));
+        this.dispatchEvent(new CustomEvent<UauiTableSearchDetail>("search", { bubbles: true, detail: { query: this.value } }));
     }
 
     #onInput(event: UUIInputEvent) {
@@ -98,6 +98,6 @@ export class UaxTableSearchElement extends UmbLitElement {
 
 declare global {
     interface HTMLElementTagNameMap {
-        "uax-table-search": UaxTableSearchElement;
+        "uaui-table-search": UauiTableSearchElement;
     }
 }

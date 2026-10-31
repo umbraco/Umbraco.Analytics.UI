@@ -8,13 +8,13 @@ import highContrastCss from "@umbraco-ui/uui/themes/high-contrast.css?inline";
 import { render } from "vitest-browser-lit";
 import { userEvent } from "vitest/browser";
 import { axeRun } from "../internal/test/a11y.js";
-import { deepQueryAll, deepText, nextEvent, recordEvents, renderElement, settle, shadow, type UaxTestElement } from "../internal/test/dom.js";
+import { deepQueryAll, deepText, nextEvent, recordEvents, renderElement, settle, shadow, type UauiTestElement } from "../internal/test/dom.js";
 import "./data-table.element.js";
 import { manyRows, nameColumns } from "./table-fixtures.js";
-import { UAX_TABLE_CELL } from "./cells/cell-names.js";
+import { UAUI_TABLE_CELL } from "./cells/cell-names.js";
 
-/** The controls are their own element (`uax-compact-pager`), so their parts live in that element's shadow root. */
-const pagerElement = (el: Element) => shadow(el).querySelector("uax-compact-pager") as (HTMLElement & { updateComplete: Promise<boolean> }) | null;
+/** The controls are their own element (`uaui-compact-pager`), so their parts live in that element's shadow root. */
+const pagerElement = (el: Element) => shadow(el).querySelector("uaui-compact-pager") as (HTMLElement & { updateComplete: Promise<boolean> }) | null;
 const controls = (el: Element) => (pagerElement(el)?.shadowRoot?.querySelector(".pager") ?? null) as HTMLElement | null;
 /** The table's own footer section, which holds the pager. */
 const footer = (el: Element) => shadow(el).querySelector(".footer") as HTMLElement | null;
@@ -28,7 +28,7 @@ const pageSizeSelect = (el: Element) => controls(el)!.querySelector("uui-select[
 const nextButton = (el: Element) => controls(el)!.querySelector(".next") as HTMLElement & { updateComplete: Promise<boolean> };
 const previousButton = (el: Element) => controls(el)!.querySelector(".previous") as HTMLElement & { updateComplete: Promise<boolean> };
 /** Clicks a pager button once uui-button has rendered its inner button (its host click does nothing before that), then waits for the table to update. */
-const press = async (el: UaxTestElement, button: HTMLElement) => {
+const press = async (el: UauiTestElement, button: HTMLElement) => {
     await (button as HTMLElement & { updateComplete: Promise<boolean> }).updateComplete;
     button.click();
     await settle(el);
@@ -40,22 +40,22 @@ const barWidths = (el: Element) => deepQueryAll<HTMLElement>(shadow(el), ".share
 
 const serverTable = (attrs: { page?: number; pageSize?: number; total?: number } = {}) =>
     renderElement(
-        html`<uax-data-table
+        html`<uaui-data-table
             mode="server"
             .columns=${nameColumns}
             .rows=${manyRows(10)}
             total-rows=${attrs.total ?? 272}
             page=${attrs.page ?? 1}
-            page-size=${attrs.pageSize ?? 10}></uax-data-table>`,
-        "uax-data-table",
+            page-size=${attrs.pageSize ?? 10}></uaui-data-table>`,
+        "uaui-data-table",
     );
 
 const clientTable = (count: number, pageSize = 10) =>
-    renderElement(html`<uax-data-table mode="client" .columns=${nameColumns} .rows=${manyRows(count)} page-size=${pageSize}></uax-data-table>`, "uax-data-table");
+    renderElement(html`<uaui-data-table mode="client" .columns=${nameColumns} .rows=${manyRows(count)} page-size=${pageSize}></uaui-data-table>`, "uaui-data-table");
 
 describe("Feature: page through rows", () => {
     describe("Scenario: 272 rows, 10 per page, on page 1", () => {
-        let el: UaxTestElement;
+        let el: UauiTestElement;
         beforeEach(async () => {
             el = await serverTable();
         });
@@ -148,7 +148,7 @@ describe("Feature: page through rows", () => {
     });
 
     describe("Scenario: client mode, page 2 of 30 rows", () => {
-        let el: UaxTestElement;
+        let el: UauiTestElement;
         beforeEach(async () => {
             el = await clientTable(30);
             await press(el, nextButton(el));
@@ -179,7 +179,7 @@ describe("Feature: page through rows", () => {
     });
 
     describe("Scenario: client mode, a bigger page size", () => {
-        let el: UaxTestElement;
+        let el: UauiTestElement;
         beforeEach(async () => {
             el = await clientTable(60);
             await press(el, nextButton(el));
@@ -206,7 +206,7 @@ describe("Feature: page through rows", () => {
     });
 
     describe("Scenario: client mode, sorting", () => {
-        let el: UaxTestElement;
+        let el: UauiTestElement;
         beforeEach(async () => {
             el = await clientTable(30);
             await press(el, nextButton(el));
@@ -225,7 +225,7 @@ describe("Feature: page through rows", () => {
     });
 
     describe("Scenario: everything fits on one page", () => {
-        let el: UaxTestElement;
+        let el: UauiTestElement;
         beforeEach(async () => {
             el = await clientTable(8);
         });
@@ -256,7 +256,7 @@ describe("Feature: page through rows", () => {
     });
 
     describe("Scenario: using the pager from the keyboard", () => {
-        let el: UaxTestElement;
+        let el: UauiTestElement;
         beforeEach(async () => {
             el = await clientTable(30);
         });
@@ -312,10 +312,10 @@ describe("Feature: page through rows", () => {
             expect(getComputedStyle(footer(await clientTable(30))!).borderTopWidth).toBe("1px");
         });
 
-        it("takes --uax-table-padding", async () => {
+        it("takes --uaui-table-padding", async () => {
             const el = await renderElement(
-                html`<uax-data-table style="--uax-table-padding: 7px" .columns=${nameColumns} .rows=${manyRows(30)}></uax-data-table>`,
-                "uax-data-table",
+                html`<uaui-data-table style="--uaui-table-padding: 7px" .columns=${nameColumns} .rows=${manyRows(30)}></uaui-data-table>`,
+                "uaui-data-table",
             );
             expect(getComputedStyle(footer(el)!).paddingLeft).toBe("7px");
         });
@@ -332,10 +332,10 @@ describe("Feature: page through rows", () => {
     describe("Scenario: the footer slot", () => {
         const slotTable = (count: number) =>
             renderElement(
-                html`<uax-data-table .columns=${nameColumns} .rows=${manyRows(count)}>
+                html`<uaui-data-table .columns=${nameColumns} .rows=${manyRows(count)}>
                     <span slot="footer">Updated</span>
-                </uax-data-table>`,
-                "uax-data-table",
+                </uaui-data-table>`,
+                "uaui-data-table",
             );
 
         it("has no pager when the rows fit one page", async () => {
@@ -356,10 +356,10 @@ describe("Feature: page through rows", () => {
 
         it("shows the footer for slot content under the skeleton", async () => {
             const el = await renderElement(
-                html`<uax-data-table mode="server" .columns=${nameColumns} .rows=${[]} total-rows="272" loading>
+                html`<uaui-data-table mode="server" .columns=${nameColumns} .rows=${[]} total-rows="272" loading>
                     <span slot="footer">Updated</span>
-                </uax-data-table>`,
-                "uax-data-table",
+                </uaui-data-table>`,
+                "uaui-data-table",
             );
             expect(footerShown(el)).toBe(true);
         });
@@ -388,8 +388,8 @@ describe("Feature: page through rows", () => {
     describe("Scenario: first load of a server table", () => {
         const loadingTable = (loading: boolean, rows: unknown[]) =>
             renderElement(
-                html`<uax-data-table mode="server" .columns=${nameColumns} .rows=${rows} total-rows="272" ?loading=${loading}></uax-data-table>`,
-                "uax-data-table",
+                html`<uaui-data-table mode="server" .columns=${nameColumns} .rows=${rows} total-rows="272" ?loading=${loading}></uaui-data-table>`,
+                "uaui-data-table",
             );
 
         it("has no footer under the skeleton", async () => {
@@ -404,43 +404,43 @@ describe("Feature: page through rows", () => {
     describe("Scenario: share percentages in server mode", () => {
         const columns = [
             { key: "name", label: "Name" },
-            { key: "views", label: "Views", elementName: UAX_TABLE_CELL.share },
+            { key: "views", label: "Views", elementName: UAUI_TABLE_CELL.share },
         ];
         const rows = [{ name: "A", views: 50 }, { name: "B", views: 25 }];
 
         it("uses the page's rows as the total when no stats are given", async () => {
-            const el = await renderElement(html`<uax-data-table mode="server" .columns=${columns} .rows=${rows} total-rows="272"></uax-data-table>`, "uax-data-table");
+            const el = await renderElement(html`<uaui-data-table mode="server" .columns=${columns} .rows=${rows} total-rows="272"></uaui-data-table>`, "uaui-data-table");
             expect(shares(el)).toEqual(["(66.7%)", "(33.3%)"]);
         });
 
         it("uses the stats total as the denominator", async () => {
             const el = await renderElement(
-                html`<uax-data-table mode="server" .columns=${columns} .rows=${rows} total-rows="272" .stats=${{ views: { total: 200, max: 0 } }}></uax-data-table>`,
-                "uax-data-table",
+                html`<uaui-data-table mode="server" .columns=${columns} .rows=${rows} total-rows="272" .stats=${{ views: { total: 200, max: 0 } }}></uaui-data-table>`,
+                "uaui-data-table",
             );
             expect(shares(el)).toEqual(["(25.0%)", "(12.5%)"]);
         });
 
         it("ignores a total for another column", async () => {
             const el = await renderElement(
-                html`<uax-data-table mode="server" .columns=${columns} .rows=${rows} total-rows="272" .stats=${{ other: { total: 200, max: 0 } }}></uax-data-table>`,
-                "uax-data-table",
+                html`<uaui-data-table mode="server" .columns=${columns} .rows=${rows} total-rows="272" .stats=${{ other: { total: 200, max: 0 } }}></uaui-data-table>`,
+                "uaui-data-table",
             );
             expect(shares(el)).toEqual(["(66.7%)", "(33.3%)"]);
         });
 
         it("shows 0% when the total is zero", async () => {
             const el = await renderElement(
-                html`<uax-data-table mode="server" .columns=${columns} .rows=${rows} total-rows="272" .stats=${{ views: { total: 0, max: 0 } }}></uax-data-table>`,
-                "uax-data-table",
+                html`<uaui-data-table mode="server" .columns=${columns} .rows=${rows} total-rows="272" .stats=${{ views: { total: 0, max: 0 } }}></uaui-data-table>`,
+                "uaui-data-table",
             );
             expect(shares(el)).toEqual(["(0.0%)", "(0.0%)"]);
         });
 
         it("recomputes when stats change", async () => {
             const el = await renderElement(
-                html`<uax-data-table mode="server" .columns=${columns} .rows=${rows} total-rows="272" .stats=${{ views: { total: 200, max: 0 } }}></uax-data-table>`,
-                "uax-data-table",
+                html`<uaui-data-table mode="server" .columns=${columns} .rows=${rows} total-rows="272" .stats=${{ views: { total: 200, max: 0 } }}></uaui-data-table>`,
+                "uaui-data-table",
             );
             el.stats = { views: { total: 100, max: 0 } };
             await el.updateComplete;
@@ -451,27 +451,27 @@ describe("Feature: page through rows", () => {
     describe("Scenario: share bars in server mode", () => {
         const columns = [
             { key: "name", label: "Name" },
-            { key: "views", label: "Views", elementName: UAX_TABLE_CELL.share },
+            { key: "views", label: "Views", elementName: UAUI_TABLE_CELL.share },
         ];
         const rows = [{ name: "A", views: 50 }, { name: "B", views: 25 }];
 
         it("scales to the page's largest value when no stats are given", async () => {
-            const el = await renderElement(html`<uax-data-table mode="server" .columns=${columns} .rows=${rows} total-rows="272"></uax-data-table>`, "uax-data-table");
+            const el = await renderElement(html`<uaui-data-table mode="server" .columns=${columns} .rows=${rows} total-rows="272"></uaui-data-table>`, "uaui-data-table");
             expect(barWidths(el)).toEqual(["100%", "50%"]);
         });
 
         it("scales to the stats max when given", async () => {
             const el = await renderElement(
-                html`<uax-data-table mode="server" .columns=${columns} .rows=${rows} total-rows="272" .stats=${{ views: { total: 0, max: 200 } }}></uax-data-table>`,
-                "uax-data-table",
+                html`<uaui-data-table mode="server" .columns=${columns} .rows=${rows} total-rows="272" .stats=${{ views: { total: 0, max: 200 } }}></uaui-data-table>`,
+                "uaui-data-table",
             );
             expect(barWidths(el)).toEqual(["25%", "12.5%"]);
         });
 
         it("never draws a bar wider than its track", async () => {
             const el = await renderElement(
-                html`<uax-data-table mode="server" .columns=${columns} .rows=${rows} total-rows="272" .stats=${{ views: { total: 0, max: 10 } }}></uax-data-table>`,
-                "uax-data-table",
+                html`<uaui-data-table mode="server" .columns=${columns} .rows=${rows} total-rows="272" .stats=${{ views: { total: 0, max: 10 } }}></uaui-data-table>`,
+                "uaui-data-table",
             );
             expect(barWidths(el)).toEqual(["100%", "100%"]);
         });
@@ -479,9 +479,9 @@ describe("Feature: page through rows", () => {
 
     describe("Scenario: client mode shares are of all rows, not the page", () => {
         it("keeps each row's share of the whole column on page 2", async () => {
-            const columns = [{ key: "name", label: "Name" }, { key: "views", label: "Views", elementName: UAX_TABLE_CELL.share }];
+            const columns = [{ key: "name", label: "Name" }, { key: "views", label: "Views", elementName: UAUI_TABLE_CELL.share }];
             const rows = Array.from({ length: 20 }, (_, i) => ({ name: `Page ${i + 1}`, views: 10 }));
-            const el = await renderElement(html`<uax-data-table .columns=${columns} .rows=${rows} page-size="10"></uax-data-table>`, "uax-data-table");
+            const el = await renderElement(html`<uaui-data-table .columns=${columns} .rows=${rows} page-size="10"></uaui-data-table>`, "uaui-data-table");
             await press(el, nextButton(el));
             expect(shares(el)[0]).toBe("(5.0%)");
         });
@@ -497,12 +497,12 @@ describe("Feature: page through rows", () => {
             try {
                 const host = render(
                     html`<div style="background: var(--uui-color-surface); color: var(--uui-color-text); width: 700px">
-                        <uax-data-table .columns=${nameColumns} .rows=${manyRows(30)} page-size="10">
+                        <uaui-data-table .columns=${nameColumns} .rows=${manyRows(30)} page-size="10">
                             <span slot="footer">Updated 5 minutes ago</span>
-                        </uax-data-table>
+                        </uaui-data-table>
                     </div>`,
                 ).container.querySelector("div")!;
-                await host.querySelector("uax-data-table")!.updateComplete;
+                await host.querySelector("uaui-data-table")!.updateComplete;
                 return await axeRun(host);
             } finally {
                 theme.remove();

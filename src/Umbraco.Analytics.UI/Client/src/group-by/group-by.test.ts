@@ -8,17 +8,17 @@ import { render } from "vitest-browser-lit";
 import { axeRun } from "../internal/test/a11y.js";
 import { userEvent } from "vitest/browser";
 import "./group-by.element.js";
-import type { UaxGroupByElement } from "./group-by.element.js";
-import { deepQueryAll, nextEvent, renderElement, type UaxTestElement } from "../internal/test/dom.js";
+import type { UauiGroupByElement } from "./group-by.element.js";
+import { deepQueryAll, nextEvent, renderElement, type UauiTestElement } from "../internal/test/dom.js";
 
 const option = (el: Element, label: string) =>
     deepQueryAll(el.shadowRoot!, "[role='radio']").find((o) => o.textContent?.trim() === label) as HTMLElement;
 
 describe("Feature: Day / Week / Month switch", () => {
     describe("Scenario: showing the current value", () => {
-        let el: UaxTestElement;
+        let el: UauiTestElement;
         beforeEach(async () => {
-            el = await renderElement(html`<uax-group-by value="week"></uax-group-by>`, "uax-group-by");
+            el = await renderElement(html`<uaui-group-by value="week"></uaui-group-by>`, "uaui-group-by");
         });
 
         it("checks Week", () => {
@@ -29,7 +29,7 @@ describe("Feature: Day / Week / Month switch", () => {
     describe("Scenario: clicking an option", () => {
         let detail: unknown;
         beforeEach(async () => {
-            const el = await renderElement(html`<uax-group-by value="day"></uax-group-by>`, "uax-group-by");
+            const el = await renderElement(html`<uaui-group-by value="day"></uaui-group-by>`, "uaui-group-by");
             const event = nextEvent(el, "change");
             option(el, "Month").click();
             detail = (await event).detail;
@@ -43,7 +43,7 @@ describe("Feature: Day / Week / Month switch", () => {
     describe("Scenario: using the arrow keys", () => {
         let detail: unknown;
         beforeEach(async () => {
-            const el = await renderElement(html`<uax-group-by value="day"></uax-group-by>`, "uax-group-by");
+            const el = await renderElement(html`<uaui-group-by value="day"></uaui-group-by>`, "uaui-group-by");
             const event = nextEvent(el, "change");
             option(el, "Day").focus();
             await userEvent.keyboard("{ArrowRight}");
@@ -57,7 +57,7 @@ describe("Feature: Day / Week / Month switch", () => {
 
     describe("Scenario: picking an option", () => {
         it("raises exactly one change on the host", async () => {
-            const el = await renderElement(html`<uax-group-by value="day"></uax-group-by>`, "uax-group-by");
+            const el = await renderElement(html`<uaui-group-by value="day"></uaui-group-by>`, "uaui-group-by");
             let count = 0;
             el.addEventListener("change", () => count++);
             option(el, "Month").click();
@@ -67,9 +67,9 @@ describe("Feature: Day / Week / Month switch", () => {
     });
 
     describe("Scenario: limited options", () => {
-        let el: UaxTestElement;
+        let el: UauiTestElement;
         beforeEach(async () => {
-            el = await renderElement(html`<uax-group-by value="day" .options=${["day", "week"]}></uax-group-by>`, "uax-group-by");
+            el = await renderElement(html`<uaui-group-by value="day" .options=${["day", "week"]}></uaui-group-by>`, "uaui-group-by");
         });
 
         it("shows only Day and Week", () => {
@@ -88,10 +88,10 @@ describe("Feature: Day / Week / Month switch", () => {
             try {
                 const host = render(
                     html`<div style="background: var(--uui-color-surface); padding: 8px">
-                        <uax-group-by value="week"></uax-group-by>
+                        <uaui-group-by value="week"></uaui-group-by>
                     </div>`,
                 ).container.querySelector("div")!;
-                await host.querySelector<UaxGroupByElement>("uax-group-by")!.updateComplete;
+                await host.querySelector<UauiGroupByElement>("uaui-group-by")!.updateComplete;
                 return await axeRun(host);
             } finally {
                 theme.remove();

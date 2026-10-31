@@ -1,33 +1,33 @@
 import { UmbContextBase } from "@umbraco-cms/backoffice/class-api";
 import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
 import { UmbBasicState, UmbObjectState } from "@umbraco-cms/backoffice/observable-api";
-import { UAX_TABLE_CONTEXT, type UaxTableContext } from "../table-context.js";
-import type { UaxTableColumn, UaxTableCompareLookup, UaxTableStats } from "../types.js";
+import { UAUI_TABLE_CONTEXT, type UauiTableContext } from "../table-context.js";
+import type { UauiTableColumn, UauiTableCompareLookup, UauiTableStats } from "../types.js";
 
-/** The context a table provides to its cells. Internal: the table sets the state, cells only read `UaxTableContext`. */
-export class UaxTableContextController extends UmbContextBase implements UaxTableContext {
+/** The context a table provides to its cells. Internal: the table sets the state, cells only read `UauiTableContext`. */
+export class UauiTableContextController extends UmbContextBase implements UauiTableContext {
     // Basic states, not deep ones: a deep state would freeze the product's column objects.
-    #columns = new UmbBasicState<UaxTableColumn[]>([]);
-    #stats = new UmbObjectState<UaxTableStats>({});
-    #compare = new UmbBasicState<UaxTableCompareLookup>(() => undefined);
+    #columns = new UmbBasicState<UauiTableColumn[]>([]);
+    #stats = new UmbObjectState<UauiTableStats>({});
+    #compare = new UmbBasicState<UauiTableCompareLookup>(() => undefined);
 
     readonly columns = this.#columns.asObservable();
     readonly stats = this.#stats.asObservable();
     readonly compare = this.#compare.asObservable();
 
     constructor(host: UmbControllerHost) {
-        super(host, UAX_TABLE_CONTEXT);
+        super(host, UAUI_TABLE_CONTEXT);
     }
 
-    setColumns(columns: UaxTableColumn[]) {
+    setColumns(columns: UauiTableColumn[]) {
         this.#columns.setValue(columns);
     }
 
-    setStats(stats: UaxTableStats) {
+    setStats(stats: UauiTableStats) {
         this.#stats.setValue(stats);
     }
 
-    setCompare(lookup: UaxTableCompareLookup) {
+    setCompare(lookup: UauiTableCompareLookup) {
         this.#compare.setValue(lookup);
     }
 }

@@ -16,7 +16,7 @@ CLIENT_REL="${CLIENT_DIR#"$REPO_DIR"/}"
 # The container needs its own Linux node_modules, so a named volume hides the host's (macOS) copy.
 docker run --rm \
     -v "$REPO_DIR":/work \
-    -v uax-client-node-modules:"/work/$CLIENT_REL/node_modules" \
+    -v uaui-client-node-modules:"/work/$CLIENT_REL/node_modules" \
     -w "/work/$CLIENT_REL" \
     -e CI=true \
     -e HOST_UID="$(id -u)" -e HOST_GID="$(id -g)" \

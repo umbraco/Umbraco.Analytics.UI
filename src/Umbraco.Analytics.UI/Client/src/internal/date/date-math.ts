@@ -55,9 +55,9 @@ export function isoToDate(iso: string | undefined): Date | undefined {
 type Range = { from: string; to: string };
 
 /** The ids of the presets the package knows how to calculate. */
-export type UaxBuiltInPresetId = "last-7-days" | "last-30-days" | "last-month" | "last-year";
+export type UauiBuiltInPresetId = "last-7-days" | "last-30-days" | "last-month" | "last-year";
 
-const builtIn: Record<UaxBuiltInPresetId, (today: string) => Range> = {
+const builtIn: Record<UauiBuiltInPresetId, (today: string) => Range> = {
     // Rolling windows include today.
     "last-7-days": (today) => ({ from: addDays(today, -6), to: today }),
     "last-30-days": (today) => ({ from: addDays(today, -29), to: today }),
@@ -77,7 +77,7 @@ const builtIn: Record<UaxBuiltInPresetId, (today: string) => Range> = {
 
 /** The dates for a built-in preset as of `today`, or `undefined` for any other id (including "custom"). */
 export function builtInPresetRange(id: string, today: string): Range | undefined {
-    return id in builtIn ? builtIn[id as UaxBuiltInPresetId](today) : undefined;
+    return id in builtIn ? builtIn[id as UauiBuiltInPresetId](today) : undefined;
 }
 
 /** Whole days from `from` to `to`, both inclusive. `undefined` unless both are real dates with `to` on or after `from`. */
@@ -119,7 +119,7 @@ export function daysIn(range: Range): string[] {
     return count === undefined ? [] : Array.from({ length: count }, (_, i) => addDays(range.from, i));
 }
 
-/** How a chart groups its points. The same three values as `UaxGroupBy`. */
+/** How a chart groups its points. The same three values as `UauiGroupBy`. */
 export type BucketUnit = "day" | "week" | "month";
 
 /** The first day of the bucket an ISO date falls in: the day itself, the Monday of its week, or the 1st of its month. */

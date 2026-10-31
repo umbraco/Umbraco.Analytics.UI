@@ -2,16 +2,16 @@ import type { Meta, StoryObj } from "@storybook/web-components-vite";
 import { html } from "@umbraco-cms/backoffice/external/lit";
 import { notPublicApi } from "../../internal/story/internal.js";
 import "./chart-tooltip.element.js";
-import type { UaxChartTooltipElement } from "./chart-tooltip.element.js";
+import type { UauiChartTooltipElement } from "./chart-tooltip.element.js";
 
 const numberFormat = new Intl.NumberFormat("en");
 
-const meta: Meta<UaxChartTooltipElement> = {
+const meta: Meta<UauiChartTooltipElement> = {
     title: "Internal/Chart tooltip",
-    component: "uax-chart-tooltip",
+    component: "uaui-chart-tooltip",
     tags: ["internal"],
     parameters: {
-        docs: { description: { component: notPublicApi("`uax-chart-tooltip` is the tooltip over a hovered date of `uax-time-series-chart`. The chart positions it; here it sits in the flow.") } },
+        docs: { description: { component: notPublicApi("`uaui-chart-tooltip` is the tooltip over a hovered date of `uaui-time-series-chart`. The chart positions it; here it sits in the flow.") } },
     },
     args: {
         date: "Jun 11, 2026",
@@ -22,19 +22,19 @@ const meta: Meta<UaxChartTooltipElement> = {
         numberFormat,
     },
     render: (args) => html`<div style="width: 240px">
-        <uax-chart-tooltip
+        <uaui-chart-tooltip
             style="position: static"
             .date=${args.date}
             .rows=${args.rows}
             .bars=${args.bars}
             .total=${args.total}
             .compareTotal=${args.compareTotal}
-            .numberFormat=${args.numberFormat}></uax-chart-tooltip>
+            .numberFormat=${args.numberFormat}></uaui-chart-tooltip>
     </div>`,
 };
 
 export default meta;
-type Story = StoryObj<UaxChartTooltipElement>;
+type Story = StoryObj<UauiChartTooltipElement>;
 
 /** One series: the value only, no label. */
 export const Default: Story = {};

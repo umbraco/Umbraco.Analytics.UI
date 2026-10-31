@@ -3,20 +3,20 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { html } from "@umbraco-cms/backoffice/external/lit";
 import "@umbraco-cms/backoffice/external/uui";
-import { deepQuery, pressed, recordEvents, renderElement, settle, shadow, type UaxTestElement } from "../internal/test/dom.js";
+import { deepQuery, pressed, recordEvents, renderElement, settle, shadow, type UauiTestElement } from "../internal/test/dom.js";
 import "./time-series-chart.element.js";
 
 const series = [{ id: "pv", label: "Pageviews", points: [{ date: "2026-06-01", value: 40 }, { date: "2026-06-02", value: 120 }] }];
 
-const errorState = (el: Element) => shadow(el).querySelector("uax-error-state") as UaxTestElement | null;
+const errorState = (el: Element) => shadow(el).querySelector("uaui-error-state") as UauiTestElement | null;
 
 describe("Feature: chart error state", () => {
     describe("Scenario: the chart has an error", () => {
-        let el: UaxTestElement;
+        let el: UauiTestElement;
         beforeEach(async () => {
             el = await renderElement(
-                html`<uax-time-series-chart .series=${series} error retryable></uax-time-series-chart>`,
-                "uax-time-series-chart",
+                html`<uaui-time-series-chart .series=${series} error retryable></uaui-time-series-chart>`,
+                "uaui-time-series-chart",
             );
             await settle(el);
         });
@@ -30,7 +30,7 @@ describe("Feature: chart error state", () => {
         });
 
         it("shows no empty state", () => {
-            expect(shadow(el).querySelector("uax-empty-state")).toBe(null);
+            expect(shadow(el).querySelector("uaui-empty-state")).toBe(null);
         });
 
         it("raises retry on the chart", async () => {
@@ -53,11 +53,11 @@ describe("Feature: chart error state", () => {
     });
 
     describe("Scenario: the chart has an error while loading", () => {
-        let el: UaxTestElement;
+        let el: UauiTestElement;
         beforeEach(async () => {
             el = await renderElement(
-                html`<uax-time-series-chart .series=${[]} error loading></uax-time-series-chart>`,
-                "uax-time-series-chart",
+                html`<uaui-time-series-chart .series=${[]} error loading></uaui-time-series-chart>`,
+                "uaui-time-series-chart",
             );
         });
 
@@ -66,7 +66,7 @@ describe("Feature: chart error state", () => {
         });
 
         it("shows no skeleton", () => {
-            expect(deepQuery(shadow(el), "uax-skeleton")).toBe(null);
+            expect(deepQuery(shadow(el), "uaui-skeleton")).toBe(null);
         });
 
         it("is not busy", () => {
@@ -77,8 +77,8 @@ describe("Feature: chart error state", () => {
     describe("Scenario: the chart has an error with the product's text", () => {
         it("passes the headline on", async () => {
             const el = await renderElement(
-                html`<uax-time-series-chart .series=${[]} error error-headline="Chart failed"></uax-time-series-chart>`,
-                "uax-time-series-chart",
+                html`<uaui-time-series-chart .series=${[]} error error-headline="Chart failed"></uaui-time-series-chart>`,
+                "uaui-time-series-chart",
             );
             expect(errorState(el)!.headline).toBe("Chart failed");
         });

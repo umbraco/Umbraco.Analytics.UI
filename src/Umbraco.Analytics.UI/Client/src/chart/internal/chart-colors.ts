@@ -1,4 +1,4 @@
-export interface UaxChartColors {
+export interface UauiChartColors {
     /** One entry per series, cycling through the four series tokens. */
     series: { line: string; fill: string; bar: string }[];
     /** The compare line. */
@@ -24,11 +24,11 @@ export interface UaxChartColors {
  * Chart.js draws to a canvas, which can't read CSS custom properties. The series tokens are also
  * `light-dark(...)` strings, not colours. So each colour is applied to a probe element in the
  * chart's shadow root and read back as a computed `color`, which is a real colour in the
- * element's current theme. The fill is a base colour at low alpha (`--uax-color-fill-N`, declared by the
+ * element's current theme. The fill is a base colour at low alpha (`--uaui-color-fill-N`, declared by the
  * element): the livelier design colour by default, the product's colour when it overrides a series token. Bars use
- * `--uax-color-bar-N`, opaque.
+ * `--uaui-color-bar-N`, opaque.
  */
-export function resolveChartColors(probe: HTMLElement, slots: number[]): UaxChartColors {
+export function resolveChartColors(probe: HTMLElement, slots: number[]): UauiChartColors {
     const colorOf = (expression: string): string => {
         probe.style.color = "";
         probe.style.color = expression;
@@ -36,30 +36,30 @@ export function resolveChartColors(probe: HTMLElement, slots: number[]): UaxChar
     };
     const series = slots.map((n) => {
         return {
-            line: colorOf(`var(--uax-color-series-${n})`),
-            fill: colorOf(`color-mix(in srgb, var(--uax-color-fill-${n}) 12%, transparent)`),
-            bar: colorOf(`var(--uax-color-bar-${n})`),
+            line: colorOf(`var(--uaui-color-series-${n})`),
+            fill: colorOf(`color-mix(in srgb, var(--uaui-color-fill-${n}) 12%, transparent)`),
+            bar: colorOf(`var(--uaui-color-bar-${n})`),
         };
     });
     return {
         series,
-        compare: colorOf("var(--uax-color-compare)"),
-        compareBar: colorOf("var(--uax-color-compare-bar)"),
-        gapAbove: colorOf("var(--uax-color-gap-positive)"),
-        gapBelow: colorOf("var(--uax-color-gap-negative)"),
+        compare: colorOf("var(--uaui-color-compare)"),
+        compareBar: colorOf("var(--uaui-color-compare-bar)"),
+        gapAbove: colorOf("var(--uaui-color-gap-positive)"),
+        gapBelow: colorOf("var(--uaui-color-gap-negative)"),
         grid: colorOf("var(--uui-color-divider-standalone)"),
         tick: colorOf("var(--uui-color-text-alt)"),
         surface: colorOf("var(--uui-color-surface)"),
         hoverLine: colorOf("color-mix(in srgb, var(--uui-color-text) 35%, transparent)"),
-        marker: colorOf("var(--uax-color-marker)"),
-        markerHover: colorOf("var(--uax-color-marker-hover)"),
-        markerLine: colorOf("color-mix(in srgb, var(--uax-color-marker) 26%, transparent)"),
-        markerLineActive: colorOf("color-mix(in srgb, var(--uax-color-marker-hover) 60%, transparent)"),
+        marker: colorOf("var(--uaui-color-marker)"),
+        markerHover: colorOf("var(--uaui-color-marker-hover)"),
+        markerLine: colorOf("color-mix(in srgb, var(--uaui-color-marker) 26%, transparent)"),
+        markerLineActive: colorOf("color-mix(in srgb, var(--uaui-color-marker-hover) 60%, transparent)"),
         fontFamily: getComputedStyle(probe).fontFamily,
     };
 }
 
 /** True when the two palettes would draw differently. */
-export function colorsDiffer(a: UaxChartColors | undefined, b: UaxChartColors): boolean {
+export function colorsDiffer(a: UauiChartColors | undefined, b: UauiChartColors): boolean {
     return !a || JSON.stringify(a) !== JSON.stringify(b);
 }

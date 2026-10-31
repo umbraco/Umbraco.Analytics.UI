@@ -4,22 +4,22 @@ import { asNumber } from "../internal/cell-values.js";
 import { getNumberFormat } from "../../internal/format/number-format.js";
 import "../table-compare-badge.element.js";
 import "../internal/table-skeleton-cell.element.js";
-import type { UaxTableCellElement, UaxTableColumn } from "../types.js";
+import type { UauiTableCellElement, UauiTableColumn } from "../types.js";
 
 const percentFormatOptions: Intl.NumberFormatOptions = { style: "percent", maximumFractionDigits: 1 };
 
 /**
  * A table cell that shows its value, a fraction (0.25 is "25%"), as a percentage in the editor's culture.
- * The column's `valueFormat` overrides the default of one decimal at most. With a compare row it adds a change badge (`uax-table-compare-badge`). A missing or non-numeric value shows nothing.
- * Its name is `UAX_TABLE_CELL.percent`, and it is usable on its own.
+ * The column's `valueFormat` overrides the default of one decimal at most. With a compare row it adds a change badge (`uaui-table-compare-badge`). A missing or non-numeric value shows nothing.
+ * Its name is `UAUI_TABLE_CELL.percent`, and it is usable on its own.
  *
- * @element uax-percent-cell
+ * @element uaui-percent-cell
  */
-@customElement("uax-percent-cell")
-export class UaxPercentCellElement extends UmbLitElement implements UaxTableCellElement {
+@customElement("uaui-percent-cell")
+export class UauiPercentCellElement extends UmbLitElement implements UauiTableCellElement {
     /** The column the cell is in. Its `valueFormat` formats the percentage. */
     @property({ attribute: false })
-    column: UaxTableColumn = { key: "value", label: "" };
+    column: UauiTableColumn = { key: "value", label: "" };
 
     /** The row the cell is in. */
     @property({ attribute: false })
@@ -29,7 +29,7 @@ export class UaxPercentCellElement extends UmbLitElement implements UaxTableCell
     @property({ attribute: false })
     value: unknown;
 
-    #format?: { column: UaxTableColumn; lang: string; format: Intl.NumberFormat };
+    #format?: { column: UauiTableColumn; lang: string; format: Intl.NumberFormat };
 
     protected override willUpdate(changed: PropertyValues<this>) {
         super.willUpdate(changed);
@@ -44,10 +44,10 @@ export class UaxPercentCellElement extends UmbLitElement implements UaxTableCell
     loading = false;
 
     override render(): TemplateResult | typeof nothing {
-        if (this.loading) return html`<uax-table-skeleton-cell .align=${this.column.align ?? "start"}></uax-table-skeleton-cell>`;
+        if (this.loading) return html`<uaui-table-skeleton-cell .align=${this.column.align ?? "start"}></uaui-table-skeleton-cell>`;
         const value = asNumber(this.value);
         if (value === undefined) return nothing;
-        return html`<span class="value">${this.#format!.format.format(value)}<uax-table-compare-badge .column=${this.column} .item=${this.item} .value=${this.value}></uax-table-compare-badge></span>`;
+        return html`<span class="value">${this.#format!.format.format(value)}<uaui-table-compare-badge .column=${this.column} .item=${this.item} .value=${this.value}></uaui-table-compare-badge></span>`;
     }
 
     static override styles: CSSResultGroup = css`
@@ -60,10 +60,10 @@ export class UaxPercentCellElement extends UmbLitElement implements UaxTableCell
             align-items: center;
             gap: 6px;
             white-space: nowrap;
-            height: var(--_uax-table-line, 20px);
+            height: var(--_uaui-table-line, 20px);
         }
 
-        uax-table-compare-badge {
+        uaui-table-compare-badge {
             line-height: 1.4;
         }
     `;
@@ -71,6 +71,6 @@ export class UaxPercentCellElement extends UmbLitElement implements UaxTableCell
 
 declare global {
     interface HTMLElementTagNameMap {
-        "uax-percent-cell": UaxPercentCellElement;
+        "uaui-percent-cell": UauiPercentCellElement;
     }
 }

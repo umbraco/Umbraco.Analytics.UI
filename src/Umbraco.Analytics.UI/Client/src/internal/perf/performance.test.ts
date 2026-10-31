@@ -7,9 +7,9 @@ import { Chart } from "chart.js";
 import "@umbraco-cms/backoffice/external/uui";
 import "../../chart/time-series-chart.element.js";
 import "../../table/data-table.element.js";
-import { UAX_TABLE_CELL } from "../../table/cells/cell-names.js";
-import { settle, type UaxTestElement } from "../test/dom.js";
-import type { UaxSeries } from "../../chart/types.js";
+import { UAUI_TABLE_CELL } from "../../table/cells/cell-names.js";
+import { settle, type UauiTestElement } from "../test/dom.js";
+import type { UauiSeries } from "../../chart/types.js";
 
 const RUNS = 7;
 const timed = it.skipIf(server.browser !== "chromium");
@@ -27,8 +27,8 @@ async function medianOf(measure: () => Promise<number>) {
 const mounted: HTMLElement[] = [];
 afterEach(() => mounted.splice(0).forEach((el) => el.remove()));
 
-function mount(tag: string, props: Record<string, unknown>, width = "900px"): UaxTestElement {
-    const el = document.createElement(tag) as UaxTestElement;
+function mount(tag: string, props: Record<string, unknown>, width = "900px"): UauiTestElement {
+    const el = document.createElement(tag) as UauiTestElement;
     Object.assign(el, props);
     el.style.display = "block";
     el.style.width = width;
@@ -40,7 +40,7 @@ function mount(tag: string, props: Record<string, unknown>, width = "900px"): Ua
 const isoDates = (count: number) =>
     Array.from({ length: count }, (_, i) => new Date(Date.UTC(2024, 0, 1 + i)).toISOString().slice(0, 10));
 
-const makeSeries = (seriesCount: number, pointCount: number): UaxSeries[] => {
+const makeSeries = (seriesCount: number, pointCount: number): UauiSeries[] => {
     const dates = isoDates(pointCount);
     return Array.from({ length: seriesCount }, (_, s) => ({
         id: `s${s}`,
@@ -56,7 +56,7 @@ describe("Feature: performance targets", () => {
 
         timed("draws in under 100 ms (median of 7 mounts, cold JIT included)", async () => {
             const ms = await medianOf(async () => {
-                const el = mount("uax-time-series-chart", { kind: "line", series });
+                const el = mount("uaui-time-series-chart", { kind: "line", series });
                 const start = performance.now();
                 document.body.append(el);
                 await el.updateComplete;
@@ -72,7 +72,7 @@ describe("Feature: performance targets", () => {
         });
 
         timed("redraws in under 100 ms when the series change (median of 7)", async () => {
-            const el = mount("uax-time-series-chart", { kind: "line", series });
+            const el = mount("uaui-time-series-chart", { kind: "line", series });
             document.body.append(el);
             await el.updateComplete;
             expect(Chart.getChart(el.shadowRoot!.querySelector("canvas")!)?.data.datasets.length).toBe(6);
@@ -97,8 +97,8 @@ describe("Feature: performance targets", () => {
     describe("Scenario: a client-mode table of 1,000 rows", () => {
         const columns = [
             { key: "name", label: "Name", sortable: true },
-            { key: "views", label: "Views", elementName: UAX_TABLE_CELL.share, sortable: true, sortAs: "number" },
-            { key: "sessions", label: "Sessions", elementName: UAX_TABLE_CELL.number, sortable: true, sortAs: "number", align: "end" },
+            { key: "views", label: "Views", elementName: UAUI_TABLE_CELL.share, sortable: true, sortAs: "number" },
+            { key: "sessions", label: "Sessions", elementName: UAUI_TABLE_CELL.number, sortable: true, sortAs: "number", align: "end" },
         ];
         // Scrambled so a sort has real work to do.
         const rows = Array.from({ length: 1000 }, (_, i) => ({
@@ -108,7 +108,7 @@ describe("Feature: performance targets", () => {
         }));
         // 100 is the biggest page size the footer offers, so it is the heaviest page to draw.
         const mountTable = async () => {
-            const el = mount("uax-data-table", { mode: "client", columns, rows, pageSize: 100 });
+            const el = mount("uaui-data-table", { mode: "client", columns, rows, pageSize: 100 });
             document.body.append(el);
             await settle(el);
             // Guard against timing a table that drew nothing: one full page of body rows.

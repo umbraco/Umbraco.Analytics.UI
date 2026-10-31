@@ -1,5 +1,5 @@
 /** A chosen date range. `preset` names the preset it came from, when it did. */
-export type UaxDateRange = {
+export type UauiDateRange = {
     /** ISO date, e.g. "2026-05-25". */
     from: string;
     /** ISO date, e.g. "2026-06-23". */
@@ -8,7 +8,7 @@ export type UaxDateRange = {
 };
 
 /** A chosen comparison range. */
-export type UaxCompare = {
+export type UauiCompare = {
     mode: "previous-period" | "previous-year" | "custom";
     /** ISO date. */
     from: string;
@@ -21,7 +21,7 @@ export type UaxCompare = {
  * `last-month` and `last-year`: they get their dates and a translated label from the package. Any other id
  * needs its own `range` and `label`. `custom` is always offered last and has no dates of its own.
  */
-export type UaxDatePreset = {
+export type UauiDatePreset = {
     id: string;
     /** Already translated text. Built-in ids fall back to the package's translation. */
     label?: string;
@@ -30,8 +30,8 @@ export type UaxDatePreset = {
 };
 
 /** What the date range dialog is opened with. */
-export type UaxDateRangeModalData = {
-    presets: UaxDatePreset[];
+export type UauiDateRangeModalData = {
+    presets: UauiDatePreset[];
     /** ISO date the presets count from. Defaults to the clock's day. */
     today?: string;
     /** ISO date no field may be after. */
@@ -39,14 +39,14 @@ export type UaxDateRangeModalData = {
     allowCompare: boolean;
 };
 
-/** The detail of the `change` event of `uax-date-range`: the range the editor saved, and the comparison when they turned it on. */
-export type UaxDateRangeChangeDetail = {
-    value: UaxDateRange;
-    compare?: UaxCompare;
+/** The detail of the `change` event of `uaui-date-range`: the range the editor saved, and the comparison when they turned it on. */
+export type UauiDateRangeChangeDetail = {
+    value: UauiDateRange;
+    compare?: UauiCompare;
 };
 
 /** What the date range dialog hands back when the editor saves. */
-export type UaxDateRangeModalValue = {
-    value: UaxDateRange;
-    compare?: UaxCompare;
+export type UauiDateRangeModalValue = {
+    value: UauiDateRange;
+    compare?: UauiCompare;
 };

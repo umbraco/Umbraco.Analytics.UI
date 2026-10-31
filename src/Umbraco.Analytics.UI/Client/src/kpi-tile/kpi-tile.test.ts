@@ -7,17 +7,17 @@ import { html } from "@umbraco-cms/backoffice/external/lit";
 import { render } from "vitest-browser-lit";
 import { axeRun } from "../internal/test/a11y.js";
 import "./kpi-tile.element.js";
-import type { UaxDeltaBadgeElement } from "../delta-badge/delta-badge.element.js";
-import type { UaxKpiTileElement } from "./kpi-tile.element.js";
-import { recordEvents, renderElement, shadow, type UaxTestElement } from "../internal/test/dom.js";
+import type { UauiDeltaBadgeElement } from "../delta-badge/delta-badge.element.js";
+import type { UauiKpiTileElement } from "./kpi-tile.element.js";
+import { recordEvents, renderElement, shadow, type UauiTestElement } from "../internal/test/dom.js";
 
 describe("Feature: KPI tile shows a headline number", () => {
     describe("Scenario: label, value and icon", () => {
-        let el: UaxTestElement;
+        let el: UauiTestElement;
         beforeEach(async () => {
             el = await renderElement(
-                html`<uax-kpi-tile label="Revenue" value="€ 4,837.40" icon="icon-coins"></uax-kpi-tile>`,
-                "uax-kpi-tile",
+                html`<uaui-kpi-tile label="Revenue" value="€ 4,837.40" icon="icon-coins"></uaui-kpi-tile>`,
+                "uaui-kpi-tile",
             );
         });
 
@@ -35,31 +35,31 @@ describe("Feature: KPI tile shows a headline number", () => {
     });
 
     describe("Scenario: lower is better", () => {
-        it("reflects lower-is-better to the attribute, like uax-delta-badge", async () => {
-            const el = await renderElement(html`<uax-kpi-tile label="Refunds" value="1" .lowerIsBetter=${true}></uax-kpi-tile>`, "uax-kpi-tile");
+        it("reflects lower-is-better to the attribute, like uaui-delta-badge", async () => {
+            const el = await renderElement(html`<uaui-kpi-tile label="Refunds" value="1" .lowerIsBetter=${true}></uaui-kpi-tile>`, "uaui-kpi-tile");
             expect(el.hasAttribute("lower-is-better")).toBe(true);
         });
     });
 
     describe("Scenario: with a delta", () => {
-        let el: UaxTestElement;
+        let el: UauiTestElement;
         beforeEach(async () => {
-            el = await renderElement(html`<uax-kpi-tile label="Revenue" value="€ 1" .delta=${18.7}></uax-kpi-tile>`, "uax-kpi-tile");
+            el = await renderElement(html`<uaui-kpi-tile label="Revenue" value="€ 1" .delta=${18.7}></uaui-kpi-tile>`, "uaui-kpi-tile");
         });
 
         it("shows a change badge for the delta", () => {
-            expect((shadow(el).querySelector("uax-delta-badge") as UaxTestElement | null)?.value).toBe(18.7);
+            expect((shadow(el).querySelector("uaui-delta-badge") as UauiTestElement | null)?.value).toBe(18.7);
         });
     });
 
     describe("Scenario: no change", () => {
-        let badge: UaxDeltaBadgeElement;
+        let badge: UauiDeltaBadgeElement;
         beforeEach(async () => {
             const el = await renderElement(
-                html`<uax-kpi-tile label="Success rate" value="98%" .delta=${0} delta-unit="points"></uax-kpi-tile>`,
-                "uax-kpi-tile",
+                html`<uaui-kpi-tile label="Success rate" value="98%" .delta=${0} delta-unit="points"></uaui-kpi-tile>`,
+                "uaui-kpi-tile",
             );
-            badge = shadow(el).querySelector("uax-delta-badge") as UaxDeltaBadgeElement;
+            badge = shadow(el).querySelector("uaui-delta-badge") as UauiDeltaBadgeElement;
             await badge.updateComplete;
         });
 
@@ -78,25 +78,25 @@ describe("Feature: KPI tile shows a headline number", () => {
 
     describe("Scenario (sad path): unknown change", () => {
         it("shows no badge when the delta is not a number", async () => {
-            const el = await renderElement(html`<uax-kpi-tile label="Orders" value="26" .delta=${Number.NaN}></uax-kpi-tile>`, "uax-kpi-tile");
-            expect(shadow(el).querySelector("uax-delta-badge")).toBe(null);
+            const el = await renderElement(html`<uaui-kpi-tile label="Orders" value="26" .delta=${Number.NaN}></uaui-kpi-tile>`, "uaui-kpi-tile");
+            expect(shadow(el).querySelector("uaui-delta-badge")).toBe(null);
         });
 
         it("shows no badge when the delta is infinite (compared with zero)", async () => {
             const el = await renderElement(
-                html`<uax-kpi-tile label="Orders" value="26" .delta=${Number.POSITIVE_INFINITY}></uax-kpi-tile>`,
-                "uax-kpi-tile",
+                html`<uaui-kpi-tile label="Orders" value="26" .delta=${Number.POSITIVE_INFINITY}></uaui-kpi-tile>`,
+                "uaui-kpi-tile",
             );
-            expect(shadow(el).querySelector("uax-delta-badge")).toBe(null);
+            expect(shadow(el).querySelector("uaui-delta-badge")).toBe(null);
         });
     });
 
     describe("Scenario: no data", () => {
-        let el: UaxTestElement;
+        let el: UauiTestElement;
         beforeEach(async () => {
             el = await renderElement(
-                html`<uax-kpi-tile label="Revenue" value="€ 0" icon="icon-coins" .delta=${5} no-data></uax-kpi-tile>`,
-                "uax-kpi-tile",
+                html`<uaui-kpi-tile label="Revenue" value="€ 0" icon="icon-coins" .delta=${5} no-data></uaui-kpi-tile>`,
+                "uaui-kpi-tile",
             );
         });
 
@@ -113,7 +113,7 @@ describe("Feature: KPI tile shows a headline number", () => {
         });
 
         it("shows no change badge", () => {
-            expect(shadow(el).querySelector("uax-delta-badge")).toBe(null);
+            expect(shadow(el).querySelector("uaui-delta-badge")).toBe(null);
         });
 
         it("keeps the label", () => {
@@ -121,12 +121,12 @@ describe("Feature: KPI tile shows a headline number", () => {
         });
 
         it("is as tall as a tile with a value, so the row does not jump", async () => {
-            const loaded = await renderElement(html`<uax-kpi-tile label="Revenue" value="1" icon="icon-coins"></uax-kpi-tile>`, "uax-kpi-tile");
+            const loaded = await renderElement(html`<uaui-kpi-tile label="Revenue" value="1" icon="icon-coins"></uaui-kpi-tile>`, "uaui-kpi-tile");
             expect(el.getBoundingClientRect().height).toBe(loaded.getBoundingClientRect().height);
         });
 
         it("stays selectable", async () => {
-            const selectable = await renderElement(html`<uax-kpi-tile label="Revenue" no-data selectable></uax-kpi-tile>`, "uax-kpi-tile");
+            const selectable = await renderElement(html`<uaui-kpi-tile label="Revenue" no-data selectable></uaui-kpi-tile>`, "uaui-kpi-tile");
             const events = recordEvents(selectable, "selected");
             (shadow(selectable).querySelector("button") as HTMLElement).click();
             expect(events).toHaveLength(1);
@@ -134,9 +134,9 @@ describe("Feature: KPI tile shows a headline number", () => {
     });
 
     describe("Scenario: no data while loading", () => {
-        let el: UaxTestElement;
+        let el: UauiTestElement;
         beforeEach(async () => {
-            el = await renderElement(html`<uax-kpi-tile label="Revenue" no-data loading></uax-kpi-tile>`, "uax-kpi-tile");
+            el = await renderElement(html`<uaui-kpi-tile label="Revenue" no-data loading></uaui-kpi-tile>`, "uaui-kpi-tile");
         });
 
         it("keeps the dash instead of a skeleton", () => {
@@ -149,14 +149,14 @@ describe("Feature: KPI tile shows a headline number", () => {
     });
 
     describe("Scenario: tiles in one row", () => {
-        let tiles: UaxKpiTileElement[];
+        let tiles: UauiKpiTileElement[];
         beforeEach(async () => {
             const { container } = render(html`<div style="display:grid;grid-template-columns:repeat(3,160px)">
-                <uax-kpi-tile label="Revenue" value="1"></uax-kpi-tile>
-                <uax-kpi-tile label="Carts created this period" value="2"></uax-kpi-tile>
-                <uax-kpi-tile label="Orders" value="3"></uax-kpi-tile>
+                <uaui-kpi-tile label="Revenue" value="1"></uaui-kpi-tile>
+                <uaui-kpi-tile label="Carts created this period" value="2"></uaui-kpi-tile>
+                <uaui-kpi-tile label="Orders" value="3"></uaui-kpi-tile>
             </div>`);
-            tiles = [...container.querySelectorAll("uax-kpi-tile")];
+            tiles = [...container.querySelectorAll("uaui-kpi-tile")];
             await Promise.all(tiles.map((t) => t.updateComplete));
         });
 
@@ -174,55 +174,55 @@ describe("Feature: KPI tile shows a headline number", () => {
     });
 
     describe("Scenario: a narrow tile", () => {
-        let el: UaxTestElement;
+        let el: UauiTestElement;
         beforeEach(async () => {
             el = await renderElement(
-                html`<div style="width:140px"><uax-kpi-tile label="Revenue" value="€ 4,837.40" .delta=${18.7}></uax-kpi-tile></div>`,
-                "uax-kpi-tile",
+                html`<div style="width:140px"><uaui-kpi-tile label="Revenue" value="€ 4,837.40" .delta=${18.7}></uaui-kpi-tile></div>`,
+                "uaui-kpi-tile",
             );
         });
 
         it("puts the badge below the value", () => {
             const value = shadow(el).querySelector(".value")!.getBoundingClientRect();
-            const badge = shadow(el).querySelector("uax-delta-badge")!.getBoundingClientRect();
+            const badge = shadow(el).querySelector("uaui-delta-badge")!.getBoundingClientRect();
             expect(badge.top).toBeGreaterThanOrEqual(value.bottom);
         });
     });
 
     describe("Scenario (sad path): no delta", () => {
-        let el: UaxTestElement;
+        let el: UauiTestElement;
         beforeEach(async () => {
-            el = await renderElement(html`<uax-kpi-tile label="Orders" value="26"></uax-kpi-tile>`, "uax-kpi-tile");
+            el = await renderElement(html`<uaui-kpi-tile label="Orders" value="26"></uaui-kpi-tile>`, "uaui-kpi-tile");
         });
 
         it("shows no badge", () => {
-            expect(shadow(el).querySelector("uax-delta-badge")).toBe(null);
+            expect(shadow(el).querySelector("uaui-delta-badge")).toBe(null);
         });
     });
 
     describe("Scenario: loading", () => {
         it("shows a skeleton and no value while loading with no value", async () => {
-            const el = await renderElement(html`<uax-kpi-tile label="Revenue" loading></uax-kpi-tile>`, "uax-kpi-tile");
-            expect(shadow(el).querySelector("uax-skeleton")).not.toBe(null);
+            const el = await renderElement(html`<uaui-kpi-tile label="Revenue" loading></uaui-kpi-tile>`, "uaui-kpi-tile");
+            expect(shadow(el).querySelector("uaui-skeleton")).not.toBe(null);
         });
 
         it("keeps the value, with no skeleton, while reloading", async () => {
             const el = await renderElement(
-                html`<uax-kpi-tile label="Revenue" value="€ 1" loading></uax-kpi-tile>`,
-                "uax-kpi-tile",
+                html`<uaui-kpi-tile label="Revenue" value="€ 1" loading></uaui-kpi-tile>`,
+                "uaui-kpi-tile",
             );
-            expect(shadow(el).querySelector("uax-skeleton")).toBe(null);
+            expect(shadow(el).querySelector("uaui-skeleton")).toBe(null);
             expect(shadow(el).textContent).toContain("€ 1");
         });
 
         it("marks its content busy while loading", async () => {
-            const el = await renderElement(html`<uax-kpi-tile label="Revenue" loading></uax-kpi-tile>`, "uax-kpi-tile");
+            const el = await renderElement(html`<uaui-kpi-tile label="Revenue" loading></uaui-kpi-tile>`, "uaui-kpi-tile");
             expect(shadow(el).querySelector(".content")?.getAttribute("aria-busy")).toBe("true");
         });
 
         it("is as tall as a loaded tile, so the page does not jump", async () => {
-            const loaded = await renderElement(html`<uax-kpi-tile label="Revenue" value="1"></uax-kpi-tile>`, "uax-kpi-tile");
-            const loading = await renderElement(html`<uax-kpi-tile label="Revenue" loading></uax-kpi-tile>`, "uax-kpi-tile");
+            const loaded = await renderElement(html`<uaui-kpi-tile label="Revenue" value="1"></uaui-kpi-tile>`, "uaui-kpi-tile");
+            const loading = await renderElement(html`<uaui-kpi-tile label="Revenue" loading></uaui-kpi-tile>`, "uaui-kpi-tile");
             expect(loading.getBoundingClientRect().height).toBe(loaded.getBoundingClientRect().height);
         });
     });
@@ -238,11 +238,11 @@ describe("Feature: KPI tile shows a headline number", () => {
             try {
                 const host = render(
                     html`<div style="background: var(--uui-color-background); padding: 8px; width: 320px">
-                        <uax-kpi-tile label="Revenue" value="€ 4,837.40" icon="icon-coins" .delta=${-3}></uax-kpi-tile>
-                        <uax-kpi-tile label="Orders" icon="icon-inbox" no-data></uax-kpi-tile>
+                        <uaui-kpi-tile label="Revenue" value="€ 4,837.40" icon="icon-coins" .delta=${-3}></uaui-kpi-tile>
+                        <uaui-kpi-tile label="Orders" icon="icon-inbox" no-data></uaui-kpi-tile>
                     </div>`,
                 ).container.querySelector("div")!;
-                await host.querySelector("uax-kpi-tile")!.updateComplete;
+                await host.querySelector("uaui-kpi-tile")!.updateComplete;
                 return await axeRun(host);
             } finally {
                 theme.remove();
@@ -262,7 +262,7 @@ describe("Feature: KPI tile shows a headline number", () => {
         });
 
         it("hides the icon from assistive tech", async () => {
-            const el = await renderElement(html`<uax-kpi-tile label="A" value="1" icon="icon-coins"></uax-kpi-tile>`, "uax-kpi-tile");
+            const el = await renderElement(html`<uaui-kpi-tile label="A" value="1" icon="icon-coins"></uaui-kpi-tile>`, "uaui-kpi-tile");
             expect(shadow(el).querySelector(".icon")?.getAttribute("aria-hidden")).toBe("true");
         });
     });

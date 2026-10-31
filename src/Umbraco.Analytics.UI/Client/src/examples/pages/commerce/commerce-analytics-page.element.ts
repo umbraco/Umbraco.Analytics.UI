@@ -6,12 +6,12 @@ import "../../../chart/time-series-chart.element.js";
 import "../../../date-range/date-range.element.js";
 import "../../../table/data-table.element.js";
 import "../../../table-search/table-search.element.js";
-import { UAX_TABLE_CELL } from "../../../table/cells/cell-names.js";
-import type { UaxSeries } from "../../../chart/types.js";
-import { uaxCompareFor, uaxFormatDateRange } from "../../../date-helpers/index.js";
-import type { UaxCompare, UaxDateRange } from "../../../date-range/types.js";
-import { UaxTableServerController } from "../../../table/table-server.controller.js";
-import type { UaxTableColumn, UaxTableServerState } from "../../../table/index.js";
+import { UAUI_TABLE_CELL } from "../../../table/cells/cell-names.js";
+import type { UauiSeries } from "../../../chart/types.js";
+import { uauiCompareFor, uauiFormatDateRange } from "../../../date-helpers/index.js";
+import type { UauiCompare, UauiDateRange } from "../../../date-range/types.js";
+import { UauiTableServerController } from "../../../table/table-server.controller.js";
+import type { UauiTableColumn, UauiTableServerState } from "../../../table/index.js";
 import {
     loadBuyerCompare,
     loadBuyers,
@@ -62,26 +62,26 @@ const dayValue = (day: Day, id: MetricId): number => {
 /** A page of buyers and last period's buyers, which the controller hands to the table. */
 type BuyerResult = BuyerPage & { compareRows: BuyerRow[] };
 
-const productColumns: UaxTableColumn[] = [
-    { key: "name", label: "Product", elementName: UAX_TABLE_CELL.link, meta: { hrefKey: "url" }, searchable: true, sortable: true, sortAs: "text" },
+const productColumns: UauiTableColumn[] = [
+    { key: "name", label: "Product", elementName: UAUI_TABLE_CELL.link, meta: { hrefKey: "url" }, searchable: true, sortable: true, sortAs: "text" },
     { key: "sku", label: "SKU", searchable: true },
-    { key: "units", label: "Units sold", elementName: UAX_TABLE_CELL.share, width: "28%", valueFormat: COUNT, sortable: true, sortAs: "number" },
-    { key: "revenue", label: "Revenue", elementName: UAX_TABLE_CELL.share, width: "32%", valueFormat: EUR_WHOLE, meta: { color: 2 }, sortable: true, sortAs: "number" },
+    { key: "units", label: "Units sold", elementName: UAUI_TABLE_CELL.share, width: "28%", valueFormat: COUNT, sortable: true, sortAs: "number" },
+    { key: "revenue", label: "Revenue", elementName: UAUI_TABLE_CELL.share, width: "32%", valueFormat: EUR_WHOLE, meta: { color: 2 }, sortable: true, sortAs: "number" },
 ];
 
 // The buyers table is `server` mode: the product sorts, pages and searches, so no `sortAs` here.
-const buyerColumns: UaxTableColumn[] = [
+const buyerColumns: UauiTableColumn[] = [
     { key: "name", label: "Buyer", sortable: true },
     { key: "email", label: "Email", sortable: true },
-    { key: "orders", label: "Orders", elementName: UAX_TABLE_CELL.number, align: "end", sortable: true },
-    { key: "spent", label: "Total spent", elementName: UAX_TABLE_CELL.share, width: "30%", valueFormat: EUR_WHOLE, sortable: true },
+    { key: "orders", label: "Orders", elementName: UAUI_TABLE_CELL.number, align: "end", sortable: true },
+    { key: "spent", label: "Total spent", elementName: UAUI_TABLE_CELL.share, width: "30%", valueFormat: EUR_WHOLE, sortable: true },
 ];
 
-const discountColumns: UaxTableColumn[] = [
+const discountColumns: UauiTableColumn[] = [
     { key: "name", label: "Discount", sortable: true, sortAs: "text" },
     { key: "code", label: "Code" },
-    { key: "uses", label: "Times used", elementName: UAX_TABLE_CELL.share, width: "30%", valueFormat: COUNT, sortable: true, sortAs: "number" },
-    { key: "given", label: "Value given", elementName: UAX_TABLE_CELL.number, valueFormat: EUR_WHOLE, align: "end", sortable: true, sortAs: "number" },
+    { key: "uses", label: "Times used", elementName: UAUI_TABLE_CELL.share, width: "30%", valueFormat: COUNT, sortable: true, sortAs: "number" },
+    { key: "given", label: "Value given", elementName: UAUI_TABLE_CELL.number, valueFormat: EUR_WHOLE, align: "end", sortable: true, sortAs: "number" },
 ];
 
 /**
@@ -99,8 +99,8 @@ export class ExampleCommerceAnalyticsPageElement extends UmbLitElement {
     @property({ type: Boolean })
     failing = false;
 
-    @state() private _range: UaxDateRange = { from: "2026-05-25", to: "2026-06-23" };
-    @state() private _compare?: UaxCompare = uaxCompareFor("previous-period", { from: "2026-05-25", to: "2026-06-23" });
+    @state() private _range: UauiDateRange = { from: "2026-05-25", to: "2026-06-23" };
+    @state() private _compare?: UauiCompare = uauiCompareFor("previous-period", { from: "2026-05-25", to: "2026-06-23" });
     @state() private _metric: MetricId = "revenue";
 
     @state() private _data?: Snapshot;
@@ -114,7 +114,7 @@ export class ExampleCommerceAnalyticsPageElement extends UmbLitElement {
 
     // Top buyers load a page at a time: the controller keeps their sort, page, page size and search, drops stale
     // answers and gives the table its rows, loading and totals. It loads on connect and on the table's own events.
-    #buyers = new UaxTableServerController<BuyerResult>(this, {
+    #buyers = new UauiTableServerController<BuyerResult>(this, {
         sort: { key: "spent", direction: "desc" },
         pageSize: 5,
         load: (state, signal) => this.#loadBuyers(state, signal),
@@ -144,7 +144,7 @@ export class ExampleCommerceAnalyticsPageElement extends UmbLitElement {
         this._loading = false;
     }
 
-    async #loadBuyers(state: Readonly<UaxTableServerState>, signal: AbortSignal): Promise<BuyerResult> {
+    async #loadBuyers(state: Readonly<UauiTableServerState>, signal: AbortSignal): Promise<BuyerResult> {
         if (this.failing) throw new Error("The buyers request failed.");
         const [buyers, compareRows] = await Promise.all([
             loadBuyers(this._range, { sort: state.sort, page: state.page, pageSize: state.pageSize, query: state.query }, this.latency),
@@ -155,7 +155,7 @@ export class ExampleCommerceAnalyticsPageElement extends UmbLitElement {
     }
 
     // The date range updates everything. A new range starts the buyers back on page 1.
-    #onRangeChange(e: CustomEvent<{ value: UaxDateRange; compare?: UaxCompare }>) {
+    #onRangeChange(e: CustomEvent<{ value: UauiDateRange; compare?: UauiCompare }>) {
         this._range = e.detail.value;
         this._compare = e.detail.compare;
         this.#loadSummary();
@@ -177,7 +177,7 @@ export class ExampleCommerceAnalyticsPageElement extends UmbLitElement {
         return previous[id] ? ((current[id] - previous[id]) / previous[id]) * 100 : undefined;
     }
 
-    #series(days: Day[] | undefined, id: MetricId): UaxSeries[] {
+    #series(days: Day[] | undefined, id: MetricId): UauiSeries[] {
         const metric = metrics.find((m) => m.id === id)!;
         // No orders in the range: no points, so the chart shows its empty state.
         if (!days?.some((d) => d.orders)) return [];
@@ -186,7 +186,7 @@ export class ExampleCommerceAnalyticsPageElement extends UmbLitElement {
 
     #renderTile(metric: (typeof metrics)[number]) {
         const totals = this._data?.totals;
-        return html`<uax-kpi-tile
+        return html`<uaui-kpi-tile
             label=${metric.label}
             icon=${metric.icon}
             .value=${totals ? this.localize.number(totals[metric.id], metric.format) : undefined}
@@ -198,7 +198,7 @@ export class ExampleCommerceAnalyticsPageElement extends UmbLitElement {
             selectable
             .deselectable=${false}
             .selected=${this._metric === metric.id}
-            @selected=${() => this.#selectMetric(metric.id)}></uax-kpi-tile>`;
+            @selected=${() => this.#selectMetric(metric.id)}></uaui-kpi-tile>`;
     }
 
     override render() {
@@ -207,29 +207,29 @@ export class ExampleCommerceAnalyticsPageElement extends UmbLitElement {
         return html`
             <div class="actions">
                 <h2 class="uui-h3">Analytics</h2>
-                <uax-date-range today="2026-06-23" .value=${this._range} .compare=${compare} @change=${this.#onRangeChange}></uax-date-range>
+                <uaui-date-range today="2026-06-23" .value=${this._range} .compare=${compare} @change=${this.#onRangeChange}></uaui-date-range>
             </div>
 
             <div class="kpis">${metrics.map((m) => this.#renderTile(m))}</div>
 
             <uui-box headline=${metric.label} headline-variant="h3" style="--uui-box-default-padding: 0">
-                <uax-time-series-chart
+                <uaui-time-series-chart
                     kind="line"
                     .series=${this.#series(this._data?.days, this._metric)}
                     .compareSeries=${this.#series(this._compareData?.days, this._metric)}
                     .range=${this._range}
                     .compare=${this._compare}
-                    .compareLabel=${compare ? uaxFormatDateRange(this.localize, compare) : undefined}
+                    .compareLabel=${compare ? uauiFormatDateRange(this.localize, compare) : undefined}
                     .valueFormat=${metric.format}
                     ?loading=${this._loading}
                     ?error=${this._error}
                     retryable
-                    @retry=${() => this.#loadSummary()}></uax-time-series-chart>
+                    @retry=${() => this.#loadSummary()}></uaui-time-series-chart>
             </uui-box>
 
             <div class="tables">
                 <uui-box headline="Top products" headline-variant="h3" style="--uui-box-default-padding: 0">
-                    <uax-data-table
+                    <uaui-data-table
                         row-key="sku"
                         .columns=${productColumns}
                         .rows=${this._data?.products ?? []}
@@ -238,12 +238,12 @@ export class ExampleCommerceAnalyticsPageElement extends UmbLitElement {
                         ?error=${this._error}
                         retryable
                         @retry=${() => this.#loadSummary()}>
-                        <div slot="toolbar"><uax-table-search></uax-table-search></div>
-                    </uax-data-table>
+                        <div slot="toolbar"><uaui-table-search></uaui-table-search></div>
+                    </uaui-data-table>
                 </uui-box>
 
                 <uui-box headline="Popular discounts" headline-variant="h3" style="--uui-box-default-padding: 0">
-                    <uax-data-table
+                    <uaui-data-table
                         row-key="code"
                         .columns=${discountColumns}
                         .rows=${this._data?.discounts ?? []}
@@ -251,17 +251,17 @@ export class ExampleCommerceAnalyticsPageElement extends UmbLitElement {
                         ?loading=${this._loading}
                         ?error=${this._error}
                         retryable
-                        @retry=${() => this.#loadSummary()}></uax-data-table>
+                        @retry=${() => this.#loadSummary()}></uaui-data-table>
                 </uui-box>
             </div>
 
             <uui-box headline="Top buyers" headline-variant="h3" style="--uui-box-default-padding: 0">
-                <uax-data-table
+                <uaui-data-table
                     ${ref(this.#buyers.attach)}
                     row-key="email"
                     .columns=${buyerColumns}>
-                    <div slot="toolbar"><uax-table-search></uax-table-search></div>
-                </uax-data-table>
+                    <div slot="toolbar"><uaui-table-search></uaui-table-search></div>
+                </uaui-data-table>
             </uui-box>
         `;
     }

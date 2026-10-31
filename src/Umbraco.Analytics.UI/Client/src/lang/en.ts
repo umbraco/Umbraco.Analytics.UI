@@ -1,11 +1,11 @@
 import type { UmbLocalizationDictionary } from "@umbraco-cms/backoffice/localization-api";
 
 // Loaded by the package's `localization` extension as lang/en.js. The section name is the
-// key prefix: `emptyHeadline` below is `uaxAnalytics_emptyHeadline`. Placeholders are {0}, {1}...
+// key prefix: `emptyHeadline` below is `uauiAnalytics_emptyHeadline`. Placeholders are {0}, {1}...
 // Generic verbs reuse Umbraco's keys instead of copies: Save is `buttons_save`, Close is
 // `general_close`, Loading is `general_loading`, Search (label and placeholder) is `general_search`.
 export default {
-    uaxAnalytics: {
+    uauiAnalytics: {
         // Empty state
         emptyHeadline: "No data yet",
         emptyDescription: "Try a wider date range.",

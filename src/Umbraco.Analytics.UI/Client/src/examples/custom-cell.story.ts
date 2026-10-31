@@ -5,43 +5,43 @@ import { regionSource, sourceDocs } from "../internal/story/source.js";
 import raw from "./custom-cell.story.ts?raw";
 import "../table/data-table.element.js";
 import "../table/table-compare-badge.element.js";
-import { UAX_TABLE_CELL } from "../table/cells/cell-names.js";
-import { UAX_TABLE_CONTEXT } from "../table/table-context.js";
-import { UaxPaletteStyles } from "../theme/index.js";
-import type { UaxTableCellElement, UaxTableColumn, UaxTableStats } from "../table/types.js";
+import { UAUI_TABLE_CELL } from "../table/cells/cell-names.js";
+import { UAUI_TABLE_CONTEXT } from "../table/table-context.js";
+import { UauiPaletteStyles } from "../theme/index.js";
+import type { UauiTableCellElement, UauiTableColumn, UauiTableStats } from "../table/types.js";
 
 const imports = `import { css, customElement, html, nothing, property, state } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import {
-    UAX_TABLE_CELL,
-    UAX_TABLE_CONTEXT,
-    UaxPaletteStyles,
-    type UaxTableCellElement,
-    type UaxTableColumn,
-    type UaxTableStats,
-    // Importing the package also registers <uax-table-compare-badge>.
+    UAUI_TABLE_CELL,
+    UAUI_TABLE_CONTEXT,
+    UauiPaletteStyles,
+    type UauiTableCellElement,
+    type UauiTableColumn,
+    type UauiTableStats,
+    // Importing the package also registers <uaui-table-compare-badge>.
 } from "@umbraco-analytics/ui";`;
 
 // #region cell
 /**
  * A cell that needs a number it can't work out from its own row: the column's largest value. It reads that from
- * the table's context, `UAX_TABLE_CONTEXT`, which the table provides to every cell inside it. The bar takes its colour
- * from the package's palette (`UaxPaletteStyles`), so it matches the share bars in every theme and follows a product's
- * `--uax-series-1`. The change against the compare period is the package's `uax-table-compare-badge`: the cell passes it the
+ * the table's context, `UAUI_TABLE_CONTEXT`, which the table provides to every cell inside it. The bar takes its colour
+ * from the package's palette (`UauiPaletteStyles`), so it matches the share bars in every theme and follows a product's
+ * `--uaui-series-1`. The change against the compare period is the package's `uaui-table-compare-badge`: the cell passes it the
  * three properties it was given, and the badge finds the compare row in the table's context and reads the column's
  * `meta.lowerIsBetter`. It shows nothing when the row has no compare row.
  */
 @customElement("example-orders-bar-cell")
-class ExampleOrdersBarCellElement extends UmbLitElement implements UaxTableCellElement {
-    @property({ attribute: false }) column: UaxTableColumn = { key: "value", label: "" };
+class ExampleOrdersBarCellElement extends UmbLitElement implements UauiTableCellElement {
+    @property({ attribute: false }) column: UauiTableColumn = { key: "value", label: "" };
     @property({ attribute: false }) item: Record<string, unknown> = {};
     @property({ attribute: false }) value: unknown;
 
-    @state() private _stats?: UaxTableStats;
+    @state() private _stats?: UauiTableStats;
 
     constructor() {
         super();
-        this.consumeContext(UAX_TABLE_CONTEXT, (context) => {
+        this.consumeContext(UAUI_TABLE_CONTEXT, (context) => {
             // Observables update the cell when the table's rows change (a new page, a sort).
             this.observe(context?.stats, (stats) => (this._stats = stats), "_stats");
         });
@@ -54,13 +54,13 @@ class ExampleOrdersBarCellElement extends UmbLitElement implements UaxTableCellE
         const width = max > 0 ? Math.round((orders / max) * 100) : 0;
         return html`<div class="bar-cell">
             <span class="orders">${orders.toLocaleString(this.localize.lang())}</span>
-            <uax-table-compare-badge .column=${this.column} .item=${this.item} .value=${this.value}></uax-table-compare-badge>
+            <uaui-table-compare-badge .column=${this.column} .item=${this.item} .value=${this.value}></uaui-table-compare-badge>
             <div class="bar"><div class="fill" style="width: ${width}%"></div></div>
         </div>`;
     }
 
     static override styles = [
-        UaxPaletteStyles,
+        UauiPaletteStyles,
         css`
             .bar-cell {
                 display: grid;
@@ -75,12 +75,12 @@ class ExampleOrdersBarCellElement extends UmbLitElement implements UaxTableCellE
             .bar {
                 height: 8px;
                 border-radius: 4px;
-                background-color: var(--uax-color-tint-neutral);
+                background-color: var(--uaui-color-tint-neutral);
                 overflow: hidden;
             }
             .fill {
                 height: 100%;
-                background-color: var(--uax-color-series-1);
+                background-color: var(--uaui-color-series-1);
             }
         `,
     ];
@@ -88,10 +88,10 @@ class ExampleOrdersBarCellElement extends UmbLitElement implements UaxTableCellE
 // #endregion
 
 // #region table
-const columns: UaxTableColumn[] = [
+const columns: UauiTableColumn[] = [
     { key: "name", label: "Product" },
     { key: "orders", label: "Orders", elementName: "example-orders-bar-cell", width: "40%", sortable: true, sortAs: "number" },
-    { key: "revenue", label: "Revenue", elementName: UAX_TABLE_CELL.number, align: "end", valueFormat: { style: "currency", currency: "EUR", maximumFractionDigits: 0 } },
+    { key: "revenue", label: "Revenue", elementName: UAUI_TABLE_CELL.number, align: "end", valueFormat: { style: "currency", currency: "EUR", maximumFractionDigits: 0 } },
 ];
 
 const rows = [
@@ -110,7 +110,7 @@ const compareRows = [
 
 const renderProducts = () => html`
     <uui-box headline="Products" style="--uui-box-default-padding: 0">
-        <uax-data-table .columns=${columns} .rows=${rows} .compareRows=${compareRows} row-key="name"></uax-data-table>
+        <uaui-data-table .columns=${columns} .rows=${rows} .compareRows=${compareRows} row-key="name"></uaui-data-table>
     </uui-box>
 `;
 // #endregion
@@ -130,7 +130,7 @@ export default meta;
 
 /**
  * A product's own bar cell. The table's context gives a cell what it can't know from its own row: every column's
- * total and largest value (`stats`), the columns, and a lookup for the compare-period row, which `uax-table-compare-badge` uses. Sort the Orders column:
+ * total and largest value (`stats`), the columns, and a lookup for the compare-period row, which `uaui-table-compare-badge` uses. Sort the Orders column:
  * the bars keep one scale. All data is made up.
  */
 export const CustomCellWithTableContext: StoryObj = {

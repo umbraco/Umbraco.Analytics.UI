@@ -87,7 +87,7 @@ AC1 — Default series colours
   Then  its series 1 colour resolves to --uui-palette-space-cadet
 
 AC2 — Override from a parent
-  Given a parent element that sets --uax-series-1 to a different colour
+  Given a parent element that sets --uaui-series-1 to a different colour
   When  an element from the package renders inside it
   Then  the element uses the parent's colour
 
@@ -112,10 +112,10 @@ so that the screen reads naturally next to the rest of Umbraco.
 AC1 — Strings come from localization keys
   Given an element that shows built-in text such as "No data yet"
   When  it renders in a backoffice set to English
-  Then  the text is the translation for its uaxAnalytics_* key, not the raw key
+  Then  the text is the translation for its uauiAnalytics_* key, not the raw key
 
 AC2 — Product can override a string
-  Given a product registers its own localization for uaxAnalytics_emptyHeadline
+  Given a product registers its own localization for uauiAnalytics_emptyHeadline
   When  the empty state renders
   Then  it shows the product's text
 
@@ -135,14 +135,14 @@ so that I don't mistake an empty or half-loaded chart for real results.
 
 ```
 AC1 — Empty state shows the product's text
-  Given a uax-empty-state with headline "No pageviews yet"
+  Given a uaui-empty-state with headline "No pageviews yet"
   When  it renders
   Then  the headline reads "No pageviews yet"
 
 AC2 — Default empty text
   Given a data element with no data and no empty-headline set
   When  it renders
-  Then  it shows uax-empty-state with the "No data yet" translation
+  Then  it shows uaui-empty-state with the "No data yet" translation
 
 AC3 — Skeleton on first load
   Given a data element with loading set and no data yet
@@ -173,37 +173,37 @@ so that I can tell at a glance whether a number went the right way.
 
 ```
 AC1 — Positive pill
-  Given uax-delta-badge with value 12.4
+  Given uaui-delta-badge with value 12.4
   When  it renders
   Then  it shows "+12.4%" on a positive tint
 
 AC2 — Negative pill
-  Given uax-delta-badge with value -3
+  Given uaui-delta-badge with value -3
   When  it renders
   Then  it shows "-3%" on a danger tint
 
 AC3 — Flat pill
-  Given uax-delta-badge with value 0.02 and max-decimals 1
+  Given uaui-delta-badge with value 0.02 and max-decimals 1
   When  it renders
   Then  it shows "0%" on a neutral tint
 
 AC4 — Lower is better
-  Given uax-delta-badge with value -1.2, unit "points" and lower-is-better
+  Given uaui-delta-badge with value -1.2, unit "points" and lower-is-better
   When  it renders
   Then  it shows "-1.2 pp" on a positive tint
 
 AC5 — Small size
-  Given uax-delta-badge with size "sm"
+  Given uaui-delta-badge with size "sm"
   When  it renders
   Then  it uses the small font size and padding
 
 AC6 — Culture-aware number
   Given the backoffice culture is da-DK
-  When  uax-delta-badge renders value 12.4
+  When  uaui-delta-badge renders value 12.4
   Then  it shows "+12,4 %"
 
 AC7 — Sentiment is not colour only
-  Given uax-delta-badge with value -1.2, unit "points" and lower-is-better
+  Given uaui-delta-badge with value -1.2, unit "points" and lower-is-better
   When  it renders
   Then  it has visually hidden text saying "improvement"
 ```
@@ -216,17 +216,17 @@ so that I see the headline results before reading charts.
 
 ```
 AC1 — Label
-  Given uax-kpi-tile with label "Revenue"
+  Given uaui-kpi-tile with label "Revenue"
   When  it renders
   Then  it shows "Revenue"
 
 AC2 — Change badge
-  Given uax-kpi-tile with delta 18.7
+  Given uaui-kpi-tile with delta 18.7
   When  it renders
-  Then  it shows a uax-delta-badge with "+18.7%"
+  Then  it shows a uaui-delta-badge with "+18.7%"
 
 AC3 — No badge without a delta
-  Given uax-kpi-tile with no delta
+  Given uaui-kpi-tile with no delta
   When  it renders
   Then  no badge is shown
 
@@ -241,12 +241,12 @@ AC5 — Badge wraps when narrow
   Then  the badge sits below the value
 
 AC6 — Value shown as given
-  Given uax-kpi-tile with value "€ 4,837.40"
+  Given uaui-kpi-tile with value "€ 4,837.40"
   When  it renders
   Then  it shows "€ 4,837.40" exactly
 
 AC7 — Icon
-  Given uax-kpi-tile with icon "icon-coins"
+  Given uaui-kpi-tile with icon "icon-coins"
   When  it renders
   Then  it shows that icon
 ```
@@ -259,7 +259,7 @@ so that I can explore each number without leaving the screen.
 
 ```
 AC1 — Click raises selected
-  Given a uax-kpi-tile with selectable set
+  Given a uaui-kpi-tile with selectable set
   When  the editor clicks it
   Then  it raises a selected event
 
@@ -291,7 +291,7 @@ AC7 — Deselecting clears selected
 Sad path
 
 AC4 — Not selectable by default
-  Given a uax-kpi-tile without selectable
+  Given a uaui-kpi-tile without selectable
   When  the editor clicks it
   Then  no selected event is raised
 
@@ -314,22 +314,22 @@ so that I can see short spikes or long trends.
 
 ```
 AC1 — Shows the current value
-  Given uax-group-by with value "week"
+  Given uaui-group-by with value "week"
   When  it renders
   Then  "Week" is the checked option
 
 AC2 — Click changes value
-  Given uax-group-by with value "day"
+  Given uaui-group-by with value "day"
   When  the editor clicks "Month"
   Then  it raises change with { value: "month" }
 
 AC3 — Arrow keys change value
-  Given uax-group-by with focus on "Day"
+  Given uaui-group-by with focus on "Day"
   When  the editor presses the right arrow key
   Then  it raises change with { value: "week" }
 
 AC4 — Limited options
-  Given uax-group-by with options ["day", "week"]
+  Given uaui-group-by with options ["day", "week"]
   When  it renders
   Then  only "Day" and "Week" are shown
 ```
@@ -342,7 +342,7 @@ so that I can spot trends and spikes.
 
 ```
 AC1 — One line per series
-  Given uax-time-series-chart with kind "line" and two series
+  Given uaui-time-series-chart with kind "line" and two series
   When  it renders
   Then  it draws two lines
 
@@ -387,7 +387,7 @@ so that I can tell whether this period is better or worse.
 AC1 — Dashed compare line
   Given kind "line" with series and compare-series
   When  it renders
-  Then  the compare series is drawn as a dashed line in --uax-compare
+  Then  the compare series is drawn as a dashed line in --uaui-compare
 
 AC2 — Gap shaded
   Given kind "line" with series and compare-series
@@ -432,7 +432,7 @@ AC2 — Stacked bars
 AC3 — Compare behind
   Given kind "stacked-bar" with compare-series
   When  it renders
-  Then  each date shows a --uax-compare bar for the compare total behind the current bar
+  Then  each date shows a --uaui-compare bar for the compare total behind the current bar
 
 AC4 — No smoothing
   Given kind "bar"
@@ -483,14 +483,14 @@ so that I can look at exactly the days I care about.
 
 ```
 AC1 — Button shows the range
-  Given uax-date-range with value 25 May–23 Jun 2026
+  Given uaui-date-range with value 25 May–23 Jun 2026
   When  it renders
   Then  the button reads "May 25, 2026 to Jun 23, 2026" in the backoffice culture
 
 AC2 — Opens the dialog
-  Given uax-date-range on screen
+  Given uaui-date-range on screen
   When  the editor clicks it
-  Then  uax-date-range-modal opens
+  Then  uaui-date-range-modal opens
 
 AC3 — Preset fills dates
   Given the dialog is open
@@ -533,7 +533,7 @@ so that I can see change over time.
 
 ```
 AC1 — Compare off by default
-  Given uax-date-range with no compare
+  Given uaui-date-range with no compare
   When  the dialog opens
   Then  the Compare switch is off
 
@@ -568,9 +568,9 @@ so that it sits level with the other header controls.
 
 ```
 AC1 — Same height
-  Given uax-date-range next to uax-group-by
+  Given uaui-date-range next to uaui-group-by
   When  the button renders with and without a comparison
-  Then  it is as tall as uax-group-by in both cases
+  Then  it is as tall as uaui-group-by in both cases
 
 AC2 — Two lines
   Given a saved comparison of 25 Apr–24 May 2026 and the range 25 May–23 Jun 2026
@@ -601,7 +601,7 @@ so that I can read and compare rows quickly.
 
 ```
 AC1 — Number cells
-  Given a number column (`UAX_TABLE_CELL.number`) and value 1234
+  Given a number column (`UAUI_TABLE_CELL.number`) and value 1234
   When  it renders in the en-US culture
   Then  the cell shows "1,234"
 
@@ -613,7 +613,7 @@ AC2 — Share cell
 AC3 — Second share column colour
   Given two share columns
   When  they render
-  Then  the second column's bars use --uax-series-2
+  Then  the second column's bars use --uaui-series-2
 
 AC4 — Link cells
   Given a link column with hrefKey "url"
@@ -707,7 +707,7 @@ so that I can find one page or campaign without scrolling.
 
 ```
 AC1 — Search raised after typing stops
-  Given uax-table-search in the toolbar
+  Given uaui-table-search in the toolbar
   When  the editor types "contact" and stops for 300ms
   Then  it raises search with { query: "contact" }
 
@@ -764,12 +764,12 @@ AC1 — Import map entry
 AC2 — Localization registered
   Given that site
   When  the backoffice loads
-  Then  the uaxAnalytics_* keys are available in English
+  Then  the uauiAnalytics_* keys are available in English
 
 AC3 — Date range modal registered
   Given that site
-  When  a uax-date-range button is clicked
-  Then  uax-date-range-modal opens through the modal manager
+  When  a uaui-date-range button is clicked
+  Then  uaui-date-range-modal opens through the modal manager
 
 AC4 — Version stamped
   Given a release build
@@ -785,7 +785,7 @@ so that I don't read an empty metric as a real zero.
 
 ```
 AC1 — Dash in place of the value
-  Given a uax-kpi-tile with no-data set and a label
+  Given a uaui-kpi-tile with no-data set and a label
   When  it renders
   Then  it shows a dash and no value, and keeps its label
 
@@ -826,7 +826,7 @@ so that an editor can tell a failed request from an empty result.
 
 ```
 AC1 — Default text
-  Given uax-error-state with no headline or description
+  Given uaui-error-state with no headline or description
   When  it renders
   Then  it shows "Something went wrong" and "The data could not be loaded." with an alert icon
 
@@ -836,7 +836,7 @@ AC2 — The product's text
   Then  it shows that text and that icon
 
 AC3 — Announced
-  Given uax-error-state
+  Given uaui-error-state
   When  it appears
   Then  it is announced as an alert
 
@@ -846,7 +846,7 @@ AC4 — A line can be left out
   Then  the description line is not shown
 
 AC5 — Retry raises retry
-  Given uax-error-state with retryable set
+  Given uaui-error-state with retryable set
   When  the editor presses Retry
   Then  it raises retry
   And   the event bubbles and is not composed
@@ -854,7 +854,7 @@ AC5 — Retry raises retry
 Sad path
 
 AC6 — No Retry unless asked
-  Given uax-error-state without retryable
+  Given uaui-error-state without retryable
   When  it renders
   Then  it shows no Retry button
 ```
@@ -867,14 +867,14 @@ so that I know to retry instead of waiting or reading stale numbers.
 
 ```
 AC1 — Chart shows the error state
-  Given a uax-time-series-chart with error set
+  Given a uaui-time-series-chart with error set
   When  it renders
-  Then  it shows uax-error-state in place of the plot, with no empty state
+  Then  it shows uaui-error-state in place of the plot, with no empty state
 
 AC2 — Table shows the error state
-  Given a uax-data-table with error set and rows
+  Given a uaui-data-table with error set and rows
   When  it renders
-  Then  it shows uax-error-state, keeps the header row, and shows no rows, summary row, pager or empty state
+  Then  it shows uaui-error-state, keeps the header row, and shows no rows, summary row, pager or empty state
 
 AC3 — Retry on the chart and table
   Given a chart or table with error and retryable set
@@ -887,7 +887,7 @@ AC4 — Clearing the error
   Then  the error state goes, and the table's rows are back
 
 AC5 — Tile shows a dash
-  Given a uax-kpi-tile with error set
+  Given a uaui-kpi-tile with error set
   When  it renders
   Then  it keeps its label, shows a dash with the hidden text "Something went wrong", and shows no change badge
 
@@ -913,7 +913,7 @@ so that my screens switch views the way the group-by switch does.
 
 ```
 AC1 — Shows the options
-  Given uax-segmented with options and a label
+  Given uaui-segmented with options and a label
   When  it renders
   Then  it shows each option's label in order, as a radio group named by the label
 
@@ -1005,7 +1005,7 @@ so that presets match fixed example data instead of the real clock.
 
 ```
 AC1 — Presets count from it
-  Given uax-date-range with today "2026-06-23"
+  Given uaui-date-range with today "2026-06-23"
   When  the editor chooses "Last 7 days"
   Then  the dates are 2026-06-17 to 2026-06-23
 
@@ -1046,33 +1046,33 @@ so that my page builds the same compare ranges, buckets and labels as the picker
 ```
 AC1 — Previous period
   Given a range
-  When  uaxPreviousPeriod is called
+  When  uauiPreviousPeriod is called
   Then  it returns the same number of days straight before it
 
 AC2 — Previous year
   Given a range
-  When  uaxPreviousYear is called
+  When  uauiPreviousYear is called
   Then  it returns the same dates one year earlier
 
 AC3 — Compare for a mode
   Given a range
-  When  uaxCompareFor is called with "previous-period" or "previous-year"
-  Then  it returns a UaxCompare with those dates
+  When  uauiCompareFor is called with "previous-period" or "previous-year"
+  Then  it returns a UauiCompare with those dates
 
 AC4 — Days in a range
   Given a range
-  When  uaxDaysIn is called
+  When  uauiDaysIn is called
   Then  it lists every day, both ends included
 
 AC5 — Buckets
   Given a range and a group-by
-  When  uaxDateBuckets is called
+  When  uauiDateBuckets is called
   Then  day buckets start on their day, week buckets on their Monday (even before the range starts) and month buckets on the 1st
   And   each bucket's days hold only days inside the range
 
 AC6 — Label
-  Given a range or a UaxCompare and a localizer
-  When  uaxFormatDateRange is called
+  Given a range or a UauiCompare and a localizer
+  When  uauiFormatDateRange is called
   Then  it returns both dates in the localizer's medium style joined with "to"
   And   with showYear false the year is left off
 
@@ -1080,12 +1080,12 @@ Sad path
 
 AC7 — Invalid range
   Given a range that isn't valid
-  When  uaxPreviousPeriod, uaxDaysIn or uaxDateBuckets is called
+  When  uauiPreviousPeriod, uauiDaysIn or uauiDateBuckets is called
   Then  it returns undefined, an empty list or no buckets
 
 AC8 — Custom comparison
   Given mode "custom"
-  When  uaxCompareFor is called
+  When  uauiCompareFor is called
   Then  it returns undefined
 ```
 
@@ -1167,7 +1167,7 @@ AC3 — Lower is better
   Then  it is negative
 
 AC4 — A product's own cell
-  Given a custom cell that uses uax-table-compare-badge with column, item and value
+  Given a custom cell that uses uaui-table-compare-badge with column, item and value
   When  it renders
   Then  it shows the badge
 
@@ -1215,7 +1215,7 @@ so that I don't rewrite the sort, page, search, abort and error wiring on every 
 
 ```
 AC1 — First load
-  Given a UaxTableServerController attached to a table, on a host that connects
+  Given a UauiTableServerController attached to a table, on a host that connects
   When  the host connects
   Then  it loads the starting state, sets the table to server mode, shows it loading, and shows the starting sort and page size
 

@@ -5,19 +5,19 @@ import en from "../../lang/en.js";
 import { usedUmbracoKeys } from "./shipped-source.js";
 import { waitForKey } from "./localization.js";
 
-const ALIAS = "Uax.Localization.Markers";
+const ALIAS = "Uaui.Localization.Markers";
 const MARKER = /⟦[^⟧]*⟧/g;
 
 /** What a key reads as while the markers are registered. Its arguments are dropped, so only the key's own text is left. */
 export const markerFor = (key: string) => `⟦${key}⟧`;
 
 /**
- * Maps every `uaxAnalytics_*` key, and every Umbraco key the package reuses, to its marker, ahead of the package's
+ * Maps every `uauiAnalytics_*` key, and every Umbraco key the package reuses, to its marker, ahead of the package's
  * and the backoffice's own English text. Returns a function that removes them again.
  */
 export async function registerMarkerTranslations(): Promise<() => void> {
-    const localizations: Record<string, Record<string, string>> = { uaxAnalytics: {} };
-    for (const key of Object.keys(en.uaxAnalytics)) localizations.uaxAnalytics[key] = markerFor(`uaxAnalytics_${key}`);
+    const localizations: Record<string, Record<string, string>> = { uauiAnalytics: {} };
+    for (const key of Object.keys(en.uauiAnalytics)) localizations.uauiAnalytics[key] = markerFor(`uauiAnalytics_${key}`);
     for (const key of usedUmbracoKeys()) {
         const [section, name] = key.split("_");
         (localizations[section] ??= {})[name] = markerFor(key);
@@ -25,11 +25,11 @@ export async function registerMarkerTranslations(): Promise<() => void> {
     umbExtensionsRegistry.register({
         type: "localization",
         alias: ALIAS,
-        name: "Uax markers (test)",
+        name: "Uaui markers (test)",
         weight: 50,
         meta: { culture: "en", localizations },
     });
-    await waitForKey("uaxAnalytics_emptyHeadline", markerFor("uaxAnalytics_emptyHeadline"));
+    await waitForKey("uauiAnalytics_emptyHeadline", markerFor("uauiAnalytics_emptyHeadline"));
     return () => umbExtensionsRegistry.unregister(ALIAS);
 }
 
@@ -40,7 +40,7 @@ const NOT_TEXT = new Set(["STYLE", "SCRIPT", "CANVAS"]);
 
 /**
  * Every string `root` shows or announces: text nodes (visually hidden text too) and the attributes that name
- * things. It reads inside the shadow roots of `uax-` elements and not of `uui-` or `umb-` ones, whose text is theirs.
+ * things. It reads inside the shadow roots of `uaui-` elements and not of `uui-` or `umb-` ones, whose text is theirs.
  */
 export function announcedStrings(root: Node): string[] {
     if (root.nodeType === Node.TEXT_NODE) return [root.textContent ?? ""];
@@ -56,7 +56,7 @@ export function announcedStrings(root: Node): string[] {
         const value = (element as unknown as Record<string, unknown>)[name];
         if (typeof value === "string" && value) strings.push(value);
     }
-    if (element.shadowRoot && element.tagName.startsWith("UAX-")) strings.push(...announcedStrings(element.shadowRoot));
+    if (element.shadowRoot && element.tagName.startsWith("UAUI-")) strings.push(...announcedStrings(element.shadowRoot));
     for (const child of root.childNodes) strings.push(...announcedStrings(child));
     return strings;
 }

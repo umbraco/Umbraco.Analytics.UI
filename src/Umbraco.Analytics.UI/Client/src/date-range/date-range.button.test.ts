@@ -7,7 +7,7 @@ import darkCss from "@umbraco-ui/uui/themes/dark.css?inline";
 import highContrastCss from "@umbraco-ui/uui/themes/high-contrast.css?inline";
 import { axeRun } from "../internal/test/a11y.js";
 import { renderWithModals } from "../internal/test/modal-host.js";
-import { deepQuery, settle, shadow, type UaxTestElement } from "../internal/test/dom.js";
+import { deepQuery, settle, shadow, type UauiTestElement } from "../internal/test/dom.js";
 import "./date-range.element.js";
 import "../group-by/group-by.element.js";
 
@@ -17,18 +17,18 @@ const compare = { mode: "previous-period", from: "2026-04-25", to: "2026-05-24" 
 const render = async (compareValue?: object, width = "auto", dir = "ltr") => {
     const el = await renderWithModals(
         html`<div dir=${dir} style="background: var(--uui-color-surface); padding: 8px; width: ${width}">
-            <uax-group-by .value=${"week"} .options=${["day", "week", "month"]}></uax-group-by>
-            <uax-date-range .value=${value} .compare=${compareValue}></uax-date-range>
+            <uaui-group-by .value=${"week"} .options=${["day", "week", "month"]}></uaui-group-by>
+            <uaui-date-range .value=${value} .compare=${compareValue}></uaui-date-range>
         </div>`,
-        "uax-date-range",
+        "uaui-date-range",
     );
-    await settle(el.parentElement!.querySelector("uax-group-by")!);
+    await settle(el.parentElement!.querySelector("uaui-group-by")!);
     return el;
 };
 const heightOf = (el: Element | null | undefined) => el!.getBoundingClientRect().height;
-const groupByBox = (el: UaxTestElement) => deepQuery(el.parentElement!.querySelector("uax-group-by")!.shadowRoot!, ".group");
-const dateButton = (el: UaxTestElement) => shadow(el).querySelector("uui-button")!;
-const line2 = (el: UaxTestElement) => shadow(el).querySelector(".compare")?.textContent?.trim();
+const groupByBox = (el: UauiTestElement) => deepQuery(el.parentElement!.querySelector("uaui-group-by")!.shadowRoot!, ".group");
+const dateButton = (el: UauiTestElement) => shadow(el).querySelector("uui-button")!;
+const line2 = (el: UauiTestElement) => shadow(el).querySelector(".compare")?.textContent?.trim();
 
 describe("Feature: the date range button with a comparison", () => {
     const previousLanguage = umbLocalizationManager.documentLanguage;
@@ -40,7 +40,7 @@ describe("Feature: the date range button with a comparison", () => {
     });
 
     describe("Scenario: no comparison", () => {
-        it("is as tall as uax-group-by", async () => {
+        it("is as tall as uaui-group-by", async () => {
             const el = await render();
             expect(heightOf(dateButton(el))).toBe(heightOf(groupByBox(el)));
         });
@@ -59,12 +59,12 @@ describe("Feature: the date range button with a comparison", () => {
     });
 
     describe("Scenario: comparing in the same year", () => {
-        let el: UaxTestElement;
+        let el: UauiTestElement;
         beforeEach(async () => {
             el = await render(compare);
         });
 
-        it("is as tall as uax-group-by", () => {
+        it("is as tall as uaui-group-by", () => {
             expect(heightOf(dateButton(el))).toBe(heightOf(groupByBox(el)));
         });
 
@@ -90,7 +90,7 @@ describe("Feature: the date range button with a comparison", () => {
     });
 
     describe("Scenario: a narrow header", () => {
-        const range = (el: UaxTestElement) => shadow(el).querySelector(".range")!.getBoundingClientRect();
+        const range = (el: UauiTestElement) => shadow(el).querySelector(".range")!.getBoundingClientRect();
 
         it("keeps the dates inside the button edge", async () => {
             const el = await render(compare, "160px");

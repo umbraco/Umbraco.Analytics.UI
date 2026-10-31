@@ -1,9 +1,9 @@
 import { css, customElement, html, nothing, property, type CSSResultGroup, type TemplateResult } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
-import { UaxChartTooltipSurface } from "./chart-tooltip-surface.css.js";
+import { UauiChartTooltipSurface } from "./chart-tooltip-surface.css.js";
 
 /** One marker as the tooltip lists it. */
-export interface UaxChartMarkerTooltipEntry {
+export interface UauiChartMarkerTooltipEntry {
     /** The marker's formatted date. */
     date: string;
     title: string;
@@ -11,17 +11,17 @@ export interface UaxChartMarkerTooltipEntry {
 }
 
 /**
- * The tooltip over a marker's dot of `uax-time-series-chart`: each marker's date, title and description, and how
+ * The tooltip over a marker's dot of `uaui-time-series-chart`: each marker's date, title and description, and how
  * many more there are when a crowded dot has more than the chart lists. It has no position of its own:
  * the chart places it. Internal: not exported.
  *
- * @element uax-chart-marker-tooltip
+ * @element uaui-chart-marker-tooltip
  */
-@customElement("uax-chart-marker-tooltip")
-export class UaxChartMarkerTooltipElement extends UmbLitElement {
+@customElement("uaui-chart-marker-tooltip")
+export class UauiChartMarkerTooltipElement extends UmbLitElement {
     /** The markers to list. */
     @property({ attribute: false })
-    entries: UaxChartMarkerTooltipEntry[] = [];
+    entries: UauiChartMarkerTooltipEntry[] = [];
 
     /** How many markers of the dot are not listed. */
     @property({ type: Number })
@@ -35,11 +35,11 @@ export class UaxChartMarkerTooltipElement extends UmbLitElement {
                     ${entry.description ? html`<div class="marker-note">${entry.description}</div>` : nothing}
                 </div>`,
             )}
-            ${this.more > 0 ? html`<div class="marker-more">${this.localize.term("uaxAnalytics_chartMarkersMore", this.more)}</div>` : nothing}`;
+            ${this.more > 0 ? html`<div class="marker-more">${this.localize.term("uauiAnalytics_chartMarkersMore", this.more)}</div>` : nothing}`;
     }
 
     static override styles: CSSResultGroup = [
-        UaxChartTooltipSurface,
+        UauiChartTooltipSurface,
         css`
             :host {
                 top: 6px;
@@ -76,6 +76,6 @@ export class UaxChartMarkerTooltipElement extends UmbLitElement {
 
 declare global {
     interface HTMLElementTagNameMap {
-        "uax-chart-marker-tooltip": UaxChartMarkerTooltipElement;
+        "uaui-chart-marker-tooltip": UauiChartMarkerTooltipElement;
     }
 }

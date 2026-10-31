@@ -1,7 +1,7 @@
-import type { UaxDatePreset } from "./types.js";
+import type { UauiDatePreset } from "./types.js";
 
 /** The presets offered when a product passes none. */
-export const defaultPresets = (): UaxDatePreset[] => [
+export const defaultPresets = (): UauiDatePreset[] => [
     { id: "last-7-days" },
     { id: "last-30-days" },
     { id: "last-month" },

@@ -4,14 +4,14 @@ import { customElement, html, LitElement, ref } from "@umbraco-cms/backoffice/ex
 import { render } from "vitest-browser-lit";
 import { nextEvent, shadow } from "../internal/test/dom.js";
 import "./data-table.element.js";
-import type { UaxDataTableElement } from "./data-table.element.js";
+import type { UauiDataTableElement } from "./data-table.element.js";
 import { pageColumns } from "./table-fixtures.js";
-import { UaxTableServerController, type UaxTableServerResult, type UaxTableServerState } from "./table-server.controller.js";
+import { UauiTableServerController, type UauiTableServerResult, type UauiTableServerState } from "./table-server.controller.js";
 
-type Result = UaxTableServerResult & { label: string };
+type Result = UauiTableServerResult & { label: string };
 
 /** A request the test answers by hand, so it decides the order the answers arrive in. */
-type Pending = { state: UaxTableServerState; signal: AbortSignal; resolve: (result: Result) => void; reject: (error: unknown) => void };
+type Pending = { state: UauiTableServerState; signal: AbortSignal; resolve: (result: Result) => void; reject: (error: unknown) => void };
 
 const answer = (label: string, rows = 1): Result => ({
     label,
@@ -26,7 +26,7 @@ let errors: unknown[];
 
 @customElement("test-server-table-host")
 class TestServerTableHost extends LitElement {
-    table = new UaxTableServerController<Result>(this, {
+    table = new UauiTableServerController<Result>(this, {
         sort: { key: "pageviews", direction: "desc" },
         pageSize: 25,
         load: (state, signal) =>
@@ -37,14 +37,14 @@ class TestServerTableHost extends LitElement {
     });
 
     override render() {
-        return html`<uax-data-table .columns=${pageColumns} ${ref(this.table.attach)}></uax-data-table>
+        return html`<uaui-data-table .columns=${pageColumns} ${ref(this.table.attach)}></uaui-data-table>
             <output>${this.table.result?.label ?? "none"}</output>`;
     }
 }
 
 @customElement("test-no-retry-table-host")
 class TestNoRetryTableHost extends LitElement {
-    table = new UaxTableServerController<Result>(this, {
+    table = new UauiTableServerController<Result>(this, {
         retryable: false,
         load: (state, signal) =>
             new Promise<Result>((resolve, reject) => {
@@ -53,13 +53,13 @@ class TestNoRetryTableHost extends LitElement {
     });
 
     override render() {
-        return html`<uax-data-table .columns=${pageColumns} ${ref(this.table.attach)}></uax-data-table>`;
+        return html`<uaui-data-table .columns=${pageColumns} ${ref(this.table.attach)}></uaui-data-table>`;
     }
 }
 
 @customElement("test-swapping-table-host")
 class TestSwappingTableHost extends LitElement {
-    table = new UaxTableServerController<Result>(this, {
+    table = new UauiTableServerController<Result>(this, {
         sort: { key: "pageviews", direction: "desc" },
         load: (state, signal) =>
             new Promise<Result>((resolve, reject) => {
@@ -72,12 +72,12 @@ class TestSwappingTableHost extends LitElement {
 
     override render() {
         return this.flip
-            ? html`<section><uax-data-table id="b" .columns=${pageColumns} ${ref(this.table.attach)}></uax-data-table></section>`
-            : html`<uax-data-table id="a" .columns=${pageColumns} ${ref(this.table.attach)}></uax-data-table>`;
+            ? html`<section><uaui-data-table id="b" .columns=${pageColumns} ${ref(this.table.attach)}></uaui-data-table></section>`
+            : html`<uaui-data-table id="a" .columns=${pageColumns} ${ref(this.table.attach)}></uaui-data-table>`;
     }
 }
 
-const tableOf = (host: Element) => shadow(host).querySelector("uax-data-table") as UaxDataTableElement;
+const tableOf = (host: Element) => shadow(host).querySelector("uaui-data-table") as UauiDataTableElement;
 const labelOf = (host: Element) => shadow(host).querySelector("output")!.textContent;
 
 async function renderHost() {
@@ -367,7 +367,7 @@ describe("Feature: server mode wiring helper", () => {
             ) as TestNoRetryTableHost;
             await host.updateComplete;
             requests[0].reject(new Error("boom"));
-            const table = shadow(host).querySelector("uax-data-table") as UaxDataTableElement;
+            const table = shadow(host).querySelector("uaui-data-table") as UauiDataTableElement;
             await expect.poll(() => table.error).toBe(true);
             expect(table.retryable).toBe(false);
         });
@@ -405,7 +405,7 @@ describe("Feature: server mode wiring helper", () => {
 
     describe("Scenario: the table is replaced", () => {
         let host: TestServerTableHost;
-        let old: UaxDataTableElement;
+        let old: UauiDataTableElement;
         beforeEach(async () => {
             host = await renderHost();
             old = tableOf(host);
@@ -436,21 +436,21 @@ describe("Feature: server mode wiring helper", () => {
 describe("Feature: the table behind the controller changes", () => {
     describe("Scenario: the host draws another table", () => {
         let host: TestSwappingTableHost;
-        let next: UaxDataTableElement;
+        let next: UauiDataTableElement;
         beforeEach(async () => {
             host = render(html`<test-swapping-table-host></test-swapping-table-host>`).container.querySelector(
                 "test-swapping-table-host",
             ) as TestSwappingTableHost;
             await host.updateComplete;
             requests[0].resolve(answer("first", 3));
-            await expect.poll(() => (shadow(host).querySelector("#a") as UaxDataTableElement).loading).toBe(false);
+            await expect.poll(() => (shadow(host).querySelector("#a") as UauiDataTableElement).loading).toBe(false);
             raise(shadow(host).querySelector("#a")!, "page-change", { page: 2, pageSize: 25 });
             requests[1].resolve(answer("page 2", 3));
-            await expect.poll(() => (shadow(host).querySelector("#a") as UaxDataTableElement).loading).toBe(false);
+            await expect.poll(() => (shadow(host).querySelector("#a") as UauiDataTableElement).loading).toBe(false);
             host.flip = true;
             host.requestUpdate();
             await host.updateComplete;
-            next = shadow(host).querySelector("#b") as UaxDataTableElement;
+            next = shadow(host).querySelector("#b") as UauiDataTableElement;
         });
 
         it("gives the new table the rows of the last result", () => {

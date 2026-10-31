@@ -1,26 +1,26 @@
 import { customElement, html, nothing, property, state, type TemplateResult } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import "../delta-badge/delta-badge.element.js";
-import type { UaxDeltaBadgeSize } from "../delta-badge/delta-badge.element.js";
+import type { UauiDeltaBadgeSize } from "../delta-badge/delta-badge.element.js";
 import { asNumber } from "./internal/cell-values.js";
-import { UAX_TABLE_CONTEXT } from "./table-context.js";
-import type { UaxTableColumn, UaxTableCompareLookup } from "./types.js";
+import { UAUI_TABLE_CONTEXT } from "./table-context.js";
+import type { UauiTableColumn, UauiTableCompareLookup } from "./types.js";
 
 /**
  * The change badge of a table cell: how the cell's value moved against the same row in the compare period.
  * Built-in cells and your own use it the same way, passing the three properties the table gave them:
- * `<uax-table-compare-badge .column=${this.column} .item=${this.item} .value=${this.value}>`.
+ * `<uaui-table-compare-badge .column=${this.column} .item=${this.item} .value=${this.value}>`.
  *
- * Inside a `uax-data-table` it finds the compare row through the table's `UAX_TABLE_CONTEXT`. Whether a fall is good
+ * Inside a `uaui-data-table` it finds the compare row through the table's `UAUI_TABLE_CONTEXT`. Whether a fall is good
  * comes from the column's `meta.lowerIsBetter`. It shows nothing without a compare value, or when that is 0.
  *
- * @element uax-table-compare-badge
+ * @element uaui-table-compare-badge
  */
-@customElement("uax-table-compare-badge")
-export class UaxTableCompareBadgeElement extends UmbLitElement {
+@customElement("uaui-table-compare-badge")
+export class UauiTableCompareBadgeElement extends UmbLitElement {
     /** The column the cell is in. Its `key` picks the compare value and `meta.lowerIsBetter` the sentiment. */
     @property({ attribute: false })
-    column: UaxTableColumn = { key: "value", label: "" };
+    column: UauiTableColumn = { key: "value", label: "" };
 
     /** The row the cell is in, used to find its compare row. */
     @property({ attribute: false })
@@ -36,13 +36,13 @@ export class UaxTableCompareBadgeElement extends UmbLitElement {
 
     /** Badge size. Defaults to `"sm"`, for table cells. */
     @property({ type: String })
-    size: UaxDeltaBadgeSize = "sm";
+    size: UauiDeltaBadgeSize = "sm";
 
-    @state() private _compare?: UaxTableCompareLookup;
+    @state() private _compare?: UauiTableCompareLookup;
 
     constructor() {
         super();
-        this.consumeContext(UAX_TABLE_CONTEXT, (context) => {
+        this.consumeContext(UAUI_TABLE_CONTEXT, (context) => {
             this.observe(context?.compare, (lookup) => (this._compare = lookup), "_compare");
         });
     }
@@ -52,12 +52,12 @@ export class UaxTableCompareBadgeElement extends UmbLitElement {
         const compare = asNumber(this.compareValue ?? this._compare?.(this.item)?.[this.column.key]);
         if (value === undefined || compare === undefined || compare === 0) return nothing;
         const change = ((value - compare) / Math.abs(compare)) * 100;
-        return html`<uax-delta-badge .size=${this.size} .value=${change} ?lower-is-better=${this.column.meta?.lowerIsBetter === true}></uax-delta-badge>`;
+        return html`<uaui-delta-badge .size=${this.size} .value=${change} ?lower-is-better=${this.column.meta?.lowerIsBetter === true}></uaui-delta-badge>`;
     }
 }
 
 declare global {
     interface HTMLElementTagNameMap {
-        "uax-table-compare-badge": UaxTableCompareBadgeElement;
+        "uaui-table-compare-badge": UauiTableCompareBadgeElement;
     }
 }

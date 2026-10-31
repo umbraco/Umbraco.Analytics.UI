@@ -1,5 +1,5 @@
 /** A y-axis with round tick values: ticks at 0, `step`, 2 x `step` ... `max`. */
-export interface UaxNiceScale {
+export interface UauiNiceScale {
     max: number;
     step: number;
 }
@@ -9,7 +9,7 @@ export interface UaxNiceScale {
  * largest value has about `target` ticks and ends on a tick. With `whole` (every plotted value is an integer)
  * the step is a whole number of at least 1, so counts never get a tick at 0.5.
  */
-export function niceScale(maxValue: number, target = 5, whole = false): UaxNiceScale {
+export function niceScale(maxValue: number, target = 5, whole = false): UauiNiceScale {
     const top = Math.max(Number.isFinite(maxValue) ? maxValue : 1, whole ? 1 : 1e-9);
     const raw = top / target;
     const magnitude = Math.pow(10, Math.floor(Math.log10(raw)));

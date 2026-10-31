@@ -7,25 +7,25 @@ import darkCss from "@umbraco-ui/uui/themes/dark.css?inline";
 import highContrastCss from "@umbraco-ui/uui/themes/high-contrast.css?inline";
 import { axeRun } from "../../../internal/test/a11y.js";
 import { renderPageExample, saveDateRange, withTheme } from "../../../internal/test/page-example.js";
-import { deepQuery, deepQueryAll, deepText, settle, shadow, type UaxTestElement } from "../../../internal/test/dom.js";
+import { deepQuery, deepQueryAll, deepText, settle, shadow, type UauiTestElement } from "../../../internal/test/dom.js";
 import "./ai-usage-page.element.js";
-import type { UaxKpiTileElement } from "../../../kpi-tile/kpi-tile.element.js";
-import type { UaxTimeSeriesChartElement } from "../../../chart/time-series-chart.element.js";
-import type { UaxDataTableElement } from "../../../table/data-table.element.js";
+import type { UauiKpiTileElement } from "../../../kpi-tile/kpi-tile.element.js";
+import type { UauiTimeSeriesChartElement } from "../../../chart/time-series-chart.element.js";
+import type { UauiDataTableElement } from "../../../table/data-table.element.js";
 
-const tiles = (page: Element) => [...shadow(page).querySelectorAll<UaxKpiTileElement>("uax-kpi-tile")];
+const tiles = (page: Element) => [...shadow(page).querySelectorAll<UauiKpiTileElement>("uaui-kpi-tile")];
 const tile = (page: Element, label: string) => tiles(page).find((t) => t.label === label)!;
-const chart = (page: Element) => shadow(page).querySelector("uax-time-series-chart") as UaxTimeSeriesChartElement;
-const table = (page: Element) => shadow(page).querySelector("uax-data-table") as UaxDataTableElement;
+const chart = (page: Element) => shadow(page).querySelector("uaui-time-series-chart") as UauiTimeSeriesChartElement;
+const table = (page: Element) => shadow(page).querySelector("uaui-data-table") as UauiDataTableElement;
 const rowNames = (page: Element) =>
     [...shadow(table(page)).querySelectorAll("uui-table-row:not([part~='header']):not(.summary) uui-table-cell:first-child")].map((c) => deepText(c).trim());
-const press = async (t: UaxKpiTileElement) => {
+const press = async (t: UauiKpiTileElement) => {
     await t.updateComplete;
     (t.shadowRoot!.querySelector("button") as HTMLButtonElement).click();
 };
 
 /** Renders the page and waits until its first load has landed in the tiles, the chart and the table. */
-async function renderPage(): Promise<UaxTestElement> {
+async function renderPage(): Promise<UauiTestElement> {
     const page = await renderPageExample(html`<example-ai-usage-page .latency=${0}></example-ai-usage-page>`, "example-ai-usage-page");
     await expect.poll(() => tile(page, "Requests").value).toBeTruthy();
     await expect.poll(() => rowNames(page).length).toBeGreaterThan(0);
@@ -66,7 +66,7 @@ describe("Feature: Umbraco AI usage page", () => {
     });
 
     describe("Scenario: first load", () => {
-        let page: UaxTestElement;
+        let page: UauiTestElement;
         beforeEach(async () => {
             page = await renderPage();
         });
@@ -93,7 +93,7 @@ describe("Feature: Umbraco AI usage page", () => {
     });
 
     describe("Scenario: pressing a KPI tile", () => {
-        let page: UaxTestElement;
+        let page: UauiTestElement;
         beforeEach(async () => {
             page = await renderPage();
             await press(tile(page, "Total tokens"));
@@ -134,7 +134,7 @@ describe("Feature: Umbraco AI usage page", () => {
     });
 
     describe("Scenario (sad path): the comparison period has no requests", () => {
-        let page: UaxTestElement;
+        let page: UauiTestElement;
         beforeEach(async () => {
             page = await renderPage();
             await saveDateRange(page, { from: "2026-01-01", to: "2026-01-10" });
@@ -143,12 +143,12 @@ describe("Feature: Umbraco AI usage page", () => {
         });
 
         it("shows no change badge on the success rate tile", () => {
-            expect(shadow(tile(page, "Success rate")).querySelector("uax-delta-badge")).toBe(null);
+            expect(shadow(tile(page, "Success rate")).querySelector("uaui-delta-badge")).toBe(null);
         });
     });
 
     describe("Scenario (sad path): the range has no requests", () => {
-        let page: UaxTestElement;
+        let page: UauiTestElement;
         beforeEach(async () => {
             page = await renderPage();
             await saveDateRange(page, { from: "2025-11-01", to: "2025-11-30", compare: "off" });
@@ -162,11 +162,11 @@ describe("Feature: Umbraco AI usage page", () => {
     });
 
     describe("Scenario: changing the group by", () => {
-        let page: UaxTestElement;
+        let page: UauiTestElement;
         beforeEach(async () => {
             page = await renderPage();
             const before = chart(page).series[0].points.length;
-            const week = deepQuery<HTMLElement>(shadow(page).querySelector("uax-group-by")!.shadowRoot!, "[data-value='week']")!;
+            const week = deepQuery<HTMLElement>(shadow(page).querySelector("uaui-group-by")!.shadowRoot!, "[data-value='week']")!;
             week.click();
             await expect.poll(() => chart(page).series[0].points.length).toBeLessThan(before);
         });
@@ -181,7 +181,7 @@ describe("Feature: Umbraco AI usage page", () => {
     });
 
     describe("Scenario: changing the date range", () => {
-        let page: UaxTestElement;
+        let page: UauiTestElement;
         let requestsBefore: string | undefined;
         beforeEach(async () => {
             page = await renderPage();
@@ -216,7 +216,7 @@ describe("Feature: Umbraco AI usage page", () => {
     describe("Scenario: paging the table", () => {
         it("loads the second page, with the two models left over", async () => {
             const page = await renderPage();
-            const pager = deepQuery<HTMLElement>(shadow(table(page)), "uax-compact-pager")!;
+            const pager = deepQuery<HTMLElement>(shadow(table(page)), "uaui-compact-pager")!;
             const next = pager.shadowRoot!.querySelector(".next") as HTMLElement & { updateComplete: Promise<boolean> };
             await next.updateComplete;
             next.click();
@@ -227,7 +227,7 @@ describe("Feature: Umbraco AI usage page", () => {
     describe("Scenario: searching the table", () => {
         it("loads only the rows whose name matches", async () => {
             const page = await renderPage();
-            const search = shadow(page).querySelector("uax-table-search");
+            const search = shadow(page).querySelector("uaui-table-search");
             const input = search!.shadowRoot!.querySelector("uui-input") as HTMLElement & { value: string };
             input.value = "atlas";
             input.dispatchEvent(new Event("input", { bubbles: true, composed: true }));
@@ -249,7 +249,7 @@ describe("Feature: Umbraco AI usage page", () => {
     describe("Scenario: once the first load is back", () => {
         it("shows no loading skeletons", async () => {
             const page = await renderPage();
-            expect(deepQueryAll(shadow(page), "uax-skeleton")).toHaveLength(0);
+            expect(deepQueryAll(shadow(page), "uaui-skeleton")).toHaveLength(0);
         });
     });
 
@@ -261,7 +261,7 @@ describe("Feature: Umbraco AI usage page", () => {
             );
             await expect.poll(() => chart(page).error).toBe(true);
             await settle(page);
-            expect(shadow(chart(page)).querySelector("uax-error-state")).not.toBe(null);
+            expect(shadow(chart(page)).querySelector("uaui-error-state")).not.toBe(null);
         });
     });
 });

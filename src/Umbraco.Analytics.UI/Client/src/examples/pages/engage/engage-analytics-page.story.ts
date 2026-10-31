@@ -8,18 +8,18 @@ import "./engage-analytics-page.element.js";
 const imports = `import { css, customElement, html, nothing, property, state } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import {
-    UAX_TABLE_CELL,
-    uaxCompareFor,
-    uaxFormatDateRange,
-    type UaxCompare,
-    type UaxDateRange,
-    type UaxGroupBy,
-    type UaxSeries,
-    type UaxTableColumn,
-    type UaxTablePageChangeDetail,
-    type UaxTableSearchDetail,
-    type UaxTableSort,
-    type UaxTableSortChangeDetail,
+    UAUI_TABLE_CELL,
+    uauiCompareFor,
+    uauiFormatDateRange,
+    type UauiCompare,
+    type UauiDateRange,
+    type UauiGroupBy,
+    type UauiSeries,
+    type UauiTableColumn,
+    type UauiTablePageChangeDetail,
+    type UauiTableSearchDetail,
+    type UauiTableSort,
+    type UauiTableSortChangeDetail,
 } from "@umbraco-analytics/ui";
 // Your API client (the story fakes it, and wait stands in for the network): fetchChartSeries, fetchCompareSeries, fetchPages, fetchVisitorTypes and their types. In this story they are a fake, generated from the dates.
 import { fetchChartSeries, fetchCompareSeries, fetchPages, fetchVisitorTypes, markers, wait, type ChartView, type PagesResult, type VisitorTypeRow } from "./engage-api.js";`;
@@ -35,9 +35,9 @@ export default meta;
 
 // The host stands in for the backoffice's modal manager, which the date range dialog opens through.
 const render = (view: "pageviews" | "visitors", latency?: number, failing = false) => html`
-    <uax-test-modal-host>
+    <uaui-test-modal-host>
         <example-engage-analytics-page view=${view} latency=${ifDefined(latency)} ?failing=${failing}></example-engage-analytics-page>
-    </uax-test-modal-host>
+    </uaui-test-modal-host>
 `;
 
 /**

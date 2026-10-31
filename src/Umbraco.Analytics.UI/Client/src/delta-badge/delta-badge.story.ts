@@ -1,11 +1,11 @@
 import type { Meta, StoryObj } from "@storybook/web-components-vite";
 import { html } from "@umbraco-cms/backoffice/external/lit";
-import type { UaxDeltaBadgeElement } from "./delta-badge.element.js";
+import type { UauiDeltaBadgeElement } from "./delta-badge.element.js";
 import "./delta-badge.element.js";
 
-const meta: Meta<UaxDeltaBadgeElement> = {
+const meta: Meta<UauiDeltaBadgeElement> = {
     title: "Components/Delta Badge",
-    component: "uax-delta-badge",
+    component: "uaui-delta-badge",
     args: {
         value: 12.4,
         unit: "percent",
@@ -18,16 +18,16 @@ const meta: Meta<UaxDeltaBadgeElement> = {
         size: { control: "inline-radio", options: ["md", "sm"] },
     },
     render: (args) =>
-        html`<uax-delta-badge
+        html`<uaui-delta-badge
             .value=${args.value}
             .unit=${args.unit}
             .lowerIsBetter=${args.lowerIsBetter}
             .maxDecimals=${args.maxDecimals}
-            .size=${args.size}></uax-delta-badge>`,
+            .size=${args.size}></uaui-delta-badge>`,
 };
 
 export default meta;
-type Story = StoryObj<UaxDeltaBadgeElement>;
+type Story = StoryObj<UauiDeltaBadgeElement>;
 
 export const Increase: Story = {};
 
@@ -49,11 +49,11 @@ export const AllStates: Story = {
     render: () => html`<div style="display:flex;flex-direction:column;gap:12px">
         ${(["md", "sm"] as const).map(
             (size) => html`<div style="display:flex;gap:16px;flex-wrap:wrap;align-items:center">
-                <uax-delta-badge .value=${12.4} .size=${size}></uax-delta-badge>
-                <uax-delta-badge .value=${-3} .size=${size}></uax-delta-badge>
-                <uax-delta-badge .value=${0} .size=${size}></uax-delta-badge>
-                <uax-delta-badge .value=${-1.2} unit="points" lower-is-better .size=${size}></uax-delta-badge>
-                <uax-delta-badge .value=${4.5} unit="points" lower-is-better .size=${size}></uax-delta-badge>
+                <uaui-delta-badge .value=${12.4} .size=${size}></uaui-delta-badge>
+                <uaui-delta-badge .value=${-3} .size=${size}></uaui-delta-badge>
+                <uaui-delta-badge .value=${0} .size=${size}></uaui-delta-badge>
+                <uaui-delta-badge .value=${-1.2} unit="points" lower-is-better .size=${size}></uaui-delta-badge>
+                <uaui-delta-badge .value=${4.5} unit="points" lower-is-better .size=${size}></uaui-delta-badge>
             </div>`,
         )}
     </div>`,

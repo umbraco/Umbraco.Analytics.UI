@@ -2,17 +2,17 @@ import type { Meta, StoryObj } from "@storybook/web-components-vite";
 import { html } from "@umbraco-cms/backoffice/external/lit";
 import { notPublicApi } from "../../internal/story/internal.js";
 import "./chart-data-table.element.js";
-import type { UaxChartDataTableElement } from "./chart-data-table.element.js";
+import type { UauiChartDataTableElement } from "./chart-data-table.element.js";
 
-const meta: Meta<UaxChartDataTableElement> = {
+const meta: Meta<UauiChartDataTableElement> = {
     title: "Internal/Chart data table",
-    component: "uax-chart-data-table",
+    component: "uaui-chart-data-table",
     tags: ["internal"],
     parameters: {
         docs: {
             description: {
                 component: notPublicApi(
-                    "`uax-chart-data-table` is the visually hidden table of `uax-time-series-chart`'s data, for screen readers. It is clipped away, so the story shows it unclipped to inspect.",
+                    "`uaui-chart-data-table` is the visually hidden table of `uaui-time-series-chart`'s data, for screen readers. It is clipped away, so the story shows it unclipped to inspect.",
                 ),
             },
         },
@@ -29,18 +29,18 @@ const meta: Meta<UaxChartDataTableElement> = {
         compareTotal: undefined,
     },
     // The table is clipped to 1px; the story puts it back in the flow.
-    render: (args) => html`<uax-chart-data-table
+    render: (args) => html`<uaui-chart-data-table
         style="position: static; width: auto; height: auto; margin: 0; overflow: visible; clip-path: none"
         .dates=${args.dates}
         .series=${args.series}
         .bars=${args.bars}
         .totals=${args.totals}
         .totalLabel=${args.totalLabel}
-        .compareTotal=${args.compareTotal}></uax-chart-data-table>`,
+        .compareTotal=${args.compareTotal}></uaui-chart-data-table>`,
 };
 
 export default meta;
-type Story = StoryObj<UaxChartDataTableElement>;
+type Story = StoryObj<UauiChartDataTableElement>;
 
 /** Lines: a column per series, and one for its compare points. */
 export const Default: Story = {};

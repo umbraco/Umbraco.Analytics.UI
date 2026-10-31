@@ -8,8 +8,8 @@ import { html } from "@umbraco-cms/backoffice/external/lit";
 import darkCss from "@umbraco-ui/uui/themes/dark.css?inline";
 import { render } from "vitest-browser-lit";
 import { screenshotIt } from "../internal/test/screenshot.js";
-import { deepQuery, deepText, renderElement, shadow, type UaxTestElement } from "../internal/test/dom.js";
-import type { UaxDeltaBadgeElement } from "../delta-badge/delta-badge.element.js";
+import { deepQuery, deepText, renderElement, shadow, type UauiTestElement } from "../internal/test/dom.js";
+import type { UauiDeltaBadgeElement } from "../delta-badge/delta-badge.element.js";
 import "./time-series-chart.element.js";
 
 const current = { id: "pv", label: "Pageviews", points: [
@@ -22,22 +22,22 @@ const compareLabel = "Apr 25, 2026 – May 24, 2026";
 
 const renderChart = (kind = "line") =>
     renderElement(
-        html`<uax-time-series-chart kind=${kind} .series=${[current]} .compareSeries=${[previous]}
-            compare-label=${compareLabel} style="width:400px"></uax-time-series-chart>`,
-        "uax-time-series-chart",
+        html`<uaui-time-series-chart kind=${kind} .series=${[current]} .compareSeries=${[previous]}
+            compare-label=${compareLabel} style="width:400px"></uaui-time-series-chart>`,
+        "uaui-time-series-chart",
     );
 
-const legendText = (el: Element) => deepText(deepQuery(shadow(el), "uax-chart-legend")!);
-const tooltip = (el: Element) => shadow(el).querySelector("uax-chart-tooltip") as HTMLElement;
+const legendText = (el: Element) => deepText(deepQuery(shadow(el), "uaui-chart-legend")!);
+const tooltip = (el: Element) => shadow(el).querySelector("uaui-chart-tooltip") as HTMLElement;
 
 describe("Feature: compare with another period", () => {
     describe("Scenario: a line chart with a compare series", () => {
-        let el: UaxTestElement;
+        let el: UauiTestElement;
         beforeEach(async () => {
             el = await renderChart();
         });
 
-        screenshotIt("draws a dashed --uax-compare line with the gap to the series shaded", async () => {
+        screenshotIt("draws a dashed --uaui-compare line with the gap to the series shaded", async () => {
             await expect.element(page.elementLocator(el)).toMatchScreenshot("chart-compare-dashed-gap");
         });
 
@@ -63,11 +63,11 @@ describe("Feature: compare with another period", () => {
             document.head.appendChild(theme);
             host = render(
                 html`<div style="background: var(--uui-color-surface); width: 400px">
-                    <uax-time-series-chart kind="line" .series=${[current]} .compareSeries=${[previous]}
-                        compare-label=${compareLabel}></uax-time-series-chart>
+                    <uaui-time-series-chart kind="line" .series=${[current]} .compareSeries=${[previous]}
+                        compare-label=${compareLabel}></uaui-time-series-chart>
                 </div>`,
             ).container.querySelector("div")!;
-            await host.querySelector("uax-time-series-chart")!.updateComplete;
+            await host.querySelector("uaui-time-series-chart")!.updateComplete;
         });
         afterEach(() => theme.remove());
 
@@ -77,7 +77,7 @@ describe("Feature: compare with another period", () => {
     });
 
     describe("Scenario: an area chart with a compare series", () => {
-        let el: UaxTestElement;
+        let el: UauiTestElement;
         beforeEach(async () => {
             el = await renderChart("area");
         });
@@ -88,7 +88,7 @@ describe("Feature: compare with another period", () => {
     });
 
     describe("Scenario: hovering a date while comparing", () => {
-        let el: UaxTestElement;
+        let el: UauiTestElement;
         beforeEach(async () => {
             el = await renderChart();
             const canvas = shadow(el).querySelector("canvas")!;
@@ -110,7 +110,7 @@ describe("Feature: compare with another period", () => {
         });
 
         it("shows the change as a badge", () => {
-            const badge = deepQuery(tooltip(el).shadowRoot!, "uax-delta-badge") as UaxDeltaBadgeElement;
+            const badge = deepQuery(tooltip(el).shadowRoot!, "uaui-delta-badge") as UauiDeltaBadgeElement;
             expect(badge.value).toBeCloseTo(9.09, 1);
         });
     });
@@ -119,9 +119,9 @@ describe("Feature: compare with another period", () => {
         it("keeps the labels inside the tooltip", async () => {
             const long = "Pageviews from organic search, paid campaigns and direct visits";
             const el = await renderElement(
-                html`<uax-time-series-chart kind="line" .series=${[{ ...current, label: long }, { ...current, id: "b", label: "Sessions" }]}
-                    .compareSeries=${[previous]} compare-label=${compareLabel} style="width:400px"></uax-time-series-chart>`,
-                "uax-time-series-chart",
+                html`<uaui-time-series-chart kind="line" .series=${[{ ...current, label: long }, { ...current, id: "b", label: "Sessions" }]}
+                    .compareSeries=${[previous]} compare-label=${compareLabel} style="width:400px"></uaui-time-series-chart>`,
+                "uaui-time-series-chart",
             );
             const canvas = shadow(el).querySelector("canvas")!;
             const x = Chart.getChart(canvas)!.getDatasetMeta(0).data[2].x;
@@ -136,9 +136,9 @@ describe("Feature: compare with another period", () => {
             const weeks = { id: "pv", label: "Pageviews", points: [{ date: "2026-06-01", value: 1 }, { date: "2026-06-08", value: 2 }] };
             const before = { id: "pv", label: "Pageviews", points: [{ date: "2026-05-06", value: 5 }, { date: "2026-05-11", value: 6 }] };
             const el = await renderElement(
-                html`<uax-time-series-chart kind="line" group-by="week" .series=${[weeks]} .compareSeries=${[before]}
-                    style="width:400px"></uax-time-series-chart>`,
-                "uax-time-series-chart",
+                html`<uaui-time-series-chart kind="line" group-by="week" .series=${[weeks]} .compareSeries=${[before]}
+                    style="width:400px"></uaui-time-series-chart>`,
+                "uaui-time-series-chart",
             );
             const canvas = shadow(el).querySelector("canvas")!;
             const x = Chart.getChart(canvas)!.getDatasetMeta(0).data[1].x;

@@ -1,6 +1,6 @@
 /// <reference types="vite/client" />
 // DR-1 — Pick a date range
-// The modal opens through UMB_MODAL_MANAGER_CONTEXT. Every spec renders under uax-test-modal-host, which
+// The modal opens through UMB_MODAL_MANAGER_CONTEXT. Every spec renders under uaui-test-modal-host, which
 // provides the modal manager and the backoffice's real modal container.
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { html } from "@umbraco-cms/backoffice/external/lit";
@@ -9,21 +9,21 @@ import darkCss from "@umbraco-ui/uui/themes/dark.css?inline";
 import highContrastCss from "@umbraco-ui/uui/themes/high-contrast.css?inline";
 import { axeRun } from "../internal/test/a11y.js";
 import { renderWithModals } from "../internal/test/modal-host.js";
-import { deepQuery, recordEvents, settle, shadow, type UaxTestElement } from "../internal/test/dom.js";
+import { deepQuery, recordEvents, settle, shadow, type UauiTestElement } from "../internal/test/dom.js";
 import "./date-range.element.js";
 import "./date-range-modal.element.js";
 
 const value = { from: "2026-05-25", to: "2026-06-23" };
 
-const openModal = async (el: UaxTestElement) => {
+const openModal = async (el: UauiTestElement) => {
     (shadow(el).querySelector("uui-button") as HTMLElement).click();
-    await expect.poll(() => deepQuery<UaxTestElement>(document, "uax-date-range-modal")).not.toBe(null);
-    const modal = deepQuery<UaxTestElement>(document, "uax-date-range-modal")!;
+    await expect.poll(() => deepQuery<UauiTestElement>(document, "uaui-date-range-modal")).not.toBe(null);
+    const modal = deepQuery<UauiTestElement>(document, "uaui-date-range-modal")!;
     await modal.updateComplete;
     return modal;
 };
 const field = (modal: Element, name: string) => deepQuery<HTMLInputElement>(shadow(modal), `[name='${name}']`)!;
-const setField = async (modal: UaxTestElement, name: string, v: string) => {
+const setField = async (modal: UauiTestElement, name: string, v: string) => {
     const input = field(modal, name);
     input.value = v;
     input.dispatchEvent(new Event("change", { bubbles: true, composed: true }));
@@ -52,15 +52,15 @@ describe("Feature: pick a date range", () => {
 
     describe("Scenario: comparison is on by default", () => {
         it("allows compare without the allow-compare attribute", async () => {
-            const el = await renderWithModals(html`<uax-date-range .value=${value}></uax-date-range>`, "uax-date-range");
+            const el = await renderWithModals(html`<uaui-date-range .value=${value}></uaui-date-range>`, "uaui-date-range");
             expect((el as unknown as { allowCompare: boolean }).allowCompare).toBe(true);
         });
     });
 
     describe("Scenario: the button", () => {
-        let el: UaxTestElement;
+        let el: UauiTestElement;
         beforeEach(async () => {
-            el = await renderWithModals(html`<uax-date-range .value=${value}></uax-date-range>`, "uax-date-range");
+            el = await renderWithModals(html`<uaui-date-range .value=${value}></uaui-date-range>`, "uaui-date-range");
         });
 
         it("shows the range in the backoffice culture", () => {
@@ -69,10 +69,10 @@ describe("Feature: pick a date range", () => {
     });
 
     describe("Scenario: the button in another culture", () => {
-        let el: UaxTestElement;
+        let el: UauiTestElement;
         beforeEach(async () => {
             umbLocalizationManager.documentLanguage = "da-DK";
-            el = await renderWithModals(html`<uax-date-range .value=${value}></uax-date-range>`, "uax-date-range");
+            el = await renderWithModals(html`<uaui-date-range .value=${value}></uaui-date-range>`, "uaui-date-range");
         });
 
         it("formats the dates the way that culture does", () => {
@@ -81,21 +81,21 @@ describe("Feature: pick a date range", () => {
     });
 
     describe("Scenario: clicking the button", () => {
-        let modal: UaxTestElement | null;
+        let modal: UauiTestElement | null;
         beforeEach(async () => {
-            const el = await renderWithModals(html`<uax-date-range .value=${value}></uax-date-range>`, "uax-date-range");
+            const el = await renderWithModals(html`<uaui-date-range .value=${value}></uaui-date-range>`, "uaui-date-range");
             modal = await openModal(el);
         });
 
-        it("opens uax-date-range-modal", () => {
+        it("opens uaui-date-range-modal", () => {
             expect(modal).not.toBe(null);
         });
     });
 
     describe("Scenario: choosing a preset", () => {
-        let modal: UaxTestElement;
+        let modal: UauiTestElement;
         beforeEach(async () => {
-            const el = await renderWithModals(html`<uax-date-range .value=${value}></uax-date-range>`, "uax-date-range");
+            const el = await renderWithModals(html`<uaui-date-range .value=${value}></uaui-date-range>`, "uaui-date-range");
             modal = await openModal(el);
             await setField(modal, "preset", "last-30-days");
         });
@@ -110,11 +110,11 @@ describe("Feature: pick a date range", () => {
     });
 
     describe("Scenario: editing a date after choosing a preset", () => {
-        let modal: UaxTestElement;
+        let modal: UauiTestElement;
         beforeEach(async () => {
             const el = await renderWithModals(
-                html`<uax-date-range .value=${{ ...value, preset: "last-30-days" }}></uax-date-range>`,
-                "uax-date-range",
+                html`<uaui-date-range .value=${{ ...value, preset: "last-30-days" }}></uaui-date-range>`,
+                "uaui-date-range",
             );
             modal = await openModal(el);
             await setField(modal, "from", "2026-05-20");
@@ -128,7 +128,7 @@ describe("Feature: pick a date range", () => {
     describe("Scenario: saving", () => {
         let events: Event[];
         beforeEach(async () => {
-            const el = await renderWithModals(html`<uax-date-range .value=${value}></uax-date-range>`, "uax-date-range");
+            const el = await renderWithModals(html`<uaui-date-range .value=${value}></uaui-date-range>`, "uaui-date-range");
             events = recordEvents(el, "change");
             const modal = await openModal(el);
             await setField(modal, "from", "2026-06-01");
@@ -148,7 +148,7 @@ describe("Feature: pick a date range", () => {
     describe("Scenario: opening the dialog", () => {
         const bound = { from: "2026-05-25", to: "2026-06-23" };
         beforeEach(async () => {
-            const el = await renderWithModals(html`<uax-date-range .value=${bound}></uax-date-range>`, "uax-date-range");
+            const el = await renderWithModals(html`<uaui-date-range .value=${bound}></uaui-date-range>`, "uaui-date-range");
             await openModal(el);
         });
 
@@ -160,7 +160,7 @@ describe("Feature: pick a date range", () => {
     describe("Scenario: the change event", () => {
         let events: Event[];
         beforeEach(async () => {
-            const el = await renderWithModals(html`<uax-date-range .value=${value}></uax-date-range>`, "uax-date-range");
+            const el = await renderWithModals(html`<uaui-date-range .value=${value}></uaui-date-range>`, "uaui-date-range");
             events = recordEvents(el, "change");
             const modal = await openModal(el);
             await setField(modal, "from", "2026-06-01");
@@ -176,13 +176,13 @@ describe("Feature: pick a date range", () => {
     describe("Scenario (sad path): closing without saving", () => {
         let events: Event[];
         beforeEach(async () => {
-            const el = await renderWithModals(html`<uax-date-range .value=${value}></uax-date-range>`, "uax-date-range");
+            const el = await renderWithModals(html`<uaui-date-range .value=${value}></uaui-date-range>`, "uaui-date-range");
             events = recordEvents(el, "change");
             const modal = await openModal(el);
             await setField(modal, "from", "2026-06-01");
             button(modal, "Close").click();
             // The dialog is gone once the modal manager has dropped it.
-            await expect.poll(() => deepQuery<UaxTestElement>(document, "uax-date-range-modal")).toBe(null);
+            await expect.poll(() => deepQuery<UauiTestElement>(document, "uaui-date-range-modal")).toBe(null);
         });
 
         it("raises no change event", () => {
@@ -191,9 +191,9 @@ describe("Feature: pick a date range", () => {
     });
 
     describe("Scenario (sad path): end date before start date", () => {
-        let modal: UaxTestElement;
+        let modal: UauiTestElement;
         beforeEach(async () => {
-            const el = await renderWithModals(html`<uax-date-range .value=${value}></uax-date-range>`, "uax-date-range");
+            const el = await renderWithModals(html`<uaui-date-range .value=${value}></uaui-date-range>`, "uaui-date-range");
             modal = await openModal(el);
             await setField(modal, "to", "2026-05-01");
         });
@@ -210,11 +210,11 @@ describe("Feature: pick a date range", () => {
     });
 
     describe("Scenario (sad path): a date after the latest allowed date", () => {
-        let modal: UaxTestElement;
+        let modal: UauiTestElement;
         beforeEach(async () => {
             const el = await renderWithModals(
-                html`<uax-date-range .value=${value} max-date="2026-06-30"></uax-date-range>`,
-                "uax-date-range",
+                html`<uaui-date-range .value=${value} max-date="2026-06-30"></uaui-date-range>`,
+                "uaui-date-range",
             );
             modal = await openModal(el);
             await setField(modal, "to", "2026-07-02");
@@ -232,11 +232,11 @@ describe("Feature: pick a date range", () => {
     });
 
     describe("Scenario (sad path): opening with an invalid range", () => {
-        let modal: UaxTestElement;
+        let modal: UauiTestElement;
         beforeEach(async () => {
             const el = await renderWithModals(
-                html`<uax-date-range .value=${{ from: "2026-06-23", to: "2026-05-25" }}></uax-date-range>`,
-                "uax-date-range",
+                html`<uaui-date-range .value=${{ from: "2026-06-23", to: "2026-05-25" }}></uaui-date-range>`,
+                "uaui-date-range",
             );
             modal = await openModal(el);
         });
@@ -257,11 +257,11 @@ describe("Feature: pick a date range", () => {
             try {
                 const el = await renderWithModals(
                     html`<div style="background: var(--uui-color-surface); padding: 8px">
-                        <uax-date-range
+                        <uaui-date-range
                             .value=${value}
-                            .compare=${{ mode: "previous-period", from: "2026-04-25", to: "2026-05-24" }}></uax-date-range>
+                            .compare=${{ mode: "previous-period", from: "2026-04-25", to: "2026-05-24" }}></uaui-date-range>
                     </div>`,
-                    "uax-date-range",
+                    "uaui-date-range",
                 );
                 if (target === "button") return await axeRun(el);
                 return await axeRun(await openModal(el));

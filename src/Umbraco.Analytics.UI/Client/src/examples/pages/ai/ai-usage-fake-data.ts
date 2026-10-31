@@ -1,10 +1,10 @@
 // A stand-in for the Umbraco AI usage API, for the "Umbraco AI > Usage" page example. Everything is
 // invented and generated from the date, so the same range always gives the same numbers. A real
 // product fetches this over HTTP.
-import { uaxDateBuckets, uaxDaysIn } from "../../../date-helpers/index.js";
-import type { UaxCompare, UaxDateRange } from "../../../date-range/types.js";
-import type { UaxGroupBy } from "../../../group-by/group-by.element.js";
-import type { UaxTableSortDirection } from "../../../table/types.js";
+import { uauiDateBuckets, uauiDaysIn } from "../../../date-helpers/index.js";
+import type { UauiCompare, UauiDateRange } from "../../../date-range/types.js";
+import type { UauiGroupBy } from "../../../group-by/group-by.element.js";
+import type { UauiTableSortDirection } from "../../../table/types.js";
 import { wait } from "../fake-latency.js";
 
 /** What happened in one bucket of time (a day, a week or a month), or in a whole range. */
@@ -24,9 +24,9 @@ export type UsageBucket = UsageTotals & {
 };
 
 export type UsageQuery = {
-    range: UaxDateRange;
-    compare?: UaxCompare;
-    groupBy: UaxGroupBy;
+    range: UauiDateRange;
+    compare?: UauiCompare;
+    groupBy: UauiGroupBy;
 };
 
 export type UsageResult = {
@@ -41,9 +41,9 @@ export type BreakdownSortKey = "name" | "requests" | "totalTokens" | "successRat
 
 export type BreakdownQuery = {
     by: BreakdownBy;
-    range: UaxDateRange;
-    compare?: UaxCompare;
-    sort: { key: BreakdownSortKey; direction: UaxTableSortDirection };
+    range: UauiDateRange;
+    compare?: UauiCompare;
+    sort: { key: BreakdownSortKey; direction: UauiTableSortDirection };
     page: number;
     pageSize: number;
     /** Text the name must contain. */
@@ -185,8 +185,8 @@ function profileDay(date: string): UsageTotals[] {
     }));
 }
 
-function bucketsFor(range: { from: string; to: string }, groupBy: UaxGroupBy): UsageBucket[] {
-    return uaxDateBuckets(range, groupBy).map(({ start, days }) => ({ date: start, ...days.map(dayTotals).reduce(add, empty()) }));
+function bucketsFor(range: { from: string; to: string }, groupBy: UauiGroupBy): UsageBucket[] {
+    return uauiDateBuckets(range, groupBy).map(({ start, days }) => ({ date: start, ...days.map(dayTotals).reduce(add, empty()) }));
 }
 
 const sumOf = (buckets: UsageTotals[]) => buckets.reduce(add, empty());
@@ -207,7 +207,7 @@ export async function getUsage(query: UsageQuery, latencyMs = 0): Promise<UsageR
 function rowsFor(by: BreakdownBy, range: { from: string; to: string }): BreakdownRow[] {
     const names = by === "model" ? models.map((m) => m.name) : profiles.map((p) => p.name);
     const totals = names.map(() => empty());
-    for (const date of uaxDaysIn(range)) {
+    for (const date of uauiDaysIn(range)) {
         const day = by === "model" ? models.map((m) => modelDay(m, date)) : profileDay(date);
         day.forEach((usage, i) => (totals[i] = add(totals[i], usage)));
     }

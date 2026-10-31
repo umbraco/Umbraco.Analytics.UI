@@ -15,40 +15,40 @@ import "../error-state/error-state.element.js";
 import { getLoadingMode, isBusy } from "../internal/loading/loading-mode.js";
 import "../internal/loading/loading-bar.element.js";
 import "../internal/loading/skeleton.element.js";
-import { UaxPaletteStyles } from "../theme/index.js";
+import { UauiPaletteStyles } from "../theme/index.js";
 import "./cells/index.js";
-import { UAX_TABLE_CELL } from "./cells/cell-names.js";
-import { UaxTableContextController } from "./internal/table-context.controller.js";
+import { UAUI_TABLE_CELL } from "./cells/cell-names.js";
+import { UauiTableContextController } from "./internal/table-context.controller.js";
 import "../internal/pager/compact-pager.element.js";
 import "./internal/table-skeleton-cell.element.js";
 import "./internal/table-sort-button.element.js";
 import { asNumber, asText } from "./internal/cell-values.js";
 import type {
-    UaxTableCellElement,
-    UaxTableColumn,
-    UaxTableColumnStats,
-    UaxTableMode,
-    UaxTablePageChangeDetail,
-    UaxTableRowClickDetail,
-    UaxTableSearchDetail,
-    UaxTableSort,
-    UaxTableStats,
+    UauiTableCellElement,
+    UauiTableColumn,
+    UauiTableColumnStats,
+    UauiTableMode,
+    UauiTablePageChangeDetail,
+    UauiTableRowClickDetail,
+    UauiTableSearchDetail,
+    UauiTableSort,
+    UauiTableStats,
 } from "./types.js";
 
-type UaxTableRow = Record<string, unknown>;
+type UauiTableRow = Record<string, unknown>;
 
 /** A column with everything the cells need, worked out once per change of columns, rows or language. */
 interface DerivedColumn {
-    column: UaxTableColumn;
+    column: UauiTableColumn;
     align: "start" | "end";
 }
 
 interface DerivedFrom {
-    columns: UaxTableColumn[];
-    rows: UaxTableRow[];
-    compareRows: UaxTableRow[];
+    columns: UauiTableColumn[];
+    rows: UauiTableRow[];
+    compareRows: UauiTableRow[];
     rowKey?: string;
-    stats?: UaxTableStats;
+    stats?: UauiTableStats;
     lang: string;
 }
 
@@ -60,8 +60,8 @@ const PAGE_SIZES = [10, 25, 50, 100];
 const DEFAULT_PAGE_SIZE = PAGE_SIZES[0];
 
 /** The cell element a column names, the text cell when it names none. */
-function cellElementName(column: UaxTableColumn): string {
-    return column.elementName || UAX_TABLE_CELL.text;
+function cellElementName(column: UauiTableColumn): string {
+    return column.elementName || UAUI_TABLE_CELL.text;
 }
 
 /** A row's identity for matching: strings and numbers only. Anything else never matches. */
@@ -81,7 +81,7 @@ function getCollator(lang: string): Intl.Collator {
 }
 
 /** The text of the columns a search looks in: `searchable` columns, or every column when none is marked. Text values only. */
-function searchTextOf(row: UaxTableRow, columns: UaxTableColumn[]): string {
+function searchTextOf(row: UauiTableRow, columns: UauiTableColumn[]): string {
     return columns.map((column) => (typeof row[column.key] === "string" ? (row[column.key] as string) : "")).join("\n");
 }
 
@@ -91,23 +91,23 @@ const SKELETON_WIDTHS = [72, 54, 83, 47, 65];
 
 /**
  * A table of rows. Each column names the cell element that shows its values in `elementName`: the built-in
- * cells (`UAX_TABLE_CELL`) show text, links, numbers, percentages or a share of the column total with a bar,
+ * cells (`UAUI_TABLE_CELL`) show text, links, numbers, percentages or a share of the column total with a bar,
  * and a product can name its own. The default is the text cell.
  *
  * Built on `uui-table`, so it looks like the backoffice's own tables. Put it in a `uui-box` with
  * `--uui-box-default-padding: 0` so it runs edge to edge: the cells pad themselves, and the toolbar
- * slot pads itself with `--uax-table-padding`.
+ * slot pads itself with `--uaui-table-padding`.
  *
  * Values are raw numbers. The number cells format them in the editor's culture, with the column's `valueFormat`.
- * The table provides `UAX_TABLE_CONTEXT` to its cells, with each column's total and largest value (so a share
+ * The table provides `UAUI_TABLE_CONTEXT` to its cells, with each column's total and largest value (so a share
  * cell can draw a percent and a bar) and the compare-row lookup.
  *
  * Pass last period's rows in `compare-rows` and name the column that identifies a row in `row-key` so cells
  * can compare a row with its match. A row with no matching compare row shows no badge. Without a `row-key` there is no match.
  *
  * While `loading` is set it shows skeleton rows on first load, or keeps the old rows under a loading
- * bar when reloading. With no rows it shows `uax-empty-state` under the header. While `error` is set it shows
- * `uax-error-state` under the header in place of the rows and pager (error wins over loading, and loading over empty). Replace `rows` and
+ * bar when reloading. With no rows it shows `uaui-empty-state` under the header. While `error` is set it shows
+ * `uaui-error-state` under the header in place of the rows and pager (error wins over loading, and loading over empty). Replace `rows` and
  * `columns` (and `compare-rows`) with new arrays to update the table: changing one in place isn't noticed.
  *
  * Give a column `sortable` to make its header a button. Clicking it sets `sort` and raises `sort-change`
@@ -125,7 +125,7 @@ const SKELETON_WIDTHS = [72, 54, 83, 47, 65];
  *
  * Set `query` to search. In `client` mode the table keeps the rows that contain it, ignoring case, in the text of
  * the columns marked `searchable` (every column when none is), shows the empty state when none match, and goes
- * back to page 1. Put a `uax-table-search` in the `toolbar` slot and the table sets `query` itself from its `search`
+ * back to page 1. Put a `uaui-table-search` in the `toolbar` slot and the table sets `query` itself from its `search`
  * event. In `server` mode the table never filters: the product loads the matching rows. Column totals and
  * bars stay those of all the `rows`, searched or not.
  *
@@ -144,24 +144,24 @@ const SKELETON_WIDTHS = [72, 54, 83, 47, 65];
  * mode, but only the current page in `server` mode. Pass `stats` (the column's `total` and `max` across every
  * page, by column `key`) so a share is still a share of the whole and bars keep one scale from page to page.
  *
- * @element uax-data-table
+ * @element uaui-data-table
  * @fires retry - The Retry button of the error state was pressed (needs `retryable`). Bubbles, not composed.
- * @fires sort-change - A sortable header was clicked, by pointer or keyboard. Bubbles, not composed or cancelable, like `uax-group-by`. `detail` is `{ key, direction }`; the table has already set `sort` to it and reset `page` to 1, so a `server` product loads page 1 and resets its own page binding.
+ * @fires sort-change - A sortable header was clicked, by pointer or keyboard. Bubbles, not composed or cancelable, like `uaui-group-by`. `detail` is `{ key, direction }`; the table has already set `sort` to it and reset `page` to 1, so a `server` product loads page 1 and resets its own page binding.
  * @fires page-change - The editor picked another page or page size. Bubbles, not composed or cancelable, like `sort-change`. `detail` is `{ page, pageSize }`; the table has already set `page` and `pageSize`. A new page size goes back to page 1.
  * @fires row-click - A row was clicked, or Enter or Space was pressed on it, while `clickable-rows` is set. Bubbles, not composed or cancelable, like `sort-change`. `detail` is `{ row }`: the object from `rows`.
- * @fires search - Not raised by the table: the `search` event of a `uax-table-search` in the `toolbar` slot bubbles through it, and the table has already set `query` and gone back to page 1 when a product's listener runs.
- * @slot toolbar - Content above the header row, such as a search box and totals. It pads itself with `--uax-table-padding`.
+ * @fires search - Not raised by the table: the `search` event of a `uaui-table-search` in the `toolbar` slot bubbles through it, and the table has already set `query` and gone back to page 1 when a product's listener runs.
+ * @slot toolbar - Content above the header row, such as a search box and totals. It pads itself with `--uaui-table-padding`.
  * @slot summary-[key] - Content for the summary row, in the cell of the column whose `key` follows `summary-`, such as a total and its change badge. The row shows when any of these has content.
- * @slot footer - Content below the rows, on the left of the pager, such as an "updated" note. The footer shows whenever this has content, even while loading, and pads itself with `--uax-table-padding`.
- * @cssprop --uax-table-padding - Padding of the toolbar and footer sections, as a CSS `padding` value. Defaults to `12px 24px`. The loading bar ignores it and spans the full width at the top edge.
- * @cssprop --uax-series-1 - Bar colour of the first share column. Also `--uax-series-2` to `--uax-series-4` for the other slots.
- * @cssprop --uax-tint-neutral - Colour of the track behind a share bar.
+ * @slot footer - Content below the rows, on the left of the pager, such as an "updated" note. The footer shows whenever this has content, even while loading, and pads itself with `--uaui-table-padding`.
+ * @cssprop --uaui-table-padding - Padding of the toolbar and footer sections, as a CSS `padding` value. Defaults to `12px 24px`. The loading bar ignores it and spans the full width at the top edge.
+ * @cssprop --uaui-series-1 - Bar colour of the first share column. Also `--uaui-series-2` to `--uaui-series-4` for the other slots.
+ * @cssprop --uaui-tint-neutral - Colour of the track behind a share bar.
  */
-@customElement("uax-data-table")
-export class UaxDataTableElement extends UmbLitElement {
+@customElement("uaui-data-table")
+export class UauiDataTableElement extends UmbLitElement {
     /** The columns, left to right. */
     @property({ attribute: false })
-    columns: UaxTableColumn[] = [];
+    columns: UauiTableColumn[] = [];
 
     /** The rows. Each column reads its value from the row's `key`. */
     @property({ attribute: false })
@@ -179,7 +179,7 @@ export class UaxDataTableElement extends UmbLitElement {
     @property({ type: Boolean, reflect: true })
     loading = false;
 
-    /** The load failed. Shows `uax-error-state` under the header in place of the rows and pager, and wins over `loading` and the empty state. */
+    /** The load failed. Shows `uaui-error-state` under the header in place of the rows and pager, and wins over `loading` and the empty state. */
     @property({ type: Boolean, reflect: true })
     error = false;
 
@@ -205,11 +205,11 @@ export class UaxDataTableElement extends UmbLitElement {
 
     /** The column the rows are sorted by. Set by the product, and by the table itself when a header is clicked. */
     @property({ attribute: false })
-    sort?: UaxTableSort;
+    sort?: UauiTableSort;
 
     /** `client` sorts the rows itself. `server` only raises `sort-change`, and the product passes the sorted rows. */
     @property({ type: String })
-    mode: UaxTableMode = "client";
+    mode: UauiTableMode = "client";
 
     /** The page shown, starting at 1. Set by the product, and by the table itself when the editor pages. A page past the last one shows the last. */
     @property({ type: Number })
@@ -229,11 +229,11 @@ export class UaxDataTableElement extends UmbLitElement {
      * largest value of the `rows` the table holds.
      */
     @property({ attribute: false })
-    stats?: UaxTableStats;
+    stats?: UauiTableStats;
 
     /**
      * The text to search for. Set by the product, and by the table itself when a `search` event reaches it from a
-     * `uax-table-search` in the `toolbar` slot. `client` mode only keeps the rows that match; `server` mode ignores it.
+     * `uaui-table-search` in the `toolbar` slot. `client` mode only keeps the rows that match; `server` mode ignores it.
      */
     @property({ type: String })
     query = "";
@@ -245,14 +245,14 @@ export class UaxDataTableElement extends UmbLitElement {
     @property({ type: Boolean, attribute: "clickable-rows" })
     clickableRows = false;
 
-    /** Provides the columns, stats and compare lookup to the cells, as `UAX_TABLE_CONTEXT`. */
-    #context = new UaxTableContextController(this);
+    /** Provides the columns, stats and compare lookup to the cells, as `UAUI_TABLE_CONTEXT`. */
+    #context = new UauiTableContextController(this);
     #derived: DerivedColumn[] = [];
-    #sorted?: { rows: UaxTableRow[]; sort: UaxTableSort; column: UaxTableColumn; lang: string; sortedRows: UaxTableRow[] };
+    #sorted?: { rows: UauiTableRow[]; sort: UauiTableSort; column: UauiTableColumn; lang: string; sortedRows: UauiTableRow[] };
     #derivedFrom?: DerivedFrom;
-    #searched?: { rows: UaxTableRow[]; columns: UaxTableColumn[]; needle: string; lang: string; searchedRows: UaxTableRow[] };
+    #searched?: { rows: UauiTableRow[]; columns: UauiTableColumn[]; needle: string; lang: string; searchedRows: UauiTableRow[] };
     /** The compare rows by their `rowKey` value, rebuilt when `compareRows` or `rowKey` change. */
-    #compareByKey = new Map<string, UaxTableRow>();
+    #compareByKey = new Map<string, UauiTableRow>();
 
     protected override willUpdate(changed: PropertyValues<this>) {
         super.willUpdate(changed);
@@ -276,8 +276,8 @@ export class UaxDataTableElement extends UmbLitElement {
         this.#derivedFrom = { columns: this.columns, rows: this.rows, compareRows: this.compareRows, rowKey: this.rowKey, stats: this.stats, lang };
     }
 
-    #indexCompareRows(compareRows: UaxTableRow[], rowKey?: string): Map<string, UaxTableRow> {
-        const byKey = new Map<string, UaxTableRow>();
+    #indexCompareRows(compareRows: UauiTableRow[], rowKey?: string): Map<string, UauiTableRow> {
+        const byKey = new Map<string, UauiTableRow>();
         if (!rowKey) return byKey;
         for (const row of compareRows) {
             const key = rowIdentity(row[rowKey]);
@@ -287,7 +287,7 @@ export class UaxDataTableElement extends UmbLitElement {
     }
 
     /** The compare row that matches the row, or undefined when there is no `rowKey` or no matching row. */
-    #compareRowFor(row: UaxTableRow): UaxTableRow | undefined {
+    #compareRowFor(row: UauiTableRow): UauiTableRow | undefined {
         if (!this.rowKey) return undefined;
         const key = rowIdentity(row[this.rowKey]);
         return key === undefined ? undefined : this.#compareByKey.get(key);
@@ -297,12 +297,12 @@ export class UaxDataTableElement extends UmbLitElement {
      * The rows that column totals and bar scales are worked out from: all the rows the table holds, never
      * just the page on screen. In `server` mode that is the page the product passed, unless `stats` says more.
      */
-    get #statsRows(): UaxTableRow[] {
+    get #statsRows(): UauiTableRow[] {
         return this.rows;
     }
 
     /** The rows to draw: the searched rows, sorted, cut down to the current page in client mode. */
-    get #visibleRows(): UaxTableRow[] {
+    get #visibleRows(): UauiTableRow[] {
         const rows = this.#sortedRows;
         if (this.mode !== "client") return rows;
         const size = this.#pageSize;
@@ -318,7 +318,7 @@ export class UaxDataTableElement extends UmbLitElement {
 
     /** A `search` event came from the toolbar slot: take its query and go back to page 1, since the matches are other rows. */
     #onSearch = (event: Event) => {
-        const query = (event as CustomEvent<UaxTableSearchDetail>).detail?.query;
+        const query = (event as CustomEvent<UauiTableSearchDetail>).detail?.query;
         if (typeof query !== "string") return;
         this.query = query;
         this.page = 1;
@@ -328,7 +328,7 @@ export class UaxDataTableElement extends UmbLitElement {
      * `rows` that contain `query`, in client mode, found once per change of rows, columns, query or language.
      * Without a query, and in server mode, it is `rows` itself. Never changes `rows`.
      */
-    get #searchedRows(): UaxTableRow[] {
+    get #searchedRows(): UauiTableRow[] {
         const lang = this.localize.lang();
         const needle = typeof this.query === "string" ? this.query.trim().toLocaleLowerCase(lang) : "";
         if (this.mode !== "client" || !needle) return this.rows;
@@ -373,15 +373,15 @@ export class UaxDataTableElement extends UmbLitElement {
     #changePage(page: number, pageSize: number) {
         this.page = page;
         this.pageSize = pageSize;
-        this.dispatchEvent(new CustomEvent<UaxTablePageChangeDetail>("page-change", { bubbles: true, detail: { page, pageSize } }));
+        this.dispatchEvent(new CustomEvent<UauiTablePageChangeDetail>("page-change", { bubbles: true, detail: { page, pageSize } }));
     }
 
-    #onPagerChange(event: CustomEvent<UaxTablePageChangeDetail>) {
+    #onPagerChange(event: CustomEvent<UauiTablePageChangeDetail>) {
         this.#changePage(event.detail.page, event.detail.pageSize);
     }
 
     /** `rows` in the `sort` order in client mode, sorted once per change of rows, sort or language. Never reorders `rows` itself. */
-    get #sortedRows(): UaxTableRow[] {
+    get #sortedRows(): UauiTableRow[] {
         const sort = this.mode === "client" ? this.sort : undefined;
         const column = sort ? this.columns.find((c) => c.key === sort.key) : undefined;
         const rows = this.#searchedRows;
@@ -394,7 +394,7 @@ export class UaxDataTableElement extends UmbLitElement {
         const sign = sort.direction === "desc" ? -1 : 1;
         const compare =
             typeof sortAs === "function" ? sortAs : sortAs === "number" ? (x: unknown, y: unknown) => (x as number) - (y as number) : (x: unknown, y: unknown) => collator.compare(String(x), String(y));
-        const sortValue = (row: UaxTableRow): unknown => {
+        const sortValue = (row: UauiTableRow): unknown => {
             const value = row[column.key];
             if (typeof sortAs === "function") return value ?? undefined;
             return sortAs === "number" ? asNumber(value) : asText(value) || undefined;
@@ -411,7 +411,7 @@ export class UaxDataTableElement extends UmbLitElement {
     }
 
     /** The first click on a column sorts numbers biggest first and text A to Z. Later clicks flip the direction. */
-    #sortBy(column: UaxTableColumn) {
+    #sortBy(column: UauiTableColumn) {
         const current = this.sort;
         const direction = current?.key === column.key ? (current.direction === "asc" ? "desc" : "asc") : column.sortAs === "number" ? "desc" : "asc";
         this.sort = { key: column.key, direction };
@@ -439,13 +439,13 @@ export class UaxDataTableElement extends UmbLitElement {
         return SKELETON_ROWS;
     }
 
-    #derive(columns: UaxTableColumn[]): DerivedColumn[] {
+    #derive(columns: UauiTableColumn[]): DerivedColumn[] {
         return columns.map((column) => ({ column, align: column.align ?? "start" }));
     }
 
     /** Each column's total and largest number, from `stats` where given, else from the rows the table holds. */
-    #computeStats(columns: UaxTableColumn[], rows: UaxTableRow[]): UaxTableStats {
-        const stats: Record<string, UaxTableColumnStats> = {};
+    #computeStats(columns: UauiTableColumn[], rows: UauiTableRow[]): UauiTableStats {
+        const stats: Record<string, UauiTableColumnStats> = {};
         for (const { key } of columns) {
             let total = 0;
             let max = 0;
@@ -466,9 +466,9 @@ export class UaxDataTableElement extends UmbLitElement {
     }
 
     /** One cell element per row and column, reused while the column keeps its element name, as the CMS `umb-table` does. */
-    #cellElements = new WeakMap<UaxTableRow, Map<string, HTMLElement>>();
+    #cellElements = new WeakMap<UauiTableRow, Map<string, HTMLElement>>();
 
-    #renderCell(derived: DerivedColumn, row: UaxTableRow): HTMLElement {
+    #renderCell(derived: DerivedColumn, row: UauiTableRow): HTMLElement {
         const { column } = derived;
         const elementName = cellElementName(column);
         let rowCache = this.#cellElements.get(row);
@@ -481,7 +481,7 @@ export class UaxDataTableElement extends UmbLitElement {
             element = document.createElement(elementName);
             rowCache.set(column.key, element);
         }
-        const cell = element as HTMLElement & Partial<UaxTableCellElement>;
+        const cell = element as HTMLElement & Partial<UauiTableCellElement>;
         cell.column = column;
         cell.item = row;
         cell.value = row[column.key];
@@ -498,7 +498,7 @@ export class UaxDataTableElement extends UmbLitElement {
             class="${this.#cellClass(derived)} sortable"
             aria-sort=${active ? (descending ? "descending" : "ascending") : "none"}
             @click=${() => this.#sortBy(column)}>
-            <uax-table-sort-button .active=${active} .descending=${descending} .align=${derived.align}>${column.label}</uax-table-sort-button>
+            <uaui-table-sort-button .active=${active} .descending=${descending} .align=${derived.align}>${column.label}</uaui-table-sort-button>
         </uui-table-head-cell>`;
     }
 
@@ -515,24 +515,24 @@ export class UaxDataTableElement extends UmbLitElement {
         return false;
     }
 
-    #raiseRowClick(row: UaxTableRow) {
-        this.dispatchEvent(new CustomEvent<UaxTableRowClickDetail>("row-click", { bubbles: true, detail: { row } }));
+    #raiseRowClick(row: UauiTableRow) {
+        this.dispatchEvent(new CustomEvent<UauiTableRowClickDetail>("row-click", { bubbles: true, detail: { row } }));
     }
 
-    #onRowClick(event: MouseEvent, row: UaxTableRow) {
+    #onRowClick(event: MouseEvent, row: UauiTableRow) {
         if (this.#isOnInteractive(event, event.currentTarget)) return;
         this.#raiseRowClick(row);
     }
 
     /** Enter or Space on the row itself, not on something inside it. Space is held back from scrolling the page. */
-    #onRowKeydown(event: KeyboardEvent, row: UaxTableRow) {
+    #onRowKeydown(event: KeyboardEvent, row: UauiTableRow) {
         if (event.code !== "Enter" && event.code !== "Space") return;
         if (event.composedPath()[0] !== event.currentTarget) return;
         event.preventDefault();
         this.#raiseRowClick(row);
     }
 
-    #renderRow(row: UaxTableRow): TemplateResult {
+    #renderRow(row: UauiTableRow): TemplateResult {
         const clickable = this.clickableRows;
         return html`<uui-table-row
             class=${clickable ? "clickable" : ""}
@@ -565,7 +565,7 @@ export class UaxDataTableElement extends UmbLitElement {
             });
         }
         if (!definition || !("loading" in definition.prototype)) {
-            return html`<uax-table-skeleton-cell .width=${SKELETON_WIDTHS[(row + column) % SKELETON_WIDTHS.length]} .align=${derived.align}></uax-table-skeleton-cell>`;
+            return html`<uaui-table-skeleton-cell .width=${SKELETON_WIDTHS[(row + column) % SKELETON_WIDTHS.length]} .align=${derived.align}></uaui-table-skeleton-cell>`;
         }
         const id = `${row}:${derived.column.key}`;
         let element = this.#skeletonElements.get(id);
@@ -573,7 +573,7 @@ export class UaxDataTableElement extends UmbLitElement {
             element = document.createElement(elementName);
             this.#skeletonElements.set(id, element);
         }
-        const cell = element as HTMLElement & Partial<UaxTableCellElement>;
+        const cell = element as HTMLElement & Partial<UauiTableCellElement>;
         cell.column = derived.column;
         cell.item = {};
         cell.value = undefined;
@@ -586,7 +586,7 @@ export class UaxDataTableElement extends UmbLitElement {
             ${this.#derived.map((derived, column) => {
                 // Numbers sit at the end of their cell and are short, so their block is too.
                 const width = derived.align === "end" ? 40 : SKELETON_WIDTHS[(index + column) % SKELETON_WIDTHS.length];
-                return html`<uui-table-cell class=${this.#cellClass(derived)} style="--_uax-skeleton-width: ${width}%">
+                return html`<uui-table-cell class=${this.#cellClass(derived)} style="--_uaui-skeleton-width: ${width}%">
                     ${this.#renderSkeletonCell(derived, index, column)}
                 </uui-table-cell>`;
             })}
@@ -603,7 +603,7 @@ export class UaxDataTableElement extends UmbLitElement {
         const mode = getLoadingMode(this.loading, hasData, this.error);
         const busy = isBusy(this.loading, this.error);
         return html`<div class="region ${this.#hasToolbar ? "has-toolbar" : ""}">
-            ${mode === "reload" ? html`<uax-loading-bar></uax-loading-bar>` : nothing}
+            ${mode === "reload" ? html`<uaui-loading-bar></uaui-loading-bar>` : nothing}
             <div class="toolbar"><slot name="toolbar" @slotchange=${() => this.requestUpdate()} @search=${this.#onSearch}></slot></div>
             <uui-table aria-busy=${busy ? "true" : "false"}>
                 ${this.#derived.map((derived) => html`<uui-table-column style=${ifDefined(derived.column.width ? `width: ${derived.column.width}` : undefined)}></uui-table-column>`)}
@@ -636,21 +636,21 @@ export class UaxDataTableElement extends UmbLitElement {
     }
 
     #renderErrorState(): TemplateResult {
-        return html`<uax-error-state
+        return html`<uaui-error-state
             .headline=${this.errorHeadline}
             .description=${this.errorDescription}
             .retryable=${this.retryable}
-            @retry=${this.#onRetry}></uax-error-state>`;
+            @retry=${this.#onRetry}></uaui-error-state>`;
     }
 
     /** "No results" when a query leaves no rows on screen (either mode), else the product's empty state when there are no rows. */
     #renderEmptyState(mode: ReturnType<typeof getLoadingMode>, hasData: boolean): TemplateResult | typeof nothing {
         const searching = typeof this.query === "string" && this.query.trim() !== "";
         if (mode !== "skeleton" && searching && this.#visibleRows.length === 0) {
-            return html`<uax-empty-state .headline=${this.localize.term("general_searchNoResult")} description=""></uax-empty-state>`;
+            return html`<uaui-empty-state .headline=${this.localize.term("general_searchNoResult")} description=""></uaui-empty-state>`;
         }
         if (mode === "idle" && !hasData) {
-            return html`<uax-empty-state .headline=${this.emptyHeadline} .description=${this.emptyDescription}></uax-empty-state>`;
+            return html`<uaui-empty-state .headline=${this.emptyHeadline} .description=${this.emptyDescription}></uaui-empty-state>`;
         }
         return nothing;
     }
@@ -661,25 +661,25 @@ export class UaxDataTableElement extends UmbLitElement {
         return html`<div class="footer" ?hidden=${!showPager && !this.#hasFooterContent}>
             <slot name="footer" @slotchange=${() => this.requestUpdate()}></slot>
             ${showPager
-                ? html`<uax-compact-pager
+                ? html`<uaui-compact-pager
                       .page=${this.#currentPage}
                       .pageSize=${this.#pageSize}
                       .total=${this.#totalRows}
                       .pageSizes=${this.#pageSizeOptions}
-                      @page-change=${this.#onPagerChange}></uax-compact-pager>`
+                      @page-change=${this.#onPagerChange}></uaui-compact-pager>`
                 : nothing}
         </div>`;
     }
 
     static override styles: CSSResultGroup = [
-        UaxPaletteStyles,
+        UauiPaletteStyles,
         css`
             :host {
                 display: block;
-                --_uax-skeleton-height: 14px;
-                --_uax-table-line: 20px;
+                --_uaui-skeleton-height: 14px;
+                --_uaui-table-line: 20px;
                 font-size: 13px;
-                line-height: var(--_uax-table-line);
+                line-height: var(--_uaui-table-line);
             }
 
             .region {
@@ -688,12 +688,12 @@ export class UaxDataTableElement extends UmbLitElement {
                 overflow: clip;
                 border-radius: 0 0 var(--uui-box-border-radius, var(--uui-border-radius-3)) var(--uui-box-border-radius, var(--uui-border-radius-3));
                 /* The tallest content a body row holds, so a skeleton row and a loaded row are the same height. */
-                --_uax-table-content-height: var(--_uax-table-line);
+                --_uaui-table-content-height: var(--_uaui-table-line);
             }
 
             /* The toolbar pads itself, only when something is slotted, so the loading bar can span the full width. */
             .has-toolbar .toolbar {
-                padding: var(--uax-table-padding, var(--uui-size-space-4) var(--uui-size-space-6));
+                padding: var(--uaui-table-padding, var(--uui-size-space-4) var(--uui-size-space-6));
             }
 
             /* The footer slot grows on the left, so the pager stays on the right. */
@@ -702,7 +702,7 @@ export class UaxDataTableElement extends UmbLitElement {
                 align-items: center;
                 flex-wrap: wrap;
                 gap: var(--uui-size-space-4);
-                padding: var(--uax-table-padding, var(--uui-size-space-4) var(--uui-size-space-6));
+                padding: var(--uaui-table-padding, var(--uui-size-space-4) var(--uui-size-space-6));
                 border-top: 1px solid var(--uui-color-border);
             }
 
@@ -715,11 +715,11 @@ export class UaxDataTableElement extends UmbLitElement {
                 flex: 1;
             }
 
-            uax-compact-pager {
+            uaui-compact-pager {
                 margin-left: auto;
             }
 
-            uax-loading-bar {
+            uaui-loading-bar {
                 z-index: 3;
             }
 
@@ -795,8 +795,8 @@ export class UaxDataTableElement extends UmbLitElement {
                 text-align: end;
             }
 
-            uax-empty-state,
-            uax-error-state {
+            uaui-empty-state,
+            uaui-error-state {
                 border-top: 1px solid var(--uui-color-border);
             }
         `,
@@ -805,6 +805,6 @@ export class UaxDataTableElement extends UmbLitElement {
 
 declare global {
     interface HTMLElementTagNameMap {
-        "uax-data-table": UaxDataTableElement;
+        "uaui-data-table": UauiDataTableElement;
     }
 }

@@ -2,12 +2,12 @@ import { css, customElement, html, nothing, property, type CSSResultGroup, type 
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UMB_MODAL_MANAGER_CONTEXT, type UmbModalManagerContext } from "@umbraco-cms/backoffice/modal";
 import { builtInPresetRange, parseIso, todayIso } from "../internal/date/date-math.js";
-import { uaxFormatDateRange } from "../date-helpers/date-helpers.js";
-import { UAX_DATE_RANGE_MODAL } from "./date-range-modal.token.js";
+import { uauiFormatDateRange } from "../date-helpers/date-helpers.js";
+import { UAUI_DATE_RANGE_MODAL } from "./date-range-modal.token.js";
 import { defaultPresets } from "./presets.js";
-import type { UaxCompare, UaxDatePreset, UaxDateRange, UaxDateRangeChangeDetail } from "./types.js";
+import type { UauiCompare, UauiDatePreset, UauiDateRange, UauiDateRangeChangeDetail } from "./types.js";
 
-const defaultValue = (today: string): UaxDateRange => ({
+const defaultValue = (today: string): UauiDateRange => ({
     ...builtInPresetRange("last-30-days", today)!,
     preset: "last-30-days",
 });
@@ -16,32 +16,32 @@ const defaultValue = (today: string): UaxDateRange => ({
  * Shows the chosen date range on a button and opens a dialog to change it. Put it in a `uui-box`'s
  * `header-actions` slot.
  *
- * The dialog opens through the backoffice modal manager, so `uax-date-range-modal` must be registered as a
+ * The dialog opens through the backoffice modal manager, so `uaui-date-range-modal` must be registered as a
  * `modal` extension and the element must sit under a modal manager (the backoffice provides both).
- * Like `uax-group-by`, it sets its own `value` when the editor saves, then raises `change`.
+ * Like `uaui-group-by`, it sets its own `value` when the editor saves, then raises `change`.
  *
- * @element uax-date-range
- * @fires change - The editor saved the dialog. Bubbles, not composed or cancelable, like `uax-group-by`. `detail` is `{ value, compare }` (`UaxDateRangeChangeDetail`).
+ * @element uaui-date-range
+ * @fires change - The editor saved the dialog. Bubbles, not composed or cancelable, like `uaui-group-by`. `detail` is `{ value, compare }` (`UauiDateRangeChangeDetail`).
  */
-@customElement("uax-date-range")
-export class UaxDateRangeElement extends UmbLitElement {
+@customElement("uaui-date-range")
+export class UauiDateRangeElement extends UmbLitElement {
     /** The range shown. Defaults to the last 30 days, counted back from `today`. Setting `undefined` restores that default. */
     @property({ attribute: false })
-    get value(): UaxDateRange {
+    get value(): UauiDateRange {
         return this.#value ?? defaultValue(this.#today);
     }
-    set value(value: UaxDateRange | undefined) {
+    set value(value: UauiDateRange | undefined) {
         this.#value = value;
     }
-    #value?: UaxDateRange;
+    #value?: UauiDateRange;
 
     /** The comparison range shown under the dates, when there is one. */
     @property({ attribute: false })
-    compare?: UaxCompare;
+    compare?: UauiCompare;
 
     /** The choices in the dialog, in order. "Custom" is always added last. Defaults to last 7 days, last 30 days, last month and last year. */
     @property({ attribute: false })
-    presets: UaxDatePreset[] = defaultPresets();
+    presets: UauiDatePreset[] = defaultPresets();
 
     /** Whether the dialog offers a comparison. Defaults to true. A boolean attribute can't say false, so turn it off with the property: `.allowCompare=${false}`. */
     @property({ type: Boolean, attribute: "allow-compare" })
@@ -74,22 +74,22 @@ export class UaxDateRangeElement extends UmbLitElement {
     }
 
     #rangeText(from: string, to: string, showYear = true) {
-        return uaxFormatDateRange(this.localize, { from, to }, { showYear });
+        return uauiFormatDateRange(this.localize, { from, to }, { showYear });
     }
 
     /** The year is left off the comparison line when all four dates share one, and kept when they differ so the years can't be mixed up. */
-    #compareYearIsClear(compare: UaxCompare) {
+    #compareYearIsClear(compare: UauiCompare) {
         const years = new Set([this.value.from, this.value.to, compare.from, compare.to].map((date) => date.slice(0, 4)));
         return years.size === 1;
     }
 
     async #open() {
         if (!this.#modalManager) {
-            console.warn("uax-date-range: no UMB_MODAL_MANAGER_CONTEXT found, so the dialog can't open.", this);
+            console.warn("uaui-date-range: no UMB_MODAL_MANAGER_CONTEXT found, so the dialog can't open.", this);
             return;
         }
         // Copies: the modal context deep-freezes what it is given, and these belong to the product.
-        const modal = this.#modalManager.open(this, UAX_DATE_RANGE_MODAL, {
+        const modal = this.#modalManager.open(this, UAUI_DATE_RANGE_MODAL, {
             data: { presets: this.presets, today: this.#today, maxDate: this.maxDate || this.#today, allowCompare: this.allowCompare },
             value: { value: { ...this.value }, compare: this.compare && { ...this.compare } },
         });
@@ -99,7 +99,7 @@ export class UaxDateRangeElement extends UmbLitElement {
         this.value = result.value;
         this.compare = result.compare;
         this.dispatchEvent(
-            new CustomEvent<UaxDateRangeChangeDetail>("change", {
+            new CustomEvent<UauiDateRangeChangeDetail>("change", {
                 bubbles: true,
                 detail: { value: this.value, compare: this.compare },
             }),
@@ -111,12 +111,12 @@ export class UaxDateRangeElement extends UmbLitElement {
         const compareShown = this.compare
             ? this.#rangeText(this.compare.from, this.compare.to, !this.#compareYearIsClear(this.compare))
             : undefined;
-        const compareLine = compareShown ? this.localize.term("uaxAnalytics_dateRangeCompareShort", compareShown) : undefined;
+        const compareLine = compareShown ? this.localize.term("uauiAnalytics_dateRangeCompareShort", compareShown) : undefined;
         // The name is the purpose plus the two lines as shown, so the visible text is part of it (WCAG 2.5.3).
-        const purpose = this.localize.term("uaxAnalytics_dateRangeButtonLabel");
+        const purpose = this.localize.term("uauiAnalytics_dateRangeButtonLabel");
         const label = compareLine
-            ? this.localize.term("uaxAnalytics_dateRangeButtonNameCompare", purpose, range, compareLine)
-            : this.localize.term("uaxAnalytics_dateRangeButtonName", purpose, range);
+            ? this.localize.term("uauiAnalytics_dateRangeButtonNameCompare", purpose, range, compareLine)
+            : this.localize.term("uauiAnalytics_dateRangeButtonName", purpose, range);
         return html`<uui-button look="outline" label=${label} class=${compareLine ? "has-compare" : ""} @click=${this.#open}>
             <!-- An empty default-slot child on purpose: with nothing assigned, uui-button draws its label text (our whole accessible name) as visible text. -->
             <span hidden></span>
@@ -196,6 +196,6 @@ export class UaxDateRangeElement extends UmbLitElement {
 
 declare global {
     interface HTMLElementTagNameMap {
-        "uax-date-range": UaxDateRangeElement;
+        "uaui-date-range": UauiDateRangeElement;
     }
 }

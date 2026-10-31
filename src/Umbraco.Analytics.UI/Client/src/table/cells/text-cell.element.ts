@@ -2,18 +2,18 @@ import { customElement, html, property, type TemplateResult } from "@umbraco-cms
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { asText } from "../internal/cell-values.js";
 import "../internal/table-skeleton-cell.element.js";
-import type { UaxTableCellElement, UaxTableColumn } from "../types.js";
+import type { UauiTableCellElement, UauiTableColumn } from "../types.js";
 
 /**
- * A table cell that shows its value as plain text. Its name is `UAX_TABLE_CELL.text`, and it is usable on its own.
+ * A table cell that shows its value as plain text. Its name is `UAUI_TABLE_CELL.text`, and it is usable on its own.
  *
- * @element uax-text-cell
+ * @element uaui-text-cell
  */
-@customElement("uax-text-cell")
-export class UaxTextCellElement extends UmbLitElement implements UaxTableCellElement {
+@customElement("uaui-text-cell")
+export class UauiTextCellElement extends UmbLitElement implements UauiTableCellElement {
     /** The column the cell is in. */
     @property({ attribute: false })
-    column: UaxTableColumn = { key: "value", label: "" };
+    column: UauiTableColumn = { key: "value", label: "" };
 
     /** The row the cell is in. */
     @property({ attribute: false })
@@ -28,13 +28,13 @@ export class UaxTextCellElement extends UmbLitElement implements UaxTableCellEle
     loading = false;
 
     override render(): TemplateResult {
-        if (this.loading) return html`<uax-table-skeleton-cell .align=${this.column.align ?? "start"}></uax-table-skeleton-cell>`;
+        if (this.loading) return html`<uaui-table-skeleton-cell .align=${this.column.align ?? "start"}></uaui-table-skeleton-cell>`;
         return html`${asText(this.value)}`;
     }
 }
 
 declare global {
     interface HTMLElementTagNameMap {
-        "uax-text-cell": UaxTextCellElement;
+        "uaui-text-cell": UauiTextCellElement;
     }
 }

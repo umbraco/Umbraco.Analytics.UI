@@ -18,37 +18,37 @@ import { UmbLitElement } from '@umbraco-cms/backoffice/lit-element';
 import type { UmbLocalizationController } from '@umbraco-cms/backoffice/localization-api';
 
 // @public
-export const UAX_TABLE_CELL: {
-    readonly text: "uax-text-cell";
-    readonly link: "uax-link-cell";
-    readonly number: "uax-number-cell";
-    readonly percent: "uax-percent-cell";
-    readonly share: "uax-share-cell";
+export const UAUI_TABLE_CELL: {
+    readonly text: "uaui-text-cell";
+    readonly link: "uaui-link-cell";
+    readonly number: "uaui-number-cell";
+    readonly percent: "uaui-percent-cell";
+    readonly share: "uaui-share-cell";
 };
 
 // @public
-export const UAX_TABLE_CONTEXT: UmbContextToken<UaxTableContext, UaxTableContext>;
+export const UAUI_TABLE_CONTEXT: UmbContextToken<UauiTableContext, UauiTableContext>;
 
 // @public
-export type UaxChartKind = "line" | "area" | "bar" | "stacked-bar";
+export type UauiChartKind = "line" | "area" | "bar" | "stacked-bar";
 
 // @public
-export type UaxColorSlot = 1 | 2 | 3 | 4;
+export type UauiColorSlot = 1 | 2 | 3 | 4;
 
 // @public
-export type UaxCompare = {
+export type UauiCompare = {
     mode: "previous-period" | "previous-year" | "custom";
     from: string;
     to: string;
 };
 
 // @public
-export function uaxCompareFor(mode: UaxCompare["mode"], range: UaxDateSpan): UaxCompare | undefined;
+export function uauiCompareFor(mode: UauiCompare["mode"], range: UauiDateSpan): UauiCompare | undefined;
 
 // @public
-export class UaxDataTableElement extends UmbLitElement {
+export class UauiDataTableElement extends UmbLitElement {
     clickableRows: boolean;
-    columns: UaxTableColumn[];
+    columns: UauiTableColumn[];
     compareRows: Record<string, unknown>[];
     emptyDescription?: string;
     emptyHeadline?: string;
@@ -56,7 +56,7 @@ export class UaxDataTableElement extends UmbLitElement {
     errorDescription?: string;
     errorHeadline?: string;
     loading: boolean;
-    mode: UaxTableMode;
+    mode: UauiTableMode;
     page: number;
     pageSize: number;
     query: string;
@@ -65,8 +65,8 @@ export class UaxDataTableElement extends UmbLitElement {
     retryable: boolean;
     rowKey?: string;
     rows: Record<string, unknown>[];
-    sort?: UaxTableSort;
-    stats?: UaxTableStats;
+    sort?: UauiTableSort;
+    stats?: UauiTableStats;
     // (undocumented)
     static styles: CSSResultGroup;
     totalRows?: number;
@@ -75,16 +75,16 @@ export class UaxDataTableElement extends UmbLitElement {
 }
 
 // @public
-export type UaxDateBucket = {
+export type UauiDateBucket = {
     start: string;
     days: string[];
 };
 
 // @public
-export function uaxDateBuckets(range: UaxDateSpan, groupBy: UaxGroupBy): UaxDateBucket[];
+export function uauiDateBuckets(range: UauiDateSpan, groupBy: UauiGroupBy): UauiDateBucket[];
 
 // @public
-export type UaxDatePreset = {
+export type UauiDatePreset = {
     id: string;
     label?: string;
     range?: (today: string) => {
@@ -94,63 +94,63 @@ export type UaxDatePreset = {
 };
 
 // @public
-export type UaxDateRange = {
+export type UauiDateRange = {
     from: string;
     to: string;
     preset?: string;
 };
 
 // @public
-export type UaxDateRangeChangeDetail = {
-    value: UaxDateRange;
-    compare?: UaxCompare;
+export type UauiDateRangeChangeDetail = {
+    value: UauiDateRange;
+    compare?: UauiCompare;
 };
 
 // @public
-export class UaxDateRangeElement extends UmbLitElement {
+export class UauiDateRangeElement extends UmbLitElement {
     constructor();
     allowCompare: boolean;
-    compare?: UaxCompare;
+    compare?: UauiCompare;
     maxDate?: string;
-    presets: UaxDatePreset[];
+    presets: UauiDatePreset[];
     // (undocumented)
     render(): TemplateResult;
     // (undocumented)
     static styles: CSSResultGroup;
     today?: string;
-    get value(): UaxDateRange;
-    set value(value: UaxDateRange | undefined);
+    get value(): UauiDateRange;
+    set value(value: UauiDateRange | undefined);
 }
 
 // @public
-export type UaxDateSpan = Pick<UaxDateRange, "from" | "to">;
+export type UauiDateSpan = Pick<UauiDateRange, "from" | "to">;
 
 // @public
-export function uaxDaysIn(range: UaxDateSpan): string[];
+export function uauiDaysIn(range: UauiDateSpan): string[];
 
 // @public
-export class UaxDeltaBadgeElement extends UmbLitElement {
+export class UauiDeltaBadgeElement extends UmbLitElement {
     get direction(): "up" | "down" | "flat";
     lowerIsBetter: boolean;
     maxDecimals: number;
     // (undocumented)
     render(): TemplateResult | typeof nothing;
     get sentiment(): "positive" | "negative" | "neutral";
-    size: UaxDeltaBadgeSize;
+    size: UauiDeltaBadgeSize;
     // (undocumented)
     static styles: CSSResultGroup;
-    unit: UaxDeltaUnit;
+    unit: UauiDeltaUnit;
     value?: number;
 }
 
 // @public
-export type UaxDeltaBadgeSize = "md" | "sm";
+export type UauiDeltaBadgeSize = "md" | "sm";
 
 // @public
-export type UaxDeltaUnit = "percent" | "points";
+export type UauiDeltaUnit = "percent" | "points";
 
 // @public
-export class UaxEmptyStateElement extends UmbLitElement {
+export class UauiEmptyStateElement extends UmbLitElement {
     description?: string;
     headline?: string;
     icon: string;
@@ -161,7 +161,7 @@ export class UaxEmptyStateElement extends UmbLitElement {
 }
 
 // @public
-export class UaxErrorStateElement extends UmbLitElement {
+export class UauiErrorStateElement extends UmbLitElement {
     description?: string;
     headline?: string;
     icon: string;
@@ -173,35 +173,35 @@ export class UaxErrorStateElement extends UmbLitElement {
 }
 
 // @public
-export function uaxFormatDateRange(localize: Pick<UmbLocalizationController, "date" | "term">, range: UaxDateSpan, options?: UaxFormatDateRangeOptions): string;
+export function uauiFormatDateRange(localize: Pick<UmbLocalizationController, "date" | "term">, range: UauiDateSpan, options?: UauiFormatDateRangeOptions): string;
 
 // @public
-export type UaxFormatDateRangeOptions = {
+export type UauiFormatDateRangeOptions = {
     showYear?: boolean;
 };
 
 // @public
-export type UaxGroupBy = "day" | "week" | "month";
+export type UauiGroupBy = "day" | "week" | "month";
 
 // @public
-export type UaxGroupByChangeDetail = {
-    value: UaxGroupBy;
+export type UauiGroupByChangeDetail = {
+    value: UauiGroupBy;
 };
 
 // @public
-export class UaxGroupByElement extends UmbLitElement {
-    options: UaxGroupBy[];
+export class UauiGroupByElement extends UmbLitElement {
+    options: UauiGroupBy[];
     // (undocumented)
     render(): TemplateResult;
     // (undocumented)
     static styles: CSSResultGroup;
-    value: UaxGroupBy;
+    value: UauiGroupBy;
 }
 
 // @public
-export class UaxKpiTileElement extends UmbLitElement {
+export class UauiKpiTileElement extends UmbLitElement {
     delta?: number;
-    deltaUnit: UaxDeltaUnit;
+    deltaUnit: UauiDeltaUnit;
     deselectable: boolean;
     error: boolean;
     icon?: string;
@@ -219,8 +219,8 @@ export class UaxKpiTileElement extends UmbLitElement {
 }
 
 // @public
-export class UaxLinkCellElement extends UmbLitElement implements UaxTableCellElement {
-    column: UaxTableColumn;
+export class UauiLinkCellElement extends UmbLitElement implements UauiTableCellElement {
+    column: UauiTableColumn;
     item: Record<string, unknown>;
     loading: boolean;
     // (undocumented)
@@ -231,7 +231,7 @@ export class UaxLinkCellElement extends UmbLitElement implements UaxTableCellEle
 }
 
 // @public
-export type UaxMarker = {
+export type UauiMarker = {
     id: string;
     date: string;
     title: string;
@@ -239,13 +239,13 @@ export type UaxMarker = {
 };
 
 // @public
-export type UaxMarkerClickDetail = {
+export type UauiMarkerClickDetail = {
     id: string;
 };
 
 // @public
-export class UaxNumberCellElement extends UmbLitElement implements UaxTableCellElement {
-    column: UaxTableColumn;
+export class UauiNumberCellElement extends UmbLitElement implements UauiTableCellElement {
+    column: UauiTableColumn;
     item: Record<string, unknown>;
     loading: boolean;
     // (undocumented)
@@ -258,11 +258,11 @@ export class UaxNumberCellElement extends UmbLitElement implements UaxTableCellE
 }
 
 // @public
-export const UaxPaletteStyles: CSSResult;
+export const UauiPaletteStyles: CSSResult;
 
 // @public
-export class UaxPercentCellElement extends UmbLitElement implements UaxTableCellElement {
-    column: UaxTableColumn;
+export class UauiPercentCellElement extends UmbLitElement implements UauiTableCellElement {
+    column: UauiTableColumn;
     item: Record<string, unknown>;
     loading: boolean;
     // (undocumented)
@@ -275,26 +275,26 @@ export class UaxPercentCellElement extends UmbLitElement implements UaxTableCell
 }
 
 // @public
-export type UaxPoint = {
+export type UauiPoint = {
     date: string;
     value: number;
 };
 
 // @public
-export function uaxPreviousPeriod(range: UaxDateSpan): UaxDateSpan | undefined;
+export function uauiPreviousPeriod(range: UauiDateSpan): UauiDateSpan | undefined;
 
 // @public
-export function uaxPreviousYear(range: UaxDateSpan): UaxDateSpan | undefined;
+export function uauiPreviousYear(range: UauiDateSpan): UauiDateSpan | undefined;
 
 // @public
-export type UaxSegmentedChangeDetail = {
+export type UauiSegmentedChangeDetail = {
     value: string;
 };
 
 // @public
-export class UaxSegmentedElement extends UmbLitElement {
+export class UauiSegmentedElement extends UmbLitElement {
     label: string;
-    options: UaxSegmentedOption[];
+    options: UauiSegmentedOption[];
     // (undocumented)
     render(): TemplateResult;
     // (undocumented)
@@ -303,24 +303,24 @@ export class UaxSegmentedElement extends UmbLitElement {
 }
 
 // @public
-export type UaxSegmentedOption = {
+export type UauiSegmentedOption = {
     value: string;
     label: string;
 };
 
 // @public
-export type UaxSeries = {
+export type UauiSeries = {
     id: string;
     label: string;
-    color?: UaxColorSlot;
-    points: UaxPoint[];
+    color?: UauiColorSlot;
+    points: UauiPoint[];
 };
 
 // @public
-export class UaxShareCellElement extends UmbLitElement implements UaxTableCellElement {
+export class UauiShareCellElement extends UmbLitElement implements UauiTableCellElement {
     constructor();
-    color?: UaxColorSlot;
-    column: UaxTableColumn;
+    color?: UauiColorSlot;
+    column: UauiTableColumn;
     compareValue?: number;
     item: Record<string, unknown>;
     loading: boolean;
@@ -336,19 +336,19 @@ export class UaxShareCellElement extends UmbLitElement implements UaxTableCellEl
 }
 
 // @public
-export interface UaxTableCellElement {
-    column: UaxTableColumn;
+export interface UauiTableCellElement {
+    column: UauiTableColumn;
     item: Record<string, unknown>;
     loading?: boolean;
     value: unknown;
 }
 
 // @public
-export type UaxTableColumn = {
+export type UauiTableColumn = {
     key: string;
     label: string;
     elementName?: string;
-    meta?: UaxTableColumnMeta;
+    meta?: UauiTableColumnMeta;
     valueFormat?: Intl.NumberFormatOptions;
     align?: "start" | "end";
     width?: string;
@@ -358,61 +358,61 @@ export type UaxTableColumn = {
 };
 
 // @public
-export interface UaxTableColumnMeta {
-    color?: UaxColorSlot;
+export interface UauiTableColumnMeta {
+    color?: UauiColorSlot;
     hrefKey?: string;
     lowerIsBetter?: boolean;
 }
 
 // @public
-export type UaxTableColumnStats = {
+export type UauiTableColumnStats = {
     total: number;
     max: number;
 };
 
 // @public
-export class UaxTableCompareBadgeElement extends UmbLitElement {
+export class UauiTableCompareBadgeElement extends UmbLitElement {
     constructor();
-    column: UaxTableColumn;
+    column: UauiTableColumn;
     compareValue?: number;
     item: Record<string, unknown>;
     // (undocumented)
     render(): TemplateResult | typeof nothing;
-    size: UaxDeltaBadgeSize;
+    size: UauiDeltaBadgeSize;
     value: unknown;
 }
 
 // @public
-export type UaxTableCompareLookup = (item: Record<string, unknown>) => Record<string, unknown> | undefined;
+export type UauiTableCompareLookup = (item: Record<string, unknown>) => Record<string, unknown> | undefined;
 
 // @public
-export interface UaxTableContext extends UmbContextMinimal {
-    readonly columns: Observable<UaxTableColumn[]>;
-    readonly compare: Observable<UaxTableCompareLookup>;
-    readonly stats: Observable<UaxTableStats>;
+export interface UauiTableContext extends UmbContextMinimal {
+    readonly columns: Observable<UauiTableColumn[]>;
+    readonly compare: Observable<UauiTableCompareLookup>;
+    readonly stats: Observable<UauiTableStats>;
 }
 
 // @public
-export type UaxTableMode = "client" | "server";
+export type UauiTableMode = "client" | "server";
 
 // @public
-export type UaxTablePageChangeDetail = {
+export type UauiTablePageChangeDetail = {
     page: number;
     pageSize: number;
 };
 
 // @public
-export type UaxTableRowClickDetail = {
+export type UauiTableRowClickDetail = {
     row: Record<string, unknown>;
 };
 
 // @public
-export type UaxTableSearchDetail = {
+export type UauiTableSearchDetail = {
     query: string;
 };
 
 // @public
-export class UaxTableSearchElement extends UmbLitElement {
+export class UauiTableSearchElement extends UmbLitElement {
     // (undocumented)
     disconnectedCallback(): void;
     // (undocumented)
@@ -425,8 +425,8 @@ export class UaxTableSearchElement extends UmbLitElement {
 }
 
 // @public
-export class UaxTableServerController<TResult extends UaxTableServerResult = UaxTableServerResult> implements ReactiveController {
-    constructor(host: ReactiveControllerHost, options: UaxTableServerOptions<TResult>);
+export class UauiTableServerController<TResult extends UauiTableServerResult = UauiTableServerResult> implements ReactiveController {
+    constructor(host: ReactiveControllerHost, options: UauiTableServerOptions<TResult>);
     readonly attach: (element?: Element) => void;
     get error(): unknown;
     hostConnected(): void;
@@ -436,57 +436,57 @@ export class UaxTableServerController<TResult extends UaxTableServerResult = Uax
         resetPage?: boolean;
     }): Promise<void>;
     get result(): TResult | undefined;
-    get state(): Readonly<UaxTableServerState>;
+    get state(): Readonly<UauiTableServerState>;
 }
 
 // @public
-export type UaxTableServerLoader<TResult extends UaxTableServerResult> = (state: Readonly<UaxTableServerState>, signal: AbortSignal) => Promise<TResult>;
+export type UauiTableServerLoader<TResult extends UauiTableServerResult> = (state: Readonly<UauiTableServerState>, signal: AbortSignal) => Promise<TResult>;
 
 // @public
-export interface UaxTableServerOptions<TResult extends UaxTableServerResult> {
-    load: UaxTableServerLoader<TResult>;
+export interface UauiTableServerOptions<TResult extends UauiTableServerResult> {
+    load: UauiTableServerLoader<TResult>;
     onError?: (error: unknown) => void;
     page?: number;
     pageSize?: number;
     query?: string;
     retryable?: boolean;
-    sort?: UaxTableSort;
+    sort?: UauiTableSort;
 }
 
 // @public
-export type UaxTableServerResult = {
+export type UauiTableServerResult = {
     rows: Record<string, unknown>[];
     compareRows?: Record<string, unknown>[];
     totalRows?: number;
-    stats?: UaxTableStats;
+    stats?: UauiTableStats;
 };
 
 // @public
-export type UaxTableServerState = {
-    sort?: UaxTableSort;
+export type UauiTableServerState = {
+    sort?: UauiTableSort;
     page: number;
     pageSize: number;
     query: string;
 };
 
 // @public
-export type UaxTableSort = {
+export type UauiTableSort = {
     key: string;
-    direction: UaxTableSortDirection;
+    direction: UauiTableSortDirection;
 };
 
 // @public
-export type UaxTableSortChangeDetail = UaxTableSort;
+export type UauiTableSortChangeDetail = UauiTableSort;
 
 // @public
-export type UaxTableSortDirection = "asc" | "desc";
+export type UauiTableSortDirection = "asc" | "desc";
 
 // @public
-export type UaxTableStats = Readonly<Record<string, UaxTableColumnStats>>;
+export type UauiTableStats = Readonly<Record<string, UauiTableColumnStats>>;
 
 // @public
-export class UaxTextCellElement extends UmbLitElement implements UaxTableCellElement {
-    column: UaxTableColumn;
+export class UauiTextCellElement extends UmbLitElement implements UauiTableCellElement {
+    column: UauiTableColumn;
     item: Record<string, unknown>;
     loading: boolean;
     // (undocumented)
@@ -495,10 +495,10 @@ export class UaxTextCellElement extends UmbLitElement implements UaxTableCellEle
 }
 
 // @public
-export class UaxTimeSeriesChartElement extends UmbLitElement {
-    compare?: UaxCompare;
+export class UauiTimeSeriesChartElement extends UmbLitElement {
+    compare?: UauiCompare;
     compareLabel?: string;
-    compareSeries: UaxSeries[];
+    compareSeries: UauiSeries[];
     // (undocumented)
     connectedCallback(): void;
     // (undocumented)
@@ -508,15 +508,15 @@ export class UaxTimeSeriesChartElement extends UmbLitElement {
     error: boolean;
     errorDescription?: string;
     errorHeadline?: string;
-    groupBy: UaxGroupBy;
-    kind: UaxChartKind;
+    groupBy: UauiGroupBy;
+    kind: UauiChartKind;
     loading: boolean;
-    markers: UaxMarker[];
-    range?: UaxDateRange;
+    markers: UauiMarker[];
+    range?: UauiDateRange;
     // (undocumented)
     render(): TemplateResult;
     retryable: boolean;
-    series: UaxSeries[];
+    series: UauiSeries[];
     // (undocumented)
     static styles: CSSResultGroup;
     // (undocumented)

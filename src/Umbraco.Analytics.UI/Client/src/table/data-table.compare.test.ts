@@ -15,12 +15,12 @@ const compareRows = [{ url: "https://example.com/", pageviews: 190, sessions: 0 
 
 const withCompare = () =>
     renderElement(
-        html`<uax-data-table .columns=${pageColumns} .rows=${pageRows} .compareRows=${compareRows} row-key="url"></uax-data-table>`,
-        "uax-data-table",
+        html`<uaui-data-table .columns=${pageColumns} .rows=${pageRows} .compareRows=${compareRows} row-key="url"></uaui-data-table>`,
+        "uaui-data-table",
     );
 
 const badges = (el: Element, row: number, column: number) =>
-    deepQueryAll(shadow(el).querySelectorAll("uui-table-row:not(.summary)")[row].querySelectorAll("uui-table-cell")[column], "uax-delta-badge") as (HTMLElement & {
+    deepQueryAll(shadow(el).querySelectorAll("uui-table-row:not(.summary)")[row].querySelectorAll("uui-table-cell")[column], "uaui-delta-badge") as (HTMLElement & {
         value?: number;
     })[];
 
@@ -49,18 +49,18 @@ describe("Feature: table compare rows", () => {
     describe("Scenario: compare rows without a row-key", () => {
         it("shows no badges", async () => {
             const el = await renderElement(
-                html`<uax-data-table .columns=${pageColumns} .rows=${pageRows} .compareRows=${compareRows}></uax-data-table>`,
-                "uax-data-table",
+                html`<uaui-data-table .columns=${pageColumns} .rows=${pageRows} .compareRows=${compareRows}></uaui-data-table>`,
+                "uaui-data-table",
             );
-            expect(shadow(el).querySelectorAll("uax-delta-badge")).toHaveLength(0);
+            expect(shadow(el).querySelectorAll("uaui-delta-badge")).toHaveLength(0);
         });
     });
 
     describe("Scenario: compare rows set after the rows", () => {
         it("adds the badge", async () => {
             const el = await renderElement(
-                html`<uax-data-table .columns=${pageColumns} .rows=${pageRows} row-key="url"></uax-data-table>`,
-                "uax-data-table",
+                html`<uaui-data-table .columns=${pageColumns} .rows=${pageRows} row-key="url"></uaui-data-table>`,
+                "uaui-data-table",
             );
             el.compareRows = compareRows;
             await el.updateComplete;
@@ -78,17 +78,17 @@ describe("Feature: table compare rows", () => {
             try {
                 const host = render(
                     html`<div style="background: var(--uui-color-surface); color: var(--uui-color-text); width: 700px">
-                        <uax-data-table
+                        <uaui-data-table
                             .columns=${pageColumns}
                             .rows=${pageRows}
                             .compareRows=${[
                                 { url: "https://example.com/", pageviews: 190, sessions: 40 },
                                 { url: "https://example.com/contact/", pageviews: 80, sessions: 21 },
                             ]}
-                            row-key="url"></uax-data-table>
+                            row-key="url"></uaui-data-table>
                     </div>`,
                 ).container.querySelector("div")!;
-                await host.querySelector("uax-data-table")!.updateComplete;
+                await host.querySelector("uaui-data-table")!.updateComplete;
                 return await axeRun(host);
             } finally {
                 theme.remove();

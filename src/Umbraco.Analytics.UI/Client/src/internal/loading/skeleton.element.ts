@@ -1,21 +1,21 @@
 import { css, customElement, html, type CSSResultGroup } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
-import { UaxPaletteStyles } from "../../theme/index.js";
+import { UauiPaletteStyles } from "../../theme/index.js";
 
 /**
  * A grey placeholder block shown while a data element loads for the first time. Internal: not exported.
  *
- * It fills the height its host declares with `--_uax-skeleton-height`. Every data element must set that
+ * It fills the height its host declares with `--_uaui-skeleton-height`. Every data element must set that
  * on its own `:host` (so a nested element doesn't inherit an outer element's value), and use it as the
  * `min-height` of its loaded content so the switch to loaded doesn't jump. It is the content height:
  * a region with padding or a border must subtract those from the value it declares.
  * For a smaller block, such as a table row, give the element an inline `height` and `width`.
  * Decorative, so hidden from assistive tech: the host sets `aria-busy` on its region instead.
  *
- * @element uax-skeleton
+ * @element uaui-skeleton
  */
-@customElement("uax-skeleton")
-export class UaxSkeletonElement extends UmbLitElement {
+@customElement("uaui-skeleton")
+export class UauiSkeletonElement extends UmbLitElement {
     override connectedCallback() {
         super.connectedCallback();
         this.setAttribute("aria-hidden", "true");
@@ -26,12 +26,12 @@ export class UaxSkeletonElement extends UmbLitElement {
     }
 
     static override styles: CSSResultGroup = [
-        UaxPaletteStyles,
+        UauiPaletteStyles,
         css`
             :host {
                 display: block;
                 box-sizing: border-box;
-                height: var(--_uax-skeleton-height, 100%);
+                height: var(--_uaui-skeleton-height, 100%);
                 min-height: var(--uui-size-space-4);
             }
 
@@ -39,7 +39,7 @@ export class UaxSkeletonElement extends UmbLitElement {
                 display: block;
                 height: 100%;
                 border-radius: var(--uui-border-radius);
-                background-color: var(--uax-color-tint-neutral);
+                background-color: var(--uaui-color-tint-neutral);
                 background-image: linear-gradient(
                     90deg,
                     transparent 0%,
@@ -72,6 +72,6 @@ export class UaxSkeletonElement extends UmbLitElement {
 
 declare global {
     interface HTMLElementTagNameMap {
-        "uax-skeleton": UaxSkeletonElement;
+        "uaui-skeleton": UauiSkeletonElement;
     }
 }

@@ -1,13 +1,13 @@
 import { css, type CSSResult } from "@umbraco-cms/backoffice/external/lit";
-import { UaxPaletteStyles } from "../../theme/index.js";
+import { UauiPaletteStyles } from "../../theme/index.js";
 
 /**
  * The dark box shared by the date tooltip and the marker tooltip: the host is the box, and the chart
  * positions it. Dark in every theme, so the series colours take their light-on-dark shade; it comes after
  * the palette, whose `color-scheme` it replaces.
  */
-export const UaxChartTooltipSurface: CSSResult[] = [
-    UaxPaletteStyles,
+export const UauiChartTooltipSurface: CSSResult[] = [
+    UauiPaletteStyles,
     css`
         :host {
             position: absolute;

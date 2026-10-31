@@ -3,20 +3,20 @@ import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { asText } from "../internal/cell-values.js";
 import { safeHref } from "../internal/safe-href.js";
 import "../internal/table-skeleton-cell.element.js";
-import type { UaxTableCellElement, UaxTableColumn } from "../types.js";
+import type { UauiTableCellElement, UauiTableColumn } from "../types.js";
 
 /**
  * A table cell that shows its value as a link. The `href` is the item's `column.meta.hrefKey` value. A missing or unsafe
  * URL (anything but `http:`, `https:`, `mailto:`, `tel:` or relative) shows the text without a link.
- * Its name is `UAX_TABLE_CELL.link`, and it is usable on its own.
+ * Its name is `UAUI_TABLE_CELL.link`, and it is usable on its own.
  *
- * @element uax-link-cell
+ * @element uaui-link-cell
  */
-@customElement("uax-link-cell")
-export class UaxLinkCellElement extends UmbLitElement implements UaxTableCellElement {
+@customElement("uaui-link-cell")
+export class UauiLinkCellElement extends UmbLitElement implements UauiTableCellElement {
     /** The column the cell is in. Its `meta.hrefKey` names the key in `item` that holds the URL. */
     @property({ attribute: false })
-    column: UaxTableColumn = { key: "value", label: "" };
+    column: UauiTableColumn = { key: "value", label: "" };
 
     /** The row the cell is in. */
     @property({ attribute: false })
@@ -31,7 +31,7 @@ export class UaxLinkCellElement extends UmbLitElement implements UaxTableCellEle
     loading = false;
 
     override render(): TemplateResult {
-        if (this.loading) return html`<uax-table-skeleton-cell .align=${this.column.align ?? "start"}></uax-table-skeleton-cell>`;
+        if (this.loading) return html`<uaui-table-skeleton-cell .align=${this.column.align ?? "start"}></uaui-table-skeleton-cell>`;
         const text = asText(this.value);
         const hrefKey = this.column.meta?.hrefKey;
         const href = hrefKey ? safeHref(this.item[hrefKey]) : undefined;
@@ -59,6 +59,6 @@ export class UaxLinkCellElement extends UmbLitElement implements UaxTableCellEle
 
 declare global {
     interface HTMLElementTagNameMap {
-        "uax-link-cell": UaxLinkCellElement;
+        "uaui-link-cell": UauiLinkCellElement;
     }
 }

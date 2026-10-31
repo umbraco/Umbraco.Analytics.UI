@@ -1,26 +1,26 @@
 import type { Chart, Plugin } from "chart.js";
-import type { UaxChartColors } from "./chart-colors.js";
+import type { UauiChartColors } from "./chart-colors.js";
 
 /** One dot to draw: at the `index`th date of the chart, standing for `count` markers. */
-export interface UaxMarkerPin {
+export interface UauiMarkerPin {
     index: number;
     count: number;
 }
 
 /** Where a dot was drawn, in CSS pixels from the canvas's top left. The element puts a button there. */
-export interface UaxMarkerPlacement {
+export interface UauiMarkerPlacement {
     index: number;
     x: number;
     y: number;
 }
 
 /** What the plugin draws and where it reports to. The renderer owns it and changes it between draws. */
-export interface UaxMarkersState {
-    pins: UaxMarkerPin[];
+export interface UauiMarkersState {
+    pins: UauiMarkerPin[];
     /** The date index of the dot that is hovered or focused. It is drawn larger and stronger. */
     active?: number;
-    colors?: UaxChartColors;
-    onLayout: (placements: UaxMarkerPlacement[]) => void;
+    colors?: UauiChartColors;
+    onLayout: (placements: UauiMarkerPlacement[]) => void;
 }
 
 const DOT_RADIUS = 5;
@@ -33,15 +33,15 @@ const RING_WIDTH = 1.5;
  * targets). Several markers on one date are one dot with their count in it. Like Engage's annotations, a marker is
  * placed at its date's bucket, but drawn here rather than through chartjs-plugin-annotation.
  */
-export function createMarkersPlugin(state: UaxMarkersState): Plugin {
+export function createMarkersPlugin(state: UauiMarkersState): Plugin {
     let reported = "[]";
-    const placementsOf = (chart: Chart): UaxMarkerPlacement[] =>
+    const placementsOf = (chart: Chart): UauiMarkerPlacement[] =>
         state.pins
             .map((pin) => ({ index: pin.index, x: chart.scales["x"].getPixelForValue(pin.index), y: chart.chartArea.bottom }))
             .filter((p) => Number.isFinite(p.x) && Number.isFinite(p.y));
 
     return {
-        id: "uaxMarkers",
+        id: "uauiMarkers",
         afterLayout: (chart) => {
             const placements = placementsOf(chart);
             const key = JSON.stringify(placements);
@@ -98,6 +98,6 @@ export function createMarkersPlugin(state: UaxMarkersState): Plugin {
 }
 
 /** The active placement moves to the end, so it is drawn on top. */
-function orderedForDraw(placements: UaxMarkerPlacement[], active?: number): UaxMarkerPlacement[] {
+function orderedForDraw(placements: UauiMarkerPlacement[], active?: number): UauiMarkerPlacement[] {
     return [...placements.filter((p) => p.index !== active), ...placements.filter((p) => p.index === active)];
 }

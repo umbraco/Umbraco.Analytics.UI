@@ -8,8 +8,8 @@ const sources = import.meta.glob<string>(
     { query: "?raw", import: "default", eager: true },
 );
 
-// Registered by the package manifest and opened by `uax-date-range`. Not exported, so not documented.
-const NOT_PUBLIC = new Set(["uax-date-range-modal"]);
+// Registered by the package manifest and opened by `uaui-date-range`. Not exported, so not documented.
+const NOT_PUBLIC = new Set(["uaui-date-range-modal"]);
 
 const publicTags = Object.values(sources)
     .flatMap((source) => [...source.matchAll(/@customElement\("([^"]+)"\)/g)].map((match) => match[1]))

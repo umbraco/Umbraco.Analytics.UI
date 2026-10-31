@@ -16,8 +16,8 @@ function registerModalManifests() {
     }
 }
 
-@customElement("uax-test-modal-host")
-export class UaxTestModalHostElement extends UmbLitElement {
+@customElement("uaui-test-modal-host")
+export class UauiTestModalHostElement extends UmbLitElement {
     constructor() {
         super();
         registerModalManifests();
@@ -31,6 +31,6 @@ export class UaxTestModalHostElement extends UmbLitElement {
 
 declare global {
     interface HTMLElementTagNameMap {
-        "uax-test-modal-host": UaxTestModalHostElement;
+        "uaui-test-modal-host": UauiTestModalHostElement;
     }
 }

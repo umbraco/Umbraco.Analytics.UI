@@ -2,18 +2,18 @@ import { css, type CSSResult } from "@umbraco-cms/backoffice/external/lit";
 
 /*
  * Series, comparison and tint tokens. Every element adds this to its `styles`, and so can a product's
- * own element (public as `UaxPaletteStyles`), so its cells and legends resolve the same colours as ours.
+ * own element (public as `UauiPaletteStyles`), so its cells and legends resolve the same colours as ours.
  * UUI ships its tokens as `:root` stylesheets that the backoffice swaps per theme; a package can't add
  * to those, and `light-dark()` on `:root` would need `color-scheme` set page-wide, so the palette
  * is a block of styles instead, which works in any shadow root with no global CSS.
  *
- * A product reads `var(--uax-color-series-1)` and the other `--uax-color-*` names below in its own CSS. Its
- * `--uax-*` overrides still win, since they are read from the ancestors as before.
+ * A product reads `var(--uaui-color-series-1)` and the other `--uaui-color-*` names below in its own CSS. Its
+ * `--uaui-*` overrides still win, since they are read from the ancestors as before.
  *
- * A product overrides a token by setting the public name (`--uax-series-1`) on any ancestor.
- * Declaring `--uax-series-1` on `:host` would shadow that inherited value, so the public names
- * are never declared here. Instead each element resolves its token into a read name, `--uax-color-*`:
- * the ancestor's value if there is one, else the UUI default. Elements read that `--uax-color-*` name.
+ * A product overrides a token by setting the public name (`--uaui-series-1`) on any ancestor.
+ * Declaring `--uaui-series-1` on `:host` would shadow that inherited value, so the public names
+ * are never declared here. Instead each element resolves its token into a read name, `--uaui-color-*`:
+ * the ancestor's value if there is one, else the UUI default. Elements read that `--uaui-color-*` name.
  *
  * The UUI palette is the same in every theme, so each default is `light-dark(<light>, <dark>)`.
  * The UUI dark theme sets the custom property `--uui-color-scheme: dark`, not `color-scheme`
@@ -32,15 +32,15 @@ import { css, type CSSResult } from "@umbraco-cms/backoffice/external/lit";
  * Replaced because they fail 3:1: space-cadet (1.15 dark), violet-blue (1.30 dark), spanish-pink
  * (1.17 light), sunglow (1.43 light), deep-saffron (2.15 light; no orange shade passes on white).
  *
- * Fills (areas) use `--uax-color-fill-N` at low alpha, not the line colour: the line
+ * Fills (areas) use `--uaui-color-fill-N` at low alpha, not the line colour: the line
  * tokens are darker so lines clear 3:1, and a pale tint of them looks grey. In light, fill 1 is the
  * design's violet blue, fill 3 is sunglow, and fill 4 is malibu so it differs from fill 1; fills 2 and
- * the dark shades match their lines. A product that overrides `--uax-series-N` gets that colour as the fill.
+ * the dark shades match their lines. A product that overrides `--uaui-series-N` gets that colour as the fill.
  * Fills are decoration (the line or bar edge carries the series), so they have no contrast target.
  *
- * Bars use `--uax-color-bar-N`, opaque and livelier than the line shades. Light is the design's violet-blue,
- * maroon-flush-light, sunglow and malibu; dark keeps the dark line shades. A product's `--uax-bar-N`
- * wins, then its `--uax-series-N`. A bar is a large fill that the legend and the hidden table also name,
+ * Bars use `--uaui-color-bar-N`, opaque and livelier than the line shades. Light is the design's violet-blue,
+ * maroon-flush-light, sunglow and malibu; dark keeps the dark line shades. A product's `--uaui-bar-N`
+ * wins, then its `--uaui-series-N`. A bar is a large fill that the legend and the hidden table also name,
  * so it needn't reach 3:1.
  *
  * | token      | light (on #fff)            | dark (on #2d333b)             |
@@ -50,11 +50,11 @@ import { css, type CSSResult } from "@umbraco-cms/backoffice/external/lit";
  * | bar-3      | sunglow 1.43               | sunglow 8.94                  |
  * | bar-4      | malibu 3.93                | jungle-green 5.58             |
  *
- * The compare bar sits behind the current bars: `--uax-color-compare` at 45% over the surface (chamoisee
+ * The compare bar sits behind the current bars: `--uaui-color-compare` at 45% over the surface (chamoisee
  * 1.68:1 light, deep-saffron 2.34:1 dark). It is decoration too: the legend, tooltip and table carry it.
  *
  * Chart markers (the dot on the x-axis and its dashed line, drawn at 26% opacity) need 3:1 for the dot against the
- * surface. A product's `--uax-marker` also replaces the hover shade: the bigger dot and stronger line still show
+ * surface. A product's `--uaui-marker` also replaces the hover shade: the bigger dot and stronger line still show
  * the state.
  *
  * | token         | light (on #fff)        | dark (on #2d333b)        |
@@ -86,95 +86,95 @@ import { css, type CSSResult } from "@umbraco-cms/backoffice/external/lit";
  */
 /**
  * The package's colour palette as styles. Add it to your element's `static styles`, then read
- * `var(--uax-color-series-1)` and the other `--uax-color-*` names in your CSS: you get the colours our
+ * `var(--uaui-color-series-1)` and the other `--uaui-color-*` names in your CSS: you get the colours our
  * elements use, in the light, dark and high contrast themes. The names are read-only. To change a colour,
- * set the matching `--uax-*` name (for example `--uax-series-1`) on an ancestor.
+ * set the matching `--uaui-*` name (for example `--uaui-series-1`) on an ancestor.
  */
-export const UaxPaletteStyles: CSSResult = css`
+export const UauiPaletteStyles: CSSResult = css`
     :host {
         color-scheme: var(--uui-color-scheme, normal);
 
-        --uax-color-series-1: var(
-            --uax-series-1,
+        --uaui-color-series-1: var(
+            --uaui-series-1,
             light-dark(var(--uui-palette-space-cadet), var(--uui-palette-malibu-light))
         );
-        --uax-color-series-2: var(
-            --uax-series-2,
+        --uaui-color-series-2: var(
+            --uaui-series-2,
             light-dark(var(--uui-palette-maroon-flush), var(--uui-palette-maroon-flush-light))
         );
-        --uax-color-series-3: var(
-            --uax-series-3,
+        --uaui-color-series-3: var(
+            --uaui-series-3,
             light-dark(var(--uui-palette-sunglow-dark), var(--uui-palette-sunglow))
         );
-        --uax-color-series-4: var(
-            --uax-series-4,
+        --uaui-color-series-4: var(
+            --uaui-series-4,
             light-dark(var(--uui-palette-violet-blue), var(--uui-palette-jungle-green))
         );
-        --uax-color-fill-1: var(
-            --uax-series-1,
+        --uaui-color-fill-1: var(
+            --uaui-series-1,
             light-dark(var(--uui-palette-violet-blue), var(--uui-palette-malibu-light))
         );
-        --uax-color-fill-2: var(
-            --uax-series-2,
+        --uaui-color-fill-2: var(
+            --uaui-series-2,
             light-dark(var(--uui-palette-maroon-flush), var(--uui-palette-maroon-flush-light))
         );
-        --uax-color-fill-3: var(--uax-series-3, var(--uui-palette-sunglow));
-        --uax-color-fill-4: var(
-            --uax-series-4,
+        --uaui-color-fill-3: var(--uaui-series-3, var(--uui-palette-sunglow));
+        --uaui-color-fill-4: var(
+            --uaui-series-4,
             light-dark(var(--uui-palette-malibu), var(--uui-palette-jungle-green))
         );
-        --uax-color-bar-1: var(
-            --uax-bar-1,
-            var(--uax-series-1, light-dark(var(--uui-palette-violet-blue), var(--uui-palette-malibu-light)))
+        --uaui-color-bar-1: var(
+            --uaui-bar-1,
+            var(--uaui-series-1, light-dark(var(--uui-palette-violet-blue), var(--uui-palette-malibu-light)))
         );
-        --uax-color-bar-2: var(
-            --uax-bar-2,
-            var(--uax-series-2, var(--uui-palette-maroon-flush-light))
+        --uaui-color-bar-2: var(
+            --uaui-bar-2,
+            var(--uaui-series-2, var(--uui-palette-maroon-flush-light))
         );
-        --uax-color-bar-3: var(--uax-bar-3, var(--uax-series-3, var(--uui-palette-sunglow)));
-        --uax-color-bar-4: var(
-            --uax-bar-4,
-            var(--uax-series-4, light-dark(var(--uui-palette-malibu), var(--uui-palette-jungle-green)))
+        --uaui-color-bar-3: var(--uaui-bar-3, var(--uaui-series-3, var(--uui-palette-sunglow)));
+        --uaui-color-bar-4: var(
+            --uaui-bar-4,
+            var(--uaui-series-4, light-dark(var(--uui-palette-malibu), var(--uui-palette-jungle-green)))
         );
-        --uax-color-compare: var(
-            --uax-compare,
+        --uaui-color-compare: var(
+            --uaui-compare,
             light-dark(var(--uui-palette-chamoisee), var(--uui-palette-deep-saffron))
         );
-        --uax-color-compare-bar: color-mix(in srgb, var(--uax-color-compare) 45%, transparent);
+        --uaui-color-compare-bar: color-mix(in srgb, var(--uaui-color-compare) 45%, transparent);
 
-        --uax-color-marker: var(--uax-marker, light-dark(var(--uui-palette-space-cadet), var(--uui-palette-white)));
-        --uax-color-marker-hover: var(
-            --uax-marker,
+        --uaui-color-marker: var(--uaui-marker, light-dark(var(--uui-palette-space-cadet), var(--uui-palette-white)));
+        --uaui-color-marker-hover: var(
+            --uaui-marker,
             light-dark(var(--uui-palette-violet-blue), var(--uui-palette-malibu-light))
         );
 
-        --uax-color-gap-positive: var(
-            --uax-gap-positive,
+        --uaui-color-gap-positive: var(
+            --uaui-gap-positive,
             light-dark(
                 color-mix(in srgb, var(--uui-color-positive) 15%, transparent),
                 color-mix(in srgb, var(--uui-palette-jungle-green) 25%, transparent)
             )
         );
-        --uax-color-gap-negative: var(
-            --uax-gap-negative,
+        --uaui-color-gap-negative: var(
+            --uaui-gap-negative,
             light-dark(
                 color-mix(in srgb, var(--uui-color-danger) 15%, transparent),
                 color-mix(in srgb, var(--uui-palette-maroon-flush) 40%, transparent)
             )
         );
 
-        --uax-color-text-positive: var(
-            --uax-text-positive,
+        --uaui-color-text-positive: var(
+            --uaui-text-positive,
             light-dark(var(--uui-palette-forest-green-dark), var(--uui-palette-jungle-green))
         );
-        --uax-color-text-negative: var(
-            --uax-text-negative,
+        --uaui-color-text-negative: var(
+            --uaui-text-negative,
             light-dark(var(--uui-palette-maroon-flush-dark), var(--uui-palette-spanish-pink))
         );
-        --uax-color-text-neutral: var(--uax-text-neutral, var(--uui-color-text-alt));
+        --uaui-color-text-neutral: var(--uaui-text-neutral, var(--uui-color-text-alt));
 
-        --uax-color-tint-positive: var(--uax-tint-positive, color-mix(in srgb, var(--uui-color-positive) 15%, transparent));
-        --uax-color-tint-negative: var(--uax-tint-negative, color-mix(in srgb, var(--uui-color-danger) 15%, transparent));
-        --uax-color-tint-neutral: var(--uax-tint-neutral, color-mix(in srgb, var(--uui-color-text) 20%, transparent));
+        --uaui-color-tint-positive: var(--uaui-tint-positive, color-mix(in srgb, var(--uui-color-positive) 15%, transparent));
+        --uaui-color-tint-negative: var(--uaui-tint-negative, color-mix(in srgb, var(--uui-color-danger) 15%, transparent));
+        --uaui-color-tint-neutral: var(--uaui-tint-neutral, color-mix(in srgb, var(--uui-color-text) 20%, transparent));
     }
 `;

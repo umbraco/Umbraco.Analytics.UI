@@ -7,12 +7,12 @@ import highContrastCss from "@umbraco-ui/uui/themes/high-contrast.css?inline";
 import { userEvent } from "vitest/browser";
 import { axeRun } from "../../../internal/test/a11y.js";
 import { renderPageExample, saveDateRange, withTheme } from "../../../internal/test/page-example.js";
-import { deepQuery, deepQueryAll, deepText, settle, shadow, type UaxTestElement } from "../../../internal/test/dom.js";
+import { deepQuery, deepQueryAll, deepText, settle, shadow, type UauiTestElement } from "../../../internal/test/dom.js";
 import "./engage-analytics-page.element.js";
 
 type Series = { points: unknown[] }[];
-const chart = (page: Element) => shadow(page).querySelector("uax-time-series-chart")!;
-const table = (page: Element) => shadow(page).querySelector("uax-data-table")!;
+const chart = (page: Element) => shadow(page).querySelector("uaui-time-series-chart")!;
+const table = (page: Element) => shadow(page).querySelector("uaui-data-table")!;
 const dataRows = (page: Element) => [...shadow(table(page)).querySelectorAll("uui-table-row:not(.summary)")];
 const firstRowText = (page: Element) => deepText(dataRows(page)[0]);
 const header = (page: Element, label: string) =>
@@ -32,7 +32,7 @@ async function renderPage(view: "pageviews" | "visitors" = "pageviews") {
 
 describe("Feature: Engage analytics page example", () => {
     describe("Scenario: the page loads", () => {
-        let page: UaxTestElement;
+        let page: UauiTestElement;
         beforeEach(async () => {
             page = await renderPage();
         });
@@ -50,11 +50,11 @@ describe("Feature: Engage analytics page example", () => {
         });
 
         it("shows a compare badge in the table", () => {
-            expect(deepQueryAll(shadow(table(page)), "uax-delta-badge").length).toBeGreaterThan(0);
+            expect(deepQueryAll(shadow(table(page)), "uaui-delta-badge").length).toBeGreaterThan(0);
         });
 
         it("shows the total pageviews with its compare badge in the table's summary row", () => {
-            expect(table(page).querySelectorAll("[slot='summary-pageviews'] uax-delta-badge")).toHaveLength(1);
+            expect(table(page).querySelectorAll("[slot='summary-pageviews'] uaui-delta-badge")).toHaveLength(1);
         });
 
         it("puts the total under the Pageviews column", () => {
@@ -64,7 +64,7 @@ describe("Feature: Engage analytics page example", () => {
         });
 
         it("keeps the summary row out of the toolbar", () => {
-            expect(table(page).querySelectorAll("[slot='toolbar'] uax-delta-badge")).toHaveLength(0);
+            expect(table(page).querySelectorAll("[slot='toolbar'] uaui-delta-badge")).toHaveLength(0);
         });
 
         it("shows the first page of ten rows", () => {
@@ -75,7 +75,7 @@ describe("Feature: Engage analytics page example", () => {
     describe("Scenario: choosing another group by", () => {
         it("draws one point per week", async () => {
             const page = await renderPage();
-            const week = deepQuery<HTMLElement>(shadow(page).querySelector("uax-group-by")!.shadowRoot!, "[data-value='week']")!;
+            const week = deepQuery<HTMLElement>(shadow(page).querySelector("uaui-group-by")!.shadowRoot!, "[data-value='week']")!;
             week.click();
             await expect.poll(() => (chart(page).series as Series)[0].points.length).toBe(5);
         });
@@ -100,7 +100,7 @@ describe("Feature: Engage analytics page example", () => {
     describe("Scenario: going to the next page", () => {
         it("loads rows 11 to 20", async () => {
             const page = await renderPage();
-            const pager = shadow(table(page)).querySelector("uax-compact-pager")!;
+            const pager = shadow(table(page)).querySelector("uaui-compact-pager")!;
             const next = shadow(pager).querySelector(".next") as HTMLElement & { updateComplete: Promise<boolean> };
             await next.updateComplete;
             next.click();
@@ -111,7 +111,7 @@ describe("Feature: Engage analytics page example", () => {
     describe("Scenario: searching", () => {
         it("loads only the matching pages", async () => {
             const page = await renderPage();
-            const search = table(page).querySelector("uax-table-search")!;
+            const search = table(page).querySelector("uaui-table-search")!;
             (shadow(search).querySelector("uui-input") as HTMLElement).focus();
             await userEvent.keyboard("walnut");
             await expect.poll(() => dataRows(page).length).toBe(1);
@@ -154,7 +154,7 @@ describe("Feature: Engage analytics page example", () => {
     });
 
     describe("Scenario: the API fails", () => {
-        let page: UaxTestElement;
+        let page: UauiTestElement;
         beforeEach(async () => {
             page = await renderPageExample(
                 html`<example-engage-analytics-page .latency=${0} failing></example-engage-analytics-page>`,
@@ -166,11 +166,11 @@ describe("Feature: Engage analytics page example", () => {
         });
 
         it("shows the chart's error state", () => {
-            expect(shadow(chart(page)).querySelector("uax-error-state")).not.toBe(null);
+            expect(shadow(chart(page)).querySelector("uaui-error-state")).not.toBe(null);
         });
 
         it("shows the table's error state", () => {
-            expect(shadow(table(page)).querySelector("uax-error-state")).not.toBe(null);
+            expect(shadow(table(page)).querySelector("uaui-error-state")).not.toBe(null);
         });
 
         it("offers Retry on the chart", () => {

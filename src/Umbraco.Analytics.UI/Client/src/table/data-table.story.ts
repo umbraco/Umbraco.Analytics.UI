@@ -1,20 +1,20 @@
 import type { Meta, StoryObj } from "@storybook/web-components-vite";
 import { html } from "@umbraco-cms/backoffice/external/lit";
-import { UAX_TABLE_CELL } from "./cells/cell-names.js";
-import type { UaxDataTableElement } from "./data-table.element.js";
+import { UAUI_TABLE_CELL } from "./cells/cell-names.js";
+import type { UauiDataTableElement } from "./data-table.element.js";
 import "./data-table.element.js";
 import "../table-search/table-search.element.js";
 import "../delta-badge/delta-badge.element.js";
-import type { UaxTableColumn, UaxTableRowClickDetail } from "./types.js";
+import type { UauiTableColumn, UauiTableRowClickDetail } from "./types.js";
 
 // Focused stories of the table's options. Complete, worked tables are under "Examples".
 
 const host = "https://www.example.com";
 
-const pageColumns: UaxTableColumn[] = [
-    { key: "url", label: "Page URL", elementName: UAX_TABLE_CELL.link, meta: { hrefKey: "url" } },
-    { key: "pageviews", label: "Pageviews", elementName: UAX_TABLE_CELL.share, width: "27%" },
-    { key: "sessions", label: "Page sessions", elementName: UAX_TABLE_CELL.share, width: "27%" },
+const pageColumns: UauiTableColumn[] = [
+    { key: "url", label: "Page URL", elementName: UAUI_TABLE_CELL.link, meta: { hrefKey: "url" } },
+    { key: "pageviews", label: "Pageviews", elementName: UAUI_TABLE_CELL.share, width: "27%" },
+    { key: "sessions", label: "Page sessions", elementName: UAUI_TABLE_CELL.share, width: "27%" },
 ];
 
 const pageRows = [
@@ -39,11 +39,11 @@ const compareRows = [
     { url: `${host}/faq/`, pageviews: 0, sessions: 0 },
 ];
 
-const mixedColumns: UaxTableColumn[] = [
+const mixedColumns: UauiTableColumn[] = [
     { key: "name", label: "Product" },
-    { key: "orders", label: "Orders", elementName: UAX_TABLE_CELL.number, align: "end", width: "20%" },
-    { key: "revenue", label: "Revenue", elementName: UAX_TABLE_CELL.share, width: "27%", valueFormat: { style: "currency", currency: "EUR", maximumFractionDigits: 0 } },
-    { key: "refundRate", label: "Refund rate", elementName: UAX_TABLE_CELL.percent, align: "end", width: "20%" },
+    { key: "orders", label: "Orders", elementName: UAUI_TABLE_CELL.number, align: "end", width: "20%" },
+    { key: "revenue", label: "Revenue", elementName: UAUI_TABLE_CELL.share, width: "27%", valueFormat: { style: "currency", currency: "EUR", maximumFractionDigits: 0 } },
+    { key: "refundRate", label: "Refund rate", elementName: UAUI_TABLE_CELL.percent, align: "end", width: "20%" },
 ];
 
 const mixedRows = [
@@ -52,9 +52,9 @@ const mixedRows = [
     { name: "Sticker pack", orders: 2310, revenue: 6930, refundRate: 0.004 },
 ];
 
-const meta: Meta<UaxDataTableElement> = {
+const meta: Meta<UauiDataTableElement> = {
     title: "Components/Data Table",
-    component: "uax-data-table",
+    component: "uaui-data-table",
     args: {
         columns: pageColumns,
         rows: pageRows,
@@ -68,7 +68,7 @@ const meta: Meta<UaxDataTableElement> = {
     },
     render: (args) =>
         html`<uui-box headline="Top pages" style="--uui-box-default-padding: 0">
-            <uax-data-table
+            <uaui-data-table
                 .columns=${args.columns}
                 .rows=${args.rows}
                 .loading=${args.loading}
@@ -77,19 +77,19 @@ const meta: Meta<UaxDataTableElement> = {
                 .errorDescription=${args.errorDescription}
                 .retryable=${args.retryable}
                 .emptyHeadline=${args.emptyHeadline}
-                .emptyDescription=${args.emptyDescription}></uax-data-table>
+                .emptyDescription=${args.emptyDescription}></uaui-data-table>
         </uui-box>`,
 };
 
 export default meta;
-type Story = StoryObj<UaxDataTableElement>;
+type Story = StoryObj<UauiDataTableElement>;
 
 /** Each column names its cell in `elementName`, aligns with `align` and sizes with `width`. Here a text, number, share and percent column: numbers are `align: "end"`, and the share column takes a currency `valueFormat` (its percent stays a percent). */
 export const Columns: Story = {
     args: { columns: mixedColumns, rows: mixedRows },
     render: (args) =>
         html`<uui-box headline="Products" style="--uui-box-default-padding: 0">
-            <uax-data-table .columns=${args.columns} .rows=${args.rows}></uax-data-table>
+            <uaui-data-table .columns=${args.columns} .rows=${args.rows}></uaui-data-table>
         </uui-box>`,
 };
 
@@ -98,18 +98,18 @@ export const CompareBadges: Story = {
     name: "Compare badges",
     render: (args) =>
         html`<uui-box headline="Top pages" style="--uui-box-default-padding: 0">
-            <uax-data-table .columns=${args.columns} .rows=${args.rows} .compareRows=${compareRows} row-key="url"></uax-data-table>
+            <uaui-data-table .columns=${args.columns} .rows=${args.rows} .compareRows=${compareRows} row-key="url"></uaui-data-table>
         </uui-box>`,
 };
 
 /** Click a header to sort: the first click on a number column sorts biggest first, a second click flips it. In `client` mode (the default) the table sorts the rows itself and raises `sort-change`. Shares stay a share of the whole column. */
 export const Sortable: Story = {
     args: {
-        columns: pageColumns.map((c) => (c.elementName === UAX_TABLE_CELL.share || c.key === "url" ? { ...c, sortable: true, sortAs: c.elementName === UAX_TABLE_CELL.share ? ("number" as const) : ("text" as const) } : c)),
+        columns: pageColumns.map((c) => (c.elementName === UAUI_TABLE_CELL.share || c.key === "url" ? { ...c, sortable: true, sortAs: c.elementName === UAUI_TABLE_CELL.share ? ("number" as const) : ("text" as const) } : c)),
     },
     render: (args) =>
         html`<uui-box headline="Top pages" style="--uui-box-default-padding: 0">
-            <uax-data-table .columns=${args.columns} .rows=${args.rows} .sort=${{ key: "pageviews", direction: "desc" }}></uax-data-table>
+            <uaui-data-table .columns=${args.columns} .rows=${args.rows} .sort=${{ key: "pageviews", direction: "desc" }}></uaui-data-table>
         </uui-box>`,
 };
 
@@ -124,12 +124,12 @@ const manyPageRows = Array.from({ length: 34 }, (_, i) => ({
 export const PagedClient: Story = {
     name: "Paged (client)",
     args: {
-        columns: pageColumns.map((c) => (c.elementName === UAX_TABLE_CELL.share ? { ...c, sortable: true, sortAs: "number" as const } : c)),
+        columns: pageColumns.map((c) => (c.elementName === UAUI_TABLE_CELL.share ? { ...c, sortable: true, sortAs: "number" as const } : c)),
         rows: manyPageRows,
     },
     render: (args) =>
         html`<uui-box headline="Top pages" style="--uui-box-default-padding: 0">
-            <uax-data-table .columns=${args.columns} .rows=${args.rows}></uax-data-table>
+            <uaui-data-table .columns=${args.columns} .rows=${args.rows}></uaui-data-table>
         </uui-box>`,
 };
 
@@ -138,13 +138,13 @@ export const Summary: Story = {
     args: { columns: pageColumns, rows: pageRows },
     render: (args) =>
         html`<uui-box headline="Top pages" style="--uui-box-default-padding: 0">
-            <uax-data-table .columns=${args.columns} .rows=${args.rows}>
-                <uax-table-search slot="toolbar"></uax-table-search>
+            <uaui-data-table .columns=${args.columns} .rows=${args.rows}>
+                <uaui-table-search slot="toolbar"></uaui-table-search>
                 <span slot="summary-url">Total pageviews</span>
                 <span slot="summary-pageviews" style="display: inline-flex; align-items: center; gap: var(--uui-size-space-3)">
-                    272 <uax-delta-badge size="sm" .value=${6.2}></uax-delta-badge>
+                    272 <uaui-delta-badge size="sm" .value=${6.2}></uaui-delta-badge>
                 </span>
-            </uax-data-table>
+            </uaui-data-table>
         </uui-box>`,
 };
 
@@ -154,13 +154,13 @@ export const FooterSlot: Story = {
     args: { columns: pageColumns, rows: manyPageRows },
     render: (args) =>
         html`<uui-box headline="Top pages" style="--uui-box-default-padding: 0">
-            <uax-data-table .columns=${args.columns} .rows=${args.rows}>
+            <uaui-data-table .columns=${args.columns} .rows=${args.rows}>
                 <span slot="footer">Updated 5 minutes ago</span>
-            </uax-data-table>
+            </uaui-data-table>
         </uui-box>`,
 };
 
-/** A `uax-table-search` in the `toolbar` slot. In `client` mode the table filters its rows on the `searchable` columns (here only the URL), goes back to page 1 and shows the empty state when nothing matches. In `server` mode it never filters: listen for `search` and load the matching rows. */
+/** A `uaui-table-search` in the `toolbar` slot. In `client` mode the table filters its rows on the `searchable` columns (here only the URL), goes back to page 1 and shows the empty state when nothing matches. In `server` mode it never filters: listen for `search` and load the matching rows. */
 export const Search: Story = {
     args: {
         columns: pageColumns.map((c) => (c.key === "url" ? { ...c, searchable: true } : c)),
@@ -168,9 +168,9 @@ export const Search: Story = {
     },
     render: (args) =>
         html`<uui-box headline="Top pages" style="--uui-box-default-padding: 0">
-            <uax-data-table .columns=${args.columns} .rows=${args.rows}>
-                <uax-table-search slot="toolbar"></uax-table-search>
-            </uax-data-table>
+            <uaui-data-table .columns=${args.columns} .rows=${args.rows}>
+                <uaui-table-search slot="toolbar"></uaui-table-search>
+            </uaui-data-table>
         </uui-box>`,
 };
 
@@ -180,13 +180,13 @@ export const ClickableRows: Story = {
         const log = document.createElement("p");
         log.textContent = "Click a row, or Tab to one and press Enter.";
         return html`<uui-box headline="Top pages" style="--uui-box-default-padding: 0">
-                <uax-data-table
+                <uaui-data-table
                     .columns=${args.columns}
                     .rows=${args.rows}
                     clickable-rows
-                    @row-click=${(event: CustomEvent<UaxTableRowClickDetail>) => {
+                    @row-click=${(event: CustomEvent<UauiTableRowClickDetail>) => {
                         log.textContent = `row-click: ${String(event.detail.row.url)}`;
-                    }}></uax-data-table>
+                    }}></uaui-data-table>
             </uui-box>
             ${log}`;
     },

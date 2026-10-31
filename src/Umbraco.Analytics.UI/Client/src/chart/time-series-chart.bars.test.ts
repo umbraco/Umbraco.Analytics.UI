@@ -9,8 +9,8 @@ import highContrastCss from "@umbraco-ui/uui/themes/high-contrast.css?inline";
 import { render } from "vitest-browser-lit";
 import { axeRun } from "../internal/test/a11y.js";
 import { screenshotIt } from "../internal/test/screenshot.js";
-import { deepQuery, deepQueryAll, deepText, renderElement, shadow, type UaxTestElement } from "../internal/test/dom.js";
-import type { UaxDeltaBadgeElement } from "../delta-badge/delta-badge.element.js";
+import { deepQuery, deepQueryAll, deepText, renderElement, shadow, type UauiTestElement } from "../internal/test/dom.js";
+import type { UauiDeltaBadgeElement } from "../delta-badge/delta-badge.element.js";
 import "./time-series-chart.element.js";
 
 const returning = { id: "r", label: "Returning visitor", points: [
@@ -32,12 +32,12 @@ const previousTotals = { id: "total", label: "Visitors", points: [
 
 const chart = (kind: string, series: unknown[], compare?: unknown[]) =>
     renderElement(
-        html`<uax-time-series-chart kind=${kind} .series=${series} .compareSeries=${compare} style="width:400px"></uax-time-series-chart>`,
-        "uax-time-series-chart",
+        html`<uaui-time-series-chart kind=${kind} .series=${series} .compareSeries=${compare} style="width:400px"></uaui-time-series-chart>`,
+        "uaui-time-series-chart",
     );
 
-const legendText = (el: Element) => deepText(deepQuery(shadow(el), "uax-chart-legend")!);
-const tooltip = (el: Element) => shadow(el).querySelector("uax-chart-tooltip") as HTMLElement;
+const legendText = (el: Element) => deepText(deepQuery(shadow(el), "uaui-chart-legend")!);
+const tooltip = (el: Element) => shadow(el).querySelector("uaui-chart-tooltip") as HTMLElement;
 const hiddenTable = (el: Element) => deepQuery<HTMLTableElement>(shadow(el), "table")!;
 const chartOf = (el: Element) => Chart.getChart(shadow(el).querySelector("canvas")!)!;
 // Moves the pointer onto the nth date, at the x Chart.js drew that bar.
@@ -51,7 +51,7 @@ const drawnTypes = (el: Element) => chartOf(el).getSortedVisibleDatasetMetas().m
 
 describe("Feature: bar and stacked bar chart", () => {
     describe("Scenario: a bar chart", () => {
-        let el: UaxTestElement;
+        let el: UauiTestElement;
         beforeEach(async () => {
             el = await chart("bar", [returning]);
         });
@@ -66,7 +66,7 @@ describe("Feature: bar and stacked bar chart", () => {
     });
 
     describe("Scenario: a bar chart with two series", () => {
-        let el: UaxTestElement;
+        let el: UauiTestElement;
         beforeEach(async () => {
             el = await chart("bar", [returning, newVisitors]);
         });
@@ -114,7 +114,7 @@ describe("Feature: bar and stacked bar chart", () => {
     });
 
     describe("Scenario: a bar chart with two series and a compare series", () => {
-        let el: UaxTestElement;
+        let el: UauiTestElement;
         beforeEach(async () => {
             el = await chart("bar", [returning, newVisitors], [previousReturning, previousNew]);
         });
@@ -135,7 +135,7 @@ describe("Feature: bar and stacked bar chart", () => {
             });
 
             it("shows the change from the compare total to that total", () => {
-                const badge = deepQuery(tooltip(el).shadowRoot!, "uax-delta-badge") as UaxDeltaBadgeElement;
+                const badge = deepQuery(tooltip(el).shadowRoot!, "uaui-delta-badge") as UauiDeltaBadgeElement;
                 expect(badge.value).toBeCloseTo(100, 5);
             });
         });
@@ -157,7 +157,7 @@ describe("Feature: bar and stacked bar chart", () => {
     });
 
     describe("Scenario: a stacked bar chart", () => {
-        let el: UaxTestElement;
+        let el: UauiTestElement;
         beforeEach(async () => {
             el = await chart("stacked-bar", [returning, newVisitors]);
         });
@@ -196,7 +196,7 @@ describe("Feature: bar and stacked bar chart", () => {
     });
 
     describe("Scenario: a stacked bar chart with a compare series", () => {
-        let el: UaxTestElement;
+        let el: UauiTestElement;
         beforeEach(async () => {
             el = await chart("stacked-bar", [returning, newVisitors], [previousTotals]);
         });
@@ -220,7 +220,7 @@ describe("Feature: bar and stacked bar chart", () => {
     });
 
     describe("Scenario: compare series that are split into parts", () => {
-        let el: UaxTestElement;
+        let el: UauiTestElement;
         beforeEach(async () => {
             el = await chart("stacked-bar", [returning, newVisitors], [previousReturning, previousNew]);
         });
@@ -244,7 +244,7 @@ describe("Feature: bar and stacked bar chart", () => {
             });
 
             it("shows the change from the compare total to the current total", () => {
-                const badge = deepQuery(tooltip(el).shadowRoot!, "uax-delta-badge") as UaxDeltaBadgeElement;
+                const badge = deepQuery(tooltip(el).shadowRoot!, "uaui-delta-badge") as UauiDeltaBadgeElement;
                 expect(badge.value).toBeCloseTo(0, 5);
             });
         });
@@ -275,11 +275,11 @@ describe("Feature: bar and stacked bar chart", () => {
             document.head.appendChild(theme);
             host = render(
                 html`<div style="background: var(--uui-color-surface); width: 400px">
-                    <uax-time-series-chart kind="stacked-bar" .series=${[returning, newVisitors]}
-                        .compareSeries=${[previousTotals]}></uax-time-series-chart>
+                    <uaui-time-series-chart kind="stacked-bar" .series=${[returning, newVisitors]}
+                        .compareSeries=${[previousTotals]}></uaui-time-series-chart>
                 </div>`,
             ).container.querySelector("div")!;
-            await host.querySelector("uax-time-series-chart")!.updateComplete;
+            await host.querySelector("uaui-time-series-chart")!.updateComplete;
         });
         afterEach(() => theme.remove());
 
@@ -299,11 +299,11 @@ describe("Feature: bar and stacked bar chart", () => {
             try {
                 const host = render(
                     html`<div style="background: var(--uui-color-surface); width: 400px">
-                        <uax-time-series-chart kind=${kind} .series=${[returning, newVisitors]}
-                            .compareSeries=${[previousTotals]}></uax-time-series-chart>
+                        <uaui-time-series-chart kind=${kind} .series=${[returning, newVisitors]}
+                            .compareSeries=${[previousTotals]}></uaui-time-series-chart>
                     </div>`,
                 ).container.querySelector("div")!;
-                await host.querySelector("uax-time-series-chart")!.updateComplete;
+                await host.querySelector("uaui-time-series-chart")!.updateComplete;
                 return await axeRun(host);
             } finally {
                 theme.remove();

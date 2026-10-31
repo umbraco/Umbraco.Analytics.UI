@@ -2,18 +2,18 @@ import type { Meta, StoryObj } from "@storybook/web-components-vite";
 import { html } from "@umbraco-cms/backoffice/external/lit";
 import { notPublicApi } from "../../internal/story/internal.js";
 import "./date-field.element.js";
-import type { UaxDateFieldElement } from "./date-field.element.js";
+import type { UauiDateFieldElement } from "./date-field.element.js";
 
-const meta: Meta<UaxDateFieldElement> = {
+const meta: Meta<UauiDateFieldElement> = {
     title: "Internal/Date field",
-    component: "uax-date-field",
+    component: "uaui-date-field",
     tags: ["internal"],
     parameters: {
-        docs: { description: { component: notPublicApi("`uax-date-field` is one date field of the date range dialog: label, date input and message.") } },
+        docs: { description: { component: notPublicApi("`uaui-date-field` is one date field of the date range dialog: label, date input and message.") } },
     },
     args: { name: "from", label: "From", value: "2026-05-25", max: "2026-06-23", error: undefined },
     render: (args) => html`<div style="width: 200px">
-        <uax-date-field
+        <uaui-date-field
             .name=${args.name}
             label=${args.label}
             .value=${args.value}
@@ -21,13 +21,13 @@ const meta: Meta<UaxDateFieldElement> = {
             .error=${args.error}
             @change=${(e: Event) => {
                 // The field is controlled: it raises `change`, and the story keeps the value like the dialog does.
-                console.info("change", (e.target as UaxDateFieldElement).value);
-            }}></uax-date-field>
+                console.info("change", (e.target as UauiDateFieldElement).value);
+            }}></uaui-date-field>
     </div>`,
 };
 
 export default meta;
-type Story = StoryObj<UaxDateFieldElement>;
+type Story = StoryObj<UauiDateFieldElement>;
 
 /** A date. */
 export const Default: Story = {};

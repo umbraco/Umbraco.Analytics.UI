@@ -25,9 +25,9 @@ describe("Feature: data elements in error", () => {
             try {
                 const host = render(
                     html`<div style="background: var(--uui-color-surface)">
-                        <uax-kpi-tile label="Revenue" icon="icon-coins" error></uax-kpi-tile>
-                        <uax-time-series-chart .series=${[]} error retryable></uax-time-series-chart>
-                        <uax-data-table .columns=${pageColumns} .rows=${[]} error retryable></uax-data-table>
+                        <uaui-kpi-tile label="Revenue" icon="icon-coins" error></uaui-kpi-tile>
+                        <uaui-time-series-chart .series=${[]} error retryable></uaui-time-series-chart>
+                        <uaui-data-table .columns=${pageColumns} .rows=${[]} error retryable></uaui-data-table>
                     </div>`,
                 ).container.querySelector("div")!;
                 await Promise.all([...host.children].map((child) => settle(child)));

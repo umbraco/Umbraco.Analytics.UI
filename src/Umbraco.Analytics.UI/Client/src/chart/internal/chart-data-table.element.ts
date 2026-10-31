@@ -1,25 +1,25 @@
 import { css, customElement, html, nothing, property, type CSSResultGroup, type TemplateResult } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
-import { UaxVisuallyHiddenStyles } from "../../internal/a11y/visually-hidden.css.js";
+import { UauiVisuallyHiddenStyles } from "../../internal/a11y/visually-hidden.css.js";
 import { getNumberFormat } from "../../internal/format/number-format.js";
-import type { UaxChartData } from "./chart-data.js";
+import type { UauiChartData } from "./chart-data.js";
 
 /**
- * The visually hidden table of `uax-time-series-chart`'s data, for screen readers: a row per date, a column per
+ * The visually hidden table of `uaui-time-series-chart`'s data, for screen readers: a row per date, a column per
  * series (and its compare points for the line kinds), and for the bar kinds the total and the compare total.
  * Internal: not exported.
  *
- * @element uax-chart-data-table
+ * @element uaui-chart-data-table
  */
-@customElement("uax-chart-data-table")
-export class UaxChartDataTableElement extends UmbLitElement {
+@customElement("uaui-chart-data-table")
+export class UauiChartDataTableElement extends UmbLitElement {
     /** The formatted date of each row. */
     @property({ attribute: false })
     dates: string[] = [];
 
     /** The series to list, with their values on the rows' dates. */
     @property({ attribute: false })
-    series: UaxChartData["series"] = [];
+    series: UauiChartData["series"] = [];
 
     /** The bar kinds: compare points are listed as one total, not per series. */
     @property({ type: Boolean })
@@ -53,20 +53,20 @@ export class UaxChartDataTableElement extends UmbLitElement {
         const { series, bars, totals, compareTotal } = this;
         return html`<table class="visually-hidden">
             <caption>
-                ${this.localize.term("uaxAnalytics_chartTableCaption")}
+                ${this.localize.term("uauiAnalytics_chartTableCaption")}
             </caption>
             <thead>
                 <tr>
-                    <th scope="col">${this.localize.term("uaxAnalytics_chartTableDateHeader")}</th>
+                    <th scope="col">${this.localize.term("uauiAnalytics_chartTableDateHeader")}</th>
                     ${series.map(
                         (s) => html`<th scope="col">${s.label}</th>
                             ${s.compare && !bars
-                                ? html`<th scope="col">${this.localize.term("uaxAnalytics_chartTableCompareHeader", s.label)}</th>`
+                                ? html`<th scope="col">${this.localize.term("uauiAnalytics_chartTableCompareHeader", s.label)}</th>`
                                 : nothing}`,
                     )}
                     ${totals ? html`<th scope="col">${this.totalLabel}</th>` : nothing}
                     ${compareTotal
-                        ? html`<th scope="col">${this.localize.term("uaxAnalytics_chartTableCompareHeader", this.totalLabel)}</th>`
+                        ? html`<th scope="col">${this.localize.term("uauiAnalytics_chartTableCompareHeader", this.totalLabel)}</th>`
                         : nothing}
                 </tr>
             </thead>
@@ -83,7 +83,7 @@ export class UaxChartDataTableElement extends UmbLitElement {
     }
 
     static override styles: CSSResultGroup = [
-        UaxVisuallyHiddenStyles,
+        UauiVisuallyHiddenStyles,
         css`
             :host {
                 position: relative;
@@ -96,6 +96,6 @@ export class UaxChartDataTableElement extends UmbLitElement {
 
 declare global {
     interface HTMLElementTagNameMap {
-        "uax-chart-data-table": UaxChartDataTableElement;
+        "uaui-chart-data-table": UauiChartDataTableElement;
     }
 }

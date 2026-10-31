@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/web-components-vite";
 import { html } from "@umbraco-cms/backoffice/external/lit";
-import type { UaxSegmentedElement } from "./segmented.element.js";
+import type { UauiSegmentedElement } from "./segmented.element.js";
 import "./segmented.element.js";
 
 const options = [
@@ -9,9 +9,9 @@ const options = [
     { value: "team", label: "Team" },
 ];
 
-const meta: Meta<UaxSegmentedElement> = {
+const meta: Meta<UauiSegmentedElement> = {
     title: "Components/Segmented",
-    component: "uax-segmented",
+    component: "uaui-segmented",
     args: { value: "model", label: "Break down by", options },
     argTypes: {
         value: { control: "inline-radio", options: options.map((o) => o.value) },
@@ -19,17 +19,17 @@ const meta: Meta<UaxSegmentedElement> = {
         options: { control: "object" },
     },
     render: (args) =>
-        html`<uax-segmented
+        html`<uaui-segmented
             .value=${args.value}
             .label=${args.label}
             .options=${args.options}
             @change=${(e: CustomEvent<{ value: string }>) => {
-                (e.currentTarget as UaxSegmentedElement).value = e.detail.value;
-            }}></uax-segmented>`,
+                (e.currentTarget as UauiSegmentedElement).value = e.detail.value;
+            }}></uaui-segmented>`,
 };
 
 export default meta;
-type Story = StoryObj<UaxSegmentedElement>;
+type Story = StoryObj<UauiSegmentedElement>;
 
 export const Default: Story = {};
 
@@ -37,9 +37,9 @@ export const TwoOptions: Story = { args: { value: "model", options: options.slic
 
 export const AllStates: Story = {
     render: () => html`<div style="display:flex;flex-direction:column;gap:12px;align-items:flex-start">
-        <uax-segmented label="First selected" value="model" .options=${options}></uax-segmented>
-        <uax-segmented label="Middle selected" value="profile" .options=${options}></uax-segmented>
-        <uax-segmented label="Last selected" value="team" .options=${options}></uax-segmented>
-        <uax-segmented label="Two options" value="model" .options=${options.slice(0, 2)}></uax-segmented>
+        <uaui-segmented label="First selected" value="model" .options=${options}></uaui-segmented>
+        <uaui-segmented label="Middle selected" value="profile" .options=${options}></uaui-segmented>
+        <uaui-segmented label="Last selected" value="team" .options=${options}></uaui-segmented>
+        <uaui-segmented label="Two options" value="model" .options=${options.slice(0, 2)}></uaui-segmented>
     </div>`,
 };

@@ -4,11 +4,11 @@ import { regionSource, sourceDocs } from "../internal/story/source.js";
 import raw from "./paged-server.story.ts?raw";
 import "../table/data-table.element.js";
 import "../table-search/table-search.element.js";
-import { UAX_TABLE_CELL } from "../table/cells/cell-names.js";
-import { UaxTableServerController, type UaxTableColumn, type UaxTableServerState } from "../table/index.js";
+import { UAUI_TABLE_CELL } from "../table/cells/cell-names.js";
+import { UauiTableServerController, type UauiTableColumn, type UauiTableServerState } from "../table/index.js";
 
 const imports = `import { css, customElement, html, LitElement, ref } from "@umbraco-cms/backoffice/external/lit";
-import { UAX_TABLE_CELL, UaxTableServerController, type UaxTableColumn, type UaxTableServerState } from "@umbraco-analytics/ui";`;
+import { UAUI_TABLE_CELL, UauiTableServerController, type UauiTableColumn, type UauiTableServerState } from "@umbraco-analytics/ui";`;
 
 // #region example
 type PageRow = { url: string; pageviews: number; sessions: number };
@@ -23,7 +23,7 @@ const everyPage: PageRow[] = Array.from({ length: 272 }, (_, i) => ({
 const sumOf = (rows: PageRow[], key: SortKey) => rows.reduce((sum, row) => sum + row[key], 0);
 const largestOf = (rows: PageRow[], key: SortKey) => Math.max(...rows.map((row) => row[key]));
 
-async function fetchPages({ sort, page, pageSize, query }: UaxTableServerState, signal: AbortSignal) {
+async function fetchPages({ sort, page, pageSize, query }: UauiTableServerState, signal: AbortSignal) {
     await new Promise((resolve) => setTimeout(resolve, 400));
     // A real `fetch(url, { signal })` stops by itself. Here, give up once the request is stale.
     signal.throwIfAborted();
@@ -42,26 +42,26 @@ async function fetchPages({ sort, page, pageSize, query }: UaxTableServerState, 
     };
 }
 
-const columns: UaxTableColumn[] = [
-    { key: "url", label: "Page URL", elementName: UAX_TABLE_CELL.link, meta: { hrefKey: "url" } },
-    { key: "pageviews", label: "Pageviews", elementName: UAX_TABLE_CELL.share, width: "27%", sortable: true, sortAs: "number" },
-    { key: "sessions", label: "Page sessions", elementName: UAX_TABLE_CELL.share, width: "27%", sortable: true, sortAs: "number" },
+const columns: UauiTableColumn[] = [
+    { key: "url", label: "Page URL", elementName: UAUI_TABLE_CELL.link, meta: { hrefKey: "url" } },
+    { key: "pageviews", label: "Pageviews", elementName: UAUI_TABLE_CELL.share, width: "27%", sortable: true, sortAs: "number" },
+    { key: "sessions", label: "Page sessions", elementName: UAUI_TABLE_CELL.share, width: "27%", sortable: true, sortAs: "number" },
 ];
 
 @customElement("example-paged-server-table")
 export class ExamplePagedServerTableElement extends LitElement {
     // Keeps the sort, page, page size and search, goes back to page 1 on a sort or search, aborts the request a newer
     // one replaces, drops its late answer, and gives the table its rows, totals and loading flag.
-    #pages = new UaxTableServerController(this, {
+    #pages = new UauiTableServerController(this, {
         sort: { key: "pageviews", direction: "desc" },
         load: fetchPages,
     });
 
     override render() {
         return html`<uui-box headline="Top pages" style="--uui-box-default-padding: 0">
-            <uax-data-table ${ref(this.#pages.attach)} .columns=${columns}>
-                <div slot="toolbar"><uax-table-search></uax-table-search></div>
-            </uax-data-table>
+            <uaui-data-table ${ref(this.#pages.attach)} .columns=${columns}>
+                <div slot="toolbar"><uaui-table-search></uaui-table-search></div>
+            </uaui-data-table>
         </uui-box>`;
     }
 
@@ -87,7 +87,7 @@ const meta: Meta = {
 export default meta;
 
 /**
- * `mode="server"` with `UaxTableServerController`: attach it with `ref` and it does the wiring. Page forward, click
+ * `mode="server"` with `UauiTableServerController`: attach it with `ref` and it does the wiring. Page forward, click
  * a header (back to page 1), or search: each loads through one function that gets the table's state and an
  * `AbortSignal`. Change the page twice quickly and only the last answer is shown. Call `reload()` when something the
  * loader reads changes, such as a date range. In this story the "server" is a function with a 400 ms delay.

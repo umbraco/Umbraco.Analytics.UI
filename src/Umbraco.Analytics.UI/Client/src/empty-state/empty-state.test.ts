@@ -6,17 +6,17 @@ import darkCss from "@umbraco-ui/uui/themes/dark.css?inline";
 import highContrastCss from "@umbraco-ui/uui/themes/high-contrast.css?inline";
 import { render } from "vitest-browser-lit";
 import { axeRun } from "../internal/test/a11y.js";
-import { renderElement, shadow, type UaxTestElement } from "../internal/test/dom.js";
+import { renderElement, shadow, type UauiTestElement } from "../internal/test/dom.js";
 import "./empty-state.element.js";
 import "../chart/time-series-chart.element.js";
 
 describe("Feature: empty state", () => {
     describe("Scenario: the product's text", () => {
-        let el: UaxTestElement;
+        let el: UauiTestElement;
         beforeEach(async () => {
             el = await renderElement(
-                html`<uax-empty-state headline="No pageviews yet" description="Views appear here."></uax-empty-state>`,
-                "uax-empty-state",
+                html`<uaui-empty-state headline="No pageviews yet" description="Views appear here."></uaui-empty-state>`,
+                "uaui-empty-state",
             );
         });
 
@@ -34,9 +34,9 @@ describe("Feature: empty state", () => {
     });
 
     describe("Scenario: no text set", () => {
-        let el: UaxTestElement;
+        let el: UauiTestElement;
         beforeEach(async () => {
-            el = await renderElement(html`<uax-empty-state></uax-empty-state>`, "uax-empty-state");
+            el = await renderElement(html`<uaui-empty-state></uaui-empty-state>`, "uaui-empty-state");
         });
 
         it("shows the default headline", () => {
@@ -53,9 +53,9 @@ describe("Feature: empty state", () => {
     });
 
     describe("Scenario: a line is set to an empty string", () => {
-        let el: UaxTestElement;
+        let el: UauiTestElement;
         beforeEach(async () => {
-            el = await renderElement(html`<uax-empty-state description=""></uax-empty-state>`, "uax-empty-state");
+            el = await renderElement(html`<uaui-empty-state description=""></uaui-empty-state>`, "uaui-empty-state");
         });
 
         it("leaves the description out", () => {
@@ -64,9 +64,9 @@ describe("Feature: empty state", () => {
     });
 
     describe("Scenario: a custom icon", () => {
-        let el: UaxTestElement;
+        let el: UauiTestElement;
         beforeEach(async () => {
-            el = await renderElement(html`<uax-empty-state icon="icon-chart"></uax-empty-state>`, "uax-empty-state");
+            el = await renderElement(html`<uaui-empty-state icon="icon-chart"></uaui-empty-state>`, "uaui-empty-state");
         });
 
         it("shows that icon", () => {
@@ -85,10 +85,10 @@ describe("Feature: empty state", () => {
             try {
                 const host = render(
                     html`<div style="background: var(--uui-color-surface)">
-                        <uax-empty-state></uax-empty-state>
+                        <uaui-empty-state></uaui-empty-state>
                     </div>`,
                 ).container.querySelector("div")!;
-                await host.querySelector("uax-empty-state")!.updateComplete;
+                await host.querySelector("uaui-empty-state")!.updateComplete;
                 return await axeRun(host);
             } finally {
                 theme.remove();
@@ -109,12 +109,12 @@ describe("Feature: empty state", () => {
     });
 
     describe("Scenario: a data element with no data and no text set", () => {
-        it("shows uax-empty-state with the default text", async () => {
+        it("shows uaui-empty-state with the default text", async () => {
             const el = await renderElement(
-                html`<uax-time-series-chart kind="line" .series=${[]}></uax-time-series-chart>`,
-                "uax-time-series-chart",
+                html`<uaui-time-series-chart kind="line" .series=${[]}></uaui-time-series-chart>`,
+                "uaui-time-series-chart",
             );
-            expect(shadow(el).querySelector("uax-empty-state")?.shadowRoot?.textContent).toContain("No data yet");
+            expect(shadow(el).querySelector("uaui-empty-state")?.shadowRoot?.textContent).toContain("No data yet");
         });
     });
 });

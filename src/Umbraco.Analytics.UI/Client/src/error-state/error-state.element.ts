@@ -6,15 +6,15 @@ import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
  *
  * The chart and table show it when their `error` is set, and a product can place it on its own. The KPI tile shows
  * a dash instead, with no Retry. It is the sibling of
- * `uax-empty-state`: same layout, with an alert icon. Without `headline` or `description` it shows the built-in
+ * `uaui-empty-state`: same layout, with an alert icon. Without `headline` or `description` it shows the built-in
  * "Something went wrong" / "The data could not be loaded." text. The text is announced when it appears (`role="alert"`).
  * Set an attribute to an empty string to leave that line out.
  *
- * @element uax-error-state
+ * @element uaui-error-state
  * @fires retry - The Retry button was pressed. Bubbles, is not composed. Only shown while `retryable`.
  */
-@customElement("uax-error-state")
-export class UaxErrorStateElement extends UmbLitElement {
+@customElement("uaui-error-state")
+export class UauiErrorStateElement extends UmbLitElement {
     /** The main line. Defaults to the translation of "Something went wrong". An empty string hides it. */
     @property({ type: String })
     headline?: string;
@@ -36,8 +36,8 @@ export class UaxErrorStateElement extends UmbLitElement {
     };
 
     override render(): TemplateResult {
-        const headline = this.headline ?? this.localize.term("uaxAnalytics_errorHeadline");
-        const description = this.description ?? this.localize.term("uaxAnalytics_errorDescription");
+        const headline = this.headline ?? this.localize.term("uauiAnalytics_errorHeadline");
+        const description = this.description ?? this.localize.term("uauiAnalytics_errorDescription");
 
         return html`<div class="error" role="alert">
             <div class="icon"><uui-icon name=${this.icon}></uui-icon></div>
@@ -96,6 +96,6 @@ export class UaxErrorStateElement extends UmbLitElement {
 
 declare global {
     interface HTMLElementTagNameMap {
-        "uax-error-state": UaxErrorStateElement;
+        "uaui-error-state": UauiErrorStateElement;
     }
 }

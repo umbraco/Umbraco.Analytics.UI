@@ -5,18 +5,18 @@
   "extensions": [
     {
       "type": "localization",
-      "alias": "Uax.Localization.En",
-      "name": "Uax English",
+      "alias": "Uaui.Localization.En",
+      "name": "Uaui English",
       "weight": 200,
       "js": "/App_Plugins/Umbraco.Analytics.UI/lang/en.js",
       "meta": { "culture": "en" }
     },
     {
       "type": "modal",
-      "alias": "Uax.Modal.DateRange",
-      "name": "Uax Date Range Modal",
+      "alias": "Uaui.Modal.DateRange",
+      "name": "Uaui Date Range Modal",
       "element": "/App_Plugins/Umbraco.Analytics.UI/umbraco-analytics-ui.js",
-      "elementName": "uax-date-range-modal"
+      "elementName": "uaui-date-range-modal"
     }
   ],
   "importmap": {

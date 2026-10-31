@@ -5,18 +5,18 @@ import "../../../kpi-tile/kpi-tile.element.js";
 import "../../../chart/time-series-chart.element.js";
 import "../../../group-by/group-by.element.js";
 import "../../../segmented/segmented.element.js";
-import type { UaxSegmentedChangeDetail } from "../../../segmented/segmented.element.js";
+import type { UauiSegmentedChangeDetail } from "../../../segmented/segmented.element.js";
 import "../../../date-range/date-range.element.js";
 import "../../../table/data-table.element.js";
 import "../../../table-search/table-search.element.js";
-import { UAX_TABLE_CELL } from "../../../table/cells/cell-names.js";
-import type { UaxSeries } from "../../../chart/types.js";
-import { uaxCompareFor, uaxFormatDateRange } from "../../../date-helpers/index.js";
-import type { UaxColorSlot } from "../../../theme/types.js";
-import type { UaxCompare, UaxDateRange } from "../../../date-range/types.js";
-import type { UaxGroupBy } from "../../../group-by/group-by.element.js";
-import { UaxTableServerController } from "../../../table/table-server.controller.js";
-import type { UaxTableColumn, UaxTableServerState } from "../../../table/index.js";
+import { UAUI_TABLE_CELL } from "../../../table/cells/cell-names.js";
+import type { UauiSeries } from "../../../chart/types.js";
+import { uauiCompareFor, uauiFormatDateRange } from "../../../date-helpers/index.js";
+import type { UauiColorSlot } from "../../../theme/types.js";
+import type { UauiCompare, UauiDateRange } from "../../../date-range/types.js";
+import type { UauiGroupBy } from "../../../group-by/group-by.element.js";
+import { UauiTableServerController } from "../../../table/table-server.controller.js";
+import type { UauiTableColumn, UauiTableServerState } from "../../../table/index.js";
 import {
     getBreakdown,
     getUsage,
@@ -33,8 +33,8 @@ import {
 type Metric = "requests" | "inputTokens" | "outputTokens" | "totalTokens";
 
 // Fixed dates keep the example's data, and its screenshots, the same on every day.
-const initialRange: UaxDateRange = { from: "2026-05-25", to: "2026-06-23" };
-const initialCompare = uaxCompareFor("previous-period", initialRange);
+const initialRange: UauiDateRange = { from: "2026-05-25", to: "2026-06-23" };
+const initialCompare = uauiCompareFor("previous-period", initialRange);
 
 const metricLabels: Record<Metric, string> = {
     requests: "Requests",
@@ -44,7 +44,7 @@ const metricLabels: Record<Metric, string> = {
 };
 
 /** What each metric stacks into. A tile picks the metric, and this turns the buckets into the chart's series. */
-const stacks: Record<Metric, { id: string; label: string; color: UaxColorSlot; of: (b: UsageBucket) => number }[]> = {
+const stacks: Record<Metric, { id: string; label: string; color: UauiColorSlot; of: (b: UsageBucket) => number }[]> = {
     requests: [
         { id: "succeeded", label: "Succeeded", color: 1, of: (b) => b.requests - b.failed },
         { id: "failed", label: "Failed", color: 2, of: (b) => b.failed },
@@ -60,21 +60,21 @@ const stacks: Record<Metric, { id: string; label: string; color: UaxColorSlot; o
     ],
 };
 
-const toSeries = (metric: Metric, buckets: UsageBucket[] = []): UaxSeries[] =>
+const toSeries = (metric: Metric, buckets: UsageBucket[] = []): UauiSeries[] =>
     stacks[metric].map(({ id, label, color, of }) => ({ id, label, color, points: buckets.map((b) => ({ date: b.date, value: of(b) })) }));
 
 /** Percent change against the comparison period. `undefined` when there is nothing to divide by. */
 const change = (now: number, before?: number) => (before ? ((now - before) / before) * 100 : undefined);
 
-const tableColumns = (by: BreakdownBy): UaxTableColumn[] => [
-    { key: "name", label: by === "model" ? "Model" : "Profile", elementName: UAX_TABLE_CELL.text, sortable: true, searchable: true, width: "28%" },
-    { key: "requests", label: "Requests", elementName: UAX_TABLE_CELL.share, sortable: true, sortAs: "number", width: "24%" },
-    { key: "totalTokens", label: "Tokens", elementName: UAX_TABLE_CELL.share, sortable: true, sortAs: "number", width: "24%" },
-    { key: "successRate", label: "Success rate", elementName: UAX_TABLE_CELL.percent, align: "end", sortable: true, sortAs: "number" },
+const tableColumns = (by: BreakdownBy): UauiTableColumn[] => [
+    { key: "name", label: by === "model" ? "Model" : "Profile", elementName: UAUI_TABLE_CELL.text, sortable: true, searchable: true, width: "28%" },
+    { key: "requests", label: "Requests", elementName: UAUI_TABLE_CELL.share, sortable: true, sortAs: "number", width: "24%" },
+    { key: "totalTokens", label: "Tokens", elementName: UAUI_TABLE_CELL.share, sortable: true, sortAs: "number", width: "24%" },
+    { key: "successRate", label: "Success rate", elementName: UAUI_TABLE_CELL.percent, align: "end", sortable: true, sortAs: "number" },
     {
         key: "avgDurationMs",
         label: "Avg duration",
-        elementName: UAX_TABLE_CELL.number,
+        elementName: UAUI_TABLE_CELL.number,
         align: "end",
         sortable: true,
         sortAs: "number",
@@ -98,9 +98,9 @@ export class ExampleAiUsagePageElement extends UmbLitElement {
     @property({ type: Boolean })
     failing = false;
 
-    @state() private _range: UaxDateRange = initialRange;
-    @state() private _compare?: UaxCompare = initialCompare;
-    @state() private _groupBy: UaxGroupBy = "day";
+    @state() private _range: UauiDateRange = initialRange;
+    @state() private _compare?: UauiCompare = initialCompare;
+    @state() private _groupBy: UauiGroupBy = "day";
     @state() private _metric: Metric = "requests";
     @state() private _by: BreakdownBy = "model";
 
@@ -114,7 +114,7 @@ export class ExampleAiUsagePageElement extends UmbLitElement {
 
     // The table's sort, page, page size and search, the request guard and the table's rows, loading and totals.
     // The controller loads on connect and when the table raises sort-change, page-change or search.
-    #breakdown = new UaxTableServerController<BreakdownResult>(this, {
+    #breakdown = new UauiTableServerController<BreakdownResult>(this, {
         sort: { key: "requests", direction: "desc" },
         pageSize: 5,
         load: (state, signal) => this.#loadBreakdown(state, signal),
@@ -140,7 +140,7 @@ export class ExampleAiUsagePageElement extends UmbLitElement {
         this._usageLoading = false;
     }
 
-    async #loadBreakdown(state: Readonly<UaxTableServerState>, signal: AbortSignal) {
+    async #loadBreakdown(state: Readonly<UauiTableServerState>, signal: AbortSignal) {
         if (this.failing) throw new Error("The breakdown request failed.");
         const breakdown = await getBreakdown(
             {
@@ -159,7 +159,7 @@ export class ExampleAiUsagePageElement extends UmbLitElement {
     }
 
     // The date range changed: every part reloads. The table goes back to page 1.
-    #onDateRange(event: CustomEvent<{ value: UaxDateRange; compare?: UaxCompare }>) {
+    #onDateRange(event: CustomEvent<{ value: UauiDateRange; compare?: UauiCompare }>) {
         this._range = event.detail.value;
         this._compare = event.detail.compare;
         this.#loadUsage();
@@ -167,7 +167,7 @@ export class ExampleAiUsagePageElement extends UmbLitElement {
     }
 
     // Group by only changes how the chart's points are bucketed.
-    #onGroupBy(event: CustomEvent<{ value: UaxGroupBy }>) {
+    #onGroupBy(event: CustomEvent<{ value: UauiGroupBy }>) {
         this._groupBy = event.detail.value;
         this.#loadUsage();
     }
@@ -177,14 +177,14 @@ export class ExampleAiUsagePageElement extends UmbLitElement {
         this._metric = metric;
     }
 
-    #onBreakdownBy(event: CustomEvent<UaxSegmentedChangeDetail>) {
+    #onBreakdownBy(event: CustomEvent<UauiSegmentedChangeDetail>) {
         this._by = event.detail.value as BreakdownBy;
         void this.#breakdown.reload({ resetPage: true });
     }
 
     #tile(metric: Metric, icon: string, pick: (t: UsageTotals) => number) {
         const summary = this._usage?.summary;
-        return html`<uax-kpi-tile
+        return html`<uaui-kpi-tile
             label=${metricLabels[metric]}
             icon=${icon}
             .value=${summary && this.#compact(pick(summary))}
@@ -195,7 +195,7 @@ export class ExampleAiUsagePageElement extends UmbLitElement {
             selectable
             .deselectable=${false}
             .selected=${this._metric === metric}
-            @selected=${() => this.#selectMetric(metric)}></uax-kpi-tile>`;
+            @selected=${() => this.#selectMetric(metric)}></uaui-kpi-tile>`;
     }
 
     #compact(value: number) {
@@ -223,7 +223,7 @@ export class ExampleAiUsagePageElement extends UmbLitElement {
             ${this.#tile("requests", "icon-chart", (t) => t.requests)} ${this.#tile("inputTokens", "icon-inbox", (t) => t.inputTokens)}
             ${this.#tile("outputTokens", "icon-navigation-right", (t) => t.outputTokens)}
             ${this.#tile("totalTokens", "icon-coins", (t) => t.inputTokens + t.outputTokens)}
-            <uax-kpi-tile
+            <uaui-kpi-tile
                 label="Success rate"
                 icon="icon-check"
                 .value=${successRate === undefined
@@ -233,8 +233,8 @@ export class ExampleAiUsagePageElement extends UmbLitElement {
                 .delta=${comparable ? (this.#successRate(now) - this.#successRate(before)) * 100 : undefined}
                 delta-unit="points"
                 ?loading=${this._usageLoading}
-                ?error=${this._usageError}></uax-kpi-tile>
-            <uax-kpi-tile
+                ?error=${this._usageError}></uaui-kpi-tile>
+            <uaui-kpi-tile
                 label="Avg duration"
                 icon="icon-time"
                 .value=${duration === undefined
@@ -244,7 +244,7 @@ export class ExampleAiUsagePageElement extends UmbLitElement {
                 .delta=${comparable ? change(this.#avgDuration(now), this.#avgDuration(before)) : undefined}
                 lower-is-better
                 ?loading=${this._usageLoading}
-                ?error=${this._usageError}></uax-kpi-tile>
+                ?error=${this._usageError}></uaui-kpi-tile>
         </div>`;
     }
 
@@ -254,41 +254,41 @@ export class ExampleAiUsagePageElement extends UmbLitElement {
             <div class="actions">
                 <h2 class="uui-h3">Usage</h2>
                 <div class="controls">
-                    <uax-group-by .value=${this._groupBy} @change=${this.#onGroupBy}></uax-group-by>
-                    <uax-date-range today="2026-06-23" .value=${this._range} .compare=${this._compare} @change=${this.#onDateRange}></uax-date-range>
+                    <uaui-group-by .value=${this._groupBy} @change=${this.#onGroupBy}></uaui-group-by>
+                    <uaui-date-range today="2026-06-23" .value=${this._range} .compare=${this._compare} @change=${this.#onDateRange}></uaui-date-range>
                 </div>
             </div>
 
             ${this.#tiles()}
 
             <uui-box headline="${metricLabels[this._metric]} over time" headline-variant="h3" style="--uui-box-default-padding: 0">
-                <uax-time-series-chart
+                <uaui-time-series-chart
                     kind="stacked-bar"
                     .series=${toSeries(this._metric, usage?.buckets)}
                     .compareSeries=${toSeries(this._metric, usage?.compareBuckets)}
                     .range=${this._range}
                     .compare=${this._compare}
-                    .compareLabel=${this._compare ? uaxFormatDateRange(this.localize, this._compare) : undefined}
+                    .compareLabel=${this._compare ? uauiFormatDateRange(this.localize, this._compare) : undefined}
                     .groupBy=${this._groupBy}
                     ?loading=${this._usageLoading}
                     ?error=${this._usageError}
                     retryable
-                    @retry=${() => this.#loadUsage()}></uax-time-series-chart>
+                    @retry=${() => this.#loadUsage()}></uaui-time-series-chart>
             </uui-box>
 
             <uui-box headline="Breakdown" headline-variant="h3" style="--uui-box-default-padding: 0">
-                <uax-segmented
+                <uaui-segmented
                     slot="header-actions"
                     label="Break down by"
                     .value=${this._by}
                     .options=${breakdownOptions}
-                    @change=${this.#onBreakdownBy}></uax-segmented>
-                <uax-data-table
+                    @change=${this.#onBreakdownBy}></uaui-segmented>
+                <uaui-data-table
                     ${ref(this.#breakdown.attach)}
                     row-key="name"
                     .columns=${tableColumns(this._by)}>
-                    <div slot="toolbar"><uax-table-search></uax-table-search></div>
-                </uax-data-table>
+                    <div slot="toolbar"><uaui-table-search></uaui-table-search></div>
+                </uaui-data-table>
             </uui-box>
         `;
     }

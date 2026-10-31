@@ -8,17 +8,17 @@ import darkCss from "@umbraco-ui/uui/themes/dark.css?inline";
 import highContrastCss from "@umbraco-ui/uui/themes/high-contrast.css?inline";
 import { render } from "vitest-browser-lit";
 import { axeRun } from "../internal/test/a11y.js";
-import { deepQuery, deepText, renderElement, settle, shadow, type UaxTestElement } from "../internal/test/dom.js";
+import { deepQuery, deepText, renderElement, settle, shadow, type UauiTestElement } from "../internal/test/dom.js";
 import "./data-table.element.js";
 import "./cells/index.js";
-import type { UaxShareCellElement } from "./cells/share-cell.element.js";
-import type { UaxTableCellElement, UaxTableColumn } from "./types.js";
-import { UAX_TABLE_CELL } from "./cells/cell-names.js";
+import type { UauiShareCellElement } from "./cells/share-cell.element.js";
+import type { UauiTableCellElement, UauiTableColumn } from "./types.js";
+import { UAUI_TABLE_CELL } from "./cells/cell-names.js";
 
 /** A product's own cell: a dot and the value. Records what the table gave it. */
-@customElement("uax-test-dot-cell")
-class TestDotCellElement extends UmbLitElement implements UaxTableCellElement {
-    @property({ attribute: false }) column: UaxTableColumn = { key: "", label: "" };
+@customElement("uaui-test-dot-cell")
+class TestDotCellElement extends UmbLitElement implements UauiTableCellElement {
+    @property({ attribute: false }) column: UauiTableColumn = { key: "", label: "" };
     @property({ attribute: false }) item: Record<string, unknown> = {};
     @property({ attribute: false }) value: unknown;
 
@@ -27,27 +27,27 @@ class TestDotCellElement extends UmbLitElement implements UaxTableCellElement {
     }
 }
 
-@customElement("uax-test-other-cell")
+@customElement("uaui-test-other-cell")
 class TestOtherCellElement extends TestDotCellElement {}
 
 const rows = [{ name: "New visitor", n: 5 }, { name: "Returning visitor", n: 7 }];
-const columns = (elementName?: string): UaxTableColumn[] => [
+const columns = (elementName?: string): UauiTableColumn[] => [
     { key: "name", label: "Type", elementName },
-    { key: "n", label: "N", elementName: UAX_TABLE_CELL.number, align: "end" },
+    { key: "n", label: "N", elementName: UAUI_TABLE_CELL.number, align: "end" },
 ];
 const firstCell = (el: Element) => shadow(el).querySelector("uui-table-row:not([part~='header']):not(.summary) uui-table-cell")!.firstElementChild as TestDotCellElement;
-const table = (el: Element) => el as UaxTestElement & { columns: UaxTableColumn[]; rows: unknown[] };
+const table = (el: Element) => el as UauiTestElement & { columns: UauiTableColumn[]; rows: unknown[] };
 
 describe("Feature: table cells are elements", () => {
     describe("Scenario: a column with an elementName", () => {
-        let el: UaxTestElement;
+        let el: UauiTestElement;
         beforeEach(async () => {
-            el = await renderElement(html`<uax-data-table .columns=${columns("uax-test-dot-cell")} .rows=${rows}></uax-data-table>`, "uax-data-table");
+            el = await renderElement(html`<uaui-data-table .columns=${columns("uaui-test-dot-cell")} .rows=${rows}></uaui-data-table>`, "uaui-data-table");
             await settle(el);
         });
 
         it("creates that element in the cell", () => {
-            expect(firstCell(el).tagName.toLowerCase()).toBe("uax-test-dot-cell");
+            expect(firstCell(el).tagName.toLowerCase()).toBe("uaui-test-dot-cell");
         });
 
         it("gives it the column", () => {
@@ -69,7 +69,7 @@ describe("Feature: table cells are elements", () => {
 
     describe("Scenario: the table renders again", () => {
         it("reuses the same element while the name stays the same", async () => {
-            const el = await renderElement(html`<uax-data-table .columns=${columns("uax-test-dot-cell")} .rows=${rows}></uax-data-table>`, "uax-data-table");
+            const el = await renderElement(html`<uaui-data-table .columns=${columns("uaui-test-dot-cell")} .rows=${rows}></uaui-data-table>`, "uaui-data-table");
             const before = firstCell(el);
             table(el).columns = [...table(el).columns];
             await settle(el);
@@ -77,41 +77,41 @@ describe("Feature: table cells are elements", () => {
         });
 
         it("gives the reused element the new column", async () => {
-            const el = await renderElement(html`<uax-data-table .columns=${columns("uax-test-dot-cell")} .rows=${rows}></uax-data-table>`, "uax-data-table");
-            const next = [{ ...columns("uax-test-dot-cell")[0], label: "Renamed" }, columns()[1]];
+            const el = await renderElement(html`<uaui-data-table .columns=${columns("uaui-test-dot-cell")} .rows=${rows}></uaui-data-table>`, "uaui-data-table");
+            const next = [{ ...columns("uaui-test-dot-cell")[0], label: "Renamed" }, columns()[1]];
             table(el).columns = next;
             await settle(el);
             expect(firstCell(el).column).toBe(next[0]);
         });
 
         it("replaces the element when the name changes", async () => {
-            const el = await renderElement(html`<uax-data-table .columns=${columns("uax-test-dot-cell")} .rows=${rows}></uax-data-table>`, "uax-data-table");
-            table(el).columns = columns("uax-test-other-cell");
+            const el = await renderElement(html`<uaui-data-table .columns=${columns("uaui-test-dot-cell")} .rows=${rows}></uaui-data-table>`, "uaui-data-table");
+            table(el).columns = columns("uaui-test-other-cell");
             await settle(el);
-            expect(firstCell(el).tagName.toLowerCase()).toBe("uax-test-other-cell");
+            expect(firstCell(el).tagName.toLowerCase()).toBe("uaui-test-other-cell");
         });
 
         it("goes back to the built-in cell when the name is removed", async () => {
-            const el = await renderElement(html`<uax-data-table .columns=${columns("uax-test-dot-cell")} .rows=${rows}></uax-data-table>`, "uax-data-table");
+            const el = await renderElement(html`<uaui-data-table .columns=${columns("uaui-test-dot-cell")} .rows=${rows}></uaui-data-table>`, "uaui-data-table");
             table(el).columns = columns();
             await settle(el);
-            expect(firstCell(el).tagName.toLowerCase()).toBe("uax-text-cell");
+            expect(firstCell(el).tagName.toLowerCase()).toBe("uaui-text-cell");
         });
     });
 
     describe("Scenario: a column with a built-in cell name", () => {
         it("uses that cell element", async () => {
-            const el = await renderElement(html`<uax-data-table .columns=${columns()} .rows=${rows}></uax-data-table>`, "uax-data-table");
+            const el = await renderElement(html`<uaui-data-table .columns=${columns()} .rows=${rows}></uaui-data-table>`, "uaui-data-table");
             const cells = [...shadow(el).querySelectorAll("uui-table-row:not([part~='header']):not(.summary)")[0].querySelectorAll("uui-table-cell")];
-            expect(cells.map((c) => c.firstElementChild?.tagName.toLowerCase())).toEqual(["uax-text-cell", "uax-number-cell"]);
+            expect(cells.map((c) => c.firstElementChild?.tagName.toLowerCase())).toEqual(["uaui-text-cell", "uaui-number-cell"]);
         });
     });
 
     describe("Scenario: a share cell used on its own", () => {
-        let cell: UaxShareCellElement;
+        let cell: UauiShareCellElement;
         beforeEach(async () => {
-            const host = render(html`<uax-share-cell .value=${25} .total=${100} .max=${50} .color=${2}></uax-share-cell>`).container;
-            cell = host.querySelector("uax-share-cell")!;
+            const host = render(html`<uaui-share-cell .value=${25} .total=${100} .max=${50} .color=${2}></uaui-share-cell>`).container;
+            cell = host.querySelector("uaui-share-cell")!;
             await settle(cell);
         });
 
@@ -130,19 +130,19 @@ describe("Feature: table cells are elements", () => {
         it("shows a change badge when it has a compare value", async () => {
             cell.compareValue = 20;
             await settle(cell);
-            expect(deepQuery(cell.shadowRoot!, "uax-delta-badge")).not.toBe(null);
+            expect(deepQuery(cell.shadowRoot!, "uaui-delta-badge")).not.toBe(null);
         });
     });
 
     describe("Scenario: a link cell used on its own", () => {
         it("links to the item's hrefKey value", async () => {
             const host = render(
-                html`<uax-link-cell
-                    .column=${{ key: "url", label: "", elementName: UAX_TABLE_CELL.link, meta: { hrefKey: "href" } }}
+                html`<uaui-link-cell
+                    .column=${{ key: "url", label: "", elementName: UAUI_TABLE_CELL.link, meta: { hrefKey: "href" } }}
                     .item=${{ href: "https://example.com/" }}
-                    .value=${"Home"}></uax-link-cell>`,
+                    .value=${"Home"}></uaui-link-cell>`,
             ).container;
-            const cell = host.querySelector("uax-link-cell")!;
+            const cell = host.querySelector("uaui-link-cell")!;
             await settle(cell);
             expect(cell.shadowRoot!.querySelector("a")?.getAttribute("href")).toBe("https://example.com/");
         });
@@ -158,10 +158,10 @@ describe("Feature: table cells are elements", () => {
             try {
                 const host = render(
                     html`<div style="background: var(--uui-color-surface); color: var(--uui-color-text); width: 700px">
-                        <uax-data-table .columns=${columns("uax-test-dot-cell")} .rows=${rows}></uax-data-table>
+                        <uaui-data-table .columns=${columns("uaui-test-dot-cell")} .rows=${rows}></uaui-data-table>
                     </div>`,
                 ).container.querySelector("div")!;
-                await settle(host.querySelector("uax-data-table")!);
+                await settle(host.querySelector("uaui-data-table")!);
                 return await axeRun(host);
             } finally {
                 theme.remove();
@@ -184,7 +184,7 @@ describe("Feature: table cells are elements", () => {
 
 declare global {
     interface HTMLElementTagNameMap {
-        "uax-test-dot-cell": TestDotCellElement;
-        "uax-test-other-cell": TestOtherCellElement;
+        "uaui-test-dot-cell": TestDotCellElement;
+        "uaui-test-other-cell": TestOtherCellElement;
     }
 }

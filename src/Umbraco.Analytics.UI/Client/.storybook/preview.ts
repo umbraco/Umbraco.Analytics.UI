@@ -9,7 +9,7 @@ import { html } from "@umbraco-cms/backoffice/external/lit";
 // Registers every uui-* element, as the backoffice does
 import "@umbraco-cms/backoffice/external/uui";
 import { UmbIconRegistry } from "@umbraco-cms/backoffice/icon";
-import { registerUaxLocalization } from "../src/internal/localization/register.js";
+import { registerUauiLocalization } from "../src/internal/localization/register.js";
 import backofficeEn from "../src/internal/test/backoffice-en.js";
 import customElements from "../custom-elements.json";
 
@@ -90,7 +90,7 @@ iconRegistry.setIcons(
 iconRegistry.attach(document.body);
 
 // Stories show text, not keys: register translations like the backoffice would.
-registerUaxLocalization(backofficeEn);
+registerUauiLocalization(backofficeEn);
 
 setCustomElementsManifest(customElements);
 

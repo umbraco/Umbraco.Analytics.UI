@@ -7,13 +7,13 @@ import darkCss from "@umbraco-ui/uui/themes/dark.css?inline";
 import highContrastCss from "@umbraco-ui/uui/themes/high-contrast.css?inline";
 import { axeRun } from "../../../internal/test/a11y.js";
 import { renderPageExample, saveDateRange, withTheme } from "../../../internal/test/page-example.js";
-import { deepQuery, deepText, shadow, settle, type UaxTestElement } from "../../../internal/test/dom.js";
+import { deepQuery, deepText, shadow, settle, type UauiTestElement } from "../../../internal/test/dom.js";
 import "./commerce-analytics-page.element.js";
-import type { UaxTimeSeriesChartElement } from "../../../chart/time-series-chart.element.js";
-import type { UaxKpiTileElement } from "../../../kpi-tile/kpi-tile.element.js";
+import type { UauiTimeSeriesChartElement } from "../../../chart/time-series-chart.element.js";
+import type { UauiKpiTileElement } from "../../../kpi-tile/kpi-tile.element.js";
 
 /** Renders the page and waits until every part has its data. */
-async function renderPage(): Promise<UaxTestElement> {
+async function renderPage(): Promise<UauiTestElement> {
     const page = await renderPageExample(
         html`<example-commerce-analytics-page .latency=${0}></example-commerce-analytics-page>`,
         "example-commerce-analytics-page",
@@ -23,11 +23,11 @@ async function renderPage(): Promise<UaxTestElement> {
     return page;
 }
 
-const tiles = (page: Element) => [...shadow(page).querySelectorAll<UaxKpiTileElement>("uax-kpi-tile")];
+const tiles = (page: Element) => [...shadow(page).querySelectorAll<UauiKpiTileElement>("uaui-kpi-tile")];
 const tile = (page: Element, label: string) => tiles(page).find((t) => t.label === label)!;
-const chart = (page: Element) => shadow(page).querySelector("uax-time-series-chart") as UaxTimeSeriesChartElement;
+const chart = (page: Element) => shadow(page).querySelector("uaui-time-series-chart") as UauiTimeSeriesChartElement;
 const buyersTable = (page: Element) =>
-    shadow(page).querySelector("uax-data-table[row-key='email']") as UaxTestElement & { loading: boolean };
+    shadow(page).querySelector("uaui-data-table[row-key='email']") as UauiTestElement & { loading: boolean };
 const buyerCells = (page: Element, column: number) =>
     [...shadow(buyersTable(page)).querySelectorAll(`uui-table-row:not(.summary) uui-table-cell:nth-child(${column})`)].map((c) => deepText(c).trim());
 const buyerNames = (page: Element) => buyerCells(page, 1);
@@ -50,7 +50,7 @@ describe("Feature: the Commerce analytics page", () => {
     });
 
     describe("Scenario: pressing a KPI tile", () => {
-        let page: UaxTestElement;
+        let page: UauiTestElement;
         beforeEach(async () => {
             page = await renderPage();
             (shadow(tile(page, "Orders")).querySelector("button") as HTMLElement).click();
@@ -63,7 +63,7 @@ describe("Feature: the Commerce analytics page", () => {
     });
 
     describe("Scenario: choosing a new date range", () => {
-        let page: UaxTestElement;
+        let page: UauiTestElement;
         let before: string;
         beforeEach(async () => {
             page = await renderPage();
@@ -82,7 +82,7 @@ describe("Feature: the Commerce analytics page", () => {
     });
 
     describe("Scenario (sad path): a range before the store opened", () => {
-        let page: UaxTestElement;
+        let page: UauiTestElement;
         beforeEach(async () => {
             page = await renderPage();
             await saveDateRange(page, { from: "2025-11-01", to: "2025-11-30", compare: "off" });
@@ -91,7 +91,7 @@ describe("Feature: the Commerce analytics page", () => {
         });
 
         it("shows the chart's empty state", () => {
-            expect(deepQuery(shadow(chart(page)), "uax-empty-state")).not.toBe(null);
+            expect(deepQuery(shadow(chart(page)), "uaui-empty-state")).not.toBe(null);
         });
 
         it("shows the KPI tiles as having no data, not as 0", () => {
@@ -100,7 +100,7 @@ describe("Feature: the Commerce analytics page", () => {
     });
 
     describe("Scenario: sorting top buyers", () => {
-        let page: UaxTestElement;
+        let page: UauiTestElement;
         beforeEach(async () => {
             page = await renderPage();
             const header = [...shadow(buyersTable(page)).querySelectorAll("uui-table-head-cell")].find((h) =>
@@ -120,12 +120,12 @@ describe("Feature: the Commerce analytics page", () => {
     });
 
     describe("Scenario: paging top buyers", () => {
-        let page: UaxTestElement;
+        let page: UauiTestElement;
         let firstPage: string[];
         beforeEach(async () => {
             page = await renderPage();
             firstPage = buyerNames(page);
-            const pager = shadow(buyersTable(page)).querySelector("uax-compact-pager") as HTMLElement;
+            const pager = shadow(buyersTable(page)).querySelector("uaui-compact-pager") as HTMLElement;
             const next = shadow(pager).querySelector(".next") as HTMLElement & { updateComplete: Promise<boolean> };
             await next.updateComplete;
             next.click();
@@ -137,11 +137,11 @@ describe("Feature: the Commerce analytics page", () => {
     });
 
     describe("Scenario: searching top buyers", () => {
-        let page: UaxTestElement;
+        let page: UauiTestElement;
         beforeEach(async () => {
             page = await renderPage();
             const search = shadow(buyersTable(page)).querySelector("slot[name='toolbar']") as HTMLSlotElement;
-            const box = search.assignedElements()[0].querySelector("uax-table-search") as HTMLElement;
+            const box = search.assignedElements()[0].querySelector("uaui-table-search") as HTMLElement;
             (shadow(box).querySelector("input, uui-input") as HTMLElement).focus();
             await userEvent.keyboard("ada");
         });
@@ -159,7 +159,7 @@ describe("Feature: the Commerce analytics page", () => {
             );
             await expect.poll(() => chart(page).error).toBe(true);
             await settle(page);
-            expect(shadow(chart(page)).querySelector("uax-error-state")).not.toBe(null);
+            expect(shadow(chart(page)).querySelector("uaui-error-state")).not.toBe(null);
         });
     });
 });

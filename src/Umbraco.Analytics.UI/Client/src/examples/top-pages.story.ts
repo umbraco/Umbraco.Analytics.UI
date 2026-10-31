@@ -5,21 +5,21 @@ import raw from "./top-pages.story.ts?raw";
 import "../delta-badge/delta-badge.element.js";
 import "../table/data-table.element.js";
 import "../table-search/table-search.element.js";
-import { UAX_TABLE_CELL } from "../table/cells/cell-names.js";
-import type { UaxTableColumn } from "../table/types.js";
+import { UAUI_TABLE_CELL } from "../table/cells/cell-names.js";
+import type { UauiTableColumn } from "../table/types.js";
 
 const imports = `import { css, html, nothing } from "@umbraco-cms/backoffice/external/lit";
-import { UAX_TABLE_CELL, type UaxTableColumn } from "@umbraco-analytics/ui";`;
+import { UAUI_TABLE_CELL, type UauiTableColumn } from "@umbraco-analytics/ui";`;
 
 // #region example
 const host = "https://www.example.com";
 
 // The first column is a link. The other two are share columns: the value, its percent of the
 // column total and a bar. A product gives each share column its width.
-const columns: UaxTableColumn[] = [
-    { key: "url", label: "Page URL", elementName: UAX_TABLE_CELL.link, meta: { hrefKey: "url" }, searchable: true },
-    { key: "pageviews", label: "Pageviews", elementName: UAX_TABLE_CELL.share, width: "27%" },
-    { key: "sessions", label: "Page sessions", elementName: UAX_TABLE_CELL.share, width: "27%" },
+const columns: UauiTableColumn[] = [
+    { key: "url", label: "Page URL", elementName: UAUI_TABLE_CELL.link, meta: { hrefKey: "url" }, searchable: true },
+    { key: "pageviews", label: "Pageviews", elementName: UAUI_TABLE_CELL.share, width: "27%" },
+    { key: "sessions", label: "Page sessions", elementName: UAUI_TABLE_CELL.share, width: "27%" },
 ];
 
 const rows = [
@@ -53,7 +53,7 @@ const compareRows = [
 const total = (label: string, value: string, change?: number) => html`<div class="total">
     <span class="total-label">${label}</span>
     <span class="total-value">${value}</span>
-    ${change === undefined ? nothing : html`<uax-delta-badge size="sm" .value=${change} unit="percent"></uax-delta-badge>`}
+    ${change === undefined ? nothing : html`<uaui-delta-badge size="sm" .value=${change} unit="percent"></uaui-delta-badge>`}
 </div>`;
 
 const toolbarStyles = css`
@@ -92,12 +92,12 @@ const renderTopPages = () => html`
         ${toolbarStyles}
     </style>
     <uui-box headline="Top pages" style="--uui-box-default-padding: 0">
-        <uax-data-table .columns=${columns} .rows=${rows} .compareRows=${compareRows} row-key="url">
+        <uaui-data-table .columns=${columns} .rows=${rows} .compareRows=${compareRows} row-key="url">
             <div slot="toolbar" class="toolbar">
-                <uax-table-search></uax-table-search>
+                <uaui-table-search></uaui-table-search>
                 ${total("Total pageviews", "272", 8.4)} ${total("Total sessions", "52", -3.2)}
             </div>
-        </uax-data-table>
+        </uaui-data-table>
     </uui-box>
 `;
 // #endregion

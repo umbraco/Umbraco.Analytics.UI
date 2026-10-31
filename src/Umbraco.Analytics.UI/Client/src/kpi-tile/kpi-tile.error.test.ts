@@ -3,16 +3,16 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { html } from "@umbraco-cms/backoffice/external/lit";
 import "@umbraco-cms/backoffice/external/uui";
-import { renderElement, shadow, type UaxTestElement } from "../internal/test/dom.js";
+import { renderElement, shadow, type UauiTestElement } from "../internal/test/dom.js";
 import "./kpi-tile.element.js";
 
 describe("Feature: tile error state", () => {
     describe("Scenario: the tile has an error", () => {
-        let el: UaxTestElement;
+        let el: UauiTestElement;
         beforeEach(async () => {
             el = await renderElement(
-                html`<uax-kpi-tile label="Revenue" value="€ 10" icon="icon-coins" .delta=${5} error></uax-kpi-tile>`,
-                "uax-kpi-tile",
+                html`<uaui-kpi-tile label="Revenue" value="€ 10" icon="icon-coins" .delta=${5} error></uaui-kpi-tile>`,
+                "uaui-kpi-tile",
             );
         });
 
@@ -29,7 +29,7 @@ describe("Feature: tile error state", () => {
         });
 
         it("shows no change badge", () => {
-            expect(shadow(el).querySelector("uax-delta-badge")).toBe(null);
+            expect(shadow(el).querySelector("uaui-delta-badge")).toBe(null);
         });
 
         it("reflects the attribute", () => {
@@ -38,9 +38,9 @@ describe("Feature: tile error state", () => {
     });
 
     describe("Scenario: the tile has an error while loading and marked no-data", () => {
-        let el: UaxTestElement;
+        let el: UauiTestElement;
         beforeEach(async () => {
-            el = await renderElement(html`<uax-kpi-tile label="Revenue" error loading no-data></uax-kpi-tile>`, "uax-kpi-tile");
+            el = await renderElement(html`<uaui-kpi-tile label="Revenue" error loading no-data></uaui-kpi-tile>`, "uaui-kpi-tile");
         });
 
         it("shows the error text, not the no-data text", () => {
@@ -48,7 +48,7 @@ describe("Feature: tile error state", () => {
         });
 
         it("shows no skeleton", () => {
-            expect(shadow(el).querySelector("uax-skeleton")).toBe(null);
+            expect(shadow(el).querySelector("uaui-skeleton")).toBe(null);
         });
 
         it("is not busy", () => {

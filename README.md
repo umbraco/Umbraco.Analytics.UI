@@ -17,20 +17,20 @@ Live previews of every element, all states, and full example pages (Commerce, En
 
 | Element | What it does |
 |---|---|
-| `uax-kpi-tile` | A headline number as a card, with an icon and a change badge. Can be selectable. |
-| `uax-delta-badge` | The change against a comparison period, e.g. "▲ 12.4%". |
-| `uax-time-series-chart` | Lines, areas, bars or stacked bars over time, with compare, markers and a legend. |
-| `uax-segmented` | Segmented control: one selected option in a row. |
-| `uax-group-by` | Day, week or month switch for a chart. |
-| `uax-date-range` | Button and dialog to pick a date range and a comparison. |
-| `uax-data-table` | Sortable, searchable, pageable table. Client or server mode. |
-| `uax-table-search` | Search box for the table's `toolbar` slot. |
-| `uax-text-cell`, `uax-link-cell`, `uax-number-cell`, `uax-percent-cell`, `uax-share-cell` | Table cells. Name one in a column's `elementName`, or write your own. |
-| `uax-table-compare-badge` | The change badge of a table cell: finds the compare row and shows how a value moved. Use it in your own cells. |
-| `uax-empty-state` | "Nothing to show" message. The chart and table use it too. |
-| `uax-error-state` | "Could not load" message, with an optional Retry button. The chart and table show it when their `error` is set. The KPI tile shows a dash instead, with no Retry. |
+| `uaui-kpi-tile` | A headline number as a card, with an icon and a change badge. Can be selectable. |
+| `uaui-delta-badge` | The change against a comparison period, e.g. "▲ 12.4%". |
+| `uaui-time-series-chart` | Lines, areas, bars or stacked bars over time, with compare, markers and a legend. |
+| `uaui-segmented` | Segmented control: one selected option in a row. |
+| `uaui-group-by` | Day, week or month switch for a chart. |
+| `uaui-date-range` | Button and dialog to pick a date range and a comparison. |
+| `uaui-data-table` | Sortable, searchable, pageable table. Client or server mode. |
+| `uaui-table-search` | Search box for the table's `toolbar` slot. |
+| `uaui-text-cell`, `uaui-link-cell`, `uaui-number-cell`, `uaui-percent-cell`, `uaui-share-cell` | Table cells. Name one in a column's `elementName`, or write your own. |
+| `uaui-table-compare-badge` | The change badge of a table cell: finds the compare row and shows how a value moved. Use it in your own cells. |
+| `uaui-empty-state` | "Nothing to show" message. The chart and table use it too. |
+| `uaui-error-state` | "Could not load" message, with an optional Retry button. The chart and table show it when their `error` is set. The KPI tile shows a dash instead, with no Retry. |
 
-Also public: `UAX_TABLE_CELL` (the cell element names), `UAX_TABLE_CONTEXT` (what a custom cell reads from its table), `UaxPaletteStyles` (the colour palette for your own elements), `UaxTableServerController` (runs a table in `server` mode) and the date helpers `uaxPreviousPeriod`, `uaxPreviousYear`, `uaxCompareFor`, `uaxDaysIn`, `uaxDateBuckets` and `uaxFormatDateRange`.
+Also public: `UAUI_TABLE_CELL` (the cell element names), `UAUI_TABLE_CONTEXT` (what a custom cell reads from its table), `UauiPaletteStyles` (the colour palette for your own elements), `UauiTableServerController` (runs a table in `server` mode) and the date helpers `uauiPreviousPeriod`, `uauiPreviousYear`, `uauiCompareFor`, `uauiDaysIn`, `uauiDateBuckets` and `uauiFormatDateRange`.
 
 ## Packages
 

@@ -1,10 +1,10 @@
 // A stand-in for the product's API: invented numbers for example.com, worked out from the dates asked for.
 // A real product fetches this from its own endpoints; the page element below never knows the difference.
-import type { UaxMarker, UaxSeries } from "../../../chart/types.js";
-import type { UaxColorSlot } from "../../../theme/types.js";
-import { uaxDateBuckets, uaxDaysIn } from "../../../date-helpers/index.js";
-import type { UaxGroupBy } from "../../../group-by/group-by.element.js";
-import type { UaxTableSortDirection } from "../../../table/types.js";
+import type { UauiMarker, UauiSeries } from "../../../chart/types.js";
+import type { UauiColorSlot } from "../../../theme/types.js";
+import { uauiDateBuckets, uauiDaysIn } from "../../../date-helpers/index.js";
+import type { UauiGroupBy } from "../../../group-by/group-by.element.js";
+import type { UauiTableSortDirection } from "../../../table/types.js";
 
 // #region data
 export type PageRow = { url: string; pageviews: number; sessions: number };
@@ -36,21 +36,21 @@ const visitorsOn = (date: string) => {
 };
 
 /** The events drawn on the chart's timeline. */
-export const markers: UaxMarker[] = [
+export const markers: UauiMarker[] = [
     { id: "spring", date: "2026-06-11", title: "Spring campaign", description: "Email to 12,000 subscribers" },
     { id: "pricing", date: "2026-06-18", title: "New pricing page" },
 ];
 
 /** Adds the days up per day, week or month. */
-function series(id: string, label: string, color: UaxColorSlot, range: { from: string; to: string }, groupBy: UaxGroupBy, valueOn: (date: string) => number): UaxSeries {
-    const points = uaxDateBuckets(range, groupBy).map(({ start, days }) => ({ date: start, value: days.reduce((sum, day) => sum + valueOn(day), 0) }));
+function series(id: string, label: string, color: UauiColorSlot, range: { from: string; to: string }, groupBy: UauiGroupBy, valueOn: (date: string) => number): UauiSeries {
+    const points = uauiDateBuckets(range, groupBy).map(({ start, days }) => ({ date: start, value: days.reduce((sum, day) => sum + valueOn(day), 0) }));
     return { id, label, color, points };
 }
 
 export type ChartView = "pageviews" | "visitors";
 
 /** The chart's series: pageviews as one series, visitors as returning and new (stacked). */
-export function fetchChartSeries(view: ChartView, range: { from: string; to: string }, groupBy: UaxGroupBy): UaxSeries[] {
+export function fetchChartSeries(view: ChartView, range: { from: string; to: string }, groupBy: UauiGroupBy): UauiSeries[] {
     return view === "pageviews"
         ? [series("pageviews", "Pageviews", 1, range, groupBy, pageviewsOn)]
         : [
@@ -60,7 +60,7 @@ export function fetchChartSeries(view: ChartView, range: { from: string; to: str
 }
 
 /** The previous period for the chart. The stacked bars draw it as one bar, so visitors are one series. */
-export function fetchCompareSeries(view: ChartView, range: { from: string; to: string }, groupBy: UaxGroupBy): UaxSeries[] {
+export function fetchCompareSeries(view: ChartView, range: { from: string; to: string }, groupBy: UauiGroupBy): UauiSeries[] {
     return view === "pageviews"
         ? [series("pageviews", "Pageviews", 1, range, groupBy, pageviewsOn)]
         : [series("visitors", "Visitors", 1, range, groupBy, (d) => visitorsOn(d).returning + visitorsOn(d).new)];
@@ -79,7 +79,7 @@ const weights = everyUrl.map((_, i) => 1 / (i + 2));
 const weightSum = weights.reduce((sum, w) => sum + w, 0);
 
 const sumOver = (range: { from: string; to: string }, valueOn: (date: string) => number) =>
-    uaxDaysIn(range).reduce((sum, date) => sum + valueOn(date), 0);
+    uauiDaysIn(range).reduce((sum, date) => sum + valueOn(date), 0);
 
 const allPages = (range: { from: string; to: string }): PageRow[] => {
     const total = sumOver(range, pageviewsOn);
@@ -92,7 +92,7 @@ const allPages = (range: { from: string; to: string }): PageRow[] => {
 export type PagesQuery = {
     range: { from: string; to: string };
     compare?: { from: string; to: string };
-    sort: { key: string; direction: UaxTableSortDirection };
+    sort: { key: string; direction: UauiTableSortDirection };
     page: number;
     pageSize: number;
     query: string;
@@ -132,7 +132,7 @@ export function fetchPages({ range, compare, sort, page, pageSize, query }: Page
 }
 
 const visitorTypes = (range: { from: string; to: string }): VisitorTypeRow[] => {
-    const days = uaxDaysIn(range);
+    const days = uauiDaysIn(range);
     const returning = days.reduce((sum, d) => sum + visitorsOn(d).returning, 0);
     const added = days.reduce((sum, d) => sum + visitorsOn(d).new, 0);
     return [

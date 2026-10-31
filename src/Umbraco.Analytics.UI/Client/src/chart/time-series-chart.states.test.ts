@@ -8,7 +8,7 @@ import darkCss from "@umbraco-ui/uui/themes/dark.css?inline";
 import highContrastCss from "@umbraco-ui/uui/themes/high-contrast.css?inline";
 import { render } from "vitest-browser-lit";
 import { axeRun } from "../internal/test/a11y.js";
-import { deepQuery, renderElement, shadow, type UaxTestElement } from "../internal/test/dom.js";
+import { deepQuery, renderElement, shadow, type UauiTestElement } from "../internal/test/dom.js";
 import "./time-series-chart.element.js";
 
 const series = [
@@ -26,41 +26,41 @@ const canvas = (el: Element) => shadow(el).querySelector("canvas")!;
 
 describe("Feature: chart empty and loading states", () => {
     describe("Scenario: no data and no text set", () => {
-        let el: UaxTestElement;
+        let el: UauiTestElement;
         beforeEach(async () => {
-            el = await renderElement(html`<uax-time-series-chart .series=${[]}></uax-time-series-chart>`, "uax-time-series-chart");
+            el = await renderElement(html`<uaui-time-series-chart .series=${[]}></uaui-time-series-chart>`, "uaui-time-series-chart");
         });
 
         it("shows the empty state with the default text", () => {
-            expect(shadow(el).querySelector("uax-empty-state")?.shadowRoot?.textContent).toContain("No data yet");
+            expect(shadow(el).querySelector("uaui-empty-state")?.shadowRoot?.textContent).toContain("No data yet");
         });
     });
 
     describe("Scenario: no data, with the product's text", () => {
         it("passes the text to the empty state", async () => {
             const el = await renderElement(
-                html`<uax-time-series-chart .series=${[]} empty-headline="No pageviews yet"></uax-time-series-chart>`,
-                "uax-time-series-chart",
+                html`<uaui-time-series-chart .series=${[]} empty-headline="No pageviews yet"></uaui-time-series-chart>`,
+                "uaui-time-series-chart",
             );
-            expect(shadow(el).querySelector("uax-empty-state")?.shadowRoot?.textContent).toContain("No pageviews yet");
+            expect(shadow(el).querySelector("uaui-empty-state")?.shadowRoot?.textContent).toContain("No pageviews yet");
         });
     });
 
     describe("Scenario: first load", () => {
-        let el: UaxTestElement;
+        let el: UauiTestElement;
         beforeEach(async () => {
             el = await renderElement(
-                html`<uax-time-series-chart loading .series=${[]}></uax-time-series-chart>`,
-                "uax-time-series-chart",
+                html`<uaui-time-series-chart loading .series=${[]}></uaui-time-series-chart>`,
+                "uaui-time-series-chart",
             );
         });
 
         it("shows a skeleton", () => {
-            expect(shadow(el).querySelector("uax-skeleton")).not.toBe(null);
+            expect(shadow(el).querySelector("uaui-skeleton")).not.toBe(null);
         });
 
         it("shows no empty state", () => {
-            expect(shadow(el).querySelector("uax-empty-state")).toBe(null);
+            expect(shadow(el).querySelector("uaui-empty-state")).toBe(null);
         });
 
         it("takes the height of the loaded chart", async () => {
@@ -73,12 +73,12 @@ describe("Feature: chart empty and loading states", () => {
     });
 
     describe("Scenario: reloading with data shown", () => {
-        let el: UaxTestElement;
+        let el: UauiTestElement;
         let chart: Chart | undefined;
         beforeEach(async () => {
             el = await renderElement(
-                html`<uax-time-series-chart .series=${series}></uax-time-series-chart>`,
-                "uax-time-series-chart",
+                html`<uaui-time-series-chart .series=${series}></uaui-time-series-chart>`,
+                "uaui-time-series-chart",
             );
             chart = Chart.getChart(canvas(el));
             el.loading = true;
@@ -90,19 +90,19 @@ describe("Feature: chart empty and loading states", () => {
         });
 
         it("shows a loading bar", () => {
-            expect(shadow(el).querySelector("uax-loading-bar")).not.toBe(null);
+            expect(shadow(el).querySelector("uaui-loading-bar")).not.toBe(null);
         });
 
         it("shows no skeleton", () => {
-            expect(shadow(el).querySelector("uax-skeleton")).toBe(null);
+            expect(shadow(el).querySelector("uaui-skeleton")).toBe(null);
         });
 
         it("puts the loading bar on the top edge", () => {
-            expect(shadow(el).querySelector("uax-loading-bar")!.getBoundingClientRect().top).toBe(el.getBoundingClientRect().top);
+            expect(shadow(el).querySelector("uaui-loading-bar")!.getBoundingClientRect().top).toBe(el.getBoundingClientRect().top);
         });
 
         it("spans the loading bar across the full width, ignoring the padding", () => {
-            expect(shadow(el).querySelector("uax-loading-bar")!.getBoundingClientRect().width).toBe(el.getBoundingClientRect().width);
+            expect(shadow(el).querySelector("uaui-loading-bar")!.getBoundingClientRect().width).toBe(el.getBoundingClientRect().width);
         });
 
         it("keeps the same chart instead of building a new one", () => {
@@ -112,11 +112,11 @@ describe("Feature: chart empty and loading states", () => {
 });
 
 describe("Feature: chart accessibility and cleanup", () => {
-    let el: UaxTestElement;
+    let el: UauiTestElement;
     beforeEach(async () => {
         el = await renderElement(
-            html`<uax-time-series-chart .series=${series}></uax-time-series-chart>`,
-            "uax-time-series-chart",
+            html`<uaui-time-series-chart .series=${series}></uaui-time-series-chart>`,
+            "uaui-time-series-chart",
         );
     });
 
@@ -169,13 +169,13 @@ describe("Feature: chart accessibility and cleanup", () => {
             try {
                 const host = render(
                     html`<div style="background: var(--uui-color-surface); width: 400px">
-                        <uax-time-series-chart
+                        <uaui-time-series-chart
                             .series=${[...series, { ...series[0], id: "b", label: "Sessions" }]}
                             .compareSeries=${compare ? [{ ...series[0], id: "pv" }] : []}
-                            compare-label=${compare ? "Previous period" : ""}></uax-time-series-chart>
+                            compare-label=${compare ? "Previous period" : ""}></uaui-time-series-chart>
                     </div>`,
                 ).container.querySelector("div")!;
-                await host.querySelector("uax-time-series-chart")!.updateComplete;
+                await host.querySelector("uaui-time-series-chart")!.updateComplete;
                 return await axeRun(host);
             } finally {
                 theme.remove();

@@ -9,9 +9,9 @@ import darkCss from "@umbraco-ui/uui/themes/dark.css?inline";
 import highContrastCss from "@umbraco-ui/uui/themes/high-contrast.css?inline";
 import { render } from "vitest-browser-lit";
 import { axeRun } from "../internal/test/a11y.js";
-import { deepText, nextEvent, renderElement, shadow, type UaxTestElement } from "../internal/test/dom.js";
+import { deepText, nextEvent, renderElement, shadow, type UauiTestElement } from "../internal/test/dom.js";
 import { screenshotIt } from "../internal/test/screenshot.js";
-import type { UaxMarker } from "./types.js";
+import type { UauiMarker } from "./types.js";
 import "./time-series-chart.element.js";
 
 const series = [{ id: "pv", label: "Pageviews", points: [
@@ -26,7 +26,7 @@ const sameDay = { id: "m2", date: "2026-06-11", title: "Paid push" };
 const outside = { id: "m9", date: "2026-07-01", title: "Summer sale" };
 
 const markers = (el: Element) => [...shadow(el).querySelectorAll(".marker")] as HTMLElement[];
-const markerTooltip = (el: Element) => shadow(el).querySelector("uax-chart-marker-tooltip") as HTMLElement | null;
+const markerTooltip = (el: Element) => shadow(el).querySelector("uaui-chart-marker-tooltip") as HTMLElement | null;
 const markerTooltipText = (el: Element) => {
     const tip = markerTooltip(el);
     return tip ? deepText(tip) : undefined;
@@ -39,15 +39,15 @@ const hoverDate = async (el: Element, index: number) => {
     const x = Chart.getChart(canvas)!.getDatasetMeta(0).data[index].x;
     await userEvent.hover(page.elementLocator(canvas), { position: { x, y: canvas.getBoundingClientRect().height / 2 } });
 };
-const chart = (list: UaxMarker[], kind = "line", data = series, groupBy = "day") =>
+const chart = (list: UauiMarker[], kind = "line", data = series, groupBy = "day") =>
     renderElement(
-        html`<uax-time-series-chart kind=${kind} group-by=${groupBy} .series=${data} .markers=${list} style="width:400px"></uax-time-series-chart>`,
-        "uax-time-series-chart",
+        html`<uaui-time-series-chart kind=${kind} group-by=${groupBy} .series=${data} .markers=${list} style="width:400px"></uaui-time-series-chart>`,
+        "uaui-time-series-chart",
     );
 
 describe("Feature: event markers", () => {
     describe("Scenario: a marker within the range", () => {
-        let el: UaxTestElement;
+        let el: UauiTestElement;
         beforeEach(async () => {
             el = await chart([launch]);
             await parkPointer(el);
@@ -74,7 +74,7 @@ describe("Feature: event markers", () => {
     });
 
     describe("Scenario: hovering a marker", () => {
-        let el: UaxTestElement;
+        let el: UauiTestElement;
         beforeEach(async () => {
             el = await chart([launch]);
             await userEvent.hover(page.elementLocator(markers(el)[0]));
@@ -150,7 +150,7 @@ describe("Feature: event markers", () => {
     });
 
     describe("Scenario (sad path): a marker outside the range", () => {
-        let el: UaxTestElement;
+        let el: UauiTestElement;
         beforeEach(async () => {
             el = await chart([outside]);
         });
@@ -161,7 +161,7 @@ describe("Feature: event markers", () => {
     });
 
     describe("Scenario: two markers on the same day", () => {
-        let el: UaxTestElement;
+        let el: UauiTestElement;
         beforeEach(async () => {
             el = await chart([launch, sameDay]);
         });
@@ -217,7 +217,7 @@ describe("Feature: event markers", () => {
     });
 
     describe("Scenario: markers change while one is hovered", () => {
-        let el: UaxTestElement;
+        let el: UauiTestElement;
         beforeEach(async () => {
             el = await chart([launch]);
             await userEvent.hover(page.elementLocator(markers(el)[0]));
@@ -228,7 +228,7 @@ describe("Feature: event markers", () => {
         });
 
         it("shows the date tooltip again", async () => {
-            await expect.poll(() => shadow(el).querySelector<HTMLElement>("uax-chart-tooltip")?.style.visibility).toBe("visible");
+            await expect.poll(() => shadow(el).querySelector<HTMLElement>("uaui-chart-tooltip")?.style.visibility).toBe("visible");
         });
 
         it("doesn't open a tooltip for a new marker on the same date", async () => {
@@ -260,18 +260,18 @@ describe("Feature: event markers", () => {
         it("hides the date tooltip", async () => {
             const el = await chart([]);
             await hoverDate(el, 1);
-            await expect.poll(() => shadow(el).querySelector<HTMLElement>("uax-chart-tooltip")?.style.visibility).toBe("visible");
+            await expect.poll(() => shadow(el).querySelector<HTMLElement>("uaui-chart-tooltip")?.style.visibility).toBe("visible");
             await userEvent.keyboard("{Escape}");
-            await expect.poll(() => shadow(el).querySelector("uax-chart-tooltip")).toBeNull();
+            await expect.poll(() => shadow(el).querySelector("uaui-chart-tooltip")).toBeNull();
         });
     });
 
     describe("Scenario: markers on a chart that also compares", () => {
         it("still draws the dot", async () => {
             const el = await renderElement(
-                html`<uax-time-series-chart .series=${series} .compareSeries=${[{ ...series[0], points: series[0].points.map((p) => ({ ...p, date: p.date.replace("-06-", "-05-") })) }]}
-                    .markers=${[launch]} style="width:400px"></uax-time-series-chart>`,
-                "uax-time-series-chart",
+                html`<uaui-time-series-chart .series=${series} .compareSeries=${[{ ...series[0], points: series[0].points.map((p) => ({ ...p, date: p.date.replace("-06-", "-05-") })) }]}
+                    .markers=${[launch]} style="width:400px"></uaui-time-series-chart>`,
+                "uaui-time-series-chart",
             );
             expect(markers(el)).toHaveLength(1);
         });
@@ -286,10 +286,10 @@ describe("Feature: event markers", () => {
             document.head.appendChild(theme);
             host = render(
                 html`<div style="background: var(--uui-color-surface); width: 400px">
-                    <uax-time-series-chart .series=${series} .markers=${[launch]}></uax-time-series-chart>
+                    <uaui-time-series-chart .series=${series} .markers=${[launch]}></uaui-time-series-chart>
                 </div>`,
             ).container.querySelector("div")!;
-            await host.querySelector("uax-time-series-chart")!.updateComplete;
+            await host.querySelector("uaui-time-series-chart")!.updateComplete;
             await parkPointer(host);
         });
         afterEach(() => theme.remove());
@@ -309,10 +309,10 @@ describe("Feature: event markers", () => {
             try {
                 const host = render(
                     html`<div style="background: var(--uui-color-surface); width: 400px">
-                        <uax-time-series-chart .series=${series} .markers=${[launch, sameDay, earlier]}></uax-time-series-chart>
+                        <uaui-time-series-chart .series=${series} .markers=${[launch, sameDay, earlier]}></uaui-time-series-chart>
                     </div>`,
                 ).container.querySelector("div")!;
-                await host.querySelector("uax-time-series-chart")!.updateComplete;
+                await host.querySelector("uaui-time-series-chart")!.updateComplete;
                 return await axeRun(host);
             } finally {
                 theme?.remove();

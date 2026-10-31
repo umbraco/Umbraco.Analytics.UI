@@ -4,13 +4,13 @@ import "../../internal/loading/skeleton.element.js";
 
 /**
  * The placeholder in a table cell while the table loads for the first time: a grey block as tall as a loaded
- * row's content, so the switch to loaded rows doesn't jump. The table sets `--_uax-table-content-height`,
- * `--_uax-skeleton-height` and optionally `--_uax-skeleton-width`, which wins over `width`. Internal: not exported.
+ * row's content, so the switch to loaded rows doesn't jump. The table sets `--_uaui-table-content-height`,
+ * `--_uaui-skeleton-height` and optionally `--_uaui-skeleton-width`, which wins over `width`. Internal: not exported.
  *
- * @element uax-table-skeleton-cell
+ * @element uaui-table-skeleton-cell
  */
-@customElement("uax-table-skeleton-cell")
-export class UaxTableSkeletonCellElement extends UmbLitElement {
+@customElement("uaui-table-skeleton-cell")
+export class UauiTableSkeletonCellElement extends UmbLitElement {
     /** The width of the block, as a percent of the cell. */
     @property({ type: Number })
     width = 50;
@@ -20,14 +20,14 @@ export class UaxTableSkeletonCellElement extends UmbLitElement {
     align: "start" | "end" = "start";
 
     override render() {
-        return html`<uax-skeleton style="width: var(--_uax-skeleton-width, ${this.width}%); height: var(--_uax-skeleton-height)"></uax-skeleton>`;
+        return html`<uaui-skeleton style="width: var(--_uaui-skeleton-width, ${this.width}%); height: var(--_uaui-skeleton-height)"></uaui-skeleton>`;
     }
 
     static override styles: CSSResultGroup = css`
         :host {
             display: flex;
             align-items: center;
-            min-height: var(--_uax-table-content-height);
+            min-height: var(--_uaui-table-content-height);
         }
 
         :host([align="end"]) {
@@ -38,6 +38,6 @@ export class UaxTableSkeletonCellElement extends UmbLitElement {
 
 declare global {
     interface HTMLElementTagNameMap {
-        "uax-table-skeleton-cell": UaxTableSkeletonCellElement;
+        "uaui-table-skeleton-cell": UauiTableSkeletonCellElement;
     }
 }

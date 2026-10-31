@@ -6,11 +6,11 @@ import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
  * It only draws and takes focus. The header cell around it carries `aria-sort` and handles the click, which
  * bubbles out of the native button. Internal: not exported.
  *
- * @element uax-table-sort-button
+ * @element uaui-table-sort-button
  * @slot - The header label.
  */
-@customElement("uax-table-sort-button")
-export class UaxTableSortButtonElement extends UmbLitElement {
+@customElement("uaui-table-sort-button")
+export class UauiTableSortButtonElement extends UmbLitElement {
     /** This column is the one the table is sorted by. */
     @property({ type: Boolean })
     active = false;
@@ -79,6 +79,6 @@ export class UaxTableSortButtonElement extends UmbLitElement {
 
 declare global {
     interface HTMLElementTagNameMap {
-        "uax-table-sort-button": UaxTableSortButtonElement;
+        "uaui-table-sort-button": UauiTableSortButtonElement;
     }
 }

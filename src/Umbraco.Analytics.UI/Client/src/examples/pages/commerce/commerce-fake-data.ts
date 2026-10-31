@@ -1,8 +1,8 @@
 // Example only: a made-up store that answers like an API would. A real product calls its own endpoints
 // here. Everything is worked out from the date, so the same range always gives the same numbers.
-import { uaxDaysIn } from "../../../date-helpers/index.js";
-import type { UaxDateRange } from "../../../date-range/types.js";
-import type { UaxTableSort } from "../../../table/types.js";
+import { uauiDaysIn } from "../../../date-helpers/index.js";
+import type { UauiDateRange } from "../../../date-range/types.js";
+import type { UauiTableSort } from "../../../table/types.js";
 import { wait } from "../fake-latency.js";
 
 /** The store opened on this day: ranges before it have no orders at all. */
@@ -21,7 +21,7 @@ export type Snapshot = {
     discounts: DiscountRow[];
 };
 
-export type BuyerQuery = { sort?: UaxTableSort; page: number; pageSize: number; query: string };
+export type BuyerQuery = { sort?: UauiTableSort; page: number; pageSize: number; query: string };
 export type BuyerPage = { rows: BuyerRow[]; totalRows: number; stats: { spent: { total: number; max: number } } };
 
 const toTime = (iso: string) => Date.parse(`${iso}T00:00:00Z`);
@@ -96,9 +96,9 @@ const discounts = [
     { code: "BUNDLE5", name: "Bundle saver", weight: 0.08, value: 5 },
 ];
 
-const wobble = (range: UaxDateRange, id: string) => 0.8 + noise(`${range.from}:${range.to}:${id}`) * 0.4;
+const wobble = (range: UauiDateRange, id: string) => 0.8 + noise(`${range.from}:${range.to}:${id}`) * 0.4;
 
-function productsFor(range: UaxDateRange, totals: Totals): ProductRow[] {
+function productsFor(range: UauiDateRange, totals: Totals): ProductRow[] {
     return products
         .map((p) => {
             const units = Math.round(totals.orders * 1.8 * p.weight * wobble(range, p.sku));
@@ -108,7 +108,7 @@ function productsFor(range: UaxDateRange, totals: Totals): ProductRow[] {
         .sort((a, b) => b.units - a.units);
 }
 
-function discountsFor(range: UaxDateRange, totals: Totals): DiscountRow[] {
+function discountsFor(range: UauiDateRange, totals: Totals): DiscountRow[] {
     return discounts
         .map((d) => {
             const uses = Math.round(totals.orders * 0.5 * d.weight * wobble(range, d.code));
@@ -118,8 +118,8 @@ function discountsFor(range: UaxDateRange, totals: Totals): DiscountRow[] {
         .sort((a, b) => b.uses - a.uses);
 }
 
-function buyersFor(range: UaxDateRange): BuyerRow[] {
-    const totals = totalsOf(uaxDaysIn(range).map(dayOf));
+function buyersFor(range: UauiDateRange): BuyerRow[] {
+    const totals = totalsOf(uauiDaysIn(range).map(dayOf));
     return buyers
         .map(([name, email, weight]) => {
             const orders = Math.round(totals.orders * weight * 0.4 * wobble(range, email));
@@ -130,15 +130,15 @@ function buyersFor(range: UaxDateRange): BuyerRow[] {
 }
 
 /** The KPI totals, the daily points and the two small tables for one range. */
-export async function loadSnapshot(range: UaxDateRange, latencyMs = 0): Promise<Snapshot> {
+export async function loadSnapshot(range: UauiDateRange, latencyMs = 0): Promise<Snapshot> {
     await wait(latencyMs);
-    const days = uaxDaysIn(range).map(dayOf);
+    const days = uauiDaysIn(range).map(dayOf);
     const totals = totalsOf(days);
     return { days, totals, products: productsFor(range, totals), discounts: discountsFor(range, totals) };
 }
 
 /** Top buyers, one page at a time: the server searches, sorts and pages, like a real endpoint would. */
-export async function loadBuyers(range: UaxDateRange, query: BuyerQuery, latencyMs = 0): Promise<BuyerPage> {
+export async function loadBuyers(range: UauiDateRange, query: BuyerQuery, latencyMs = 0): Promise<BuyerPage> {
     await wait(latencyMs);
     const all = buyersFor(range);
     const needle = query.query.trim().toLowerCase();
@@ -162,7 +162,7 @@ export async function loadBuyers(range: UaxDateRange, query: BuyerQuery, latency
 }
 
 /** Last period's buyers, for the compare badges. Matched to the page's rows by email. */
-export async function loadBuyerCompare(range: UaxDateRange, latencyMs = 0): Promise<BuyerRow[]> {
+export async function loadBuyerCompare(range: UauiDateRange, latencyMs = 0): Promise<BuyerRow[]> {
     await wait(latencyMs);
     return buyersFor(range);
 }

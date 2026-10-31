@@ -5,34 +5,34 @@ import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
 import { builtInPresetRange, compareRangeFor, parseIso, todayIso } from "../internal/date/date-math.js";
 import { displayIsoDate } from "../internal/date/format-date.js";
 import "./internal/compare-group.element.js";
-import type { UaxCompareGroupChangeDetail } from "./internal/compare-group.element.js";
+import type { UauiCompareGroupChangeDetail } from "./internal/compare-group.element.js";
 import "./internal/date-field.element.js";
-import type { UaxDateFieldElement } from "./internal/date-field.element.js";
+import type { UauiDateFieldElement } from "./internal/date-field.element.js";
 import { defaultPresets } from "./presets.js";
-import type { UaxDateRange, UaxDatePreset, UaxDateRangeModalData, UaxDateRangeModalValue } from "./types.js";
+import type { UauiDateRange, UauiDatePreset, UauiDateRangeModalData, UauiDateRangeModalValue } from "./types.js";
 
 const CUSTOM = "custom";
 
 const presetTerms: Record<string, string> = {
-    "last-7-days": "uaxAnalytics_dateRangeLast7Days",
-    "last-30-days": "uaxAnalytics_dateRangeLast30Days",
-    "last-month": "uaxAnalytics_dateRangeLastMonth",
-    "last-year": "uaxAnalytics_dateRangeLastYear",
-    [CUSTOM]: "uaxAnalytics_dateRangeCustom",
+    "last-7-days": "uauiAnalytics_dateRangeLast7Days",
+    "last-30-days": "uauiAnalytics_dateRangeLast30Days",
+    "last-month": "uauiAnalytics_dateRangeLastMonth",
+    "last-year": "uauiAnalytics_dateRangeLastYear",
+    [CUSTOM]: "uauiAnalytics_dateRangeCustom",
 };
 
 type Field = "from" | "to" | "compare-from" | "compare-to";
 
 /**
- * The dialog behind `uax-date-range`: pick a preset or type two dates, then Save or Close.
- * Opened through the backoffice modal manager with `UAX_DATE_RANGE_MODAL`, not placed on a page.
+ * The dialog behind `uaui-date-range`: pick a preset or type two dates, then Save or Close.
+ * Opened through the backoffice modal manager with `UAUI_DATE_RANGE_MODAL`, not placed on a page.
  *
  * The edits live in the modal's value, as in the backoffice's own modals: Save submits it, Close rejects it.
  *
- * @element uax-date-range-modal
+ * @element uaui-date-range-modal
  */
-@customElement("uax-date-range-modal")
-export class UaxDateRangeModalElement extends UmbModalBaseElement<UaxDateRangeModalData, UaxDateRangeModalValue> {
+@customElement("uaui-date-range-modal")
+export class UauiDateRangeModalElement extends UmbModalBaseElement<UauiDateRangeModalData, UauiDateRangeModalValue> {
     get #today() {
         return this.data?.today || todayIso();
     }
@@ -42,16 +42,16 @@ export class UaxDateRangeModalElement extends UmbModalBaseElement<UaxDateRangeMo
     }
 
     /** The presets to offer, with "custom" always last. */
-    get #presets(): UaxDatePreset[] {
+    get #presets(): UauiDatePreset[] {
         const presets = this.data?.presets ?? defaultPresets();
         return presets.some((p) => p.id === CUSTOM) ? presets : [...presets, { id: CUSTOM }];
     }
 
-    #presetRange(preset: UaxDatePreset) {
+    #presetRange(preset: UauiDatePreset) {
         return preset.range?.(this.#today) ?? builtInPresetRange(preset.id, this.#today);
     }
 
-    #presetLabel(preset: UaxDatePreset) {
+    #presetLabel(preset: UauiDatePreset) {
         return preset.label ?? (presetTerms[preset.id] ? this.localize.term(presetTerms[preset.id]) : preset.id);
     }
 
@@ -67,7 +67,7 @@ export class UaxDateRangeModalElement extends UmbModalBaseElement<UaxDateRangeMo
     }
 
     /** Changes the main range. A previous-period or previous-year comparison follows it; a custom one stays put. */
-    #setRange(changes: Partial<UaxDateRange>) {
+    #setRange(changes: Partial<UauiDateRange>) {
         const current = this.value?.value ?? { from: "", to: "" };
         const range = { ...current, ...changes };
         const compare = this.value?.compare;
@@ -75,7 +75,7 @@ export class UaxDateRangeModalElement extends UmbModalBaseElement<UaxDateRangeMo
         this.updateValue({ value: range, compare: dates ? { mode: compare.mode, ...dates } : compare });
     }
 
-    #onCompareChange(e: CustomEvent<UaxCompareGroupChangeDetail>) {
+    #onCompareChange(e: CustomEvent<UauiCompareGroupChangeDetail>) {
         this.updateValue({ compare: e.detail.compare });
     }
 
@@ -87,7 +87,7 @@ export class UaxDateRangeModalElement extends UmbModalBaseElement<UaxDateRangeMo
     }
 
     #onDateChange(field: "from" | "to", e: Event) {
-        this.#setRange({ [field]: (e.target as UaxDateFieldElement).value, preset: CUSTOM });
+        this.#setRange({ [field]: (e.target as UauiDateFieldElement).value, preset: CUSTOM });
     }
 
     /** The message under a field, or `undefined` when it is fine. The end date shows its own range error. */
@@ -95,10 +95,10 @@ export class UaxDateRangeModalElement extends UmbModalBaseElement<UaxDateRangeMo
         const { from, to, date } = this.#dates(field);
         const max = this.#maxDate;
         if (parseIso(date) && date > max) {
-            return this.localize.term("uaxAnalytics_dateRangeErrorAfterMaxDate", displayIsoDate(max, this.localize));
+            return this.localize.term("uauiAnalytics_dateRangeErrorAfterMaxDate", displayIsoDate(max, this.localize));
         }
         if (field.endsWith("to") && parseIso(from) && parseIso(to) && to < from) {
-            return this.localize.term("uaxAnalytics_dateRangeErrorEndBeforeStart");
+            return this.localize.term("uauiAnalytics_dateRangeErrorEndBeforeStart");
         }
         return undefined;
     }
@@ -116,22 +116,22 @@ export class UaxDateRangeModalElement extends UmbModalBaseElement<UaxDateRangeMo
     }
 
     #renderDate(field: "from" | "to", label: string) {
-        return html`<uax-date-field
+        return html`<uaui-date-field
             .name=${field}
             label=${label}
             .value=${this.#dates(field).date}
             .max=${this.#maxDate}
             .error=${this.#error(field)}
-            @change=${(e: Event) => this.#onDateChange(field, e)}></uax-date-field>`;
+            @change=${(e: Event) => this.#onDateChange(field, e)}></uaui-date-field>`;
     }
 
     #renderCompare() {
-        return html`<uax-compare-group
+        return html`<uaui-compare-group
             .range=${this.value?.value ?? { from: "", to: "" }}
             .compare=${this.value?.compare}
             max-date=${this.#maxDate}
             .errors=${{ from: this.#error("compare-from"), to: this.#error("compare-to") }}
-            @change=${this.#onCompareChange}></uax-compare-group>`;
+            @change=${this.#onCompareChange}></uaui-compare-group>`;
     }
 
     /** Fixed on first render, so focus never jumps while the editor types. Save when it can be pressed, else the first field. */
@@ -143,12 +143,12 @@ export class UaxDateRangeModalElement extends UmbModalBaseElement<UaxDateRangeMo
         const presetId = this.#presetId;
         this.#focusSave ??= !invalid;
         return html`
-            <uui-dialog-layout class="uui-text" headline=${this.localize.term("uaxAnalytics_dateRangeModalHeadline")}>
+            <uui-dialog-layout class="uui-text" headline=${this.localize.term("uauiAnalytics_dateRangeModalHeadline")}>
                 <div class="row">
                     <uui-form-layout-item>
                         <uui-select
                             name="preset"
-                            label=${this.localize.term("uaxAnalytics_dateRangePreset")}
+                            label=${this.localize.term("uauiAnalytics_dateRangePreset")}
                             .options=${this.#presets.map((p) => ({
                                 name: this.#presetLabel(p),
                                 value: p.id,
@@ -158,8 +158,8 @@ export class UaxDateRangeModalElement extends UmbModalBaseElement<UaxDateRangeMo
                             ${this.#focusSave ? nothing : umbFocus()}
                             @change=${this.#onPresetChange}></uui-select>
                     </uui-form-layout-item>
-                    ${this.#renderDate("from", this.localize.term("uaxAnalytics_dateRangeFrom"))}
-                    ${this.#renderDate("to", this.localize.term("uaxAnalytics_dateRangeTo"))}
+                    ${this.#renderDate("from", this.localize.term("uauiAnalytics_dateRangeFrom"))}
+                    ${this.#renderDate("to", this.localize.term("uauiAnalytics_dateRangeTo"))}
                 </div>
                 ${this.data?.allowCompare ? this.#renderCompare() : nothing}
 
@@ -212,6 +212,6 @@ export class UaxDateRangeModalElement extends UmbModalBaseElement<UaxDateRangeMo
 
 declare global {
     interface HTMLElementTagNameMap {
-        "uax-date-range-modal": UaxDateRangeModalElement;
+        "uaui-date-range-modal": UauiDateRangeModalElement;
     }
 }

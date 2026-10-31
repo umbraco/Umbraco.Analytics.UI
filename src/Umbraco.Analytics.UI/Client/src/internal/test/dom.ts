@@ -3,14 +3,14 @@
 import { render } from "vitest-browser-lit";
 import type { TemplateResult } from "@umbraco-cms/backoffice/external/lit";
 
-export type UaxTestElement = HTMLElement & {
+export type UauiTestElement = HTMLElement & {
     updateComplete: Promise<boolean>;
     [key: string]: unknown;
 };
 
 /** Renders a template and returns the first element matching `tag`, once it has updated. */
-export async function renderElement(template: TemplateResult, tag: string): Promise<UaxTestElement> {
-    const el = render(template).container.querySelector(tag) as UaxTestElement;
+export async function renderElement(template: TemplateResult, tag: string): Promise<UauiTestElement> {
+    const el = render(template).container.querySelector(tag) as UauiTestElement;
     await el?.updateComplete;
     return el;
 }

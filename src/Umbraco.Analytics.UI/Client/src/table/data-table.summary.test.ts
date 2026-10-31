@@ -7,7 +7,7 @@ import darkCss from "@umbraco-ui/uui/themes/dark.css?inline";
 import highContrastCss from "@umbraco-ui/uui/themes/high-contrast.css?inline";
 import { render } from "vitest-browser-lit";
 import { axeRun } from "../internal/test/a11y.js";
-import { renderElement, settle, shadow, type UaxTestElement } from "../internal/test/dom.js";
+import { renderElement, settle, shadow, type UauiTestElement } from "../internal/test/dom.js";
 import "./data-table.element.js";
 import { nameColumns } from "./table-fixtures.js";
 
@@ -24,17 +24,17 @@ const headCell = (el: Element, label: string) =>
     [...shadow(el).querySelectorAll("uui-table-head-cell")].find((h) => h.textContent?.includes(label)) as HTMLElement;
 
 const withSummary = (extra = nothing) =>
-    html`<uax-data-table .columns=${nameColumns} .rows=${rows}>
+    html`<uaui-data-table .columns=${nameColumns} .rows=${rows}>
         <span slot="summary-name">Total</span>
         <span slot="summary-views">272</span>
         ${extra}
-    </uax-data-table>`;
+    </uaui-data-table>`;
 
 describe("Feature: a summary row aligned to the columns", () => {
     describe("Scenario: content is slotted for a column", () => {
-        let el: UaxTestElement;
+        let el: UauiTestElement;
         beforeEach(async () => {
-            el = await renderElement(withSummary(), "uax-data-table");
+            el = await renderElement(withSummary(), "uaui-data-table");
             await settle(el);
         });
 
@@ -71,13 +71,13 @@ describe("Feature: a summary row aligned to the columns", () => {
     });
 
     describe("Scenario: the summary is not sorted with the rows", () => {
-        let el: UaxTestElement;
+        let el: UauiTestElement;
         beforeEach(async () => {
             el = await renderElement(
-                html`<uax-data-table .columns=${nameColumns} .rows=${rows} .sort=${{ key: "views", direction: "asc" }}>
+                html`<uaui-data-table .columns=${nameColumns} .rows=${rows} .sort=${{ key: "views", direction: "asc" }}>
                     <span slot="summary-views">272</span>
-                </uax-data-table>`,
-                "uax-data-table",
+                </uaui-data-table>`,
+                "uaui-data-table",
             );
             await settle(el);
         });
@@ -88,9 +88,9 @@ describe("Feature: a summary row aligned to the columns", () => {
     });
 
     describe("Scenario (sad path): nothing is slotted", () => {
-        let el: UaxTestElement;
+        let el: UauiTestElement;
         beforeEach(async () => {
-            el = await renderElement(html`<uax-data-table .columns=${nameColumns} .rows=${rows}></uax-data-table>`, "uax-data-table");
+            el = await renderElement(html`<uaui-data-table .columns=${nameColumns} .rows=${rows}></uaui-data-table>`, "uaui-data-table");
             await settle(el);
         });
 
@@ -100,9 +100,9 @@ describe("Feature: a summary row aligned to the columns", () => {
     });
 
     describe("Scenario: content arrives after the first draw", () => {
-        let el: UaxTestElement;
+        let el: UauiTestElement;
         beforeEach(async () => {
-            el = await renderElement(html`<uax-data-table .columns=${nameColumns} .rows=${rows}></uax-data-table>`, "uax-data-table");
+            el = await renderElement(html`<uaui-data-table .columns=${nameColumns} .rows=${rows}></uaui-data-table>`, "uaui-data-table");
             const late = document.createElement("span");
             late.slot = "summary-views";
             late.textContent = "272";
@@ -121,11 +121,11 @@ describe("Feature: a summary row aligned to the columns", () => {
     });
 
     describe("Scenario: a summary for a column the table doesn't have", () => {
-        let el: UaxTestElement;
+        let el: UauiTestElement;
         beforeEach(async () => {
             el = await renderElement(
-                html`<uax-data-table .columns=${nameColumns} .rows=${rows}><span slot="summary-nope">x</span></uax-data-table>`,
-                "uax-data-table",
+                html`<uaui-data-table .columns=${nameColumns} .rows=${rows}><span slot="summary-nope">x</span></uaui-data-table>`,
+                "uaui-data-table",
             );
             await settle(el);
         });
@@ -136,9 +136,9 @@ describe("Feature: a summary row aligned to the columns", () => {
     });
 
     describe("Scenario: the summary row is part of the table's semantics", () => {
-        let el: UaxTestElement;
+        let el: UauiTestElement;
         beforeEach(async () => {
-            el = await renderElement(withSummary(), "uax-data-table");
+            el = await renderElement(withSummary(), "uaui-data-table");
             await settle(el);
         });
 
@@ -162,7 +162,7 @@ describe("Feature: a summary row aligned to the columns", () => {
                 const host = render(
                     html`<div style="background: var(--uui-color-surface); color: var(--uui-color-text); width: 700px">${withSummary()}</div>`,
                 ).container.querySelector("div")!;
-                await settle(host.querySelector("uax-data-table")!);
+                await settle(host.querySelector("uaui-data-table")!);
                 return await axeRun(host);
             } finally {
                 theme.remove();

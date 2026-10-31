@@ -1,9 +1,9 @@
 import { css, customElement, html, nothing, property, repeat, type CSSResultGroup, type TemplateResult } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
-import { UaxPaletteStyles } from "../../theme/index.js";
+import { UauiPaletteStyles } from "../../theme/index.js";
 
 /** One series as the legend lists it. */
-export interface UaxChartLegendEntry {
+export interface UauiChartLegendEntry {
     id: string;
     label: string;
     /** The series' palette slot, 1 to 4. */
@@ -11,16 +11,16 @@ export interface UaxChartLegendEntry {
 }
 
 /**
- * The legend under `uax-time-series-chart`: a list with a line (or, for the bar kinds, a square) in each series'
+ * The legend under `uaui-time-series-chart`: a list with a line (or, for the bar kinds, a square) in each series'
  * colour, and an entry for the compared period when `compareLabel` is set. Internal: not exported.
  *
- * @element uax-chart-legend
+ * @element uaui-chart-legend
  */
-@customElement("uax-chart-legend")
-export class UaxChartLegendElement extends UmbLitElement {
+@customElement("uaui-chart-legend")
+export class UauiChartLegendElement extends UmbLitElement {
     /** The series to list. */
     @property({ attribute: false })
-    entries: UaxChartLegendEntry[] = [];
+    entries: UauiChartLegendEntry[] = [];
 
     /** Draw squares in the bar colours, as the bar kinds do. */
     @property({ type: Boolean })
@@ -32,14 +32,14 @@ export class UaxChartLegendElement extends UmbLitElement {
 
     override render(): TemplateResult {
         const token = this.bars ? "bar" : "series";
-        return html`<ul aria-label=${this.localize.term("uaxAnalytics_chartLegendLabel")}>
+        return html`<ul aria-label=${this.localize.term("uauiAnalytics_chartLegendLabel")}>
             ${repeat(
                 this.entries,
                 (entry) => entry.id,
                 (entry) => html`<li>
                     <span
                         class=${this.bars ? "legend-swatch" : "legend-line"}
-                        style="--swatch: var(--uax-color-${token}-${entry.slot})"
+                        style="--swatch: var(--uaui-color-${token}-${entry.slot})"
                         aria-hidden="true"></span>
                     ${entry.label}
                 </li>`,
@@ -54,7 +54,7 @@ export class UaxChartLegendElement extends UmbLitElement {
     }
 
     static override styles: CSSResultGroup = [
-        UaxPaletteStyles,
+        UauiPaletteStyles,
         css`
             :host {
                 display: block;
@@ -94,13 +94,13 @@ export class UaxChartLegendElement extends UmbLitElement {
             }
 
             .legend-compare-swatch {
-                background: var(--uax-color-compare-bar);
+                background: var(--uaui-color-compare-bar);
             }
 
             .legend-compare {
                 border-top-style: dashed;
                 border-top-width: 2px;
-                border-top-color: var(--uax-color-compare);
+                border-top-color: var(--uaui-color-compare);
             }
         `,
     ];
@@ -108,6 +108,6 @@ export class UaxChartLegendElement extends UmbLitElement {
 
 declare global {
     interface HTMLElementTagNameMap {
-        "uax-chart-legend": UaxChartLegendElement;
+        "uaui-chart-legend": UauiChartLegendElement;
     }
 }

@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/web-components-vite";
 import { css, html, LitElement } from "@umbraco-cms/backoffice/external/lit";
-import { UaxPaletteStyles } from "./index.js";
+import { UauiPaletteStyles } from "./index.js";
 
 const tokens = [
     "series-1",
@@ -17,20 +17,20 @@ const tokens = [
 ];
 
 /** Story-only element: shows each resolved token, the same way a component sees it. */
-class UaxThemeSwatchesElement extends LitElement {
+class UauiThemeSwatchesElement extends LitElement {
     override render() {
         return html`<div class="grid">
             ${tokens.map(
                 (name) => html`<div class="item">
-                    <div class="swatch" style="background: var(--uax-color-${name})"></div>
-                    <code>--uax-${name}</code>
+                    <div class="swatch" style="background: var(--uaui-color-${name})"></div>
+                    <code>--uaui-${name}</code>
                 </div>`,
             )}
         </div>`;
     }
 
     static override styles = [
-        UaxPaletteStyles,
+        UauiPaletteStyles,
         css`
             .grid {
                 display: grid;
@@ -50,13 +50,13 @@ class UaxThemeSwatchesElement extends LitElement {
     ];
 }
 
-if (!customElements.get("uax-theme-swatches")) {
-    customElements.define("uax-theme-swatches", UaxThemeSwatchesElement);
+if (!customElements.get("uaui-theme-swatches")) {
+    customElements.define("uaui-theme-swatches", UauiThemeSwatchesElement);
 }
 
 const meta: Meta = {
     title: "Foundation/Theme",
-    render: () => html`<uax-theme-swatches></uax-theme-swatches>`,
+    render: () => html`<uaui-theme-swatches></uaui-theme-swatches>`,
 };
 
 export default meta;
@@ -65,7 +65,7 @@ type Story = StoryObj;
 /** Switch the toolbar theme to check light, dark and high contrast. */
 export const Swatches: Story = {};
 
-/** A parent sets `--uax-series-1`, so the first swatch follows it. */
+/** A parent sets `--uaui-series-1`, so the first swatch follows it. */
 export const Overridden: Story = {
-    render: () => html`<div style="--uax-series-1: hotpink"><uax-theme-swatches></uax-theme-swatches></div>`,
+    render: () => html`<div style="--uaui-series-1: hotpink"><uaui-theme-swatches></uaui-theme-swatches></div>`,
 };

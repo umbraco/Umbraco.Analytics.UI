@@ -7,16 +7,16 @@ import darkCss from "@umbraco-ui/uui/themes/dark.css?inline";
 import highContrastCss from "@umbraco-ui/uui/themes/high-contrast.css?inline";
 import { render } from "vitest-browser-lit";
 import { axeRun } from "../internal/test/a11y.js";
-import { pressed, recordEvents, renderElement, shadow, type UaxTestElement } from "../internal/test/dom.js";
+import { pressed, recordEvents, renderElement, shadow, type UauiTestElement } from "../internal/test/dom.js";
 import "./error-state.element.js";
 
 const retryButton = (el: Element) => shadow(el).querySelector("uui-button") as HTMLElement | null;
 
 describe("Feature: error state", () => {
     describe("Scenario: no text set", () => {
-        let el: UaxTestElement;
+        let el: UauiTestElement;
         beforeEach(async () => {
-            el = await renderElement(html`<uax-error-state></uax-error-state>`, "uax-error-state");
+            el = await renderElement(html`<uaui-error-state></uaui-error-state>`, "uaui-error-state");
         });
 
         it("shows the default headline", () => {
@@ -41,11 +41,11 @@ describe("Feature: error state", () => {
     });
 
     describe("Scenario: the product's text", () => {
-        let el: UaxTestElement;
+        let el: UauiTestElement;
         beforeEach(async () => {
             el = await renderElement(
-                html`<uax-error-state headline="Pageviews failed" description="Check your connection." icon="icon-wrong"></uax-error-state>`,
-                "uax-error-state",
+                html`<uaui-error-state headline="Pageviews failed" description="Check your connection." icon="icon-wrong"></uaui-error-state>`,
+                "uaui-error-state",
             );
         });
 
@@ -64,15 +64,15 @@ describe("Feature: error state", () => {
 
     describe("Scenario: a line is set to an empty string", () => {
         it("leaves the description out", async () => {
-            const el = await renderElement(html`<uax-error-state description=""></uax-error-state>`, "uax-error-state");
+            const el = await renderElement(html`<uaui-error-state description=""></uaui-error-state>`, "uaui-error-state");
             expect(shadow(el).querySelector("p")).toBe(null);
         });
     });
 
     describe("Scenario: retryable", () => {
-        let el: UaxTestElement;
+        let el: UauiTestElement;
         beforeEach(async () => {
-            el = await renderElement(html`<uax-error-state retryable></uax-error-state>`, "uax-error-state");
+            el = await renderElement(html`<uaui-error-state retryable></uaui-error-state>`, "uaui-error-state");
         });
 
         it("shows a Retry button", () => {
@@ -107,9 +107,9 @@ describe("Feature: error state", () => {
             }
             try {
                 const host = render(
-                    html`<div style="background: var(--uui-color-surface)"><uax-error-state retryable></uax-error-state></div>`,
+                    html`<div style="background: var(--uui-color-surface)"><uaui-error-state retryable></uaui-error-state></div>`,
                 ).container.querySelector("div")!;
-                await host.querySelector("uax-error-state")!.updateComplete;
+                await host.querySelector("uaui-error-state")!.updateComplete;
                 return await axeRun(host);
             } finally {
                 theme.remove();

@@ -2,14 +2,14 @@ import type { Meta, StoryObj } from "@storybook/web-components-vite";
 import { html } from "@umbraco-cms/backoffice/external/lit";
 import { notPublicApi } from "../../internal/story/internal.js";
 import "./chart-legend.element.js";
-import type { UaxChartLegendElement } from "./chart-legend.element.js";
+import type { UauiChartLegendElement } from "./chart-legend.element.js";
 
-const meta: Meta<UaxChartLegendElement> = {
+const meta: Meta<UauiChartLegendElement> = {
     title: "Internal/Chart legend",
-    component: "uax-chart-legend",
+    component: "uaui-chart-legend",
     tags: ["internal"],
     parameters: {
-        docs: { description: { component: notPublicApi("`uax-chart-legend` is the legend under `uax-time-series-chart`.") } },
+        docs: { description: { component: notPublicApi("`uaui-chart-legend` is the legend under `uaui-time-series-chart`.") } },
     },
     args: {
         entries: [
@@ -19,11 +19,11 @@ const meta: Meta<UaxChartLegendElement> = {
         bars: false,
         compareLabel: undefined,
     },
-    render: (args) => html`<uax-chart-legend .entries=${args.entries} .bars=${args.bars} .compareLabel=${args.compareLabel}></uax-chart-legend>`,
+    render: (args) => html`<uaui-chart-legend .entries=${args.entries} .bars=${args.bars} .compareLabel=${args.compareLabel}></uaui-chart-legend>`,
 };
 
 export default meta;
-type Story = StoryObj<UaxChartLegendElement>;
+type Story = StoryObj<UauiChartLegendElement>;
 
 /** Lines, one per series. */
 export const Default: Story = {};

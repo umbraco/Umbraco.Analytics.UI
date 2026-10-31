@@ -6,7 +6,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { page, userEvent } from "vitest/browser";
 import { html } from "@umbraco-cms/backoffice/external/lit";
 import { screenshotIt } from "../internal/test/screenshot.js";
-import { deepQuery, deepText, renderElement, settle, shadow, type UaxTestElement } from "../internal/test/dom.js";
+import { deepQuery, deepText, renderElement, settle, shadow, type UauiTestElement } from "../internal/test/dom.js";
 import "./time-series-chart.element.js";
 
 const pageviews = { id: "pv", label: "Pageviews", points: [
@@ -17,8 +17,8 @@ const sessions = { id: "s", label: "Sessions", points: [
 ] };
 
 const hiddenTable = (el: Element) => deepQuery<HTMLTableElement>(shadow(el), "table")!;
-const legendText = (el: Element) => deepText(deepQuery(shadow(el), "uax-chart-legend")!);
-const tooltip = (el: Element) => shadow(el).querySelector("uax-chart-tooltip") as HTMLElement;
+const legendText = (el: Element) => deepText(deepQuery(shadow(el), "uaui-chart-legend")!);
+const tooltip = (el: Element) => shadow(el).querySelector("uaui-chart-tooltip") as HTMLElement;
 // Moves the pointer onto the nth date, at the x Chart.js drew that point.
 const hoverDate = async (el: Element, index: number) => {
     const canvas = shadow(el).querySelector("canvas")!;
@@ -28,11 +28,11 @@ const hoverDate = async (el: Element, index: number) => {
 
 describe("Feature: line and area chart", () => {
     describe("Scenario: a line chart with two series", () => {
-        let el: UaxTestElement;
+        let el: UauiTestElement;
         beforeEach(async () => {
             el = await renderElement(
-                html`<uax-time-series-chart kind="line" .series=${[pageviews, sessions]} style="width:400px"></uax-time-series-chart>`,
-                "uax-time-series-chart",
+                html`<uaui-time-series-chart kind="line" .series=${[pageviews, sessions]} style="width:400px"></uaui-time-series-chart>`,
+                "uaui-time-series-chart",
             );
         });
 
@@ -50,11 +50,11 @@ describe("Feature: line and area chart", () => {
     });
 
     describe("Scenario: an area chart", () => {
-        let el: UaxTestElement;
+        let el: UauiTestElement;
         beforeEach(async () => {
             el = await renderElement(
-                html`<uax-time-series-chart kind="area" .series=${[pageviews]} style="width:400px"></uax-time-series-chart>`,
-                "uax-time-series-chart",
+                html`<uaui-time-series-chart kind="area" .series=${[pageviews]} style="width:400px"></uaui-time-series-chart>`,
+                "uaui-time-series-chart",
             );
         });
 
@@ -64,11 +64,11 @@ describe("Feature: line and area chart", () => {
     });
 
     describe("Scenario: values from 40 to 280", () => {
-        let el: UaxTestElement;
+        let el: UauiTestElement;
         beforeEach(async () => {
             el = await renderElement(
-                html`<uax-time-series-chart kind="line" .series=${[pageviews]} style="width:400px"></uax-time-series-chart>`,
-                "uax-time-series-chart",
+                html`<uaui-time-series-chart kind="line" .series=${[pageviews]} style="width:400px"></uaui-time-series-chart>`,
+                "uaui-time-series-chart",
             );
         });
 
@@ -78,12 +78,12 @@ describe("Feature: line and area chart", () => {
     });
 
     describe("Scenario: currency values", () => {
-        let el: UaxTestElement;
+        let el: UauiTestElement;
         beforeEach(async () => {
             el = await renderElement(
-                html`<uax-time-series-chart kind="line" .series=${[pageviews]}
-                    .valueFormat=${{ style: "currency", currency: "EUR" }} style="width:400px"></uax-time-series-chart>`,
-                "uax-time-series-chart",
+                html`<uaui-time-series-chart kind="line" .series=${[pageviews]}
+                    .valueFormat=${{ style: "currency", currency: "EUR" }} style="width:400px"></uaui-time-series-chart>`,
+                "uaui-time-series-chart",
             );
             await hoverDate(el, 2);
             await expect.poll(() => tooltip(el)?.style.visibility).toBe("visible");
@@ -95,11 +95,11 @@ describe("Feature: line and area chart", () => {
     });
 
     describe("Scenario: hovering a date with two series", () => {
-        let el: UaxTestElement;
+        let el: UauiTestElement;
         beforeEach(async () => {
             el = await renderElement(
-                html`<uax-time-series-chart kind="line" .series=${[pageviews, sessions]} style="width:400px"></uax-time-series-chart>`,
-                "uax-time-series-chart",
+                html`<uaui-time-series-chart kind="line" .series=${[pageviews, sessions]} style="width:400px"></uaui-time-series-chart>`,
+                "uaui-time-series-chart",
             );
             await hoverDate(el, 2);
             await expect.poll(() => tooltip(el)?.style.visibility).toBe("visible");
@@ -114,8 +114,8 @@ describe("Feature: line and area chart", () => {
 describe("Feature: point dates that carry a time", () => {
     it("labels a point dated 2026-06-11T00:00:00Z as 11 Jun in the hidden table", async () => {
         const el = await renderElement(
-            html`<uax-time-series-chart kind="line" .series=${[{ id: "pv", label: "Pageviews", points: [{ date: "2026-06-11T00:00:00Z", value: 5 }] }]} style="width:400px"></uax-time-series-chart>`,
-            "uax-time-series-chart",
+            html`<uaui-time-series-chart kind="line" .series=${[{ id: "pv", label: "Pageviews", points: [{ date: "2026-06-11T00:00:00Z", value: 5 }] }]} style="width:400px"></uaui-time-series-chart>`,
+            "uaui-time-series-chart",
         );
         await settle(el);
         expect(hiddenTable(el).tBodies[0].rows[0].cells[0].textContent).toMatch(/11.*Jun|Jun.*11/);
@@ -124,13 +124,13 @@ describe("Feature: point dates that carry a time", () => {
 
 describe("Feature: hovering a chart", () => {
     describe("Scenario: hovering several dates", () => {
-        let el: UaxTestElement;
+        let el: UauiTestElement;
         let row: HTMLTableRowElement;
         let formattersBuilt: number;
         beforeEach(async () => {
             el = await renderElement(
-                html`<uax-time-series-chart kind="line" .series=${[pageviews, sessions]} style="width:400px"></uax-time-series-chart>`,
-                "uax-time-series-chart",
+                html`<uaui-time-series-chart kind="line" .series=${[pageviews, sessions]} style="width:400px"></uaui-time-series-chart>`,
+                "uaui-time-series-chart",
             );
             row = hiddenTable(el).tBodies[0].rows[0];
             const formatter = vi.spyOn(Intl, "NumberFormat");

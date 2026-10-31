@@ -8,7 +8,7 @@ import darkCss from "@umbraco-ui/uui/themes/dark.css?inline";
 import highContrastCss from "@umbraco-ui/uui/themes/high-contrast.css?inline";
 import { render } from "vitest-browser-lit";
 import { axeRun } from "../test/a11y.js";
-import { renderElement, shadow, type UaxTestElement } from "../test/dom.js";
+import { renderElement, shadow, type UauiTestElement } from "../test/dom.js";
 import { getLoadingMode } from "./loading-mode.js";
 import "./skeleton.element.js";
 import "./loading-bar.element.js";
@@ -16,10 +16,10 @@ import "./loading-bar.element.js";
 const HOST_HEIGHT = 200;
 
 /**
- * Stands in for a data element. It declares its loaded height with `--_uax-skeleton-height`, uses that
+ * Stands in for a data element. It declares its loaded height with `--_uaui-skeleton-height`, uses that
  * as the min-height of its region, and picks what to render with `getLoadingMode`.
  */
-@customElement("uax-loading-test-host")
+@customElement("uaui-loading-test-host")
 class LoadingTestHost extends UmbLitElement {
     @property({ type: Boolean })
     loading = false;
@@ -30,9 +30,9 @@ class LoadingTestHost extends UmbLitElement {
     override render() {
         const mode = getLoadingMode(this.loading, this.rows.length > 0);
         return html`<div class="region" aria-busy=${this.loading ? "true" : "false"}>
-            ${mode === "reload" ? html`<uax-loading-bar></uax-loading-bar>` : nothing}
+            ${mode === "reload" ? html`<uaui-loading-bar></uaui-loading-bar>` : nothing}
             ${mode === "skeleton"
-                ? html`<uax-skeleton></uax-skeleton>`
+                ? html`<uaui-skeleton></uaui-skeleton>`
                 : html`<ul>
                       ${this.rows.map((row) => html`<li>${row}</li>`)}
                   </ul>`}
@@ -42,11 +42,11 @@ class LoadingTestHost extends UmbLitElement {
     static override styles = css`
         :host {
             display: block;
-            --_uax-skeleton-height: ${HOST_HEIGHT}px;
+            --_uaui-skeleton-height: ${HOST_HEIGHT}px;
         }
         .region {
             position: relative;
-            min-height: var(--_uax-skeleton-height);
+            min-height: var(--_uaui-skeleton-height);
             background: var(--uui-color-surface);
             color: var(--uui-color-text);
         }
@@ -62,21 +62,21 @@ const rows = ["Home", "Contact"];
 
 describe("Feature: loading states", () => {
     describe("Scenario: first load", () => {
-        let el: UaxTestElement;
+        let el: UauiTestElement;
         beforeEach(async () => {
-            el = await renderElement(html`<uax-loading-test-host loading></uax-loading-test-host>`, "uax-loading-test-host");
+            el = await renderElement(html`<uaui-loading-test-host loading></uaui-loading-test-host>`, "uaui-loading-test-host");
         });
 
         it("shows a skeleton", () => {
-            expect(shadow(el).querySelector("uax-skeleton")).not.toBe(null);
+            expect(shadow(el).querySelector("uaui-skeleton")).not.toBe(null);
         });
 
         it("shows no loading bar", () => {
-            expect(shadow(el).querySelector("uax-loading-bar")).toBe(null);
+            expect(shadow(el).querySelector("uaui-loading-bar")).toBe(null);
         });
 
         it("takes the height the host declares", () => {
-            expect(shadow(el).querySelector("uax-skeleton")!.getBoundingClientRect().height).toBe(HOST_HEIGHT);
+            expect(shadow(el).querySelector("uaui-skeleton")!.getBoundingClientRect().height).toBe(HOST_HEIGHT);
         });
 
         it("marks its region busy", () => {
@@ -85,10 +85,10 @@ describe("Feature: loading states", () => {
     });
 
     describe("Scenario: switching from loading to loaded", () => {
-        let el: UaxTestElement;
+        let el: UauiTestElement;
         let loadingHeight: number;
         beforeEach(async () => {
-            el = await renderElement(html`<uax-loading-test-host loading></uax-loading-test-host>`, "uax-loading-test-host");
+            el = await renderElement(html`<uaui-loading-test-host loading></uaui-loading-test-host>`, "uaui-loading-test-host");
             loadingHeight = el.getBoundingClientRect().height;
             el.rows = rows;
             el.loading = false;
@@ -100,7 +100,7 @@ describe("Feature: loading states", () => {
         });
 
         it("removes the skeleton", () => {
-            expect(shadow(el).querySelector("uax-skeleton")).toBe(null);
+            expect(shadow(el).querySelector("uaui-skeleton")).toBe(null);
         });
 
         it("clears the busy mark", () => {
@@ -109,12 +109,12 @@ describe("Feature: loading states", () => {
     });
 
     describe("Scenario: reloading with data shown", () => {
-        let el: UaxTestElement;
+        let el: UauiTestElement;
         let rowTop: number;
         beforeEach(async () => {
             el = await renderElement(
-                html`<uax-loading-test-host .rows=${rows}></uax-loading-test-host>`,
-                "uax-loading-test-host",
+                html`<uaui-loading-test-host .rows=${rows}></uaui-loading-test-host>`,
+                "uaui-loading-test-host",
             );
             rowTop = shadow(el).querySelector("li")!.getBoundingClientRect().top;
             el.loading = true;
@@ -126,11 +126,11 @@ describe("Feature: loading states", () => {
         });
 
         it("shows a loading bar", () => {
-            expect(shadow(el).querySelector("uax-loading-bar")).not.toBe(null);
+            expect(shadow(el).querySelector("uaui-loading-bar")).not.toBe(null);
         });
 
         it("puts the loading bar on the top edge", () => {
-            const bar = shadow(el).querySelector("uax-loading-bar")!;
+            const bar = shadow(el).querySelector("uaui-loading-bar")!;
             expect(bar.getBoundingClientRect().top).toBe(el.getBoundingClientRect().top);
         });
 
@@ -139,11 +139,11 @@ describe("Feature: loading states", () => {
         });
 
         it("shows no skeleton", () => {
-            expect(shadow(el).querySelector("uax-skeleton")).toBe(null);
+            expect(shadow(el).querySelector("uaui-skeleton")).toBe(null);
         });
 
         it("names the loading bar for assistive tech", () => {
-            const bar = shadow(el).querySelector("uax-loading-bar")!;
+            const bar = shadow(el).querySelector("uaui-loading-bar")!;
             expect(bar.shadowRoot!.querySelector("[role='progressbar']")!.getAttribute("aria-label")).toBe("Loading");
         });
 
@@ -153,16 +153,16 @@ describe("Feature: loading states", () => {
     });
 
     describe("Scenario: loaded and idle", () => {
-        let el: UaxTestElement;
+        let el: UauiTestElement;
         beforeEach(async () => {
             el = await renderElement(
-                html`<uax-loading-test-host .rows=${rows}></uax-loading-test-host>`,
-                "uax-loading-test-host",
+                html`<uaui-loading-test-host .rows=${rows}></uaui-loading-test-host>`,
+                "uaui-loading-test-host",
             );
         });
 
         it("shows no loading bar", () => {
-            expect(shadow(el).querySelector("uax-loading-bar")).toBe(null);
+            expect(shadow(el).querySelector("uaui-loading-bar")).toBe(null);
         });
     });
 
@@ -177,12 +177,12 @@ describe("Feature: loading states", () => {
             try {
                 const host = render(
                     html`<div style="background: var(--uui-color-surface)">
-                        <uax-loading-test-host
+                        <uaui-loading-test-host
                             loading
-                            .rows=${state === "reload" ? rows : []}></uax-loading-test-host>
+                            .rows=${state === "reload" ? rows : []}></uaui-loading-test-host>
                     </div>`,
                 ).container.querySelector("div")!;
-                await host.querySelector("uax-loading-test-host")!.updateComplete;
+                await host.querySelector("uaui-loading-test-host")!.updateComplete;
                 return await axeRun(host);
             } finally {
                 theme.remove();
@@ -217,6 +217,6 @@ describe("Feature: loading states", () => {
 
 declare global {
     interface HTMLElementTagNameMap {
-        "uax-loading-test-host": LoadingTestHost;
+        "uaui-loading-test-host": LoadingTestHost;
     }
 }

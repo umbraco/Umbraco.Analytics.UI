@@ -1,14 +1,14 @@
 import type { ReactiveController, ReactiveControllerHost } from "@umbraco-cms/backoffice/external/lit";
-import type { UaxDataTableElement } from "./data-table.element.js";
-import type { UaxTablePageChangeDetail, UaxTableSearchDetail, UaxTableSort, UaxTableSortChangeDetail, UaxTableStats } from "./types.js";
+import type { UauiDataTableElement } from "./data-table.element.js";
+import type { UauiTablePageChangeDetail, UauiTableSearchDetail, UauiTableSort, UauiTableSortChangeDetail, UauiTableStats } from "./types.js";
 
 /** Shared so a table with no answer yet keeps the same arrays and doesn't work its columns out again. */
 const NO_ROWS: Record<string, unknown>[] = [];
 
 /** What a product's loader is asked for: the table's sort, page, page size and search, as the editor left them. */
-export type UaxTableServerState = {
+export type UauiTableServerState = {
     /** The column the editor sorted by, or what `sort` in the options said at the start. */
-    sort?: UaxTableSort;
+    sort?: UauiTableSort;
     /** The page to load, starting at 1. */
     page: number;
     /** Rows per page. */
@@ -18,7 +18,7 @@ export type UaxTableServerState = {
 };
 
 /** What a loader answers with. The controller gives each field to the table. Add your own fields: `result` hands them back. */
-export type UaxTableServerResult = {
+export type UauiTableServerResult = {
     /** The rows of the requested page. */
     rows: Record<string, unknown>[];
     /** Last period's rows, for the compare badges. */
@@ -26,21 +26,21 @@ export type UaxTableServerResult = {
     /** How many rows match across every page. */
     totalRows?: number;
     /** Each column's total and largest value across every page. */
-    stats?: UaxTableStats;
+    stats?: UauiTableStats;
 };
 
 /** Loads one page. Pass `signal` on to `fetch`: it aborts when a newer request starts or the host leaves the page. */
-export type UaxTableServerLoader<TResult extends UaxTableServerResult> = (
-    state: Readonly<UaxTableServerState>,
+export type UauiTableServerLoader<TResult extends UauiTableServerResult> = (
+    state: Readonly<UauiTableServerState>,
     signal: AbortSignal,
 ) => Promise<TResult>;
 
-/** The options of a `UaxTableServerController`. */
-export interface UaxTableServerOptions<TResult extends UaxTableServerResult> {
+/** The options of a `UauiTableServerController`. */
+export interface UauiTableServerOptions<TResult extends UauiTableServerResult> {
     /** Loads the page for a state. Reject with the error when the request fails. */
-    load: UaxTableServerLoader<TResult>;
+    load: UauiTableServerLoader<TResult>;
     /** The sort to start with. Show it on the table's header too: the controller sets it. */
-    sort?: UaxTableSort;
+    sort?: UauiTableSort;
     /** The page to start on. Defaults to 1. */
     page?: number;
     /** Rows per page to start with. Defaults to 10, the table's own default. */
@@ -54,7 +54,7 @@ export interface UaxTableServerOptions<TResult extends UaxTableServerResult> {
 }
 
 /**
- * Runs the server side of a `uax-data-table` in `server` mode, so a product doesn't write the wiring again. It keeps
+ * Runs the server side of a `uaui-data-table` in `server` mode, so a product doesn't write the wiring again. It keeps
  * the sort, page, page size and search from the table's `sort-change`, `page-change` and `search` events, goes back to
  * page 1 on a sort or search, calls `load` with that state, and gives the answer to the table: `rows`,
  * `compareRows`, `totalRows`, `stats`, `loading` and `error` (with `retryable`, on unless the option says otherwise; the table's `retry` calls `reload()`). A newer request aborts the one before it (its `AbortSignal`) and an
@@ -62,18 +62,18 @@ export interface UaxTableServerOptions<TResult extends UaxTableServerResult> {
  * leaving the page aborts the request too.
  *
  * Create it on the page element and attach it to the table with `ref`:
- * `<uax-data-table ${ref(this.#table.attach)}>`. The controller sets `mode` to `server` and every property above. The
+ * `<uaui-data-table ${ref(this.#table.attach)}>`. The controller sets `mode` to `server` and every property above. The
  * page keeps `columns`, `row-key` and the slots. Call `reload()` when something the loader reads changes, such as
  * the date range. The host updates whenever `loading`, `result` or `error` change, so a template can read them.
  *
  * A reactive controller rather than a CMS collection context: a table is a leaf element, so nothing needs to find
  * the state through the context tree, and the controller works on any `ReactiveControllerHost`.
  */
-export class UaxTableServerController<TResult extends UaxTableServerResult = UaxTableServerResult> implements ReactiveController {
+export class UauiTableServerController<TResult extends UauiTableServerResult = UauiTableServerResult> implements ReactiveController {
     readonly #host: ReactiveControllerHost;
-    readonly #options: UaxTableServerOptions<TResult>;
-    #state: UaxTableServerState;
-    #table?: UaxDataTableElement;
+    readonly #options: UauiTableServerOptions<TResult>;
+    #state: UauiTableServerState;
+    #table?: UauiDataTableElement;
     #abort?: AbortController;
     #request = 0;
     #connected = false;
@@ -83,7 +83,7 @@ export class UaxTableServerController<TResult extends UaxTableServerResult = Uax
     // Apart from `#error` because a loader may reject with `undefined`.
     #failed = false;
 
-    constructor(host: ReactiveControllerHost, options: UaxTableServerOptions<TResult>) {
+    constructor(host: ReactiveControllerHost, options: UauiTableServerOptions<TResult>) {
         this.#host = host;
         this.#options = options;
         this.#state = {
@@ -96,7 +96,7 @@ export class UaxTableServerController<TResult extends UaxTableServerResult = Uax
     }
 
     /** The sort, page, page size and search the next load will use. */
-    get state(): Readonly<UaxTableServerState> {
+    get state(): Readonly<UauiTableServerState> {
         return this.#state;
     }
 
@@ -116,11 +116,11 @@ export class UaxTableServerController<TResult extends UaxTableServerResult = Uax
     }
 
     /**
-     * Attaches the table: pass it to `ref` on the `uax-data-table`. The table gets the state and the last answer at once,
+     * Attaches the table: pass it to `ref` on the `uaui-data-table`. The table gets the state and the last answer at once,
      * and its `sort-change`, `page-change` and `search` events drive the loads. Called with `undefined` when the table goes.
      */
     readonly attach = (element?: Element): void => {
-        const table = element as UaxDataTableElement | undefined;
+        const table = element as UauiDataTableElement | undefined;
         if (table === this.#table) return;
         this.#detach();
         if (!table) return;
@@ -162,18 +162,18 @@ export class UaxTableServerController<TResult extends UaxTableServerResult = Uax
 
     // The table has already moved to page 1, so the state follows it.
     #onSortChange = (event: Event) => {
-        this.#state = { ...this.#state, sort: (event as CustomEvent<UaxTableSortChangeDetail>).detail, page: 1 };
+        this.#state = { ...this.#state, sort: (event as CustomEvent<UauiTableSortChangeDetail>).detail, page: 1 };
         void this.#run();
     };
 
     #onPageChange = (event: Event) => {
-        const { page, pageSize } = (event as CustomEvent<UaxTablePageChangeDetail>).detail;
+        const { page, pageSize } = (event as CustomEvent<UauiTablePageChangeDetail>).detail;
         this.#state = { ...this.#state, page, pageSize };
         void this.#run();
     };
 
     #onSearch = (event: Event) => {
-        const query = (event as CustomEvent<UaxTableSearchDetail>).detail?.query;
+        const query = (event as CustomEvent<UauiTableSearchDetail>).detail?.query;
         if (typeof query !== "string" || query === this.#state.query) return;
         this.#state = { ...this.#state, query, page: 1 };
         void this.#run();

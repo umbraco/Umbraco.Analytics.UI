@@ -3,20 +3,20 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { html } from "@umbraco-cms/backoffice/external/lit";
 import "@umbraco-cms/backoffice/external/uui";
-import { deepQuery, pressed, recordEvents, renderElement, settle, shadow, type UaxTestElement } from "../internal/test/dom.js";
+import { deepQuery, pressed, recordEvents, renderElement, settle, shadow, type UauiTestElement } from "../internal/test/dom.js";
 import "./data-table.element.js";
 import { pageColumns, pageRows } from "./table-fixtures.js";
 
-const errorState = (el: Element) => shadow(el).querySelector("uax-error-state") as UaxTestElement | null;
+const errorState = (el: Element) => shadow(el).querySelector("uaui-error-state") as UauiTestElement | null;
 const dataRows = (el: Element) => [...shadow(el).querySelectorAll("uui-table-row:not(.summary)")].filter((row) => !row.querySelector("uui-table-head-cell"));
 
 describe("Feature: table error state", () => {
     describe("Scenario: the table has an error", () => {
-        let el: UaxTestElement;
+        let el: UauiTestElement;
         beforeEach(async () => {
             el = await renderElement(
-                html`<uax-data-table .columns=${pageColumns} .rows=${pageRows} error retryable></uax-data-table>`,
-                "uax-data-table",
+                html`<uaui-data-table .columns=${pageColumns} .rows=${pageRows} error retryable></uaui-data-table>`,
+                "uaui-data-table",
             );
             await settle(el);
         });
@@ -34,11 +34,11 @@ describe("Feature: table error state", () => {
         });
 
         it("shows no pager", () => {
-            expect(shadow(el).querySelector("uax-compact-pager")).toBe(null);
+            expect(shadow(el).querySelector("uaui-compact-pager")).toBe(null);
         });
 
         it("shows no empty state", () => {
-            expect(shadow(el).querySelector("uax-empty-state")).toBe(null);
+            expect(shadow(el).querySelector("uaui-empty-state")).toBe(null);
         });
 
         it("raises retry on the table", async () => {
@@ -65,11 +65,11 @@ describe("Feature: table error state", () => {
     });
 
     describe("Scenario: the table has an error while loading", () => {
-        let el: UaxTestElement;
+        let el: UauiTestElement;
         beforeEach(async () => {
             el = await renderElement(
-                html`<uax-data-table .columns=${pageColumns} .rows=${[]} error loading></uax-data-table>`,
-                "uax-data-table",
+                html`<uaui-data-table .columns=${pageColumns} .rows=${[]} error loading></uaui-data-table>`,
+                "uaui-data-table",
             );
             await settle(el);
         });
@@ -79,7 +79,7 @@ describe("Feature: table error state", () => {
         });
 
         it("shows no skeleton", () => {
-            expect(deepQuery(shadow(el), "uax-skeleton")).toBe(null);
+            expect(deepQuery(shadow(el), "uaui-skeleton")).toBe(null);
         });
 
         it("is not busy", () => {

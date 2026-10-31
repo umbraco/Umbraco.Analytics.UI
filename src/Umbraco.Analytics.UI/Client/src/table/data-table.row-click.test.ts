@@ -8,9 +8,9 @@ import darkCss from "@umbraco-ui/uui/themes/dark.css?inline";
 import highContrastCss from "@umbraco-ui/uui/themes/high-contrast.css?inline";
 import { render } from "vitest-browser-lit";
 import { axeRun } from "../internal/test/a11y.js";
-import { deepQuery, renderElement, settle, shadow, type UaxTestElement } from "../internal/test/dom.js";
+import { deepQuery, renderElement, settle, shadow, type UauiTestElement } from "../internal/test/dom.js";
 import "./data-table.element.js";
-import { UAX_TABLE_CELL } from "./cells/cell-names.js";
+import { UAUI_TABLE_CELL } from "./cells/cell-names.js";
 import { nameColumns } from "./table-fixtures.js";
 
 const rows = [{ name: "Home", views: 210 }];
@@ -22,7 +22,7 @@ describe("Feature: open a row", () => {
         beforeEach(async () => {
             clicked = [];
             const listener = (e: Event) => clicked.push((e as CustomEvent).detail.row);
-            const el = await renderElement(html`<uax-data-table .columns=${nameColumns} .rows=${rows} clickable-rows @row-click=${listener}></uax-data-table>`, "uax-data-table");
+            const el = await renderElement(html`<uaui-data-table .columns=${nameColumns} .rows=${rows} clickable-rows @row-click=${listener}></uaui-data-table>`, "uaui-data-table");
             firstRow(el).click();
         });
 
@@ -36,7 +36,7 @@ describe("Feature: open a row", () => {
         beforeEach(async () => {
             clicked = [];
             const listener = (e: Event) => clicked.push((e as CustomEvent).detail.row);
-            const el = await renderElement(html`<uax-data-table .columns=${nameColumns} .rows=${rows} clickable-rows @row-click=${listener}></uax-data-table>`, "uax-data-table");
+            const el = await renderElement(html`<uaui-data-table .columns=${nameColumns} .rows=${rows} clickable-rows @row-click=${listener}></uaui-data-table>`, "uaui-data-table");
             firstRow(el).focus();
             await userEvent.keyboard("{Enter}");
         });
@@ -47,9 +47,9 @@ describe("Feature: open a row", () => {
     });
 
     describe("Scenario (sad path): no row-click listener", () => {
-        let el: UaxTestElement;
+        let el: UauiTestElement;
         beforeEach(async () => {
-            el = await renderElement(html`<uax-data-table .columns=${nameColumns} .rows=${rows}></uax-data-table>`, "uax-data-table");
+            el = await renderElement(html`<uaui-data-table .columns=${nameColumns} .rows=${rows}></uaui-data-table>`, "uaui-data-table");
         });
 
         it("leaves rows unfocusable", () => {
@@ -62,7 +62,7 @@ describe("Feature: open a row", () => {
         beforeEach(async () => {
             clicked = [];
             const listener = (e: Event) => clicked.push((e as CustomEvent).detail.row);
-            const el = await renderElement(html`<uax-data-table .columns=${nameColumns} .rows=${rows} clickable-rows @row-click=${listener}></uax-data-table>`, "uax-data-table");
+            const el = await renderElement(html`<uaui-data-table .columns=${nameColumns} .rows=${rows} clickable-rows @row-click=${listener}></uaui-data-table>`, "uaui-data-table");
             firstRow(el).focus();
             await userEvent.keyboard(" ");
         });
@@ -74,12 +74,12 @@ describe("Feature: open a row", () => {
 
     describe("Scenario: clickable rows", () => {
         it("makes each row reachable by keyboard", async () => {
-            const el = await renderElement(html`<uax-data-table .columns=${nameColumns} .rows=${rows} clickable-rows></uax-data-table>`, "uax-data-table");
+            const el = await renderElement(html`<uaui-data-table .columns=${nameColumns} .rows=${rows} clickable-rows></uaui-data-table>`, "uaui-data-table");
             expect(firstRow(el).getAttribute("tabindex")).toBe("0");
         });
 
         it("keeps the row role", async () => {
-            const el = await renderElement(html`<uax-data-table .columns=${nameColumns} .rows=${rows} clickable-rows></uax-data-table>`, "uax-data-table");
+            const el = await renderElement(html`<uaui-data-table .columns=${nameColumns} .rows=${rows} clickable-rows></uaui-data-table>`, "uaui-data-table");
             expect(firstRow(el).getAttribute("role")).toBe("row");
         });
     });
@@ -87,7 +87,7 @@ describe("Feature: open a row", () => {
     describe("Scenario (sad path): a listener but rows not marked clickable", () => {
         it("raises nothing when a row is clicked", async () => {
             const clicked: unknown[] = [];
-            const el = await renderElement(html`<uax-data-table .columns=${nameColumns} .rows=${rows} @row-click=${(e: Event) => clicked.push(e)}></uax-data-table>`, "uax-data-table");
+            const el = await renderElement(html`<uaui-data-table .columns=${nameColumns} .rows=${rows} @row-click=${(e: Event) => clicked.push(e)}></uaui-data-table>`, "uaui-data-table");
             firstRow(el).click();
             expect(clicked).toEqual([]);
         });
@@ -96,10 +96,10 @@ describe("Feature: open a row", () => {
     describe("Scenario (sad path): clicking a link in a row", () => {
         it("raises nothing", async () => {
             const clicked: unknown[] = [];
-            const columns = [{ key: "name", label: "Name", elementName: UAX_TABLE_CELL.link, meta: { hrefKey: "url" } }];
+            const columns = [{ key: "name", label: "Name", elementName: UAUI_TABLE_CELL.link, meta: { hrefKey: "url" } }];
             const el = await renderElement(
-                html`<uax-data-table .columns=${columns} .rows=${[{ name: "Home", url: "#home" }]} clickable-rows @row-click=${(e: Event) => clicked.push(e)}></uax-data-table>`,
-                "uax-data-table",
+                html`<uaui-data-table .columns=${columns} .rows=${[{ name: "Home", url: "#home" }]} clickable-rows @row-click=${(e: Event) => clicked.push(e)}></uaui-data-table>`,
+                "uaui-data-table",
             );
             await settle(el);
             deepQuery<HTMLElement>(shadow(el), "a")!.click();
@@ -110,10 +110,10 @@ describe("Feature: open a row", () => {
     describe("Scenario (sad path): pressing Enter on a link in a row", () => {
         it("raises nothing", async () => {
             const clicked: unknown[] = [];
-            const columns = [{ key: "name", label: "Name", elementName: UAX_TABLE_CELL.link, meta: { hrefKey: "url" } }];
+            const columns = [{ key: "name", label: "Name", elementName: UAUI_TABLE_CELL.link, meta: { hrefKey: "url" } }];
             const el = await renderElement(
-                html`<uax-data-table .columns=${columns} .rows=${[{ name: "Home", url: "#home" }]} clickable-rows @row-click=${(e: Event) => clicked.push(e)}></uax-data-table>`,
-                "uax-data-table",
+                html`<uaui-data-table .columns=${columns} .rows=${[{ name: "Home", url: "#home" }]} clickable-rows @row-click=${(e: Event) => clicked.push(e)}></uaui-data-table>`,
+                "uaui-data-table",
             );
             await settle(el);
             deepQuery<HTMLElement>(shadow(el), "a")!.focus();
@@ -124,7 +124,7 @@ describe("Feature: open a row", () => {
 
     describe("Scenario (sad path): first load", () => {
         it("leaves the skeleton rows unfocusable", async () => {
-            const el = await renderElement(html`<uax-data-table .columns=${nameColumns} .rows=${[]} loading clickable-rows></uax-data-table>`, "uax-data-table");
+            const el = await renderElement(html`<uaui-data-table .columns=${nameColumns} .rows=${[]} loading clickable-rows></uaui-data-table>`, "uaui-data-table");
             expect(firstRow(el).hasAttribute("tabindex")).toBe(false);
         });
     });
@@ -139,10 +139,10 @@ describe("Feature: open a row", () => {
             try {
                 const host = render(
                     html`<div style="background: var(--uui-color-surface); color: var(--uui-color-text); width: 700px">
-                        <uax-data-table .columns=${nameColumns} .rows=${rows} clickable-rows></uax-data-table>
+                        <uaui-data-table .columns=${nameColumns} .rows=${rows} clickable-rows></uaui-data-table>
                     </div>`,
                 ).container.querySelector("div")!;
-                await host.querySelector("uax-data-table")!.updateComplete;
+                await host.querySelector("uaui-data-table")!.updateComplete;
                 return await axeRun(host);
             } finally {
                 theme.remove();

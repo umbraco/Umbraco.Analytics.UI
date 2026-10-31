@@ -2,7 +2,7 @@
 import "@umbraco-ui/uui/themes/light.css";
 import { type AxeResults } from "axe-core";
 import { beforeAll, expect } from "vitest";
-import { registerUaxTranslations } from "./src/internal/test/localization.js";
+import { registerUauiTranslations } from "./src/internal/test/localization.js";
 import type { ExpectationResult } from "@vitest/expect";
 
 /**
@@ -41,4 +41,4 @@ declare module "vitest" {
 }
 
 // Every test renders translated text, not keys.
-beforeAll(registerUaxTranslations);
+beforeAll(registerUauiTranslations);

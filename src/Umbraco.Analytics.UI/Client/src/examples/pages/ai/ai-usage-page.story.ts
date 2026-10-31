@@ -8,17 +8,17 @@ import "./ai-usage-page.element.js";
 const imports = `import { css, customElement, html, property, state } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import {
-    UAX_TABLE_CELL,
-    uaxFormatDateRange,
-    type UaxCompare,
-    type UaxDateRange,
-    type UaxGroupBy,
-    type UaxSeries,
-    type UaxTableColumn,
-    type UaxTablePageChangeDetail,
-    type UaxTableSearchDetail,
-    type UaxTableSort,
-    type UaxTableSortChangeDetail,
+    UAUI_TABLE_CELL,
+    uauiFormatDateRange,
+    type UauiCompare,
+    type UauiDateRange,
+    type UauiGroupBy,
+    type UauiSeries,
+    type UauiTableColumn,
+    type UauiTablePageChangeDetail,
+    type UauiTableSearchDetail,
+    type UauiTableSort,
+    type UauiTableSortChangeDetail,
 } from "@umbraco-analytics/ui";
 // Your API client: getUsage, getBreakdown and their types. In this story they are a fake, generated from the date.
 import { getBreakdown, getUsage, type BreakdownBy, type BreakdownResult, type BreakdownSortKey, type UsageBucket, type UsageResult, type UsageTotals } from "./usage-api.js";`;
@@ -34,7 +34,7 @@ export default meta;
 
 // The host stands in for the backoffice's modal manager, which the date range dialog opens through.
 const render = (latency?: number, failing = false) => html`
-    <uax-test-modal-host><example-ai-usage-page latency=${ifDefined(latency)} ?failing=${failing}></example-ai-usage-page></uax-test-modal-host>
+    <uaui-test-modal-host><example-ai-usage-page latency=${ifDefined(latency)} ?failing=${failing}></example-ai-usage-page></uaui-test-modal-host>
 `;
 
 /**

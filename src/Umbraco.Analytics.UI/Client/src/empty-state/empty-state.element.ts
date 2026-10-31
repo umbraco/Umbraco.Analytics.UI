@@ -9,10 +9,10 @@ import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
  * The headline is styled text, not a heading element, so it fits under whatever heading the host box has.
  * Set an attribute to an empty string to leave that line out.
  *
- * @element uax-empty-state
+ * @element uaui-empty-state
  */
-@customElement("uax-empty-state")
-export class UaxEmptyStateElement extends UmbLitElement {
+@customElement("uaui-empty-state")
+export class UauiEmptyStateElement extends UmbLitElement {
     /** The main line. Defaults to the translation of "No data yet". An empty string hides it. */
     @property({ type: String })
     headline?: string;
@@ -26,8 +26,8 @@ export class UaxEmptyStateElement extends UmbLitElement {
     icon = "icon-search";
 
     override render(): TemplateResult {
-        const headline = this.headline ?? this.localize.term("uaxAnalytics_emptyHeadline");
-        const description = this.description ?? this.localize.term("uaxAnalytics_emptyDescription");
+        const headline = this.headline ?? this.localize.term("uauiAnalytics_emptyHeadline");
+        const description = this.description ?? this.localize.term("uauiAnalytics_emptyDescription");
 
         return html`<div class="empty">
             <div class="icon"><uui-icon name=${this.icon}></uui-icon></div>
@@ -78,6 +78,6 @@ export class UaxEmptyStateElement extends UmbLitElement {
 
 declare global {
     interface HTMLElementTagNameMap {
-        "uax-empty-state": UaxEmptyStateElement;
+        "uaui-empty-state": UauiEmptyStateElement;
     }
 }

@@ -9,11 +9,11 @@ import { parseIso } from "../../internal/date/date-math.js";
  * controlled: it shows `value` and raises `change` with what the editor typed, and the dialog decides what to
  * keep. The message is `error` when set, else "required" while the date is empty or half-typed. Internal: not exported.
  *
- * @element uax-date-field
+ * @element uaui-date-field
  * @fires change - The editor changed the date. Bubbles, not composed. Read the new date from the element's `value`.
  */
-@customElement("uax-date-field")
-export class UaxDateFieldElement extends UmbLitElement {
+@customElement("uaui-date-field")
+export class UauiDateFieldElement extends UmbLitElement {
     /** The field's name, which also names its message (`data-for`). Set as a property: it is not an attribute. */
     @property({ attribute: false })
     name = "";
@@ -82,6 +82,6 @@ export class UaxDateFieldElement extends UmbLitElement {
 
 declare global {
     interface HTMLElementTagNameMap {
-        "uax-date-field": UaxDateFieldElement;
+        "uaui-date-field": UauiDateFieldElement;
     }
 }
