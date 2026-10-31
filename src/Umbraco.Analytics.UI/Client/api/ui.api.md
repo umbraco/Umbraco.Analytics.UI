@@ -130,9 +130,11 @@ export function uauiDaysIn(range: UauiDateSpan): string[];
 
 // @public
 export class UauiDeltaBadgeElement extends UmbLitElement {
+    current?: number;
     get direction(): "up" | "down" | "flat";
     lowerIsBetter: boolean;
     maxDecimals: number;
+    previous?: number;
     // (undocumented)
     render(): TemplateResult | typeof nothing;
     get sentiment(): "positive" | "negative" | "neutral";

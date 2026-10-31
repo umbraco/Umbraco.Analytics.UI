@@ -1,4 +1,12 @@
-import { css, customElement, html, nothing, property, type CSSResultGroup, type TemplateResult } from "@umbraco-cms/backoffice/external/lit";
+import {
+  css,
+  customElement,
+  html,
+  nothing,
+  property,
+  type CSSResultGroup,
+  type TemplateResult,
+} from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UauiVisuallyHiddenStyles } from "../internal/a11y/visually-hidden.css.js";
 import { UauiPaletteStyles } from "../theme/index.js";
@@ -12,7 +20,11 @@ export type UauiDeltaBadgeSize = "md" | "sm";
 /**
  * Shows the change in a value against a comparison period, e.g. "▲ 12.4%".
  *
- * A `value` of 0 is "no change": a neutral badge ("0%" or "0 pp", read as "no change"). With no `value` (or one that
+ * Give the change as `value`, or give the two numbers as `current` and `previous` and the badge works it out: the
+ * percent change (unknown when `previous` is 0), or with `unit="points"` the difference between two percentages.
+ * `value` wins when both are set.
+ *
+ * A change of 0 is "no change": a neutral badge ("0%" or "0 pp", read as "no change"). With no change (or one that
  * is not a finite number) the change is unknown and nothing is drawn.
  *
  * Green means good. For metrics where a drop is good (refund rate, bounce rate), set `lower-is-better`.
@@ -28,128 +40,161 @@ export type UauiDeltaBadgeSize = "md" | "sm";
  */
 @customElement("uaui-delta-badge")
 export class UauiDeltaBadgeElement extends UmbLitElement {
-    /**
-     * The change. 12.4 means +12.4% (or +12.4 percentage points when `unit` is "points"). 0 is "no change".
-     * Unset means unknown: nothing is drawn.
-     */
-    @property({ type: Number })
-    value?: number;
+  /**
+   * The change. 12.4 means +12.4% (or +12.4 percentage points when `unit` is "points"). 0 is "no change".
+   * Unset means unknown: nothing is drawn.
+   */
+  @property({ type: Number })
+  value?: number;
 
-    /** Whether `value` is a percent change or a change in percentage points. */
-    @property({ type: String })
-    unit: UauiDeltaUnit = "percent";
+  /** The value in the current period. With `previous`, the badge works out the change. Ignored when `value` is set. */
+  @property({ type: Number })
+  current?: number;
 
-    /** Shows a fall as good (green) and a rise as bad (red). */
-    @property({ type: Boolean, attribute: "lower-is-better", reflect: true })
-    lowerIsBetter = false;
+  /** The same value in the comparison period. With `current`, the badge works out the change. Ignored when `value` is set. */
+  @property({ type: Number })
+  previous?: number;
 
-    /** Maximum number of decimals shown. */
-    @property({ type: Number, attribute: "max-decimals" })
-    maxDecimals = 1;
+  /** Whether the change is a percent change or a change in percentage points. */
+  @property({ type: String })
+  unit: UauiDeltaUnit = "percent";
 
-    /** Pill size. "sm" is for table cells. */
-    @property({ type: String, reflect: true })
-    size: UauiDeltaBadgeSize = "md";
+  /** Shows a fall as good (green) and a rise as bad (red). */
+  @property({ type: Boolean, attribute: "lower-is-better", reflect: true })
+  lowerIsBetter = false;
 
-    /** The direction of the change. "flat" when the value rounds to zero. */
-    get direction(): "up" | "down" | "flat" {
-        const rounded = this.#round(this.value ?? 0);
-        return rounded > 0 ? "up" : rounded < 0 ? "down" : "flat";
-    }
+  /** Maximum number of decimals shown. */
+  @property({ type: Number, attribute: "max-decimals" })
+  maxDecimals = 1;
 
-    /** Whether the change is good, bad or neutral, after applying `lowerIsBetter`. */
-    get sentiment(): "positive" | "negative" | "neutral" {
-        const direction = this.direction;
-        if (direction === "flat") return "neutral";
-        return (direction === "up") !== this.lowerIsBetter ? "positive" : "negative";
-    }
+  /** Pill size. "sm" is for table cells. */
+  @property({ type: String, reflect: true })
+  size: UauiDeltaBadgeSize = "md";
 
-    #round(value: number) {
-        const factor = 10 ** this.maxDecimals;
-        return Math.round(value * factor) / factor;
-    }
+  /** The direction of the change. "flat" when the value rounds to zero. */
+  get direction(): "up" | "down" | "flat" {
+    const rounded = this.#round(this.#change() ?? 0);
+    return rounded > 0 ? "up" : rounded < 0 ? "down" : "flat";
+  }
 
-    #format(value: number) {
-        const rounded = this.#round(value);
-        const options = { maximumFractionDigits: this.maxDecimals, signDisplay: "exceptZero" } as const;
-        // Percent style lets the culture place the sign and spacing ("+12.4%" in en, "+12,4 %" in da-DK).
-        return this.unit === "points"
-            ? this.localize.term("uauiAnalytics_deltaPercentagePoints", this.localize.number(rounded, options))
-            : this.localize.number(rounded / 100, { ...options, style: "percent" });
-    }
+  /** Whether the change is good, bad or neutral, after applying `lowerIsBetter`. */
+  get sentiment(): "positive" | "negative" | "neutral" {
+    const direction = this.direction;
+    if (direction === "flat") return "neutral";
+    return (direction === "up") !== this.lowerIsBetter
+      ? "positive"
+      : "negative";
+  }
 
-    #sentimentLabel() {
-        const key = {
-            positive: "uauiAnalytics_deltaImprovement",
-            negative: "uauiAnalytics_deltaDecline",
-            neutral: "uauiAnalytics_deltaNoChange",
-        }[this.sentiment];
-        return this.localize.term("uauiAnalytics_deltaSentimentSuffix", this.localize.term(key));
-    }
+  // The change to draw: `value`, else worked out from `current` and `previous`. Undefined when unknown.
+  #change(): number | undefined {
+    if (this.value !== undefined) return this.value;
+    const { current, previous } = this;
+    if (current === undefined || previous === undefined) return undefined;
+    if (this.unit === "points") return current - previous;
+    return previous === 0
+      ? undefined
+      : ((current - previous) / Math.abs(previous)) * 100;
+  }
 
-    override render(): TemplateResult | typeof nothing {
-        const value = this.value;
-        if (value === undefined || !Number.isFinite(value)) return nothing;
+  #round(value: number) {
+    const factor = 10 ** this.maxDecimals;
+    return Math.round(value * factor) / factor;
+  }
 
-        const arrow = { up: "▲", down: "▼", flat: "–" }[this.direction];
+  #format(value: number) {
+    const rounded = this.#round(value);
+    const options = {
+      maximumFractionDigits: this.maxDecimals,
+      signDisplay: "exceptZero",
+    } as const;
+    // Percent style lets the culture place the sign and spacing ("+12.4%" in en, "+12,4 %" in da-DK).
+    return this.unit === "points"
+      ? this.localize.term(
+          "uauiAnalytics_deltaPercentagePoints",
+          this.localize.number(rounded, options),
+        )
+      : this.localize.number(rounded / 100, { ...options, style: "percent" });
+  }
 
-        // The signed number carries the direction for screen readers and the hidden text says whether it is
-        // good, so neither the arrow nor the colour has to; the arrow is decoration.
-        return html`<span class="badge" data-sentiment=${this.sentiment}
-            ><span class="arrow" aria-hidden="true">${arrow}</span>${this.#format(value)}<span class="visually-hidden">${this.#sentimentLabel()}</span></span
-        >`;
-    }
+  #sentimentLabel() {
+    const key = {
+      positive: "uauiAnalytics_deltaImprovement",
+      negative: "uauiAnalytics_deltaDecline",
+      neutral: "uauiAnalytics_deltaNoChange",
+    }[this.sentiment];
+    return this.localize.term(
+      "uauiAnalytics_deltaSentimentSuffix",
+      this.localize.term(key),
+    );
+  }
 
-    static override styles: CSSResultGroup = [
-        UauiPaletteStyles,
-        UauiVisuallyHiddenStyles,
-        css`
-            :host {
-                display: inline-flex;
-            }
+  override render(): TemplateResult | typeof nothing {
+    const value = this.#change();
+    if (value === undefined || !Number.isFinite(value)) return nothing;
 
-            .badge {
-                position: relative;
-                display: inline-flex;
-                align-items: center;
-                gap: var(--uui-size-space-1);
-                padding: 4px 8px;
-                border-radius: var(--uui-border-radius-1);
-                font-size: var(--uaui-delta-badge-font-size, 13px);
-                font-weight: 700;
-                font-variant-numeric: tabular-nums;
-                white-space: nowrap;
-            }
+    const arrow = { up: "▲", down: "▼", flat: "–" }[this.direction];
 
-            :host([size="sm"]) .badge {
-                padding: 1px 5px;
-                font-size: var(--uaui-delta-badge-font-size, 11.5px);
-            }
+    // The signed number carries the direction for screen readers and the hidden text says whether it is
+    // good, so neither the arrow nor the colour has to; the arrow is decoration.
+    return html`<span class="badge" data-sentiment=${this.sentiment}
+      ><span class="arrow" aria-hidden="true">${arrow}</span
+      >${this.#format(value)}<span class="visually-hidden"
+        >${this.#sentimentLabel()}</span
+      ></span
+    >`;
+  }
 
-            .arrow {
-                font-size: 0.8em;
-            }
+  static override styles: CSSResultGroup = [
+    UauiPaletteStyles,
+    UauiVisuallyHiddenStyles,
+    css`
+      :host {
+        display: inline-flex;
+      }
 
-            [data-sentiment="positive"] {
-                color: var(--uaui-color-text-positive);
-                background: var(--uaui-color-tint-positive);
-            }
+      .badge {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        gap: var(--uui-size-space-1);
+        padding: 4px 8px;
+        border-radius: var(--uui-border-radius-1);
+        font-size: var(--uaui-delta-badge-font-size, 13px);
+        font-weight: 700;
+        font-variant-numeric: tabular-nums;
+        white-space: nowrap;
+      }
 
-            [data-sentiment="negative"] {
-                color: var(--uaui-color-text-negative);
-                background: var(--uaui-color-tint-negative);
-            }
+      :host([size="sm"]) .badge {
+        padding: 1px 5px;
+        font-size: var(--uaui-delta-badge-font-size, 11.5px);
+      }
 
-            [data-sentiment="neutral"] {
-                color: var(--uaui-color-text-neutral);
-                background: var(--uaui-color-tint-neutral);
-            }
-        `,
-    ];
+      .arrow {
+        font-size: 0.8em;
+      }
+
+      [data-sentiment="positive"] {
+        color: var(--uaui-color-text-positive);
+        background: var(--uaui-color-tint-positive);
+      }
+
+      [data-sentiment="negative"] {
+        color: var(--uaui-color-text-negative);
+        background: var(--uaui-color-tint-negative);
+      }
+
+      [data-sentiment="neutral"] {
+        color: var(--uaui-color-text-neutral);
+        background: var(--uaui-color-tint-neutral);
+      }
+    `,
+  ];
 }
 
 declare global {
-    interface HTMLElementTagNameMap {
-        "uaui-delta-badge": UauiDeltaBadgeElement;
-    }
+  interface HTMLElementTagNameMap {
+    "uaui-delta-badge": UauiDeltaBadgeElement;
+  }
 }

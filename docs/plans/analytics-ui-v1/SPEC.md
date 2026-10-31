@@ -88,6 +88,7 @@ Storybook gets a "Pane" story showing this recipe, a chart and a table in one `u
 - Restyle to the design's tinted pill: a green or red tint behind the text, 13px bold, `4px 8px` padding. Flat values use a neutral tint.
 - Add `size`: `"md"` (default) | `"sm"` (for table cells).
 - Keep the current behaviour: signed number, `percent` or `points`, `lower-is-better`, rounding to `max-decimals`. Number formatting moves to `this.localize.number`.
+- Add `current` and `previous`: the badge works out the change itself when `value` isn't set. Percent change against the size of `previous` (unknown when `previous` is 0, so nothing is drawn), or with `unit="points"` the difference between two percentages. `value` wins when both are given. `uaui-table-compare-badge` passes its two numbers through instead of doing the maths.
 
 ### 4. `uaui-time-series-chart`
 

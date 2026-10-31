@@ -19,30 +19,34 @@ const withCompare = () =>
         "uaui-data-table",
     );
 
-const badges = (el: Element, row: number, column: number) =>
-    deepQueryAll(shadow(el).querySelectorAll("uui-table-row:not(.summary)")[row].querySelectorAll("uui-table-cell")[column], "uaui-delta-badge") as (HTMLElement & {
-        value?: number;
-    })[];
+// The delta badges a cell draws. A badge with no change to show (a compare value of 0) draws nothing, so it is left out.
+const badges = async (el: Element, row: number, column: number) => {
+    const cell = shadow(el).querySelectorAll("uui-table-row:not(.summary)")[row].querySelectorAll("uui-table-cell")[column];
+    const all = deepQueryAll(cell, "uaui-delta-badge") as (HTMLElement & { updateComplete: Promise<boolean> })[];
+    await Promise.all(all.map((badge) => badge.updateComplete));
+    return all.filter((badge) => badge.shadowRoot?.querySelector(".badge"));
+};
 
 describe("Feature: table compare rows", () => {
     describe("Scenario: a row with a matching compare row", () => {
-        it("gives the badge the percent change from the compare value", async () => {
+        it("shows the percent change from the compare value", async () => {
             const el = await withCompare();
-            expect(badges(el, 0, 1)[0].value).toBeCloseTo(((210 - 190) / 190) * 100);
+            // (210 - 190) / 190 = +10.5%
+            expect((await badges(el, 0, 1))[0].shadowRoot!.textContent).toContain("+10.5%");
         });
     });
 
     describe("Scenario: a compare value of zero", () => {
         it("shows no badge", async () => {
             const el = await withCompare();
-            expect(badges(el, 0, 2)).toHaveLength(0);
+            expect(await badges(el, 0, 2)).toHaveLength(0);
         });
     });
 
     describe("Scenario: a row with no compare row", () => {
         it("shows no badge", async () => {
             const el = await withCompare();
-            expect(badges(el, 1, 1)).toHaveLength(0);
+            expect(await badges(el, 1, 1)).toHaveLength(0);
         });
     });
 
@@ -64,7 +68,7 @@ describe("Feature: table compare rows", () => {
             );
             el.compareRows = compareRows;
             await el.updateComplete;
-            expect(badges(el, 0, 1)).toHaveLength(1);
+            expect(await badges(el, 0, 1)).toHaveLength(1);
         });
     });
 
