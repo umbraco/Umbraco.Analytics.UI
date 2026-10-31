@@ -445,7 +445,8 @@ describe("Feature: conversion funnel", () => {
     describe("Scenario: the editor uses the keyboard", () => {
         let el: UauiTestElement;
         beforeEach(async () => {
-            el = await render(html`<button>before</button><uaui-funnel .steps=${cartSteps}></uaui-funnel>`);
+            // "after" gives Tab somewhere to go: Firefox keeps focus in place when Tab runs off the end of the page. A span, as WebKit skips buttons on Tab.
+            el = await render(html`<button>before</button><uaui-funnel .steps=${cartSteps}></uaui-funnel><span tabindex="0">after</span>`);
             await parkPointer(document.body);
             (el.previousElementSibling as HTMLElement).focus();
             await userEvent.tab();
@@ -489,7 +490,7 @@ describe("Feature: conversion funnel", () => {
         it("hides the tooltip when focus leaves", async () => {
             await userEvent.tab();
             await settle(el);
-            expect(tooltip(el)).toBe(null);
+            expect([tooltip(el), document.activeElement]).toEqual([null, el.nextElementSibling]);
         });
 
         it("hides the focused step's tooltip on Escape, keeping focus", async () => {
@@ -504,6 +505,7 @@ describe("Feature: conversion funnel", () => {
             await settle(el);
             await userEvent.tab();
             await settle(el);
+            expect(document.activeElement).toBe(el.nextElementSibling);
             expect(tooltipText(el)).toContain("Reached checkout");
         });
 
