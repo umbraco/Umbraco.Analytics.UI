@@ -170,7 +170,8 @@ export class UauiDataTableElement extends UmbLitElement {
      * The table's accessible name, e.g. "Top pages", as `label` is across UUI. It names the table for screen readers, and
      * names the pager "Top pages, pagination" and the sideways scroll area "Top pages, scroll sideways to see more columns", so
      * two tables on one page don't share the same landmark names. Not shown. Without it the table has no name and the
-     * pager and scroll area keep the names "Pagination" and "Table, scroll sideways to see more columns".
+     * pager and scroll area keep the names "Pagination" and "Table, scroll sideways to see more columns". It is trimmed
+     * before use, so a label of only spaces counts as none.
      */
     @property({ type: String })
     label = "";
@@ -569,10 +570,16 @@ export class UauiDataTableElement extends UmbLitElement {
         </uui-table-row>`;
     }
 
+    /** The `label` without surrounding spaces, so a label of only spaces counts as none. Removing the attribute sets it to null. */
+    get #label(): string {
+        return (this.label ?? "").trim();
+    }
+
     /** The scroll area's name while it's a region: the table's `label` first when it has one, so two tables' regions differ. */
     get #scrollRegionName(): string {
-        return this.label
-            ? this.localize.term("uauiAnalytics_tableScrollRegionNamed", this.label)
+        const label = this.#label;
+        return label
+            ? this.localize.term("uauiAnalytics_tableScrollRegionNamed", label)
             : this.localize.term("uauiAnalytics_tableScrollRegion");
     }
 
@@ -597,7 +604,7 @@ export class UauiDataTableElement extends UmbLitElement {
                 aria-label=${ifDefined(scrollFocusable ? this.#scrollRegionName : undefined)}
                 @focus=${() => this.#overflow.focus()}
                 @blur=${() => this.#overflow.blur()}>
-            <uui-table aria-label=${ifDefined(this.label || undefined)} aria-busy=${busy ? "true" : "false"}>
+            <uui-table aria-label=${ifDefined(this.#label || undefined)} aria-busy=${busy ? "true" : "false"}>
                 ${this.columns.map((column) => html`<uui-table-column style=${ifDefined(column.width ? `width: ${column.width}` : undefined)}></uui-table-column>`)}
                 ${this.#renderColumnToolbar()}
                 <uui-table-head>${this.columns.map((column) => this.#renderHeaderCell(column))}</uui-table-head>
@@ -666,7 +673,7 @@ export class UauiDataTableElement extends UmbLitElement {
                       .pageSize=${this.#pageSize}
                       .total=${this.#totalRows}
                       .pageSizes=${this.#pageSizeOptions}
-                      .label=${this.label}
+                      .label=${this.#label}
                       @page-change=${this.#onPagerChange}></uaui-compact-pager>`
                 : nothing}
         </div>`;

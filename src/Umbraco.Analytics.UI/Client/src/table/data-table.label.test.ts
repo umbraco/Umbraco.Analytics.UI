@@ -1,4 +1,5 @@
 // T46 — Name each table and its pager, so two paged tables on one page have unique landmarks
+// T53 — Changing or removing the label at runtime, and a label of only spaces
 /// <reference types="vite/client" />
 import { describe, expect, it } from "vitest";
 import { html } from "@umbraco-cms/backoffice/external/lit";
@@ -14,6 +15,13 @@ const table = (el: Element) => shadow(el).querySelector("uui-table") as HTMLElem
 const pager = (el: Element) => shadow(el).querySelector("uaui-compact-pager")!.shadowRoot!.querySelector(".pager") as HTMLElement;
 const scroller = (el: Element) => shadow(el).querySelector<HTMLElement>(".scroll")!;
 const frames = () => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+
+/** Sets the table's label and waits for the table and its pager to redraw. */
+async function relabel(el: UauiTestElement, label: string) {
+    (el as unknown as { label: string }).label = label;
+    await settle(el);
+    await shadow(el).querySelector<HTMLElement & { updateComplete: Promise<boolean> }>("uaui-compact-pager")?.updateComplete;
+}
 
 const pagedTable = (label?: string) =>
     renderElement(
@@ -112,6 +120,67 @@ describe("Feature: name each table and its pager", () => {
             const { host } = await twoTables("", "");
             const results = await axeRun(host);
             expect(results.violations.map((violation) => violation.id)).toContain("landmark-unique");
+        });
+    });
+
+    describe("Scenario: the label is removed later", () => {
+        it("removes the table's name and gives the pager back Pagination", async () => {
+            const el = await pagedTable("Top pages");
+            await relabel(el, "");
+            expect([table(el).hasAttribute("aria-label"), pager(el).getAttribute("aria-label")]).toEqual([false, "Pagination"]);
+        });
+
+        it("gives the scroll region back its unlabelled name", async () => {
+            const { tables } = await twoTables("Top pages", "Entry pages");
+            await relabel(tables[0], "");
+            expect(scroller(tables[0]).getAttribute("aria-label")).toBe("Table, scroll sideways to see more columns");
+        });
+
+        it("copes with the label attribute being removed, which sets the property to null", async () => {
+            const el = await pagedTable("Top pages");
+            el.removeAttribute("label");
+            await settle(el);
+            await shadow(el).querySelector<HTMLElement & { updateComplete: Promise<boolean> }>("uaui-compact-pager")?.updateComplete;
+            expect([table(el).hasAttribute("aria-label"), pager(el).getAttribute("aria-label")]).toEqual([false, "Pagination"]);
+        });
+    });
+
+    describe("Scenario: the label changes while the columns don't fit", () => {
+        it("renames the scroll region, the table and the pager", async () => {
+            const { tables } = await twoTables("Top pages", "Entry pages");
+            await relabel(tables[0], "Exit pages");
+            expect([
+                scroller(tables[0]).getAttribute("aria-label"),
+                table(tables[0]).getAttribute("aria-label"),
+                pager(tables[0]).getAttribute("aria-label"),
+            ]).toEqual(["Exit pages, scroll sideways to see more columns", "Exit pages", "Exit pages, pagination"]);
+        });
+    });
+
+    describe("Scenario: a label of only spaces", () => {
+        it("counts as no label for the table and the pager", async () => {
+            const el = await pagedTable("   ");
+            expect([table(el).hasAttribute("aria-label"), pager(el).getAttribute("aria-label")]).toEqual([false, "Pagination"]);
+        });
+
+        it("counts as no label for the scroll region", async () => {
+            const { tables } = await twoTables(" \t ", " ");
+            expect(scroller(tables[0]).getAttribute("aria-label")).toBe("Table, scroll sideways to see more columns");
+        });
+
+        it("trims the spaces round a real label everywhere it's used", async () => {
+            const { tables } = await twoTables("  Top pages  ", "Entry pages");
+            expect([
+                table(tables[0]).getAttribute("aria-label"),
+                pager(tables[0]).getAttribute("aria-label"),
+                scroller(tables[0]).getAttribute("aria-label"),
+            ]).toEqual(["Top pages", "Top pages, pagination", "Top pages, scroll sideways to see more columns"]);
+        });
+
+        it("counts as no label when the label is changed to spaces later", async () => {
+            const el = await pagedTable("Top pages");
+            await relabel(el, "  ");
+            expect([table(el).hasAttribute("aria-label"), pager(el).getAttribute("aria-label")]).toEqual([false, "Pagination"]);
         });
     });
 });
