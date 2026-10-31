@@ -2,7 +2,7 @@
 
 Shared backoffice charts, tables, KPI tiles and filters for the analytics sections of Umbraco products (Engage, Commerce, Umbraco AI).
 
-> Working name. Owner, package name and element prefix are still to be agreed.
+> Shared by Engage, Commerce and Umbraco AI. No one product owns it: a change has to work for all three.
 
 ## What it is
 
@@ -24,7 +24,7 @@ Live previews of every element, all states, and full example pages (Commerce, En
 | `uaui-group-by` | Day, week or month switch for a chart. |
 | `uaui-date-range` | Button and dialog to pick a date range and a comparison. |
 | `uaui-data-table` | Sortable, searchable, pageable table. Client or server mode. |
-| `uaui-search-field` | Search box for the table's `toolbar` slot, or its `toolbar-start` slot (the first column of the column toolbar). |
+| `uaui-search-field` | Search box that raises `search` as you type. Works anywhere; in a table, put it in the `toolbar` or `toolbar-start` slot and the table filters itself. |
 | `uaui-table-total` | One total for the table's column toolbar: label, value and change badge, over its column. |
 | `uaui-text-cell`, `uaui-link-cell`, `uaui-number-cell`, `uaui-percent-cell`, `uaui-share-cell` | Table cells. Name one in a column's `elementName`, or write your own. |
 | `uaui-table-compare-badge` | The change badge of a table cell: finds the compare row and shows how a value moved. Use it in your own cells. |
@@ -85,11 +85,17 @@ src/delta-badge/
 
 To try changes inside a product, reference `src/Umbraco.Analytics.UI/Umbraco.Analytics.UI.csproj` from the product's test site instead of the NuGet package.
 
+CMS packages (`Umbraco.Cms.*`) restore from nuget.org only (see `NuGet.config`). A CMS prerelease can be on MyGet too with different contents, which breaks the lock file check on CI. To build against a CMS nightly, add the MyGet feeds to the `Umbraco.Cms.*` mapping and refresh `packages.lock.json`.
+
 ## Release
 
 Versions follow the CMS major (19.x is for CMS 19). Branches: `v19/dev` for development, `v19/main` for releases, work on `v19/topic/<name>`.
 
-Uses the shared `umbraco/Umbraco.Build` pipeline (`azure-pipelines.yml`). Tag `release-{version}` on the release branch. Prereleases go to MyGet, stable releases to NuGet.org and npm.
+Uses the shared `umbraco/Umbraco.Build` pipeline (`azure-pipelines.yml`), run by the [Umbraco.Analytics.UI pipeline](https://dev.azure.com/umbraco/Umbraco%20Extensions/_build?definitionId=820) in the Umbraco Extensions Azure DevOps project. Tag `release-{version}` on the release branch. Prereleases go to MyGet, stable releases to NuGet.org and npm.
+
+To publish a nightly or prerelease build from any branch: Run pipeline, pick the branch, set **Prerelease** to `nightly` or `prerelease` and **Release** to `skip`. Both packages go to the MyGet `umbraconightly` or `umbracoprereleases` feed (NuGet and npm).
+
+Not set up yet, needed before the first public release: an npmjs.org service connection (`NPM`), a release approval environment and the Dependency-Track variable group for SBOM uploads. See the TODO in `azure-pipelines.yml`.
 
 The template runs the root `package.json` `ci:*` scripts to install, build and pack the client. A `ClientTests` stage then runs lint, the browser tests in Chromium, Firefox and WebKit, and a Storybook build. Publishing waits for it to pass.
 
@@ -98,4 +104,4 @@ The template runs the root `package.json` `ci:*` scripts to install, build and p
 | Where | When | What |
 |---|---|---|
 | GitHub Actions (`.github/workflows/storybook.yml`) | Pull requests into `v19/dev`, `v19/main`, `release/*`, `hotfix/*`, and pushes to `v19/main` | Lint, build, API check, browser tests. On `v19/main`, also publishes Storybook to GitHub Pages at https://umbraco.github.io/Umbraco.Analytics.UI/. |
-| Azure DevOps (`azure-pipelines.yml`) | `release/*`, `hotfix/*`, `release-*` tags | Build, pack, SBOM, client tests, then MyGet / NuGet.org / npm. Storybook is attached to the run as an artifact. |
+| Azure DevOps (`azure-pipelines.yml`, Umbraco Extensions project) | `release/*`, `hotfix/*`, `release-*` tags, or run by hand | Build, pack, SBOM, client tests, then MyGet / NuGet.org / npm. Storybook is attached to the run as an artifact. |

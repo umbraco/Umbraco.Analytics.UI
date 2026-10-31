@@ -25,3 +25,7 @@ Shared backoffice analytics components (Lit + UUI) consumed by Engage, Commerce 
 - Import Lit only from `@umbraco-cms/backoffice/external/lit` (lint enforced).
 - Before finishing: `npm run lint`, `npm test`, `npm run build` (commit any `api/*.api.md` change deliberately).
 - Plan folders: `docs/plans/<feature-slug>/` (devkit feature-* skills). Design references: `docs/design/<name>/`.
+- Packages: NuGet `Umbraco.Analytics.UI`, npm `@umbraco/analytics-ui` (also the import map key). API report: `api/analytics-ui.api.md`.
+- CI: Azure DevOps project "Umbraco Extensions", pipeline "Umbraco.Analytics.UI" (id 820). Service connection names in `azure-pipelines.yml` must exist in that project (NuGet: `MyGet - Nightly`, `MyGet - Pre-releases`, `NuGet`; npm: `npm - Nightly`, `npm - Pre-releases`). Don't copy names from other products' pipelines.
+- CI restores with `--locked-mode`. After any package change, refresh and commit `packages.lock.json`. Keep `Umbraco.Cms.*` mapped to nuget.org only in `NuGet.config` (MyGet copies of CMS prereleases differ and fail NU1403).
+- Files CI needs must not be gitignored. The Visual Studio `.gitignore` rules hide common names like `publish/`; check `git check-ignore` when adding build scripts.
