@@ -68,12 +68,12 @@ describe("Feature: the date range button with a comparison", () => {
             expect(heightOf(dateButton(el))).toBe(heightOf(groupByBox(el)));
         });
 
-        it("shows the comparison on a second line without the year", () => {
-            expect(line2(el)).toBe("vs Apr 25 to May 24");
+        it("shows the comparison on a second line with the year", () => {
+            expect(line2(el)).toBe("vs Apr 25, 2026 to May 24, 2026");
         });
 
         it("names the comparison line as shown on the button", () => {
-            expect(dateButton(el).getAttribute("label")).toContain("vs Apr 25 to May 24");
+            expect(dateButton(el).getAttribute("label")).toContain("vs Apr 25, 2026 to May 24, 2026");
         });
     });
 

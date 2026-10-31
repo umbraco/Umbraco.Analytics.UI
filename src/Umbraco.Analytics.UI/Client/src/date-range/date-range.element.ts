@@ -73,14 +73,8 @@ export class UauiDateRangeElement extends UmbLitElement {
         });
     }
 
-    #rangeText(from: string, to: string, showYear = true) {
-        return uauiFormatDateRange(this.localize, { from, to }, { showYear });
-    }
-
-    /** The year is left off the comparison line when all four dates share one, and kept when they differ so the years can't be mixed up. */
-    #compareYearIsClear(compare: UauiCompare) {
-        const years = new Set([this.value.from, this.value.to, compare.from, compare.to].map((date) => date.slice(0, 4)));
-        return years.size === 1;
+    #rangeText(from: string, to: string) {
+        return uauiFormatDateRange(this.localize, { from, to });
     }
 
     async #open() {
@@ -108,9 +102,7 @@ export class UauiDateRangeElement extends UmbLitElement {
 
     override render(): TemplateResult {
         const range = this.#rangeText(this.value.from, this.value.to);
-        const compareShown = this.compare
-            ? this.#rangeText(this.compare.from, this.compare.to, !this.#compareYearIsClear(this.compare))
-            : undefined;
+        const compareShown = this.compare ? this.#rangeText(this.compare.from, this.compare.to) : undefined;
         const compareLine = compareShown ? this.localize.term("uauiAnalytics_dateRangeCompareShort", compareShown) : undefined;
         // The name is the purpose plus the two lines as shown, so the visible text is part of it (WCAG 2.5.3).
         const purpose = this.localize.term("uauiAnalytics_dateRangeButtonLabel");

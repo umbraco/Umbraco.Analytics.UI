@@ -153,7 +153,7 @@ Storybook gets a "Pane" story showing this recipe, a chart and a table in one `u
   - `allow-compare` (default true). A plain boolean attribute, like `deselectable` and UUI's: it can't say false, so turn it off with the property, `.allowCompare=${false}`
   - `max-date` (default today)
   - `today` (an ISO date). Presets, the default `value` and the default `max-date` count from it. Unset uses the clock, and text that isn't a real date is ignored, so a typo can't break the picker. `max-date` still wins for the latest allowed date. A `value` the product sets stays as given. Examples set it so presets match their fixed data.
-- With a comparison on, the button stays as tall as `uaui-group-by` (40px) and shows two lines: the range on line 1, "vs Apr 25 to May 24" on line 2 in the small, alt text style. The year is left off line 2 only when the range and both compare dates share a year. The button's accessible name is the purpose plus both lines as shown. Both lines are cut with an ellipsis in a narrow header. Without a comparison the button is unchanged.
+- With a comparison on, the button stays as tall as `uaui-group-by` (40px) and shows two lines: the range on line 1, "vs Apr 25, 2026 to May 24, 2026" on line 2 in the small, alt text style. Line 2 always shows the year. The button's accessible name is the purpose plus both lines as shown. Both lines are cut with an ellipsis in a narrow header. Without a comparison the button is unchanged.
 - The button opens `uaui-date-range-modal` through the backoffice modal manager.
   - **Save** closes the dialog and raises `change` with `{ value, compare }` (`UauiDateRangeChangeDetail`).
   - **Close** discards the edits.

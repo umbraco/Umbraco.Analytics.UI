@@ -160,7 +160,7 @@ describe("Feature: pick a comparison range", () => {
         });
 
         it("shows a vs line on the button", () => {
-            expect(shadow(el).textContent).toContain("vs Apr 25 to May 24");
+            expect(shadow(el).textContent).toContain("vs Apr 25, 2026 to May 24, 2026");
         });
 
         it("opens with Compare on", async () => {
