@@ -70,6 +70,7 @@ const meta: Meta<UauiDataTableElement> = {
         retryable: false,
         emptyHeadline: undefined,
         emptyDescription: undefined,
+        resetPageOnRows: false,
     },
     render: (args) =>
         html`<uui-box headline="Top pages" style="--uui-box-default-padding: 0">
@@ -83,7 +84,8 @@ const meta: Meta<UauiDataTableElement> = {
                 .errorDescription=${args.errorDescription}
                 .retryable=${args.retryable}
                 .emptyHeadline=${args.emptyHeadline}
-                .emptyDescription=${args.emptyDescription}></uaui-data-table>
+                .emptyDescription=${args.emptyDescription}
+                .resetPageOnRows=${args.resetPageOnRows}></uaui-data-table>
         </uui-box>`,
 };
 
@@ -223,6 +225,25 @@ export const PagedClient: Story = {
         html`<uui-box headline="Top pages" style="--uui-box-default-padding: 0">
             <uaui-data-table label="Top pages" .columns=${args.columns} .rows=${args.rows}></uaui-data-table>
         </uui-box>`,
+};
+
+/** Replaces `rows` with a new array, as a reload for a new date range does. */
+function reloadRows(event: Event) {
+    const table = (event.target as HTMLElement).closest(".reload-demo")!.querySelector("uaui-data-table")!;
+    table.rows = table.rows.map((row) => ({ ...row }));
+}
+
+/** `reset-page-on-rows` (`client` mode): go to page 2 or 3, then press Reload, which replaces `rows` with a new array. With the control on, the table goes back to page 1; off (the default) it keeps the page, showing the last page when there are fewer rows. It raises no `page-change`: the product replaced the rows, so it knows. Re-assigning the same array, or changing it in place, doesn't count. `server` mode ignores it. */
+export const ResetPageOnRows: Story = {
+    name: "Reset page on new rows",
+    args: { rows: manyPageRows, resetPageOnRows: true },
+    render: (args) =>
+        html`<div class="reload-demo">
+            <uui-button look="outline" label="Reload" @click=${reloadRows}></uui-button>
+            <uui-box headline="Top pages" style="--uui-box-default-padding: 0; margin-top: 12px">
+                <uaui-data-table label="Top pages" .columns=${args.columns} .rows=${args.rows} .resetPageOnRows=${args.resetPageOnRows}></uaui-data-table>
+            </uui-box>
+        </div>`,
 };
 
 /** A column toolbar above the column headings, for a search and totals that line up with their columns. Slot content as `toolbar-<column key>`, or `toolbar-start` for the first column whatever its key: here a search box in the first column and a `uaui-stat` over each number column. The search drives the table like one in the `toolbar` slot. The row isn't sorted or paged, and the product works out the numbers. Columns with nothing slotted stay empty; with nothing slotted at all there is no row. */

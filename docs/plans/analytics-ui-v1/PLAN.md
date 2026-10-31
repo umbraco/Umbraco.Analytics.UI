@@ -243,5 +243,5 @@ The user chose to build these now, although most are asked for by Commerce alone
 - [x] **T49** - A date cell: an ISO date formatted with `Intl` in the user's culture, sortable by date. Commerce discount valid from/to use it.
 - [x] **T50** - Row keys from more than one field: `row-key` accepts several fields (e.g. product and variant), used for rows and compare matching. Commerce product tables key on product + variant.
 - [x] **T51** - Footer: an empty slotted element (no text or elements) counts as no content, so a page can keep a live region mounted without an empty footer. Commerce's buyer status line stays mounted.
-- [ ] **T52** - Client-mode tables can go back to page 1 when their rows are replaced (opt-in, so existing behaviour is unchanged). Commerce stock forecast uses it instead of setting the page itself.
+- [x] **T52** - Client-mode tables can go back to page 1 when their rows are replaced (opt-in, so existing behaviour is unchanged). Commerce stock forecast uses it instead of setting the page itself.
 - [ ] **T53** - Table `label` leftovers from T46: specs for removing `label` at runtime and for the scroll region's name changing; a label of only spaces counts as none.

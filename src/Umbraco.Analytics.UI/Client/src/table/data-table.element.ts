@@ -116,6 +116,7 @@ const SKELETON_WIDTHS = [72, 54, 83, 47, 65];
  * row count from `total-rows`, and the product loads the new page when `page-change` is raised. Either way the
  * table sets its own `page` and `page-size` when the editor changes them, and goes back to page 1 when a
  * header is clicked. In `server` mode that sort is a `sort-change` for the product to load, not a `page-change`.
+ * In `client` mode set `reset-page-on-rows` to also go back to page 1 whenever `rows` is replaced with a new array.
  *
  * Set `query` to search. In `client` mode the table keeps the rows that contain it, ignoring case, in the text of
  * the columns marked `searchable` (every column when none is), shows the empty state when none match, and goes
@@ -265,6 +266,19 @@ export class UauiDataTableElement extends UmbLitElement {
     @property({ type: Boolean, attribute: "clickable-rows" })
     clickableRows = false;
 
+    /**
+     * `client` mode: go back to page 1 whenever `rows` is replaced with a new array, such as after a reload for a new date
+     * range, so the editor isn't left on page 3 of different rows. Off by default: the page is kept, and a page past the last
+     * one shows the last. Re-assigning the same array, or changing it in place, isn't a replacement. A `page` set in the same
+     * update as the new rows wins. No `page-change` is raised, as for a sort or search: the product replaced the rows, so it
+     * knows. A product that keeps the page itself sets its own to 1 too. `server` mode ignores it: the product loads each page.
+     * The mode is the one in the update the rows arrive in. Keep the rows array stable: a binding like `.rows=${data.map(...)}`
+     * makes a new array on every render of the host, so any unrelated re-render goes back to page 1. Work the rows out when the
+     * data changes (for example in `willUpdate`) and bind that array.
+     */
+    @property({ type: Boolean, attribute: "reset-page-on-rows" })
+    resetPageOnRows = false;
+
     /** Provides the columns, stats and compare lookup to the cells, as `UAUI_TABLE_CONTEXT`. */
     #context = new UauiTableContextController(this);
     #sorted?: { rows: UauiTableRow[]; sort: UauiTableSort; column: UauiTableColumn; lang: string; sortedRows: UauiTableRow[] };
@@ -283,6 +297,9 @@ export class UauiDataTableElement extends UmbLitElement {
 
     protected override willUpdate(changed: PropertyValues<this>) {
         super.willUpdate(changed);
+        // Lit only records `rows` when it is another array, so the same array re-assigned never resets. On the first update
+        // `page` is always recorded (its initial value), so a table never resets before it has shown any rows.
+        if (this.resetPageOnRows && this.mode === "client" && changed.has("rows") && !changed.has("page")) this.page = 1;
         const lang = this.localize.lang();
         const prev = this.#derivedFrom;
         const rowKeyFieldsNow = rowKeyFields(this.rowKey);

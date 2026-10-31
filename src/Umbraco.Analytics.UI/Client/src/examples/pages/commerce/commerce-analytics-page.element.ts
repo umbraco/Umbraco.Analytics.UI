@@ -14,7 +14,7 @@ import type { UauiFunnelStep } from "../../../funnel/types.js";
 import { uauiCompareFor, uauiFormatDateRange } from "../../../date-helpers/index.js";
 import type { UauiCompare, UauiDateRange } from "../../../date-range/types.js";
 import { UauiTableServerController } from "../../../table/table-server.controller.js";
-import type { UauiTableColumn, UauiTablePageChangeDetail, UauiTableRowClickDetail, UauiTableServerState } from "../../../table/index.js";
+import type { UauiTableColumn, UauiTableRowClickDetail, UauiTableServerState } from "../../../table/index.js";
 import {
     loadBuyerCompare,
     loadBuyers,
@@ -226,7 +226,7 @@ const stockColumns: UauiTableColumn[] = [
     },
 ];
 
-// Commerce shows 5 forecast rows a page.
+// Commerce shows 5 forecast rows a page, and a reload for a new range goes back to page 1 (the table's `reset-page-on-rows`).
 const STOCK_PAGE_SIZE = 5;
 
 /** Which ranges of the cart conversion answer are older than the cart cleanup policy. */
@@ -275,8 +275,6 @@ export class ExampleCommerceAnalyticsPageElement extends UmbLitElement {
     @state() private _stock?: StockForecastRow[];
     @state() private _stockLoading = true;
     @state() private _stockError = false;
-    /** The stock forecast's page. Like Commerce, a reload for a new range goes back to page 1. */
-    @state() private _stockPage = 1;
 
     // The table rows, worked out once when an answer arrives rather than on every render, so the tables get the same
     // arrays until the data changes. Top products and stock forecast rows are per variant, so they key on product and
@@ -342,7 +340,6 @@ export class ExampleCommerceAnalyticsPageElement extends UmbLitElement {
             const stock = await loadStockForecast(this._range, this.#api);
             if (request !== this.#stockRequest) return;
             this._stock = stock;
-            this._stockPage = 1;
         } catch {
             if (request !== this.#stockRequest) return;
             this._stockError = true;
@@ -624,8 +621,7 @@ export class ExampleCommerceAnalyticsPageElement extends UmbLitElement {
                     .columns=${stockColumns}
                     .rows=${this._stockRows}
                     page-size=${STOCK_PAGE_SIZE}
-                    .page=${this._stockPage}
-                    @page-change=${(e: CustomEvent<UauiTablePageChangeDetail>) => (this._stockPage = e.detail.page)}
+                    reset-page-on-rows
                     empty-headline="No products to forecast"
                     ?loading=${this._stockLoading}
                     ?error=${this._stockError}

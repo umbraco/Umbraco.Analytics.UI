@@ -65,6 +65,7 @@ export class UauiDataTableElement extends UmbLitElement {
     query: string;
     // (undocumented)
     render(): TemplateResult;
+    resetPageOnRows: boolean;
     retryable: boolean;
     rowKey?: string | string[];
     rows: Record<string, unknown>[];
