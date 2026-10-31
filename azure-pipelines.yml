@@ -41,7 +41,9 @@ parameters:
 
 # Runs in the "Umbraco Extensions" Azure DevOps project. NuGet uses the template's default connection names
 # (MyGet - Nightly, MyGet - Pre-releases, NuGet); the project's npm MyGet connections are named below.
-# TODO before the first public npm release: an npmjs.org connection (npm_service_connection, default "NPM").
+# TODO before the first public npm release: an npmjs.org connection, then set npm_service_connection below to
+# its name. Until then it is blank, so the Release stage leaves its NPM job out at compile time: Azure checks
+# every referenced connection at queue time, and the missing "NPM" made every PR build (release: auto) fail.
 # TODO before the first public release: a release approval environment (release_environment) and the
 # Dependency-Track variable group for SBOM uploads (sbom_dt_variable_group); the project has neither yet.
 # The package is @umbraco/analytics-ui, in Umbraco's shared @umbraco npm scope.
@@ -118,3 +120,4 @@ extends:
       - src/Umbraco.Analytics.UI/Client
     npm_nightly_service_connection: npm - Nightly
     npm_prereleases_service_connection: npm - Pre-releases
+    npm_service_connection: ''
