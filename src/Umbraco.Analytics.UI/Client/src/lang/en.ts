@@ -62,6 +62,17 @@ export default {
         funnelTableDroppedOffHeader: "Dropped off",
         // A hidden table cell with no figure, where the funnel shows a dash (the step before it is 0, or has no compare value).
         funnelNoValue: "No value",
+        // A focused step's description for screen readers: the tooltip's facts as lines joined by funnelDescriptionSeparator.
+        // A period's value: {0} the period's name, {1} the value ("This period: 532").
+        funnelDescriptionValue: "{0}: {1}",
+        // The compare value with its % change: {0} the period's name, {1} the value, {2} the change ("+6.8%"),
+        // {3} improvement, decline or no change (the delta badge's words).
+        funnelDescriptionCompare: "{0}: {1}, {2}, {3}",
+        // The share of the first step: {0} the first step's label, {1} the share ("Of Carts created: 42.9%").
+        funnelDescriptionOfFirst: "Of {0}: {1}",
+        // The share from the previous step: {0} the share, or funnelNoValue.
+        funnelDescriptionFromPrevious: "From previous step: {0}",
+        funnelDescriptionSeparator: ". ",
 
         // Date range
         // The button's accessible name is its purpose, then the lines it shows ({0} purpose, {1} range, {2} comparison).

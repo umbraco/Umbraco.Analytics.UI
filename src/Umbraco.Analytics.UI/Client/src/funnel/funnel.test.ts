@@ -150,6 +150,12 @@ describe("Feature: conversion funnel", () => {
             const heights = steps(el).map((step) => box(step.querySelector(".value")!).height);
             expect(heights.every((h) => h <= 18)).toBe(true);
         });
+
+        it("keeps every value inside the funnel at 280px", async () => {
+            const el = await render(html`<uaui-funnel style="width: 280px" .steps=${visitSteps} .valueFormat=${{ minimumFractionDigits: 2 }}></uaui-funnel>`);
+            const right = box(el).right;
+            expect(steps(el).map((step) => box(step.querySelector(".value")!).right <= right)).toEqual([true, true, true, true]);
+        });
     });
 
     describe("Scenario: what assistive tech gets", () => {
@@ -175,6 +181,96 @@ describe("Feature: conversion funnel", () => {
 
         it("says No value where the funnel has none", () => {
             expect(tableRows(el)[2]).toEqual(["Orders placed", "318", "25.6%", "59.8%", "214", "No value", "No value", "No value"]);
+        });
+    });
+
+    describe("Scenario: a step is larger than the one before it", () => {
+        it("says 0 dropped off, not a negative count", async () => {
+            const el = await render(
+                html`<uaui-funnel
+                    .steps=${[{ id: "a", label: "A", value: 100 }, { id: "b", label: "B", value: 120 }]}
+                    .compareSteps=${[{ id: "a", label: "A", value: 80 }, { id: "b", label: "B", value: 90 }]}></uaui-funnel>`,
+            );
+            expect([tableRows(el)[1][4], tableRows(el)[1][7]]).toEqual(["0", "0"]);
+        });
+    });
+
+    describe("Scenario: a screen reader user focuses a step", () => {
+        const description = (el: Element, index: number) => {
+            const id = steps(el)[index].getAttribute("aria-describedby")!;
+            return shadow(el).getElementById(id);
+        };
+
+        it("describes it with the tooltip's figures when comparing", async () => {
+            const el = await render(
+                html`<uaui-funnel .steps=${cartSteps} .compareSteps=${cartStepsPrevious} compare-label=${compareRangeLabel}></uaui-funnel>`,
+            );
+            expect(description(el, 1)?.textContent).toBe(
+                "This period: 532. May 2, 2026 to May 31, 2026: 498, +6.8%, improvement. Of Carts created: 42.9%. From previous step: 42.9%",
+            );
+        });
+
+        it("describes it without the compare line when not comparing", async () => {
+            const el = await render(html`<uaui-funnel .steps=${cartSteps}></uaui-funnel>`);
+            expect(description(el, 2)?.textContent).toBe("This period: 318. Of Carts created: 25.6%. From previous step: 59.8%");
+        });
+
+        it("gives the first step only its values", async () => {
+            const el = await render(html`<uaui-funnel .steps=${cartSteps} .compareSteps=${cartStepsPrevious}></uaui-funnel>`);
+            expect(description(el, 0)?.textContent).toBe("This period: 1,240. Comparison: 1,105, +12.2%, improvement");
+        });
+
+        it("says No value where the link shows a dash", async () => {
+            const el = await render(
+                html`<uaui-funnel
+                    .steps=${[{ id: "a", label: "A", value: 40 }, { id: "b", label: "B", value: 0 }, { id: "c", label: "C", value: 0 }]}></uaui-funnel>`,
+            );
+            expect(description(el, 2)?.textContent).toBe("This period: 0. Of A: 0.0%. From previous step: No value");
+        });
+
+        it("gives the browser that description for the focused step, when comparing", async () => {
+            const el = await render(
+                html`<uaui-funnel .steps=${cartSteps} .compareSteps=${cartStepsPrevious} compare-label=${compareRangeLabel}></uaui-funnel>`,
+            );
+            steps(el)[1].focus();
+            await settle(el);
+            await expect
+                .element(page.elementLocator(steps(el)[1]))
+                .toHaveAccessibleDescription(
+                    "This period: 532. May 2, 2026 to May 31, 2026: 498, +6.8%, improvement. Of Carts created: 42.9%. From previous step: 42.9%",
+                );
+        });
+
+        it("gives the browser that description for the focused step, when not comparing", async () => {
+            const el = await render(html`<uaui-funnel .steps=${cartSteps}></uaui-funnel>`);
+            steps(el)[1].focus();
+            await settle(el);
+            await expect
+                .element(page.elementLocator(steps(el)[1]))
+                .toHaveAccessibleDescription("This period: 532. Of Carts created: 42.9%. From previous step: 42.9%");
+        });
+
+        it("follows a change of language", async () => {
+            const el = await render(html`<uaui-funnel .steps=${cartSteps}></uaui-funnel>`);
+            el.lang = "da-DK";
+            await settle(el);
+            try {
+                await expect.poll(() => description(el, 2)?.textContent).toContain("59,8");
+            } finally {
+                el.removeAttribute("lang");
+            }
+        });
+
+        it("keeps the description out of the reading order, so it is not read twice", async () => {
+            const el = await render(html`<uaui-funnel .steps=${cartSteps}></uaui-funnel>`);
+            expect(steps(el).map((_, i) => description(el, i)?.hidden)).toEqual([true, true, true]);
+        });
+
+        it("updates the description when the steps change", async () => {
+            const el = await render(html`<uaui-funnel .steps=${cartSteps}></uaui-funnel>`);
+            el.steps = [cartSteps[0], { ...cartSteps[1], value: 620 }];
+            await settle(el);
+            expect(description(el, 1)?.textContent).toBe("This period: 620. Of Carts created: 50.0%. From previous step: 50.0%");
         });
     });
 
@@ -282,6 +378,67 @@ describe("Feature: conversion funnel", () => {
             await show(3);
             const [tip, host] = [box(tooltip(el)!), box(el)];
             expect([tip.top >= host.top, tip.bottom <= host.bottom, tip.left >= host.left, tip.right <= host.right]).toEqual([true, true, true, true]);
+        });
+    });
+
+    describe("Scenario: the tooltip fits neither above nor below", () => {
+        // One step under a long period name that wraps, so the tooltip is taller than the room on either side.
+        const longLabel = `${currentRangeLabel}, ${currentRangeLabel}, ${currentRangeLabel}, ${currentRangeLabel}`;
+        const showFirst = async (padding: string) => {
+            const el = await render(
+                html`<uaui-funnel
+                    style="width: 360px; --uaui-funnel-padding: ${padding}"
+                    .steps=${[visitSteps[0]]}
+                    .compareSteps=${[visitStepsPrevious[0]]}
+                    current-label=${longLabel}
+                    compare-label=${compareRangeLabel}></uaui-funnel>`,
+            );
+            await userEvent.hover(page.elementLocator(steps(el)[0]));
+            await settle(el);
+            await expect.poll(() => tooltip(el)?.style.visibility).toBe("visible");
+            const [tip, host, cell] = [box(tooltip(el)!), box(el), box(steps(el)[0].querySelector(".bar-cell")!)];
+            // Neither side fits, but the funnel is taller than the tooltip, so where it lands shows the side it chose.
+            expect([tip.height > cell.top - host.top - 8, tip.height > host.bottom - cell.bottom - 8, tip.height < host.height]).toEqual([true, true, true]);
+            return { tip, host };
+        };
+
+        it("opens on the side with more room, above", async () => {
+            const { tip, host } = await showFirst("50px 18px 24px");
+            expect([tip.top, tip.bottom < host.bottom]).toEqual([host.top, true]);
+        });
+
+        it("opens on the side with more room, below", async () => {
+            const { tip, host } = await showFirst("24px 18px 120px");
+            expect([tip.bottom, tip.top > host.top]).toEqual([host.bottom, true]);
+        });
+    });
+
+    describe("Scenario: the tooltip is wider than the room beside its bar", () => {
+        // Padding on one side squeezes the bar column to the other edge, so a centred tooltip would stick out.
+        const showFirst = async (padding: string) => {
+            const el = await render(
+                html`<uaui-funnel
+                    style="width: 360px; --uaui-funnel-padding: ${padding}"
+                    .steps=${cartSteps}
+                    .compareSteps=${cartStepsPrevious}
+                    current-label=${currentRangeLabel}
+                    compare-label=${compareRangeLabel}></uaui-funnel>`,
+            );
+            await userEvent.hover(page.elementLocator(steps(el)[0]));
+            await settle(el);
+            await expect.poll(() => tooltip(el)?.style.visibility).toBe("visible");
+            const cell = box(steps(el)[0].querySelector(".bar-cell")!);
+            return { tip: box(tooltip(el)!), host: box(el), centre: cell.left + cell.width / 2 };
+        };
+
+        it("never goes past the right edge", async () => {
+            const { tip, host, centre } = await showFirst("12px 4px 18px 200px");
+            expect([centre + tip.width / 2 > host.right, tip.right]).toEqual([true, host.right]);
+        });
+
+        it("never goes past the left edge", async () => {
+            const { tip, host, centre } = await showFirst("12px 200px 18px 4px");
+            expect([centre - tip.width / 2 < host.left, tip.left]).toEqual([true, host.left]);
         });
     });
 

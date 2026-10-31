@@ -14,6 +14,8 @@ import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import "../delta-badge/delta-badge.element.js";
 import "../empty-state/empty-state.element.js";
 import "../error-state/error-state.element.js";
+import { deltaChange } from "../internal/delta/delta-change.js";
+import { deltaSentiment, deltaSentimentWord, formatDelta, roundDelta } from "../internal/delta/delta-text.js";
 import { getNumberFormat } from "../internal/format/number-format.js";
 import { getLoadingMode, isBusy } from "../internal/loading/loading-mode.js";
 import "../internal/loading/loading-bar.element.js";
@@ -49,7 +51,8 @@ interface Derived {
  * (matched by `id`) to draw a bracket at each compare value's width, a change badge (in percentage points) on each
  * link, and a legend. Hovering or focusing a step shows a tooltip with both values, the change, and the step's share of
  * the first and the previous step. The steps are one tab stop: Up and Down move between them, Escape hides the tooltip.
- * A visually hidden table holds the same figures for screen readers, plus how many dropped off at each step.
+ * A focused step's description gives screen readers the tooltip's figures, and a visually hidden table holds the same
+ * figures plus how many dropped off at each step (0 when a step is larger than the one before it).
  * While `loading` is set it shows a skeleton on first load, or keeps the old funnel under a loading bar when
  * reloading. With no steps, or a first step of 0, it shows `uaui-empty-state`. While `error` is set it shows
  * `uaui-error-state` (error wins over loading, and loading over empty).
@@ -246,11 +249,14 @@ export class UauiFunnelElement extends UmbLitElement {
         const step = this._active === undefined ? undefined : this.#stepElements()[this._active];
         const bar = step?.querySelector<HTMLElement>(".bar-cell");
         if (!tip || !region || !step || !bar) return;
-        await placeTooltip(tip, ({ width, height }) => {
+        await placeTooltip(tip, () => {
             if (!step.isConnected) return undefined;
+            // Measured here rather than taken from placeTooltip's size argument: that is offsetWidth/offsetHeight, rounded
+            // to whole pixels, and a tooltip clamped by a rounded-down size can stick out past the edge by a sub-pixel.
+            const { width, height } = tip.getBoundingClientRect();
             const box = region.getBoundingClientRect();
             const barBox = bar.getBoundingClientRect();
-            const limit = region.clientHeight;
+            const limit = box.height;
             const gap = 8;
             const below = barBox.bottom - box.top + gap;
             const above = barBox.top - box.top - gap - height;
@@ -258,7 +264,7 @@ export class UauiFunnelElement extends UmbLitElement {
             const roomAbove = above + height;
             const top = below + height <= limit ? below : above >= 0 ? above : roomBelow >= roomAbove ? below : above;
             return {
-                left: clampInside(barBox.left - box.left + barBox.width / 2 - width / 2, width, region.clientWidth),
+                left: clampInside(barBox.left - box.left + barBox.width / 2 - width / 2, width, box.width),
                 top: clampInside(top, height, limit),
             };
         });
@@ -280,15 +286,54 @@ export class UauiFunnelElement extends UmbLitElement {
         </div>`;
     }
 
+    /** The % change the tooltip's badge shows, worded as the badge words it ("+6.8%", "improvement"). Undefined when it shows none. */
+    #describeChange(current: number, previous: number): [string, string] | undefined {
+        // The tooltip draws its badge only when the compare value is above 0, with the badge's defaults (percent, 1 decimal).
+        const change = previous > 0 ? deltaChange(undefined, current, previous, "percent") : undefined;
+        if (change === undefined || !Number.isFinite(change)) return undefined;
+        const sentiment = deltaSentiment(roundDelta(change, 1), false);
+        return [formatDelta(this.localize, change, "percent", 1), deltaSentimentWord(this.localize, sentiment)];
+    }
+
+    /**
+     * A step's description for screen readers: the facts its tooltip shows (the tooltip itself is aria-hidden), so a
+     * keyboard user hears them on focus. The step's name already gives its label and value.
+     */
+    #describeStep(row: UauiFunnelRow, index: number): string {
+        const { rows, value } = this.#derived!;
+        const lines = [this.localize.term("uauiAnalytics_funnelDescriptionValue", this.#labelText, value.format(row.value))];
+        if (row.compare !== undefined) {
+            const compare = value.format(row.compare);
+            const change = this.#describeChange(row.value, row.compare);
+            lines.push(
+                change
+                    ? this.localize.term("uauiAnalytics_funnelDescriptionCompare", this.#compareText, compare, ...change)
+                    : this.localize.term("uauiAnalytics_funnelDescriptionValue", this.#compareText, compare),
+            );
+        }
+        if (index > 0) {
+            const ofFirst = this.#formatShare(row.ofFirst);
+            if (ofFirst !== undefined) lines.push(this.localize.term("uauiAnalytics_funnelDescriptionOfFirst", rows[0].label, ofFirst));
+            const fromPrevious = this.#formatShare(row.rate) ?? this.localize.term("uauiAnalytics_funnelNoValue");
+            lines.push(this.localize.term("uauiAnalytics_funnelDescriptionFromPrevious", fromPrevious));
+        }
+        return lines.join(this.localize.term("uauiAnalytics_funnelDescriptionSeparator"));
+    }
+
     #renderStep(row: UauiFunnelRow, index: number) {
         const value = this.#derived!.value.format(row.value);
+        const descriptionId = `step-description-${index}`;
+        // The description is `hidden`, not visually hidden: aria-describedby still reads it, but the reading order
+        // (which already has the hidden table) doesn't get it a second time.
         return html`<div
             class="step"
             role="listitem"
             tabindex=${index === this._focusIndex ? 0 : -1}
             aria-label=${this.localize.term("uauiAnalytics_funnelStepName", row.label, value)}
+            aria-describedby=${descriptionId}
             @mouseenter=${() => this.#onStepEnter(index)}
             @focus=${() => this.#onStepFocus(index)}>
+            <span id=${descriptionId} class="description" hidden>${this.#describeStep(row, index)}</span>
             <span class="label">${row.label}</span>
             <span class="bar-cell">
                 ${row.value > 0 ? html`<span class="bar" style="width: ${row.width}%"></span>` : nothing}
@@ -324,6 +369,8 @@ export class UauiFunnelElement extends UmbLitElement {
         // reads as "No value", as the dash on the link does.
         const none = this.localize.term("uauiAnalytics_funnelNoValue");
         const count = (n: number | undefined) => (n === undefined ? none : value.format(n));
+        // A step larger than the one before it (possible when steps are not strict subsets) lost no one: 0, not a negative count.
+        const dropped = (before: number, now: number) => value.format(Math.max(before - now, 0));
         const tableRows: UauiFunnelTableRow[] = rows.map((row, i) => {
             const previous = rows[i - 1];
             const after = (text: string) => (i === 0 ? "" : text);
@@ -332,11 +379,11 @@ export class UauiFunnelElement extends UmbLitElement {
                 value: value.format(row.value),
                 ofFirst: this.#formatShare(row.ofFirst) ?? none,
                 fromPrevious: after(this.#formatShare(row.rate) ?? none),
-                droppedOff: after(previous ? value.format(previous.value - row.value) : ""),
+                droppedOff: after(previous ? dropped(previous.value, row.value) : ""),
                 compare: count(row.compare),
                 compareFromPrevious: after(this.#formatShare(row.compareRate) ?? none),
                 compareDroppedOff: after(
-                    previous?.compare === undefined || row.compare === undefined ? none : value.format(previous.compare - row.compare),
+                    previous?.compare === undefined || row.compare === undefined ? none : dropped(previous.compare, row.compare),
                 ),
             };
         });

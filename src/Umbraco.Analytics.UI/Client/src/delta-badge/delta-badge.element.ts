@@ -3,6 +3,7 @@ import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UauiVisuallyHiddenStyles } from "../internal/a11y/visually-hidden.css.js";
 import { UauiPaletteStyles } from "../theme/index.js";
 import { deltaChange } from "../internal/delta/delta-change.js";
+import { deltaDirection, deltaSentiment, deltaSentimentWord, formatDelta, roundDelta } from "../internal/delta/delta-text.js";
 
 /** What a delta is measured in: a percent change, or a change in percentage points. */
 export type UauiDeltaUnit = "percent" | "points";
@@ -66,15 +67,12 @@ export class UauiDeltaBadgeElement extends UmbLitElement {
 
     /** The direction of the change. "flat" when the value rounds to zero. */
     get direction(): "up" | "down" | "flat" {
-        const rounded = this.#round(this.#change() ?? 0);
-        return rounded > 0 ? "up" : rounded < 0 ? "down" : "flat";
+        return deltaDirection(roundDelta(this.#change() ?? 0, this.maxDecimals));
     }
 
     /** Whether the change is good, bad or neutral, after applying `lowerIsBetter`. */
     get sentiment(): "positive" | "negative" | "neutral" {
-        const direction = this.direction;
-        if (direction === "flat") return "neutral";
-        return (direction === "up") !== this.lowerIsBetter ? "positive" : "negative";
+        return deltaSentiment(roundDelta(this.#change() ?? 0, this.maxDecimals), this.lowerIsBetter);
     }
 
     // The change to draw: `value`, else worked out from `current` and `previous`. Undefined when unknown.
@@ -82,27 +80,8 @@ export class UauiDeltaBadgeElement extends UmbLitElement {
         return deltaChange(this.value, this.current, this.previous, this.unit);
     }
 
-    #round(value: number) {
-        const factor = 10 ** this.maxDecimals;
-        return Math.round(value * factor) / factor;
-    }
-
-    #format(value: number) {
-        const rounded = this.#round(value);
-        const options = { maximumFractionDigits: this.maxDecimals, signDisplay: "exceptZero" } as const;
-        // Percent style lets the culture place the sign and spacing ("+12.4%" in en, "+12,4 %" in da-DK).
-        return this.unit === "points"
-            ? this.localize.term("uauiAnalytics_deltaPercentagePoints", this.localize.number(rounded, options))
-            : this.localize.number(rounded / 100, { ...options, style: "percent" });
-    }
-
     #sentimentLabel() {
-        const key = {
-            positive: "uauiAnalytics_deltaImprovement",
-            negative: "uauiAnalytics_deltaDecline",
-            neutral: "uauiAnalytics_deltaNoChange",
-        }[this.sentiment];
-        return this.localize.term("uauiAnalytics_deltaSentimentSuffix", this.localize.term(key));
+        return this.localize.term("uauiAnalytics_deltaSentimentSuffix", deltaSentimentWord(this.localize, this.sentiment));
     }
 
     override render(): TemplateResult | typeof nothing {
@@ -114,7 +93,7 @@ export class UauiDeltaBadgeElement extends UmbLitElement {
         // The signed number carries the direction for screen readers and the hidden text says whether it is
         // good, so neither the arrow nor the colour has to; the arrow is decoration.
         return html`<span class="badge" data-sentiment=${this.sentiment}
-            ><span class="arrow" aria-hidden="true">${arrow}</span>${this.#format(value)}<span class="visually-hidden">${this.#sentimentLabel()}</span></span
+            ><span class="arrow" aria-hidden="true">${arrow}</span>${formatDelta(this.localize, value, this.unit, this.maxDecimals)}<span class="visually-hidden">${this.#sentimentLabel()}</span></span
         >`;
     }
 

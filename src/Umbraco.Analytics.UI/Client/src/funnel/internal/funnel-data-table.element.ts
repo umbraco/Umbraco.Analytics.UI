@@ -8,7 +8,7 @@ export interface UauiFunnelTableRow {
     value: string;
     ofFirst: string;
     fromPrevious: string;
-    /** The previous step's value minus this one. */
+    /** The previous step's value minus this one, or 0 when this one is larger. */
     droppedOff: string;
     compare: string;
     compareFromPrevious: string;
