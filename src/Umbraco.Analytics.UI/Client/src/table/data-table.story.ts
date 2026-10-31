@@ -4,7 +4,7 @@ import { UAUI_TABLE_CELL } from "./cells/cell-names.js";
 import type { UauiDataTableElement } from "./data-table.element.js";
 import "./data-table.element.js";
 import "../table-search/table-search.element.js";
-import "../delta-badge/delta-badge.element.js";
+import "./table-total.element.js";
 import type { UauiTableColumn, UauiTableRowClickDetail } from "./types.js";
 
 // Focused stories of the table's options. Complete, worked tables are under "Examples".
@@ -133,17 +133,15 @@ export const PagedClient: Story = {
         </uui-box>`,
 };
 
-/** A summary row under the header, for a total that lines up with its column. Slot content as `summary-<column key>`: here "Total pageviews" in the first column, and the number and its change in the Pageviews column. The row isn't sorted or paged, and the product works out the numbers. Columns with nothing slotted stay empty; with nothing slotted at all there is no row. */
+/** A summary row above the column headings, for a search and totals that line up with their columns. Slot content as `summary-<column key>`: here a search box in the first column and a `uaui-table-total` over each number column. The search drives the table like one in the `toolbar` slot. The row isn't sorted or paged, and the product works out the numbers. Columns with nothing slotted stay empty; with nothing slotted at all there is no row. */
 export const Summary: Story = {
     args: { columns: pageColumns, rows: pageRows },
     render: (args) =>
         html`<uui-box headline="Top pages" style="--uui-box-default-padding: 0">
             <uaui-data-table .columns=${args.columns} .rows=${args.rows}>
-                <uaui-table-search slot="toolbar"></uaui-table-search>
-                <span slot="summary-url">Total pageviews</span>
-                <span slot="summary-pageviews" style="display: inline-flex; align-items: center; gap: var(--uui-size-space-3)">
-                    272 <uaui-delta-badge size="sm" .value=${6.2}></uaui-delta-badge>
-                </span>
+                <uaui-table-search slot="summary-url"></uaui-table-search>
+                <uaui-table-total slot="summary-pageviews" label="Total pageviews" value="272" .current=${272} .previous=${256}></uaui-table-total>
+                <uaui-table-total slot="summary-sessions" label="Total sessions" value="53" .current=${53} .previous=${50}></uaui-table-total>
             </uaui-data-table>
         </uui-box>`,
 };

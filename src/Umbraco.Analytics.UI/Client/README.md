@@ -190,8 +190,8 @@ html`<uaui-data-table
 - **Client mode** (default): the table sorts, searches and pages the rows you give it.
 - **Server mode**: set `mode="server"` and `total-rows` (the row count across every page). The table never reorders or filters. Load new rows on `sort-change`, `page-change` and `search`. Pass `.stats` (`{ [columnKey]: { total, max } }` across every page) so shares and bars stay right across pages. `UauiTableServerController` does this wiring for you (below).
 - **Compare**: pass `.compareRows` and `row-key` to show a change badge on number, percent and share cells. Set `meta: { lowerIsBetter: true }` on a column where a fall is good.
-- **Summary row**: slot content as `summary-<column key>` to show a total under its column, such as `<span slot="summary-views">1,240</span>`. Each piece sits in its column's cell and takes its `align`. With nothing slotted there is no row. The row isn't sorted or paged, and you work out its numbers.
-- **Slots**: `toolbar` (above the header), `summary-<key>` (under the header), and `footer` (left of the pager).
+- **Summary row**: slot content as `summary-<column key>` to show a row above the column headings: a `uaui-table-search` in the first column and a `uaui-table-total` over each number column (below). Each piece sits in its column's cell and takes its `align`. With nothing slotted there is no row. The row isn't sorted or paged, and you work out its numbers.
+- **Slots**: `toolbar` (above everything), `summary-<key>` (above the headings, in a column), and `footer` (left of the pager).
 - **Rows**: `clickable-rows` makes rows keyboard-reachable and raises `row-click`.
 
 Replace `rows` and `columns` with new arrays to update. Changing them in place isn't noticed.
@@ -222,7 +222,7 @@ html`<uaui-data-table ${ref(this.#pages.attach)} .columns=${columns}></uaui-data
 
 ### uaui-table-search
 
-A search box for the table's `toolbar` slot. A client table needs no wiring. [Storybook](https://umbraco.github.io/Umbraco.Analytics.UI/?path=/docs/components-table-search--docs)
+A search box for the table's `toolbar` slot, or for the first column's `summary-<key>` slot. A client table needs no wiring. [Storybook](https://umbraco.github.io/Umbraco.Analytics.UI/?path=/docs/components-table-search--docs)
 
 ```ts
 html`<uaui-data-table .columns=${columns} .rows=${rows}>
@@ -231,6 +231,17 @@ html`<uaui-data-table .columns=${columns} .rows=${rows}>
 ```
 
 It raises `search` with `{ query }` 300ms after typing stops. In server mode, listen for it and load the matching rows.
+
+### uaui-table-total
+
+One total for the table's summary row: a small label, the value and an optional change badge. Slot it into `summary-<column key>` and it sits over its column, ending on the right in an end-aligned column. `value` is shown as you give it. Give `current` and `previous` and the badge works out the change, or give `delta` (it wins). Set `delta-unit="points"` for a rate, and `lower-is-better` when a fall is good, as on `uaui-kpi-tile`.
+
+```ts
+html`<uaui-data-table .columns=${columns} .rows=${rows}>
+  <uaui-table-search slot="summary-url"></uaui-table-search>
+  <uaui-table-total slot="summary-views" label="Total views" value="272" .current=${272} .previous=${251}></uaui-table-total>
+</uaui-data-table>`;
+```
 
 ### Cells
 

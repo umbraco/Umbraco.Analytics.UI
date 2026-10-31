@@ -3,10 +3,10 @@ import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
 import "../../../chart/time-series-chart.element.js";
 import "../../../date-range/date-range.element.js";
-import "../../../delta-badge/delta-badge.element.js";
 import "../../../group-by/group-by.element.js";
 import "../../../table/data-table.element.js";
 import "../../../table-search/table-search.element.js";
+import "../../../table/table-total.element.js";
 import type { UauiSeries } from "../../../chart/types.js";
 import { uauiCompareFor, uauiFormatDateRange } from "../../../date-helpers/index.js";
 import type { UauiCompare, UauiDateRange } from "../../../date-range/types.js";
@@ -42,9 +42,6 @@ const visitorColumns: UauiTableColumn[] = [
 
 // The visitors table is `client` mode, so the table sorts its three rows itself.
 const visitorSort: UauiTableSort = { key: "visitors", direction: "desc" };
-
-const percentChange = (current: number, previous?: number) =>
-    previous ? ((current - previous) / previous) * 100 : undefined;
 
 /**
  * Engage > Analytics > Pageviews (`view="pageviews"`) or Visitors (`view="visitors"`): an actions row with the group-by
@@ -151,15 +148,15 @@ export class ExampleEngageAnalyticsPageElement extends UmbLitElement {
         this.#loadChart();
     }
 
-    // The total sits in the summary row, under its own column: the label in the first column's slot, the number and
-    // its change in the slot of the column it totals.
-    #renderTotal(labelKey: string, valueKey: string, label: string, total: { current: number; previous?: number }) {
-        const change = percentChange(total.current, total.previous);
-        return html`<span slot=${`summary-${labelKey}`}>${label}</span>
-            <span slot=${`summary-${valueKey}`} class="total">
-                ${this.localize.number(total.current)}
-                ${change === undefined ? nothing : html`<uaui-delta-badge size="sm" .value=${change}></uaui-delta-badge>`}
-            </span>`;
+    // The total sits in the summary row, above the headings and over the column it totals. The total works out its own
+    // change from the two numbers, and shows none when there is no previous period to compare with.
+    #renderTotal(valueKey: string, label: string, total: { current: number; previous?: number }) {
+        return html`<uaui-table-total
+            slot=${`summary-${valueKey}`}
+            .label=${label}
+            .value=${this.localize.number(total.current)}
+            .current=${total.current}
+            .previous=${total.previous}></uaui-table-total>`;
     }
 
     #renderTable() {
@@ -172,7 +169,7 @@ export class ExampleEngageAnalyticsPageElement extends UmbLitElement {
                 .sort=${visitorSort}
                 row-key="type"
                 ?loading=${this._tableLoading}>
-                ${visitors ? this.#renderTotal("type", "visitors", "Total visitors", visitors.visitors) : nothing}
+                ${visitors ? this.#renderTotal("visitors", "Total visitors", visitors.visitors) : nothing}
             </uaui-data-table>`;
         }
         const pages = this.#pages?.result;
@@ -182,8 +179,8 @@ export class ExampleEngageAnalyticsPageElement extends UmbLitElement {
             row-key="url"
             empty-headline="No pages found"
             empty-description="No page matches your search.">
-            <div slot="toolbar"><uaui-table-search></uaui-table-search></div>
-            ${pages ? this.#renderTotal("url", "pageviews", "Total pageviews", pages.pageviews) : nothing}
+            <uaui-table-search slot="summary-url"></uaui-table-search>
+            ${pages ? this.#renderTotal("pageviews", "Total pageviews", pages.pageviews) : nothing}
         </uaui-data-table>`;
     }
 
@@ -246,11 +243,6 @@ export class ExampleEngageAnalyticsPageElement extends UmbLitElement {
                 align-items: center;
                 justify-content: space-between;
                 gap: var(--uui-size-4);
-            }
-            .total {
-                display: flex;
-                align-items: center;
-                gap: var(--uui-size-space-3);
             }
         `,
     ];

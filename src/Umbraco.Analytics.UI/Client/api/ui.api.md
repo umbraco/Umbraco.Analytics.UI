@@ -489,6 +489,21 @@ export type UauiTableSortDirection = "asc" | "desc";
 export type UauiTableStats = Readonly<Record<string, UauiTableColumnStats>>;
 
 // @public
+export class UauiTableTotalElement extends UmbLitElement {
+    current?: number;
+    delta?: number;
+    deltaUnit: UauiDeltaUnit;
+    label: string;
+    lowerIsBetter: boolean;
+    previous?: number;
+    // (undocumented)
+    render(): TemplateResult;
+    // (undocumented)
+    static styles: CSSResultGroup;
+    value?: string;
+}
+
+// @public
 export class UauiTextCellElement extends UmbLitElement implements UauiTableCellElement {
     column: UauiTableColumn;
     item: Record<string, unknown>;

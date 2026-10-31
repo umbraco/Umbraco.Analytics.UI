@@ -2,6 +2,7 @@ import { css, customElement, html, nothing, property, type CSSResultGroup, type 
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UauiVisuallyHiddenStyles } from "../internal/a11y/visually-hidden.css.js";
 import { UauiPaletteStyles } from "../theme/index.js";
+import { uauiDeltaChange } from "./delta-change.js";
 
 /** What a delta is measured in: a percent change, or a change in percentage points. */
 export type UauiDeltaUnit = "percent" | "points";
@@ -78,11 +79,7 @@ export class UauiDeltaBadgeElement extends UmbLitElement {
 
     // The change to draw: `value`, else worked out from `current` and `previous`. Undefined when unknown.
     #change(): number | undefined {
-        if (this.value !== undefined) return this.value;
-        const { current, previous } = this;
-        if (current === undefined || previous === undefined) return undefined;
-        if (this.unit === "points") return current - previous;
-        return previous === 0 ? undefined : ((current - previous) / Math.abs(previous)) * 100;
+        return uauiDeltaChange(this.value, this.current, this.previous, this.unit);
     }
 
     #round(value: number) {

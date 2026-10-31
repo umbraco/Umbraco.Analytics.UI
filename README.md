@@ -24,7 +24,8 @@ Live previews of every element, all states, and full example pages (Commerce, En
 | `uaui-group-by` | Day, week or month switch for a chart. |
 | `uaui-date-range` | Button and dialog to pick a date range and a comparison. |
 | `uaui-data-table` | Sortable, searchable, pageable table. Client or server mode. |
-| `uaui-table-search` | Search box for the table's `toolbar` slot. |
+| `uaui-table-search` | Search box for the table's `toolbar` slot, or the first column of its summary row. |
+| `uaui-table-total` | One total for the table's summary row: label, value and change badge, over its column. |
 | `uaui-text-cell`, `uaui-link-cell`, `uaui-number-cell`, `uaui-percent-cell`, `uaui-share-cell` | Table cells. Name one in a column's `elementName`, or write your own. |
 | `uaui-table-compare-badge` | The change badge of a table cell: finds the compare row and shows how a value moved. Use it in your own cells. |
 | `uaui-empty-state` | "Nothing to show" message. The chart and table use it too. |

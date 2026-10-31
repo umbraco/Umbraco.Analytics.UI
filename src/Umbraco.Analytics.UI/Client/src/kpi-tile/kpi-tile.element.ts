@@ -3,6 +3,7 @@ import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { getLoadingMode, isBusy } from "../internal/loading/index.js";
 import { UauiVisuallyHiddenStyles } from "../internal/a11y/visually-hidden.css.js";
 import { UauiPaletteStyles } from "../theme/index.js";
+import { uauiDeltaChange } from "../delta-badge/delta-change.js";
 import type { UauiDeltaUnit } from "../delta-badge/delta-badge.element.js";
 import "../delta-badge/delta-badge.element.js";
 
@@ -112,12 +113,9 @@ export class UauiKpiTileElement extends UmbLitElement {
         this.selected = !deselecting;
     }
 
-    // Whether there is a change to show: a `delta`, or two numbers the badge can work one out from (a percent
-    // change needs a `previous` other than 0). Kept in step with `uaui-delta-badge`, so no empty badge takes up room.
+    // Whether there is a change to show: the same rule the badge uses, so no empty badge takes up room.
     #hasChange(): boolean {
-        if (this.delta !== undefined) return Number.isFinite(this.delta);
-        if (!Number.isFinite(this.current) || !Number.isFinite(this.previous)) return false;
-        return this.deltaUnit === "points" || this.previous !== 0;
+        return Number.isFinite(uauiDeltaChange(this.delta, this.current, this.previous, this.deltaUnit));
     }
 
     override render(): TemplateResult {

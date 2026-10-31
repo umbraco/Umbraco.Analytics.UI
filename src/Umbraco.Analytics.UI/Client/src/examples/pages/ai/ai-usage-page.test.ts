@@ -76,7 +76,11 @@ describe("Feature: Umbraco AI usage page", () => {
         });
 
         it("shows a change badge on the requests tile, from the comparison period", () => {
-            expect(tile(page, "Requests").delta).toBeTypeOf("number");
+            expect(shadow(tile(page, "Requests")).querySelector("uaui-delta-badge")).not.toBe(null);
+        });
+
+        it("shows the success rate change in percentage points", () => {
+            expect(tile(page, "Success rate").deltaUnit).toBe("points");
         });
 
         it("stacks succeeded and failed requests on the chart", () => {

@@ -63,9 +63,6 @@ const stacks: Record<Metric, { id: string; label: string; color: UauiColorSlot; 
 const toSeries = (metric: Metric, buckets: UsageBucket[] = []): UauiSeries[] =>
     stacks[metric].map(({ id, label, color, of }) => ({ id, label, color, points: buckets.map((b) => ({ date: b.date, value: of(b) })) }));
 
-/** Percent change against the comparison period. `undefined` when there is nothing to divide by. */
-const change = (now: number, before?: number) => (before ? ((now - before) / before) * 100 : undefined);
-
 const tableColumns = (by: BreakdownBy): UauiTableColumn[] => [
     { key: "name", label: by === "model" ? "Model" : "Profile", elementName: UAUI_TABLE_CELL.text, sortable: true, searchable: true, width: "28%" },
     { key: "requests", label: "Requests", elementName: UAUI_TABLE_CELL.share, sortable: true, sortAs: "number", width: "24%" },
@@ -189,7 +186,8 @@ export class ExampleAiUsagePageElement extends UmbLitElement {
             icon=${icon}
             .value=${summary && this.#compact(pick(summary))}
             ?no-data=${summary !== undefined && !summary.requests}
-            .delta=${summary && change(pick(summary), this._usage?.compareSummary && pick(this._usage.compareSummary))}
+            .current=${summary && pick(summary)}
+            .previous=${this._usage?.compareSummary && pick(this._usage.compareSummary)}
             ?loading=${this._usageLoading}
             ?error=${this._usageError}
             selectable
@@ -230,7 +228,8 @@ export class ExampleAiUsagePageElement extends UmbLitElement {
                     ? undefined
                     : this.localize.number(successRate, { style: "percent", maximumFractionDigits: 1 })}
                 ?no-data=${noData}
-                .delta=${comparable ? (this.#successRate(now) - this.#successRate(before)) * 100 : undefined}
+                .current=${comparable ? this.#successRate(now) * 100 : undefined}
+                .previous=${comparable ? this.#successRate(before) * 100 : undefined}
                 delta-unit="points"
                 ?loading=${this._usageLoading}
                 ?error=${this._usageError}></uaui-kpi-tile>
@@ -241,7 +240,8 @@ export class ExampleAiUsagePageElement extends UmbLitElement {
                     ? undefined
                     : this.localize.number(duration / 1000, { style: "unit", unit: "second", maximumFractionDigits: 2 })}
                 ?no-data=${noData}
-                .delta=${comparable ? change(this.#avgDuration(now), this.#avgDuration(before)) : undefined}
+                .current=${comparable ? this.#avgDuration(now) : undefined}
+                .previous=${comparable ? this.#avgDuration(before) : undefined}
                 lower-is-better
                 ?loading=${this._usageLoading}
                 ?error=${this._usageError}></uaui-kpi-tile>

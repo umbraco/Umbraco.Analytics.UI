@@ -54,7 +54,7 @@ describe("Feature: Engage analytics page example", () => {
         });
 
         it("shows the total pageviews with its compare badge in the table's summary row", () => {
-            expect(table(page).querySelectorAll("[slot='summary-pageviews'] uaui-delta-badge")).toHaveLength(1);
+            expect(deepQueryAll(shadow(table(page).querySelector("[slot='summary-pageviews']")!), "uaui-delta-badge")).toHaveLength(1);
         });
 
         it("puts the total under the Pageviews column", () => {
@@ -63,8 +63,17 @@ describe("Feature: Engage analytics page example", () => {
             expect([Math.round(total.left) >= Math.round(head.left), Math.round(total.right) <= Math.round(head.right)]).toEqual([true, true]);
         });
 
-        it("keeps the summary row out of the toolbar", () => {
-            expect(table(page).querySelectorAll("[slot='toolbar'] uaui-delta-badge")).toHaveLength(0);
+        it("works the total's change out from the two periods", () => {
+            const total = table(page).querySelector("[slot='summary-pageviews']") as HTMLElement & { current?: number; previous?: number };
+            expect([typeof total.current, typeof total.previous]).toEqual(["number", "number"]);
+        });
+
+        it("puts the search in the first column's summary", () => {
+            expect(table(page).querySelectorAll("uaui-table-search[slot='summary-url']")).toHaveLength(1);
+        });
+
+        it("keeps the toolbar free for things that are not tied to a column", () => {
+            expect(table(page).querySelectorAll("[slot='toolbar']")).toHaveLength(0);
         });
 
         it("shows the first page of ten rows", () => {

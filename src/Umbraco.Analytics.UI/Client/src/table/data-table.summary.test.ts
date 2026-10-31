@@ -7,8 +7,10 @@ import darkCss from "@umbraco-ui/uui/themes/dark.css?inline";
 import highContrastCss from "@umbraco-ui/uui/themes/high-contrast.css?inline";
 import { render } from "vitest-browser-lit";
 import { axeRun } from "../internal/test/a11y.js";
-import { renderElement, settle, shadow, type UauiTestElement } from "../internal/test/dom.js";
+import { deepText, renderElement, settle, shadow, type UauiTestElement } from "../internal/test/dom.js";
 import "./data-table.element.js";
+import "../table-search/table-search.element.js";
+import "./table-total.element.js";
 import { nameColumns } from "./table-fixtures.js";
 
 const rows = [
@@ -61,12 +63,55 @@ describe("Feature: a summary row aligned to the columns", () => {
             expect(getComputedStyle(summaryCells(el)[1]).textAlign).toBe("end");
         });
 
-        it("sits above the data rows", () => {
-            expect(shadow(el).querySelector("uui-table-head")!.nextElementSibling).toBe(summaryRow(el));
+        it("comes before the column headings in the table", () => {
+            expect(shadow(el).querySelector("uui-table-head")!.previousElementSibling).toBe(summaryRow(el));
+        });
+
+        it("draws the summary row above the column headings", () => {
+            const head = shadow(el).querySelector("uui-table-head")!.getBoundingClientRect();
+            expect(summaryRow(el).getBoundingClientRect().bottom).toBeLessThanOrEqual(head.top + 1);
+        });
+
+        it("draws the column headings in one row", () => {
+            const tops = [...shadow(el).querySelectorAll("uui-table-head-cell")].map((h) => Math.round(h.getBoundingClientRect().top));
+            expect(new Set(tops).size).toBe(1);
+        });
+
+        it("keeps the column headings above the data rows", () => {
+            const head = shadow(el).querySelector("uui-table-head")!.getBoundingClientRect();
+            expect(head.bottom).toBeLessThanOrEqual(bodyRows(el)[0].getBoundingClientRect().top + 1);
         });
 
         it("is not counted among the data rows", () => {
             expect(bodyRows(el)).toHaveLength(2);
+        });
+    });
+
+    describe("Scenario: the content lines up with the column's content", () => {
+        let el: UauiTestElement;
+        beforeEach(async () => {
+            el = await renderElement(
+                html`<uaui-data-table .columns=${nameColumns} .rows=${rows}>
+                    <span slot="summary-name">Total</span>
+                    <uaui-table-total slot="summary-views" label="Views" value="272"></uaui-table-total>
+                </uaui-data-table>`,
+                "uaui-data-table",
+            );
+            await settle(el);
+        });
+
+        const firstDataCell = (index: number) => bodyRows(el)[0].querySelectorAll("uui-table-cell")[index] as HTMLElement;
+        const contentLeft = (cell: HTMLElement) => cell.getBoundingClientRect().left + parseFloat(getComputedStyle(cell).paddingLeft);
+        const contentRight = (cell: HTMLElement) => cell.getBoundingClientRect().right - parseFloat(getComputedStyle(cell).paddingRight);
+
+        it("starts the slotted content where the first column's data content starts", () => {
+            const slotted = el.querySelector("[slot=summary-name]")!.getBoundingClientRect();
+            expect(Math.round(slotted.left)).toBe(Math.round(contentLeft(firstDataCell(0))));
+        });
+
+        it("ends the total's value where the end-aligned column's data content ends", () => {
+            const value = shadow(el.querySelector("uaui-table-total")!).querySelector(".value")!.getBoundingClientRect();
+            expect(Math.round(value.right)).toBe(Math.round(contentRight(firstDataCell(1))));
         });
     });
 
@@ -82,8 +127,68 @@ describe("Feature: a summary row aligned to the columns", () => {
             await settle(el);
         });
 
-        it("stays the first row", () => {
-            expect(shadow(el).querySelector("uui-table-head")!.nextElementSibling).toBe(summaryRow(el));
+        it("stays above the column headings", () => {
+            expect(shadow(el).querySelector("uui-table-head")!.previousElementSibling).toBe(summaryRow(el));
+        });
+    });
+
+    describe("Scenario: a search in the first column's summary", () => {
+        let el: UauiTestElement;
+        beforeEach(async () => {
+            el = await renderElement(
+                html`<uaui-data-table .columns=${nameColumns} .rows=${rows}>
+                    <uaui-table-search slot="summary-name"></uaui-table-search>
+                </uaui-data-table>`,
+                "uaui-data-table",
+            );
+            await settle(el);
+            el.querySelector("uaui-table-search")!.dispatchEvent(new CustomEvent("search", { detail: { query: "cont" }, bubbles: true }));
+            await settle(el);
+        });
+
+        it("sets the table's query", () => {
+            expect(el.query).toBe("cont");
+        });
+
+        it("filters the rows", () => {
+            expect(bodyRows(el)).toHaveLength(1);
+        });
+
+        it("keeps the row that matches", () => {
+            expect(deepText(bodyRows(el)[0])).toContain("Contact");
+        });
+    });
+
+    describe("Scenario: a toolbar and a summary row", () => {
+        let el: UauiTestElement;
+        beforeEach(async () => {
+            el = await renderElement(
+                html`<uaui-data-table .columns=${nameColumns} .rows=${rows}>
+                    <div slot="toolbar">Toolbar</div>
+                    <span slot="summary-views">272</span>
+                </uaui-data-table>`,
+                "uaui-data-table",
+            );
+            await settle(el);
+        });
+
+        it("draws the toolbar above the summary row", () => {
+            const toolbar = shadow(el).querySelector(".toolbar")!.getBoundingClientRect();
+            expect(toolbar.bottom).toBeLessThanOrEqual(summaryRow(el).getBoundingClientRect().top + 1);
+        });
+    });
+
+    describe("Scenario: the summary row's borders", () => {
+        it("gives the headings a top border when the summary row shows", async () => {
+            const el = await renderElement(withSummary(), "uaui-data-table");
+            await settle(el);
+            expect(getComputedStyle(headCell(el, "Views")).borderTopWidth).toBe("1px");
+        });
+
+        it("gives the summary cells no top border without a toolbar", async () => {
+            const el = await renderElement(withSummary(), "uaui-data-table");
+            await settle(el);
+            expect(getComputedStyle(summaryCells(el)[0]).borderTopWidth).toBe("0px");
         });
     });
 
@@ -152,7 +257,7 @@ describe("Feature: a summary row aligned to the columns", () => {
     });
 
     describe("Scenario: a11y audit", () => {
-        async function audit(themeCss?: string) {
+        async function audit(themeCss?: string, content = withSummary()) {
             const theme = document.createElement("style");
             if (themeCss) {
                 theme.textContent = themeCss;
@@ -160,7 +265,7 @@ describe("Feature: a summary row aligned to the columns", () => {
             }
             try {
                 const host = render(
-                    html`<div style="background: var(--uui-color-surface); color: var(--uui-color-text); width: 700px">${withSummary()}</div>`,
+                    html`<div style="background: var(--uui-color-surface); color: var(--uui-color-text); width: 700px">${content}</div>`,
                 ).container.querySelector("div")!;
                 await settle(host.querySelector("uaui-data-table")!);
                 return await axeRun(host);
@@ -177,6 +282,23 @@ describe("Feature: a summary row aligned to the columns", () => {
         });
         it("passes in the high contrast theme", async () => {
             expect(await audit(highContrastCss)).toHaveNoViolations();
+        });
+
+        describe("with a search and a total with a badge", () => {
+            const composed = html`<uaui-data-table .columns=${nameColumns} .rows=${rows}>
+                <uaui-table-search slot="summary-name"></uaui-table-search>
+                <uaui-table-total slot="summary-views" label="Total views" value="272" .current=${272} .previous=${230}></uaui-table-total>
+            </uaui-data-table>`;
+
+            it("passes in the light theme", async () => {
+                expect(await audit(undefined, composed)).toHaveNoViolations();
+            });
+            it("passes in the dark theme", async () => {
+                expect(await audit(darkCss, composed)).toHaveNoViolations();
+            });
+            it("passes in the high contrast theme", async () => {
+                expect(await audit(highContrastCss, composed)).toHaveNoViolations();
+            });
         });
     });
 });

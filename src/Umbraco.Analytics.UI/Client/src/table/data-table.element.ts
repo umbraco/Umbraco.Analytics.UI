@@ -125,7 +125,7 @@ const SKELETON_WIDTHS = [72, 54, 83, 47, 65];
  *
  * Set `query` to search. In `client` mode the table keeps the rows that contain it, ignoring case, in the text of
  * the columns marked `searchable` (every column when none is), shows the empty state when none match, and goes
- * back to page 1. Put a `uaui-table-search` in the `toolbar` slot and the table sets `query` itself from its `search`
+ * back to page 1. Put a `uaui-table-search` in the `toolbar` slot, or in a `summary-[key]` slot, and the table sets `query` itself from its `search`
  * event. In `server` mode the table never filters: the product loads the matching rows. Column totals and
  * bars stay those of all the `rows`, searched or not.
  *
@@ -134,11 +134,13 @@ const SKELETON_WIDTHS = [72, 54, 83, 47, 65];
  * on a link, button or form control inside a row is that control's own and raises nothing. Without `clickable-rows` rows
  * are plain, even when something listens for `row-click`, because an element can't tell that it has a listener.
  *
- * Put a summary under the header, such as "Total" and a column's total, by slotting content into `summary-<column key>`
- * (`<strong slot="summary-pageviews">272</strong>`). Each piece sits in its own column's cell, so it lines up with the
- * numbers below and takes the column's `align`. A column with nothing slotted has an empty cell, and the row is
+ * Put a summary row above the column headings by slotting content into `summary-<column key>`. It suits a
+ * `uaui-table-search` in the first column and a `uaui-table-total` over each number column
+ * (`<uaui-table-total slot="summary-pageviews" label="Pageviews" value="272"></uaui-table-total>`). Each piece sits in its own
+ * column's cell, so it lines up with the column below and takes the column's `align`. A `search` event from the first column
+ * drives the table like one from the `toolbar` slot. A column with nothing slotted has an empty cell, and the row is
  * hidden while nothing is slotted for any column. The row isn't sorted, searched or paged, and the product works out its
- * numbers, as the table's `stats` aren't totals it shows.
+ * numbers, as the table's `stats` aren't totals it shows. With a `toolbar` too, the order is toolbar, summary row, headings.
  *
  * Each column's total and largest value are worked out from the `rows` the table holds: all of them in `client`
  * mode, but only the current page in `server` mode. Pass `stats` (the column's `total` and `max` across every
@@ -149,9 +151,9 @@ const SKELETON_WIDTHS = [72, 54, 83, 47, 65];
  * @fires sort-change - A sortable header was clicked, by pointer or keyboard. Bubbles, not composed or cancelable, like `uaui-group-by`. `detail` is `{ key, direction }`; the table has already set `sort` to it and reset `page` to 1, so a `server` product loads page 1 and resets its own page binding.
  * @fires page-change - The editor picked another page or page size. Bubbles, not composed or cancelable, like `sort-change`. `detail` is `{ page, pageSize }`; the table has already set `page` and `pageSize`. A new page size goes back to page 1.
  * @fires row-click - A row was clicked, or Enter or Space was pressed on it, while `clickable-rows` is set. Bubbles, not composed or cancelable, like `sort-change`. `detail` is `{ row }`: the object from `rows`.
- * @fires search - Not raised by the table: the `search` event of a `uaui-table-search` in the `toolbar` slot bubbles through it, and the table has already set `query` and gone back to page 1 when a product's listener runs.
- * @slot toolbar - Content above the header row, such as a search box and totals. It pads itself with `--uaui-table-padding`.
- * @slot summary-[key] - Content for the summary row, in the cell of the column whose `key` follows `summary-`, such as a total and its change badge. The row shows when any of these has content.
+ * @fires search - Not raised by the table: the `search` event of a `uaui-table-search` in the `toolbar` slot or a `summary-[key]` slot bubbles through it, and the table has already set `query` and gone back to page 1 when a product's listener runs.
+ * @slot toolbar - Full-width content above the header row that isn't tied to a column. Put totals, and a search beside them, in the `summary-[key]` slots instead. It pads itself with `--uaui-table-padding`.
+ * @slot summary-[key] - Content for the summary row above the column headings, in the cell of the column whose `key` follows `summary-`, such as a search box in the first column or a `uaui-table-total` over a number column. The row shows when any of these has content.
  * @slot footer - Content below the rows, on the left of the pager, such as an "updated" note. The footer shows whenever this has content, even while loading, and pads itself with `--uaui-table-padding`.
  * @cssprop --uaui-table-padding - Padding of the toolbar and footer sections, as a CSS `padding` value. Defaults to `12px 24px`. The loading bar ignores it and spans the full width at the top edge.
  * @cssprop --uaui-series-1 - Bar colour of the first share column. Also `--uaui-series-2` to `--uaui-series-4` for the other slots.
@@ -233,7 +235,7 @@ export class UauiDataTableElement extends UmbLitElement {
 
     /**
      * The text to search for. Set by the product, and by the table itself when a `search` event reaches it from a
-     * `uaui-table-search` in the `toolbar` slot. `client` mode only keeps the rows that match; `server` mode ignores it.
+     * `uaui-table-search` in the `toolbar` or a `summary-[key]` slot. `client` mode only keeps the rows that match; `server` mode ignores it.
      */
     @property({ type: String })
     query = "";
@@ -316,7 +318,7 @@ export class UauiDataTableElement extends UmbLitElement {
         return Number.isFinite(size) && size >= 1 ? size : DEFAULT_PAGE_SIZE;
     }
 
-    /** A `search` event came from the toolbar slot: take its query and go back to page 1, since the matches are other rows. */
+    /** A `search` event came from the toolbar slot or a summary slot: take its query and go back to page 1, since the matches are other rows. */
     #onSearch = (event: Event) => {
         const query = (event as CustomEvent<UauiTableSearchDetail>).detail?.query;
         if (typeof query !== "string") return;
@@ -602,13 +604,14 @@ export class UauiDataTableElement extends UmbLitElement {
         const hasData = this.rows.length > 0;
         const mode = getLoadingMode(this.loading, hasData, this.error);
         const busy = isBusy(this.loading, this.error);
-        return html`<div class="region ${this.#hasToolbar ? "has-toolbar" : ""}">
+        const showSummary = this.#hasSummary && !this.error;
+        return html`<div class="region ${this.#hasToolbar ? "has-toolbar" : ""} ${showSummary ? "has-summary" : ""}">
             ${mode === "reload" ? html`<uaui-loading-bar></uaui-loading-bar>` : nothing}
             <div class="toolbar"><slot name="toolbar" @slotchange=${() => this.requestUpdate()} @search=${this.#onSearch}></slot></div>
             <uui-table aria-busy=${busy ? "true" : "false"}>
                 ${this.#derived.map((derived) => html`<uui-table-column style=${ifDefined(derived.column.width ? `width: ${derived.column.width}` : undefined)}></uui-table-column>`)}
-                <uui-table-head>${this.#derived.map((derived) => this.#renderHeaderCell(derived))}</uui-table-head>
                 ${this.#renderSummaryRow()}
+                <uui-table-head>${this.#derived.map((derived) => this.#renderHeaderCell(derived))}</uui-table-head>
                 ${this.error
                     ? nothing
                     : mode === "skeleton"
@@ -621,15 +624,15 @@ export class UauiDataTableElement extends UmbLitElement {
     }
 
     /**
-     * The summary row: one cell per column, each a slot named `summary-<key>`. Always rendered, hidden while nothing is
-     * slotted for a column the table has, so the slots are there to raise `slotchange` when content arrives later. The slots
-     * sit in the cells, so content lines up with its column.
+     * The summary row, above the headings: one cell per column, each a slot named `summary-<key>`. Always rendered, hidden
+     * while nothing is slotted for a column the table has, so the slots are there to raise `slotchange` when content arrives
+     * later. The slots sit in the cells, so content lines up with its column. A `search` from a slot drives the table.
      */
     #renderSummaryRow(): TemplateResult {
         return html`<uui-table-row class="summary" ?hidden=${!this.#hasSummary || this.error}>
             ${this.#derived.map(
                 (derived) => html`<uui-table-cell class=${this.#cellClass(derived)}>
-                    <slot name=${`summary-${derived.column.key}`} @slotchange=${() => this.requestUpdate()}></slot>
+                    <slot name=${`summary-${derived.column.key}`} @slotchange=${() => this.requestUpdate()} @search=${this.#onSearch}></slot>
                 </uui-table-cell>`,
             )}
         </uui-table-row>`;
@@ -729,7 +732,12 @@ export class UauiDataTableElement extends UmbLitElement {
                 border-radius: 0;
             }
 
+            /*
+             * UUI's head is a table-header-group, which a table always draws first, whatever the DOM order. As a plain
+             * row it stays in place, so the summary row can sit above it. Outer styles beat UUI's :host rule.
+             */
             uui-table-head {
+                display: table-row;
                 background-color: var(--uui-color-surface-alt);
             }
 
@@ -744,7 +752,9 @@ export class UauiDataTableElement extends UmbLitElement {
                 --uui-symbol-sort-hover: 1;
             }
 
-            .has-toolbar uui-table-head-cell {
+            /* The heading row is bordered from whatever sits above it: a toolbar, or the summary row. */
+            .has-toolbar uui-table-head-cell,
+            .has-summary uui-table-head-cell {
                 border-top: 1px solid var(--uui-color-border);
             }
 
@@ -761,7 +771,8 @@ export class UauiDataTableElement extends UmbLitElement {
 
             uui-table-cell {
                 --uui-table-cell-height: auto;
-                --uui-table-cell-padding: var(--uui-size-5);
+                --_uaui-cell-inline-padding: var(--uui-size-5);
+                --uui-table-cell-padding: var(--_uaui-cell-inline-padding);
                 color: var(--uui-color-text);
                 /* Long URLs wrap anywhere rather than stretch the column. */
                 overflow-wrap: anywhere;
@@ -776,11 +787,18 @@ export class UauiDataTableElement extends UmbLitElement {
                 background-color: var(--uui-color-surface-emphasis);
             }
 
-            /* The summary reads as a strong row between the header and the data, like the design's totals row. */
-            uui-table-row.summary {
-                font-weight: 700;
-                font-variant-numeric: tabular-nums;
-                border-bottom: 1px solid var(--uui-color-border);
+            /*
+             * The summary row is a band above the headings, like the toolbar: the cells keep their horizontal padding, which
+             * is what lines content up with the column, and take the toolbar's vertical padding. The heading row draws the
+             * line below it, and the row has a top line only under a toolbar.
+             */
+            uui-table-row.summary uui-table-cell {
+                --uui-table-cell-padding: var(--uui-size-space-4) var(--_uaui-cell-inline-padding);
+                border-top: none;
+            }
+
+            .has-toolbar uui-table-row.summary uui-table-cell {
+                border-top: 1px solid var(--uui-color-border);
             }
 
             uui-table-row.summary[hidden] {

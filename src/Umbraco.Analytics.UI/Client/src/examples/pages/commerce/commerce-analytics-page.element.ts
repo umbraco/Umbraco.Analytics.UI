@@ -167,14 +167,14 @@ export class ExampleCommerceAnalyticsPageElement extends UmbLitElement {
         this._metric = metric;
     }
 
-    // The change against last period: a percent change, or points for a rate. Undefined (no badge) when there is
-    // nothing to compare with; a real 0 stays 0 and shows "no change".
-    #delta(id: MetricId) {
-        const current = this._data?.totals;
+    // Last period's number for a tile, which the tile compares with this period's to draw the change: a percent change,
+    // or points for a rate. Undefined (no badge) when there is nothing to compare with. A rate has no value to compare
+    // with when last period had no carts.
+    #previous(id: MetricId) {
         const previous = this._compareData?.totals;
-        if (!current || !previous) return undefined;
-        if (id === "conversion") return previous.carts ? current.conversion - previous.conversion : undefined;
-        return previous[id] ? ((current[id] - previous[id]) / previous[id]) * 100 : undefined;
+        if (!previous) return undefined;
+        if (id === "conversion" && !previous.carts) return undefined;
+        return previous[id];
     }
 
     #series(days: Day[] | undefined, id: MetricId): UauiSeries[] {
@@ -191,7 +191,8 @@ export class ExampleCommerceAnalyticsPageElement extends UmbLitElement {
             icon=${metric.icon}
             .value=${totals ? this.localize.number(totals[metric.id], metric.format) : undefined}
             ?no-data=${totals !== undefined && !totals.orders}
-            .delta=${this.#delta(metric.id)}
+            .current=${totals?.[metric.id]}
+            .previous=${this.#previous(metric.id)}
             delta-unit=${metric.id === "conversion" ? "points" : "percent"}
             ?loading=${this._loading}
             ?error=${this._error}
