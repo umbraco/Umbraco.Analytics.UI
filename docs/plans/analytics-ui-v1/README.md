@@ -11,4 +11,4 @@ Read these in order:
 
 See [DECISION-LOG.md](./DECISION-LOG.md) for why things changed along the way.
 
-> The design reference that SPEC.md links to (`docs/design/phase-1`) is kept out of this public repo until Engage's Phase 1 design is public. Ask the Commerce team for a copy and drop it in that folder locally; `.git/info/exclude` keeps it out of commits.
+> The design reference that SPEC.md links to (`docs/design/phase-1`) is kept out of this public repo until Engage's Phase 1 design is public. Ask the Commerce team for a copy and drop it in that folder locally; a `docs/design/phase-1/` line in `.git/info/exclude` keeps it out of commits. Other folders under `docs/design/` (such as `funnel`) are committed.

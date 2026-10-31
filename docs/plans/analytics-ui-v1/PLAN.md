@@ -195,3 +195,14 @@ Gaps the page examples found. The user picked all of them on 30-10-2026 (see T25
 12. A non-deselectable tile re-raises `selected` when pressed again (Commerce, AI).
 13. KPI delta for "no change" vs "unknown" on absolute (points) changes (AI success rate).
 14. Shared page header (title plus date range and group-by actions), repeated by all three pages.
+
+## Funnel (user picked 31-10-2026)
+
+Design: SPEC.md §10. Same rules as the follow-ups: a builder, a review and its own commit each; public API changes update `api/analytics-ui.api.md`, both READMEs, stories and examples.
+
+- [ ] **T42** - Add `uaui-funnel` (public) as SPEC.md §10: `steps`, `compare-steps`, `label`, `compare-label`, `value-format`, loading, empty and error states, centred honest-width bars, links with the step rate, compare brackets and point badges, legend, tooltip on hover and focus (shared placement helper), one tab stop with Up/Down, hidden table, new `uauiAnalytics_funnel*` keys. Story covers no compare, compare, a step missing from compare, a zero step, narrow (280px) and wide, loading, reload, empty and error, light and dark. Test includes `expect(await axeRun(el)).toHaveNoViolations()`.
+  Acceptance: every SPEC.md §10 rule has a spec; lint, test, build and `check:api` pass; the API report change is called out for sign-off.
+  depends-on: none
+- [ ] **T43** - Page examples: Commerce gets a "Cart conversion" `uui-box` with the funnel (carts created, reached checkout, orders placed, with compare) and the overall conversion in `header-actions` via `uaui-table-total`. Engage gets no funnel example, since its funnel lives on Campaign Reporting, which has no example page.
+  Acceptance: the Commerce example's specs cover the funnel with and without compare, and its Slow and Failing API stories show the funnel's loading and error states.
+  depends-on: T42

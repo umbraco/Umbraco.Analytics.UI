@@ -29,6 +29,7 @@ type UauiDateRange = { from: string; to: string; preset?: string };
 type UauiCompare = { mode: "previous-period" | "previous-year" | "custom"; from: string; to: string };
 type UauiDateSpan = { from: string; to: string };              // any range; a UauiDateRange or UauiCompare fits
 type UauiDateBucket = { start: string; days: string[] };       // start: where the chart plots the bucket; days: only the days inside the range
+type UauiFunnelStep = { id: string; label: string; value: number }; // one funnel step; compare steps match by id
 
 // Event details
 type UauiGroupByChangeDetail = { value: UauiGroupBy };
@@ -224,6 +225,41 @@ Storybook gets a "Pane" story showing this recipe, a chart and a table in one `u
 - Products override the `--uaui-*` colour names on any parent element. Elements read resolved `--uaui-color-*` copies (ARCHITECTURE.md decision 6). Default colours have a light and a dark shade, each at least 3:1 against the surface.
 - Ships `en` translations for its own strings under `uauiAnalytics_*`. Generic verbs reuse Umbraco's keys (`buttons_save`, `general_close`, `general_loading`, `general_search`), so they're translated wherever the backoffice is. The package's `localization` extension has weight 200, so a product's own `localization` extension at the default weight (100) always overrides it.
 
+### 10. `uaui-funnel`: conversion funnel
+
+![Funnel with comparison](../../design/funnel/funnel-compare.png)
+![Funnel tooltip](../../design/funnel/funnel-compare-tooltip.png)
+
+Design: [`docs/design/funnel`](../../design/funnel/README.md) (no comparison, comparing, tooltip, dark). Source: the "C2" boards on the [funnel canvas](https://claude.ai/artifact/SeWMqQ9vaifk1Yb9Qej2pH) (private; ask for access), where the other boards are rejected options kept for the record.
+
+Used by Engage (conversion funnel beside the orders chart, about 360px wide) and Commerce (cart conversion box, about 560px). Commerce's `cart-conversion-rates` endpoint already returns its three steps (carts created, reached checkout, finalized) for both periods.
+
+- Properties:
+  - `steps` (`UauiFunnelStep[]`, in funnel order)
+  - `compare-steps` (`UauiFunnelStep[]`, matched to `steps` by `id`)
+  - `label`, `compare-label`: the two periods' names for the legend (e.g. from `uauiFormatDateRange`)
+  - `value-format` (`Intl.NumberFormatOptions`, for the counts)
+  - `loading`
+  - `empty-headline`, `empty-description`
+  - `error`, `error-headline`, `error-description`, `retryable`: as on the chart (§4), with the same error > loading > empty precedence
+- **Layout:** one row per step: the label on the left, a centred bar in the middle, the count on the right (tabular figures, right-aligned). Labels wrap; the count column never does. It works from 280px wide.
+- **Bars:** width is the step's value against the largest value in `steps` and `compare-steps`, so bars are honest and both periods share one scale. One colour, `--uaui-color-bar-1`. A value above 0 always draws at least 2px. A step of 0 draws no bar.
+- **Links between steps:** a pale trapezoid joins each bar to the next (decoration, a light neutral tint). On it sits the share that moved on: this step's value divided by the previous step's, as a percent with one decimal (`Intl`). When the previous step is 0 it shows a dash.
+- **What stays off the main view:** % of the first step, "dropped off" counts and per-step count changes. They are in the tooltip and the hidden table.
+- **Comparison** (when `compare-steps` is set):
+  - Each matched step gets a bracket at the compare value's width: 2px `--uaui-color-compare` lines at both ends, 5px taller than the bar above and below, with a 1px `--uui-color-surface` gap on each side so it shows inside the bar too.
+  - Each link gets a small `uaui-delta-badge` (`size="sm"`, `unit="points"`) for this period's step rate against the compare one.
+  - A legend sits above the bars: a solid swatch with `label`, a bracket swatch with `compare-label`. With no comparison there is no legend, as for a single-series chart.
+  - A step with no match in `compare-steps` gets no bracket and no badge.
+- **Overall conversion** is not drawn by the funnel. The pane recipe (§1) puts it in the `uui-box` `header-actions` slot with `uaui-table-total` (label "Overall", the last step over the first as the value, `delta-unit="points"` with `current` and `previous`). The funnel story shows the recipe.
+- **Tooltip:** hovering a row, or focusing it, shows the chart's dark tooltip (shared placement helper): the step label, this period's count, the compare count with a % change badge, % of the first step, and the share from the previous step.
+- **Keyboard:** the rows are one tab stop. Up and Down move between steps (roving `tabindex`), and the focused step shows its tooltip. Escape hides it.
+- **Loading:** a skeleton with one grey bar per step (the length of `steps`, or 4 when there are none yet) at the loaded height. Reloading keeps the old funnel under the loading bar.
+- **Empty:** no steps, or a first step of 0, shows `uaui-empty-state`.
+- **Accessibility:** a visually hidden table holds step, count, % of first step and share from the previous step, plus the compare columns when comparing. The visible element is a labelled group ("Funnel").
+- **Localization:** new keys for the group name, the hidden table caption and headers, and the tooltip lines ("Of {0}", "From previous step"). Generic words reuse Umbraco keys.
+- No events in v1. A `step-click` can be added later without breaking anything.
+
 ### The five moments
 
 | Moment | Applies? | What the elements do |
@@ -237,12 +273,7 @@ Storybook gets a "Pane" story showing this recipe, a chart and a table in one `u
 
 ### Later: not in v1
 
-**`uaui-funnel` (conversion funnel).** Parked until a product commits to using it. Today none does:
-
-- Engage's funnel is on Campaign Reporting, which exists only in the design.
-- Commerce's cart conversion widget is a line chart and a table. A funnel would mean redesigning it.
-
-When it comes back, the starting point is [`funnel-final.png`](../../design/phase-1/screenshots/funnel-final.png) and the "Conversion funnel" notes in [`design-notes.md`](../../design/phase-1/design-notes.md). Confirm with design which label style is final, the banners in `funnel-final.png` or the plain labels in `commerce-final.png`. Adding it is a new element, so it won't break anything.
+Nothing parked right now. The funnel moved into v1 (§10).
 
 ## Non-functional targets
 

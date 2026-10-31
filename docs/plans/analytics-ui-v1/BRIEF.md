@@ -42,5 +42,4 @@ Engage, Commerce and Umbraco AI each have an analytics section in the backoffice
 - **Engage's page heatmap, side panes and profile modals.** Only Engage needs them.
 - **New icons** (orders, cart, coins and others in `ds-contribution/`). They belong in the backoffice icon set.
 - **Donut chart.** It's not in Phase 1 and only Engage uses one today.
-- **Conversion funnel.** Parked until a product commits to it: Engage's is on a page that only exists in the design, and Commerce would need to redesign its cart conversion widget. See SPEC.md, "Later".
 - **Page-level layout** (section header, tabs, sub-navigation). That stays in each product.
