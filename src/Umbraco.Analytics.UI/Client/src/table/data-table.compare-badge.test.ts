@@ -52,7 +52,7 @@ const table = (cols = columns(), compare: unknown[] = compareRows) =>
     );
 
 const badges = (el: Element, row: number, column: number) =>
-    deepQueryAll(shadow(el).querySelectorAll("uui-table-row:not(.summary)")[row].querySelectorAll("uui-table-cell")[column], "uaui-delta-badge") as Badge[];
+    deepQueryAll(shadow(el).querySelectorAll("uui-table-row:not(.column-toolbar)")[row].querySelectorAll("uui-table-cell")[column], "uaui-delta-badge") as Badge[];
 
 describe("Feature: compare badge in value cells", () => {
     describe("Scenario: a number cell whose row has a compare row", () => {

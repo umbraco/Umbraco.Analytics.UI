@@ -291,26 +291,22 @@ export function uauiPreviousPeriod(range: UauiDateSpan): UauiDateSpan | undefine
 export function uauiPreviousYear(range: UauiDateSpan): UauiDateSpan | undefined;
 
 // @public
-export type UauiSegmentedChangeDetail = {
-    value: string;
+export type UauiSearchFieldDetail = {
+    query: string;
 };
 
 // @public
-export class UauiSegmentedElement extends UmbLitElement {
-    label: string;
-    options: UauiSegmentedOption[];
+export class UauiSearchFieldElement extends UmbLitElement {
+    // (undocumented)
+    disconnectedCallback(): void;
+    // (undocumented)
+    focus(): void;
     // (undocumented)
     render(): TemplateResult;
     // (undocumented)
     static styles: CSSResultGroup;
     value: string;
 }
-
-// @public
-export type UauiSegmentedOption = {
-    value: string;
-    label: string;
-};
 
 // @public
 export type UauiSeries = {
@@ -409,24 +405,6 @@ export type UauiTablePageChangeDetail = {
 export type UauiTableRowClickDetail = {
     row: Record<string, unknown>;
 };
-
-// @public
-export type UauiTableSearchDetail = {
-    query: string;
-};
-
-// @public
-export class UauiTableSearchElement extends UmbLitElement {
-    // (undocumented)
-    disconnectedCallback(): void;
-    // (undocumented)
-    focus(): void;
-    // (undocumented)
-    render(): TemplateResult;
-    // (undocumented)
-    static styles: CSSResultGroup;
-    value: string;
-}
 
 // @public
 export class UauiTableServerController<TResult extends UauiTableServerResult = UauiTableServerResult> implements ReactiveController {
@@ -544,6 +522,28 @@ export class UauiTimeSeriesChartElement extends UmbLitElement {
     // (undocumented)
     protected willUpdate(changed: PropertyValues<this>): void;
 }
+
+// @public
+export type UauiToggleGroupChangeDetail = {
+    value: string;
+};
+
+// @public
+export class UauiToggleGroupElement extends UmbLitElement {
+    label: string;
+    options: UauiToggleGroupOption[];
+    // (undocumented)
+    render(): TemplateResult;
+    // (undocumented)
+    static styles: CSSResultGroup;
+    value: string;
+}
+
+// @public
+export type UauiToggleGroupOption = {
+    value: string;
+    label: string;
+};
 
 // (No @packageDocumentation comment for this package)
 

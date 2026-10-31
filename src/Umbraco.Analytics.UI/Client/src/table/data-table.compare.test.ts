@@ -21,7 +21,7 @@ const withCompare = () =>
 
 // The delta badges a cell draws. A badge with no change to show (a compare value of 0) draws nothing, so it is left out.
 const badges = async (el: Element, row: number, column: number) => {
-    const cell = shadow(el).querySelectorAll("uui-table-row:not(.summary)")[row].querySelectorAll("uui-table-cell")[column];
+    const cell = shadow(el).querySelectorAll("uui-table-row:not(.column-toolbar)")[row].querySelectorAll("uui-table-cell")[column];
     const all = deepQueryAll(cell, "uaui-delta-badge") as (HTMLElement & { updateComplete: Promise<boolean> })[];
     await Promise.all(all.map((badge) => badge.updateComplete));
     return all.filter((badge) => badge.shadowRoot?.querySelector(".badge"));

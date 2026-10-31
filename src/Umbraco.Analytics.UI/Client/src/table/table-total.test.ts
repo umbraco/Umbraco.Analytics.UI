@@ -1,4 +1,4 @@
-// TBL-10 — A total for the summary row
+// TBL-10 — A total for the column toolbar
 /// <reference types="vite/client" />
 import { beforeEach, describe, expect, it } from "vitest";
 import { html } from "@umbraco-cms/backoffice/external/lit";
@@ -13,7 +13,7 @@ import "./table-total.element.js";
 const badge = (el: Element) => shadow(el).querySelector("uaui-delta-badge") as UauiDeltaBadgeElement | null;
 const text = (el: Element, selector: string) => shadow(el).querySelector(selector)?.textContent?.trim();
 
-describe("Feature: a total for the summary row", () => {
+describe("Feature: a total for the column toolbar", () => {
     describe("Scenario: label and value", () => {
         let el: UauiTestElement;
         beforeEach(async () => {

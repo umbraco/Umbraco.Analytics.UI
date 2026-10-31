@@ -40,7 +40,7 @@ const rows = [{ url: "/a", n: 6 }, { url: "/b", n: 2 }];
 const columns: UauiTableColumn[] = [{ key: "url", label: "URL" }, { key: "n", label: "N", elementName: "uaui-test-stats-cell" }];
 const table = (el: Element) => el as UauiTestElement & { rows: unknown[]; stats?: Record<string, { total: number; max: number }> };
 const cellTexts = (el: Element) =>
-    [...shadow(el).querySelectorAll("uui-table-row:not([part~='header']):not(.summary) uui-table-cell:nth-child(2)")].map((c) => deepText(c).trim());
+    [...shadow(el).querySelectorAll("uui-table-row:not([part~='header']):not(.column-toolbar) uui-table-cell:nth-child(2)")].map((c) => deepText(c).trim());
 
 describe("Feature: a table provides its column stats to cells", () => {
     describe("Scenario: a product cell reads the stats", () => {

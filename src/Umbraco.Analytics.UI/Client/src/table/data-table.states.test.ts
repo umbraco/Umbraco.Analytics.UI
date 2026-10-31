@@ -86,7 +86,7 @@ describe("Feature: table empty and loading states", () => {
         });
 
         it("keeps the old rows visible", () => {
-            expect(shadow(el).querySelectorAll("uui-table-row:not(.summary)").length).toBe(2);
+            expect(shadow(el).querySelectorAll("uui-table-row:not(.column-toolbar)").length).toBe(2);
         });
 
         it("shows a loading bar", () => {

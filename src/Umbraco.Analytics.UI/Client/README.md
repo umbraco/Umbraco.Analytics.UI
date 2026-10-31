@@ -87,19 +87,19 @@ html`<uaui-time-series-chart kind="area" group-by="day" .series=${series}></uaui
 
 Set `error` when the load failed: the chart shows `uaui-error-state` in place of the plot. Add `retryable` for a Retry button, and listen for `retry` on the chart. `error-headline` and `error-description` reword it. `error` wins over `loading`, and `loading` over the empty state.
 
-### uaui-segmented
+### uaui-toggle-group
 
-A row of options where one is selected, as a radio group: arrow keys move the selection, only the selected option is in the tab order. UUI has no segmented control (`uui-button-group` and `uui-tabs` have different semantics). Sets its own `value`, then raises `change`. [Storybook](https://umbraco.github.io/Umbraco.Analytics.UI/?path=/docs/components-segmented--docs)
+A row of options where exactly one is selected at a time (single choice, a radio group under the hood, so not a multi-select toggle group): arrow keys move the selection, only the selected option is in the tab order. UUI has no such control (`uui-button-group` and `uui-tabs` have different semantics). Sets its own `value`, then raises `change`. [Storybook](https://umbraco.github.io/Umbraco.Analytics.UI/?path=/docs/components-toggle-group--docs)
 
 ```ts
-import type { UauiSegmentedChangeDetail } from "@umbraco-analytics/ui";
+import type { UauiToggleGroupChangeDetail } from "@umbraco-analytics/ui";
 
-html`<uaui-segmented
+html`<uaui-toggle-group
   label="Break down by"
   .value=${this._by}
   .options=${[{ value: "model", label: "Model" }, { value: "profile", label: "Profile" }]}
-  @change=${(e: CustomEvent<UauiSegmentedChangeDetail>) => (this._by = e.detail.value)}
-></uaui-segmented>`;
+  @change=${(e: CustomEvent<UauiToggleGroupChangeDetail>) => (this._by = e.detail.value)}
+></uaui-toggle-group>`;
 ```
 
 `label` is the group's accessible name (not shown). `uaui-group-by` is built on it.
@@ -190,8 +190,8 @@ html`<uaui-data-table
 - **Client mode** (default): the table sorts, searches and pages the rows you give it.
 - **Server mode**: set `mode="server"` and `total-rows` (the row count across every page). The table never reorders or filters. Load new rows on `sort-change`, `page-change` and `search`. Pass `.stats` (`{ [columnKey]: { total, max } }` across every page) so shares and bars stay right across pages. `UauiTableServerController` does this wiring for you (below).
 - **Compare**: pass `.compareRows` and `row-key` to show a change badge on number, percent and share cells. Set `meta: { lowerIsBetter: true }` on a column where a fall is good.
-- **Summary row**: slot content as `summary-<column key>` to show a row above the column headings: a `uaui-table-search` in the first column and a `uaui-table-total` over each number column (below). Each piece sits in its column's cell and takes its `align`. With nothing slotted there is no row. The row isn't sorted or paged, and you work out its numbers.
-- **Slots**: `toolbar` (above everything), `summary-<key>` (above the headings, in a column), and `footer` (left of the pager).
+- **Toolbar**: one idea, filled across the full width (`toolbar`) or column by column (`toolbar-<column key>`). Column by column shows a row above the column headings: a `uaui-search-field` in `toolbar-start` (always the first column's cell, whatever its key) and a `uaui-table-total` over each number column (below). Each piece sits in its column's cell and takes its `align`. If `toolbar-start` and the first column's own `toolbar-<key>` are both filled, both show, `toolbar-start` first. A column keyed `start` shares the first column's cell rather than having its own. With nothing slotted there is no row. The row isn't sorted or paged, and you work out its numbers.
+- **Slots**: `toolbar` (full width, above everything), `toolbar-start` (first column, above the headings), `toolbar-<key>` (any column, above the headings), and `footer` (left of the pager).
 - **Rows**: `clickable-rows` makes rows keyboard-reachable and raises `row-click`.
 
 Replace `rows` and `columns` with new arrays to update. Changing them in place isn't noticed.
@@ -220,13 +220,13 @@ html`<uaui-data-table ${ref(this.#pages.attach)} .columns=${columns}></uaui-data
 - It loads when the host connects. Call `this.#pages.reload({ resetPage: true })` when something the loader reads changes, such as the date range.
 - `result` is the last answer, including your own fields. `loading` and `error` are there too, and the host redraws when they change. A failed request calls `onError` and shows the table's error state with Retry, which calls `reload()`. The next request clears it.
 
-### uaui-table-search
+### uaui-search-field
 
-A search box for the table's `toolbar` slot, or for the first column's `summary-<key>` slot. A client table needs no wiring. [Storybook](https://umbraco.github.io/Umbraco.Analytics.UI/?path=/docs/components-table-search--docs)
+A search box for the table's `toolbar` slot, or for its `toolbar-start` slot, which is the first column's cell. A client table needs no wiring. [Storybook](https://umbraco.github.io/Umbraco.Analytics.UI/?path=/docs/components-search-field--docs)
 
 ```ts
 html`<uaui-data-table .columns=${columns} .rows=${rows}>
-  <uaui-table-search slot="toolbar"></uaui-table-search>
+  <uaui-search-field slot="toolbar"></uaui-search-field>
 </uaui-data-table>`;
 ```
 
@@ -234,12 +234,12 @@ It raises `search` with `{ query }` 300ms after typing stops. In server mode, li
 
 ### uaui-table-total
 
-One total for the table's summary row: a small label, the value and an optional change badge. Slot it into `summary-<column key>` and it sits over its column, ending on the right in an end-aligned column. `value` is shown as you give it. Give `current` and `previous` and the badge works out the change, or give `delta` (it wins). Set `delta-unit="points"` for a rate, and `lower-is-better` when a fall is good, as on `uaui-kpi-tile`.
+One total for the table's column toolbar: a small label, the value and an optional change badge. Slot it into `toolbar-<column key>` and it sits over its column, ending on the right in an end-aligned column. `value` is shown as you give it. Give `current` and `previous` and the badge works out the change, or give `delta` (it wins). Set `delta-unit="points"` for a rate, and `lower-is-better` when a fall is good, as on `uaui-kpi-tile`.
 
 ```ts
 html`<uaui-data-table .columns=${columns} .rows=${rows}>
-  <uaui-table-search slot="summary-url"></uaui-table-search>
-  <uaui-table-total slot="summary-views" label="Total views" value="272" .current=${272} .previous=${251}></uaui-table-total>
+  <uaui-search-field slot="toolbar-start"></uaui-search-field>
+  <uaui-table-total slot="toolbar-views" label="Total views" value="272" .current=${272} .previous=${251}></uaui-table-total>
 </uaui-data-table>`;
 ```
 
@@ -356,7 +356,7 @@ All events bubble. None is composed, so they don't cross shadow roots.
 
 | Element | Event | `detail` |
 | --- | --- | --- |
-| `uaui-segmented` | `change` | `{ value }` |
+| `uaui-toggle-group` | `change` | `{ value }` |
 | `uaui-group-by` | `change` | `{ value }` |
 | `uaui-date-range` | `change` | `{ value, compare }` |
 | `uaui-time-series-chart` | `marker-click` | `{ id }` |
@@ -364,7 +364,7 @@ All events bubble. None is composed, so they don't cross shadow roots.
 | `uaui-time-series-chart` | `retry` | none |
 | `uaui-data-table` | `retry` | none |
 | `uaui-kpi-tile` | `selected`, `deselected` | `{}` (cancelable) |
-| `uaui-table-search` | `search` | `{ query }` |
+| `uaui-search-field` | `search` | `{ query }` |
 | `uaui-data-table` | `sort-change` | `{ key, direction }` |
 | `uaui-data-table` | `page-change` | `{ page, pageSize }` |
 | `uaui-data-table` | `row-click` | `{ row }` |

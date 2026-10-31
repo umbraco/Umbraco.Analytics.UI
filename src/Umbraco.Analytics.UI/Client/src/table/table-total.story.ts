@@ -11,7 +11,7 @@ const meta: Meta<UauiTableTotalElement> = {
         docs: {
             description: {
                 component:
-                    "One total for the summary row of a `uaui-data-table`: a small uppercase label, the value in bold and an optional change badge. Slot it into `summary-<column key>` so it sits over its column. It takes the text alignment of its cell.",
+                    "One total for the column toolbar of a `uaui-data-table`: a small uppercase label, the value in bold and an optional change badge. Slot it into `toolbar-<column key>` so it sits over its column. It takes the text alignment of its cell.",
             },
         },
     },

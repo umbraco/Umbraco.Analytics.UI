@@ -5,8 +5,8 @@ import type { UauiDeltaUnit } from "../delta-badge/delta-badge.element.js";
 import "../delta-badge/delta-badge.element.js";
 
 /**
- * One total, for the summary row of a `uaui-data-table`: a small uppercase label, the value in bold and an optional
- * change badge. Slot it into `summary-<column key>` and it sits over its column, aligned like the column's cells.
+ * One total, for the column toolbar of a `uaui-data-table`: a small uppercase label, the value in bold and an optional
+ * change badge. Slot it into `toolbar-<column key>` and it sits over its column, aligned like the column's cells.
  *
  * The label is on its own line, with the value and the badge on the next. The total takes the `text-align` of its
  * cell, so it ends on the right in a column that is `align: "end"`.

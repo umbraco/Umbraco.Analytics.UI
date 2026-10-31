@@ -104,7 +104,7 @@
   Acceptance: stories render with no errors in light, dark and high contrast; the production Storybook build has no "Internal" entries, the dev server does.
   depends-on: T18d
 
-- [x] **T19** - story: TBL-4 (AC1–AC3). Add `uaui-table-search`, built like the CMS's own collection search box (find the CMS search input and copy its markup, icon position and spacing; the T15 story's hand-made search box has a misplaced icon, user feedback). Replace the story placeholders with it (300ms debounce, raises `search`). Client mode filters rows on columns marked `searchable` (column flag; if none are marked, all columns' text) and shows the empty state when nothing matches.
+- [x] **T19** - story: TBL-4 (AC1–AC3). Add `uaui-search-field`, built like the CMS's own collection search box (find the CMS search input and copy its markup, icon position and spacing; the T15 story's hand-made search box has a misplaced icon, user feedback). Replace the story placeholders with it (300ms debounce, raises `search`). Client mode filters rows on columns marked `searchable` (column flag; if none are marked, all columns' text) and shows the empty state when nothing matches.
   Acceptance: TBL-4 specs green.
   depends-on: T18
 

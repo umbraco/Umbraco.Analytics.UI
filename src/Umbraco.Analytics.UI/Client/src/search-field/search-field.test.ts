@@ -8,8 +8,8 @@ import highContrastCss from "@umbraco-ui/uui/themes/high-contrast.css?inline";
 import { render } from "vitest-browser-lit";
 import { axeRun } from "../internal/test/a11y.js";
 import { recordEvents, renderElement, shadow, type UauiTestElement } from "../internal/test/dom.js";
-import "./table-search.element.js";
-import type { UauiTableSearchElement } from "./table-search.element.js";
+import "./search-field.element.js";
+import type { UauiSearchFieldElement } from "./search-field.element.js";
 
 const input = (el: Element) => shadow(el).querySelector("uui-input") as HTMLElement & { value: string };
 /** Sets the text the way typing does: the value changes, then `input` is raised from the uui-input. */
@@ -19,11 +19,11 @@ const type = (el: Element, text: string) => {
     field.dispatchEvent(new Event("input", { bubbles: true, composed: true }));
 };
 
-describe("Feature: table search box", () => {
+describe("Feature: search field", () => {
     describe("Scenario: how it is built", () => {
         let el: UauiTestElement;
         beforeEach(async () => {
-            el = await renderElement(html`<uaui-table-search></uaui-table-search>`, "uaui-table-search");
+            el = await renderElement(html`<uaui-search-field></uaui-search-field>`, "uaui-search-field");
         });
 
         it("puts the search icon in the input's prepend slot", () => {
@@ -42,7 +42,7 @@ describe("Feature: table search box", () => {
     describe("Scenario: typing quickly", () => {
         let events: Event[];
         beforeEach(async () => {
-            const el = await renderElement(html`<uaui-table-search></uaui-table-search>`, "uaui-table-search");
+            const el = await renderElement(html`<uaui-search-field></uaui-search-field>`, "uaui-search-field");
             events = recordEvents(el, "search");
             // Only the timers are faked, after render, so the debounce is driven by the test and not by the machine's speed.
             vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
@@ -65,7 +65,7 @@ describe("Feature: table search box", () => {
         let el: UauiTestElement;
         let events: Event[];
         beforeEach(async () => {
-            el = await renderElement(html`<uaui-table-search value="contact"></uaui-table-search>`, "uaui-table-search");
+            el = await renderElement(html`<uaui-search-field value="contact"></uaui-search-field>`, "uaui-search-field");
             events = recordEvents(el, "search");
             (input(el).querySelector("[slot='append']") as HTMLElement).click();
             await el.updateComplete;
@@ -90,10 +90,10 @@ describe("Feature: table search box", () => {
             try {
                 const host = render(
                     html`<div style="background: var(--uui-color-surface); padding: 8px">
-                        <uaui-table-search value="contact"></uaui-table-search>
+                        <uaui-search-field value="contact"></uaui-search-field>
                     </div>`,
                 ).container.querySelector("div")!;
-                await host.querySelector<UauiTableSearchElement>("uaui-table-search")!.updateComplete;
+                await host.querySelector<UauiSearchFieldElement>("uaui-search-field")!.updateComplete;
                 return await axeRun(host);
             } finally {
                 theme.remove();

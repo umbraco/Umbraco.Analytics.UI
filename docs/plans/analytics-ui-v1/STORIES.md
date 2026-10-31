@@ -21,7 +21,7 @@
 - [KPI-2](#kpi-2-kpi-tiles-switch-the-charts-metric) KPI tiles switch the chart's metric, 9 criteria
 - [KPI-3](#kpi-3-kpi-tile-with-no-data) KPI tile with no data, 6 criteria
 - [GRP-1](#grp-1-day--week--month-switch) Day / Week / Month switch, 4 criteria
-- [SEG-1](#seg-1-segmented-control) Segmented control, 6 criteria
+- [SEG-1](#seg-1-toggle-group) Toggle group, 6 criteria
 - [ERR-1](#err-1-error-state) Error state, 6 criteria
 - [ERR-2](#err-2-chart-table-and-tile-in-error) Chart, table and tile in error, 7 criteria
 
@@ -48,7 +48,7 @@
 - [TBL-3](#tbl-3-page-through-rows) Page through rows, 5 criteria
 - [TBL-4](#tbl-4-search-rows) Search rows, 3 criteria
 - [TBL-5](#tbl-5-open-a-row) Open a row, 3 criteria
-- [TBL-6](#tbl-6-summary-row) Summary row, 9 criteria
+- [TBL-6](#tbl-6-column-toolbar) Column toolbar, 13 criteria
 - [TBL-7](#tbl-7-compare-badge-in-value-cells) Compare badge in value cells, 6 criteria
 - [TBL-8](#tbl-8-compact-pager-label) Compact pager label, 3 criteria
 - [SRV-1](#srv-1-server-table-wiring) Server table wiring, 11 criteria
@@ -707,7 +707,7 @@ so that I can find one page or campaign without scrolling.
 
 ```
 AC1 — Search raised after typing stops
-  Given uaui-table-search in the toolbar
+  Given uaui-search-field in the toolbar
   When  the editor types "contact" and stops for 300ms
   Then  it raises search with { query: "contact" }
 
@@ -874,7 +874,7 @@ AC1 — Chart shows the error state
 AC2 — Table shows the error state
   Given a uaui-data-table with error set and rows
   When  it renders
-  Then  it shows uaui-error-state, keeps the header row, and shows no rows, summary row, pager or empty state
+  Then  it shows uaui-error-state, keeps the header row, and shows no rows, column toolbar, pager or empty state
 
 AC3 — Retry on the chart and table
   Given a chart or table with error and retryable set
@@ -905,15 +905,15 @@ AC7 — Error wins over loading and no-data
   And   a tile shows the error text, not the no-data text
 ```
 
-## SEG-1: Segmented control
+## SEG-1: Toggle group
 
 As a product developer,
-I want a segmented control for choosing one option from a short list,
+I want a toggle group for choosing exactly one option from a short list,
 so that my screens switch views the way the group-by switch does.
 
 ```
 AC1 — Shows the options
-  Given uaui-segmented with options and a label
+  Given uaui-toggle-group with options and a label
   When  it renders
   Then  it shows each option's label in order, as a radio group named by the label
 
@@ -1089,7 +1089,7 @@ AC8 — Custom comparison
   Then  it returns undefined
 ```
 
-## TBL-6: Summary row
+## TBL-6: Column toolbar
 
 As a product developer,
 I want to put a total under its own column,
@@ -1097,51 +1097,71 @@ so that the number lines up with the column header and the figures below it.
 
 ```
 AC1 — Content sits in its column
-  Given content slotted as summary-pageviews in a table with a pageviews column
+  Given content slotted as toolbar-pageviews in a table with a pageviews column
   When  it renders
-  Then  a summary row shows it in that column's cell, lined up with the header, with the column's alignment
+  Then  a column toolbar shows it in that column's cell, lined up with the header, with the column's alignment
 
 AC2 — One cell per column
-  Given a summary slot for one column
+  Given a toolbar slot for one column
   When  it renders
   Then  the row has one cell per column
 
 AC3 — Above the data, not counted
-  Given a summary row and data rows
+  Given a column toolbar and data rows
   When  it renders
-  Then  the summary row comes first, directly under the header, and is not counted among the data rows
+  Then  the column toolbar comes first, directly above the header, and is not counted among the data rows
 
 AC4 — Not sorted
-  Given a summary row
+  Given a column toolbar
   When  the editor sorts the table
-  Then  the summary row stays first
+  Then  the column toolbar stays first
 
 AC5 — Content that arrives later
-  Given a table with no summary content
+  Given a table with no column toolbar content
   When  content is slotted later
   Then  the row appears, and it goes again when the content goes
 
 AC6 — Table semantics
-  Given a summary row
+  Given a column toolbar
   When  it renders
   Then  it is a row of the table and holds cells
 
 Sad path
 
 AC7 — Nothing slotted
-  Given no summary content
+  Given no column toolbar content
   When  it renders
-  Then  no summary row shows
+  Then  no column toolbar shows
 
 AC8 — A column the table doesn't have
-  Given content slotted as summary-missing
+  Given content slotted as toolbar-missing
   When  it renders
-  Then  no summary row shows
+  Then  no column toolbar shows
 
 AC9 — In error
   Given a table in error
   When  it renders
-  Then  the summary row is hidden
+  Then  the column toolbar is hidden
+
+AC10 — toolbar-start
+  Given content slotted as toolbar-start, whatever the first column's key
+  When  it renders
+  Then  the column toolbar shows it in the first column's cell, on its own, lined up with that column
+
+AC11 — Search in toolbar-start
+  Given a uaui-search-field slotted as toolbar-start
+  When  it raises search
+  Then  the table sets its query and filters, like a search in the toolbar slot
+
+AC12 — Both slots filled
+  Given content in toolbar-start and in toolbar-<first column key>
+  When  it renders
+  Then  both show in the first column's cell, toolbar-start first
+
+AC13 — A column keyed start
+  Given a column whose key is start
+  When  it renders
+  Then  toolbar-start is still the first column's cell, the start column has no slot of its own, and the slot is drawn once
 ```
 
 ## TBL-7: Compare badge in value cells

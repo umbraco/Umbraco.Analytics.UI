@@ -1,5 +1,5 @@
 /// <reference types="vite/client" />
-// Generic segmented control (radio group)
+// Generic toggle group (single choice, radio group)
 import { beforeEach, describe, expect, it } from "vitest";
 import { html } from "@umbraco-cms/backoffice/external/lit";
 import darkCss from "@umbraco-ui/uui/themes/dark.css?inline";
@@ -8,10 +8,10 @@ import { render } from "vitest-browser-lit";
 import { userEvent } from "vitest/browser";
 import { axeRun } from "../internal/test/a11y.js";
 import { nextEvent, renderElement, shadow, type UauiTestElement } from "../internal/test/dom.js";
-import "./segmented.element.js";
-import type { UauiSegmentedElement, UauiSegmentedOption } from "./segmented.element.js";
+import "./toggle-group.element.js";
+import type { UauiToggleGroupElement, UauiToggleGroupOption } from "./toggle-group.element.js";
 
-const options: UauiSegmentedOption[] = [
+const options: UauiToggleGroupOption[] = [
     { value: "model", label: "Model" },
     { value: "profile", label: "Profile" },
     { value: "team", label: "Team" },
@@ -20,13 +20,13 @@ const options: UauiSegmentedOption[] = [
 const radios = (el: Element) => [...shadow(el).querySelectorAll<HTMLElement>("[role='radio']")];
 const option = (el: Element, label: string) => radios(el).find((o) => o.textContent?.trim() === label)!;
 const template = (value = "model") =>
-    html`<uaui-segmented label="Break down by" value=${value} .options=${options}></uaui-segmented>`;
+    html`<uaui-toggle-group label="Break down by" value=${value} .options=${options}></uaui-toggle-group>`;
 
-describe("Feature: Segmented control", () => {
+describe("Feature: Toggle group", () => {
     describe("Scenario: showing the options", () => {
         let el: UauiTestElement;
         beforeEach(async () => {
-            el = await renderElement(template(), "uaui-segmented");
+            el = await renderElement(template(), "uaui-toggle-group");
         });
 
         it("shows each option's label in order", () => {
@@ -41,7 +41,7 @@ describe("Feature: Segmented control", () => {
     describe("Scenario: showing the current value", () => {
         let el: UauiTestElement;
         beforeEach(async () => {
-            el = await renderElement(template("profile"), "uaui-segmented");
+            el = await renderElement(template("profile"), "uaui-toggle-group");
         });
 
         it("checks the matching option", () => {
@@ -59,7 +59,7 @@ describe("Feature: Segmented control", () => {
 
     describe("Scenario: a value that is not an option", () => {
         it("gives the first option the tab stop", async () => {
-            const el = await renderElement(template("nope"), "uaui-segmented");
+            const el = await renderElement(template("nope"), "uaui-toggle-group");
             expect(radios(el).map((o) => o.tabIndex)).toEqual([0, -1, -1]);
         });
     });
@@ -68,7 +68,7 @@ describe("Feature: Segmented control", () => {
         let el: UauiTestElement;
         let detail: unknown;
         beforeEach(async () => {
-            el = await renderElement(template(), "uaui-segmented");
+            el = await renderElement(template(), "uaui-toggle-group");
             const event = nextEvent(el, "change");
             option(el, "Team").click();
             detail = (await event).detail;
@@ -79,13 +79,13 @@ describe("Feature: Segmented control", () => {
         });
 
         it("updates its own value", () => {
-            expect((el as unknown as UauiSegmentedElement).value).toBe("team");
+            expect((el as unknown as UauiToggleGroupElement).value).toBe("team");
         });
     });
 
     describe("Scenario: clicking the selected option", () => {
         it("raises nothing", async () => {
-            const el = await renderElement(template(), "uaui-segmented");
+            const el = await renderElement(template(), "uaui-toggle-group");
             let raised = false;
             el.addEventListener("change", () => (raised = true));
             option(el, "Model").click();
@@ -95,7 +95,7 @@ describe("Feature: Segmented control", () => {
 
     describe("Scenario: the change event", () => {
         it("bubbles but is not composed", async () => {
-            const el = await renderElement(template(), "uaui-segmented");
+            const el = await renderElement(template(), "uaui-toggle-group");
             const event = nextEvent(el, "change");
             option(el, "Profile").click();
             const { bubbles, composed } = await event;
@@ -105,7 +105,7 @@ describe("Feature: Segmented control", () => {
 
     describe("Scenario: using the arrow keys", () => {
         it("selects the next option on ArrowRight", async () => {
-            const el = await renderElement(template(), "uaui-segmented");
+            const el = await renderElement(template(), "uaui-toggle-group");
             const event = nextEvent(el, "change");
             option(el, "Model").focus();
             await userEvent.keyboard("{ArrowRight}");
@@ -113,7 +113,7 @@ describe("Feature: Segmented control", () => {
         });
 
         it("wraps to the last option on ArrowLeft from the first", async () => {
-            const el = await renderElement(template(), "uaui-segmented");
+            const el = await renderElement(template(), "uaui-toggle-group");
             const event = nextEvent(el, "change");
             option(el, "Model").focus();
             await userEvent.keyboard("{ArrowLeft}");
@@ -121,7 +121,7 @@ describe("Feature: Segmented control", () => {
         });
 
         it("moves focus to the newly selected option", async () => {
-            const el = await renderElement(template(), "uaui-segmented");
+            const el = await renderElement(template(), "uaui-toggle-group");
             option(el, "Model").focus();
             await userEvent.keyboard("{ArrowRight}");
             await el.updateComplete;
@@ -140,7 +140,7 @@ describe("Feature: Segmented control", () => {
                 const host = render(
                     html`<div style="background: var(--uui-color-surface); padding: 8px">${template("profile")}</div>`,
                 ).container.querySelector("div")!;
-                await host.querySelector<UauiSegmentedElement>("uaui-segmented")!.updateComplete;
+                await host.querySelector<UauiToggleGroupElement>("uaui-toggle-group")!.updateComplete;
                 return await axeRun(host);
             } finally {
                 theme.remove();

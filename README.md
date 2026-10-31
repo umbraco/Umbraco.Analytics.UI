@@ -20,12 +20,12 @@ Live previews of every element, all states, and full example pages (Commerce, En
 | `uaui-kpi-tile` | A headline number as a card, with an icon and a change badge. Can be selectable. |
 | `uaui-delta-badge` | The change against a comparison period, e.g. "▲ 12.4%". |
 | `uaui-time-series-chart` | Lines, areas, bars or stacked bars over time, with compare, markers and a legend. |
-| `uaui-segmented` | Segmented control: one selected option in a row. |
+| `uaui-toggle-group` | Toggle group: a row of options, exactly one selected. |
 | `uaui-group-by` | Day, week or month switch for a chart. |
 | `uaui-date-range` | Button and dialog to pick a date range and a comparison. |
 | `uaui-data-table` | Sortable, searchable, pageable table. Client or server mode. |
-| `uaui-table-search` | Search box for the table's `toolbar` slot, or the first column of its summary row. |
-| `uaui-table-total` | One total for the table's summary row: label, value and change badge, over its column. |
+| `uaui-search-field` | Search box for the table's `toolbar` slot, or its `toolbar-start` slot (the first column of the column toolbar). |
+| `uaui-table-total` | One total for the table's column toolbar: label, value and change badge, over its column. |
 | `uaui-text-cell`, `uaui-link-cell`, `uaui-number-cell`, `uaui-percent-cell`, `uaui-share-cell` | Table cells. Name one in a column's `elementName`, or write your own. |
 | `uaui-table-compare-badge` | The change badge of a table cell: finds the compare row and shows how a value moved. Use it in your own cells. |
 | `uaui-empty-state` | "Nothing to show" message. The chart and table use it too. |

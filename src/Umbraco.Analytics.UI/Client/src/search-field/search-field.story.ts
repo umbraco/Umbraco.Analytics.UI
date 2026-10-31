@@ -1,17 +1,17 @@
 import type { Meta, StoryObj } from "@storybook/web-components-vite";
 import { html } from "@umbraco-cms/backoffice/external/lit";
-import type { UauiTableSearchElement } from "./table-search.element.js";
-import "./table-search.element.js";
+import type { UauiSearchFieldElement } from "./search-field.element.js";
+import "./search-field.element.js";
 
-const meta: Meta<UauiTableSearchElement> = {
-    title: "Components/Table Search",
-    component: "uaui-table-search",
+const meta: Meta<UauiSearchFieldElement> = {
+    title: "Components/Search Field",
+    component: "uaui-search-field",
     args: { value: "" },
-    render: (args) => html`<uaui-table-search .value=${args.value}></uaui-table-search>`,
+    render: (args) => html`<uaui-search-field .value=${args.value}></uaui-search-field>`,
 };
 
 export default meta;
-type Story = StoryObj<UauiTableSearchElement>;
+type Story = StoryObj<UauiSearchFieldElement>;
 
 /** Type, and `search` is raised 300ms after you stop. Inside a `uaui-data-table`'s `toolbar` slot the table filters itself; see Components › Data Table › Search. */
 export const Default: Story = {};

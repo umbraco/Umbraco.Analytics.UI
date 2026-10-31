@@ -18,7 +18,7 @@ const tile = (page: Element, label: string) => tiles(page).find((t) => t.label =
 const chart = (page: Element) => shadow(page).querySelector("uaui-time-series-chart") as UauiTimeSeriesChartElement;
 const table = (page: Element) => shadow(page).querySelector("uaui-data-table") as UauiDataTableElement;
 const rowNames = (page: Element) =>
-    [...shadow(table(page)).querySelectorAll("uui-table-row:not([part~='header']):not(.summary) uui-table-cell:first-child")].map((c) => deepText(c).trim());
+    [...shadow(table(page)).querySelectorAll("uui-table-row:not([part~='header']):not(.column-toolbar) uui-table-cell:first-child")].map((c) => deepText(c).trim());
 const press = async (t: UauiKpiTileElement) => {
     await t.updateComplete;
     (t.shadowRoot!.querySelector("button") as HTMLButtonElement).click();
@@ -231,7 +231,7 @@ describe("Feature: Umbraco AI usage page", () => {
     describe("Scenario: searching the table", () => {
         it("loads only the rows whose name matches", async () => {
             const page = await renderPage();
-            const search = shadow(page).querySelector("uaui-table-search");
+            const search = shadow(page).querySelector("uaui-search-field");
             const input = search!.shadowRoot!.querySelector("uui-input") as HTMLElement & { value: string };
             input.value = "atlas";
             input.dispatchEvent(new Event("input", { bubbles: true, composed: true }));

@@ -107,8 +107,3 @@ export type UauiTableStats = Readonly<Record<string, UauiTableColumnStats>>;
 
 /** Finds the compare-period row that matches a row, by the table's `rowKey`. `undefined` when there is none. */
 export type UauiTableCompareLookup = (item: Record<string, unknown>) => Record<string, unknown> | undefined;
-
-/** The detail of the `search` event of `uaui-table-search`: what the editor typed. Empty when the box was cleared. */
-export type UauiTableSearchDetail = {
-    query: string;
-};

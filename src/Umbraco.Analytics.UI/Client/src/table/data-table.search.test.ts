@@ -3,17 +3,17 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { html } from "@umbraco-cms/backoffice/external/lit";
 import { userEvent } from "vitest/browser";
 import { nextEvent, renderElement, shadow, type UauiTestElement } from "../internal/test/dom.js";
-import "../table-search/table-search.element.js";
+import "../search-field/search-field.element.js";
 import "./data-table.element.js";
 import { pageColumns, pageRows } from "./table-fixtures.js";
 
-const dataRows = (el: Element) => shadow(el).querySelectorAll("uui-table-row:not([part~='header']):not(.summary)");
+const dataRows = (el: Element) => shadow(el).querySelectorAll("uui-table-row:not([part~='header']):not(.column-toolbar)");
 
 describe("Feature: search rows", () => {
     describe("Scenario: typing in the search box", () => {
         let detail: unknown;
         beforeEach(async () => {
-            const search = await renderElement(html`<uaui-table-search></uaui-table-search>`, "uaui-table-search");
+            const search = await renderElement(html`<uaui-search-field></uaui-search-field>`, "uaui-search-field");
             const event = nextEvent(search, "search");
             // Only the timers are faked, after render, so the debounce is driven by the test and not by the machine's speed.
             vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
@@ -36,8 +36,8 @@ describe("Feature: search rows", () => {
     describe("Scenario: client mode with a matching query", () => {
         let el: UauiTestElement;
         beforeEach(async () => {
-            el = await renderElement(html`<uaui-data-table mode="client" .columns=${pageColumns} .rows=${pageRows}><uaui-table-search slot="toolbar"></uaui-table-search></uaui-data-table>`, "uaui-data-table");
-            el.querySelector("uaui-table-search")!.dispatchEvent(new CustomEvent("search", { detail: { query: "contact" }, bubbles: true }));
+            el = await renderElement(html`<uaui-data-table mode="client" .columns=${pageColumns} .rows=${pageRows}><uaui-search-field slot="toolbar"></uaui-search-field></uaui-data-table>`, "uaui-data-table");
+            el.querySelector("uaui-search-field")!.dispatchEvent(new CustomEvent("search", { detail: { query: "contact" }, bubbles: true }));
             await el.updateComplete;
         });
 
@@ -49,8 +49,8 @@ describe("Feature: search rows", () => {
     describe("Scenario (sad path): no rows match", () => {
         let el: UauiTestElement;
         beforeEach(async () => {
-            el = await renderElement(html`<uaui-data-table mode="client" .columns=${pageColumns} .rows=${pageRows}><uaui-table-search slot="toolbar"></uaui-table-search></uaui-data-table>`, "uaui-data-table");
-            el.querySelector("uaui-table-search")!.dispatchEvent(new CustomEvent("search", { detail: { query: "zzz" }, bubbles: true }));
+            el = await renderElement(html`<uaui-data-table mode="client" .columns=${pageColumns} .rows=${pageRows}><uaui-search-field slot="toolbar"></uaui-search-field></uaui-data-table>`, "uaui-data-table");
+            el.querySelector("uaui-search-field")!.dispatchEvent(new CustomEvent("search", { detail: { query: "zzz" }, bubbles: true }));
             await el.updateComplete;
         });
 
@@ -64,11 +64,11 @@ describe("Feature: search rows", () => {
         beforeEach(async () => {
             el = await renderElement(
                 html`<uaui-data-table mode="client" .columns=${pageColumns} .rows=${pageRows}>
-                    <uaui-table-search slot="toolbar"></uaui-table-search>
+                    <uaui-search-field slot="toolbar"></uaui-search-field>
                 </uaui-data-table>`,
                 "uaui-data-table",
             );
-            const box = el.querySelector("uaui-table-search") as HTMLElement;
+            const box = el.querySelector("uaui-search-field") as HTMLElement;
             (shadow(box).querySelector("uui-input") as HTMLElement).focus();
             await userEvent.keyboard("contact");
             await new Promise((resolve) => setTimeout(resolve, 450));
@@ -118,10 +118,10 @@ describe("Feature: search rows", () => {
         let el: UauiTestElement;
         beforeEach(async () => {
             el = await renderElement(
-                html`<uaui-data-table .columns=${[{ key: "name", label: "Name" }]} .rows=${rows} .page=${3}><uaui-table-search slot="toolbar"></uaui-table-search></uaui-data-table>`,
+                html`<uaui-data-table .columns=${[{ key: "name", label: "Name" }]} .rows=${rows} .page=${3}><uaui-search-field slot="toolbar"></uaui-search-field></uaui-data-table>`,
                 "uaui-data-table",
             );
-            el.querySelector("uaui-table-search")!.dispatchEvent(new CustomEvent("search", { detail: { query: "page" }, bubbles: true }));
+            el.querySelector("uaui-search-field")!.dispatchEvent(new CustomEvent("search", { detail: { query: "page" }, bubbles: true }));
             await el.updateComplete;
         });
 

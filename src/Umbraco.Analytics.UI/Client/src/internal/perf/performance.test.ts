@@ -112,7 +112,7 @@ describe("Feature: performance targets", () => {
             document.body.append(el);
             await settle(el);
             // Guard against timing a table that drew nothing: one full page of body rows.
-            expect(el.shadowRoot!.querySelectorAll("uui-table-row:not([part~='header']):not(.summary)")).toHaveLength(100);
+            expect(el.shadowRoot!.querySelectorAll("uui-table-row:not([part~='header']):not(.column-toolbar)")).toHaveLength(100);
             return el;
         };
         const header = (el: Element, label: string) =>

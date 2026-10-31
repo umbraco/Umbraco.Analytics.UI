@@ -5,7 +5,7 @@ import "../../../chart/time-series-chart.element.js";
 import "../../../date-range/date-range.element.js";
 import "../../../group-by/group-by.element.js";
 import "../../../table/data-table.element.js";
-import "../../../table-search/table-search.element.js";
+import "../../../search-field/search-field.element.js";
 import "../../../table/table-total.element.js";
 import type { UauiSeries } from "../../../chart/types.js";
 import { uauiCompareFor, uauiFormatDateRange } from "../../../date-helpers/index.js";
@@ -148,11 +148,11 @@ export class ExampleEngageAnalyticsPageElement extends UmbLitElement {
         this.#loadChart();
     }
 
-    // The total sits in the summary row, above the headings and over the column it totals. The total works out its own
+    // The total sits in the column toolbar, above the headings and over the column it totals. The total works out its own
     // change from the two numbers, and shows none when there is no previous period to compare with.
     #renderTotal(valueKey: string, label: string, total: { current: number; previous?: number }) {
         return html`<uaui-table-total
-            slot=${`summary-${valueKey}`}
+            slot=${`toolbar-${valueKey}`}
             .label=${label}
             .value=${this.localize.number(total.current)}
             .current=${total.current}
@@ -179,7 +179,7 @@ export class ExampleEngageAnalyticsPageElement extends UmbLitElement {
             row-key="url"
             empty-headline="No pages found"
             empty-description="No page matches your search.">
-            <uaui-table-search slot="summary-url"></uaui-table-search>
+            <uaui-search-field slot="toolbar-start"></uaui-search-field>
             ${pages ? this.#renderTotal("pageviews", "Total pageviews", pages.pageviews) : nothing}
         </uaui-data-table>`;
     }

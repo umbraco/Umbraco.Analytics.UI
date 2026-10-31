@@ -29,7 +29,7 @@ const chart = (page: Element) => shadow(page).querySelector("uaui-time-series-ch
 const buyersTable = (page: Element) =>
     shadow(page).querySelector("uaui-data-table[row-key='email']") as UauiTestElement & { loading: boolean };
 const buyerCells = (page: Element, column: number) =>
-    [...shadow(buyersTable(page)).querySelectorAll(`uui-table-row:not(.summary) uui-table-cell:nth-child(${column})`)].map((c) => deepText(c).trim());
+    [...shadow(buyersTable(page)).querySelectorAll(`uui-table-row:not(.column-toolbar) uui-table-cell:nth-child(${column})`)].map((c) => deepText(c).trim());
 const buyerNames = (page: Element) => buyerCells(page, 1);
 
 describe("Feature: the Commerce analytics page", () => {
@@ -141,7 +141,7 @@ describe("Feature: the Commerce analytics page", () => {
         beforeEach(async () => {
             page = await renderPage();
             const search = shadow(buyersTable(page)).querySelector("slot[name='toolbar']") as HTMLSlotElement;
-            const box = search.assignedElements()[0].querySelector("uaui-table-search") as HTMLElement;
+            const box = search.assignedElements()[0].querySelector("uaui-search-field") as HTMLElement;
             (shadow(box).querySelector("input, uui-input") as HTMLElement).focus();
             await userEvent.keyboard("ada");
         });

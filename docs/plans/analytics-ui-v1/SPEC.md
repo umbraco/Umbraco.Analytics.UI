@@ -34,7 +34,7 @@ type UauiDateBucket = { start: string; days: string[] };       // start: where t
 type UauiGroupByChangeDetail = { value: UauiGroupBy };
 type UauiDateRangeChangeDetail = { value: UauiDateRange; compare?: UauiCompare };
 type UauiMarkerClickDetail = { id: string };
-type UauiSegmentedChangeDetail = { value: string };
+type UauiToggleGroupChangeDetail = { value: string };
 ```
 
 **Date helpers** (public functions in `src/date-helpers/`, for products that use them without the picker; weeks start on Monday, not locale-dependent):
@@ -72,7 +72,7 @@ Storybook gets a "Pane" story showing this recipe, a chart and a table in one `u
   - `no-data`: the metric has no data for the period (see below)
   - `error`: the data could not be loaded (see below)
 - One style only: a card with the icon in a pink square, as in every Phase 1 screenshot.
-- Not used for table totals ("TOTAL PAGEVIEWS 272 +8.4%"). Those are a label and a number, which the product slots into the table's summary row (`summary-<column key>`, §7), using `uaui-delta-badge` for the change.
+- Not used for table totals ("TOTAL PAGEVIEWS 272 +8.4%"). Those are a label and a number, which the product slots into the table's column toolbar (`toolbar-<column key>`, §7), using `uaui-delta-badge` for the change.
 - **Selectable:** follows UUI's `SelectableMixin` (as `uui-card` uses), so product code reads the same as for UUI cards. This lets a row of tiles switch which metric a chart shows, like Engage's `AnStatPanes`.
   - When `selectable`, the tile is a toggle button with `aria-pressed` (UUI cards don't expose their state to screen readers; this does).
   - Clicking, Enter or Space on an unselected tile raises a cancelable `selected` event, then sets `selected` unless the event was cancelled.
@@ -127,16 +127,16 @@ Storybook gets a "Pane" story showing this recipe, a chart and a table in one `u
   - Bar kinds have no smoothing.
 - **Accessibility:** a visually hidden table holds the same data, for screen readers.
 
-### 5. `uaui-group-by` and `uaui-segmented`: Day / Week / Month switch
+### 5. `uaui-group-by` and `uaui-toggle-group`: Day / Week / Month switch
 
-**`uaui-segmented`** (public) is a segmented control: a row of options with exactly one selected, built as a radio group. UUI has no such control (`uui-button-group` has no selection, `uui-tabs` switches panels, `uui-radio-group` draws radio circles).
+**`uaui-toggle-group`** (public) is a toggle group: a row of options with exactly one selected at a time (single choice, never several), built as a radio group. UUI has no such control (`uui-button-group` has no selection, `uui-tabs` switches panels, `uui-radio-group` draws radio circles).
 
 - Properties: `value` (the selected option's `value`), `options` (`{ value, label }[]`) and `label` (the group's accessible name, not shown).
 - Arrow keys move the selection and focus to the next or previous option, wrapping at the ends. Only the selected option is in the tab order (the first when `value` matches no option).
-- Clicking another option sets `value` and raises `change` with `{ value }` (`UauiSegmentedChangeDetail`). Clicking the selected option raises nothing.
+- Clicking another option sets `value` and raises `change` with `{ value }` (`UauiToggleGroupChangeDetail`). Clicking the selected option raises nothing.
 - Put it in a `uui-box`'s `header-actions` slot.
 
-**`uaui-group-by`** is `uaui-segmented` with the day, week and month options.
+**`uaui-group-by`** is `uaui-toggle-group` with the day, week and month options.
 
 - Properties: `value` (`UauiGroupBy`), `options` (defaults to all three).
 - It re-raises its own `change` with `{ value }` (`UauiGroupByChangeDetail`).
@@ -173,17 +173,17 @@ Storybook gets a "Pane" story showing this recipe, a chart and a table in one `u
   - `sort` (`{ key, direction }`)
   - `mode` (`"client"` | `"server"`)
   - `page`, `page-size`, `total-rows` (the row count across every page, `server` mode)
-  - `query` (the search text; the table sets it from a `uaui-table-search` in the `toolbar` slot)
+  - `query` (the search text; the table sets it from a `uaui-search-field` in the `toolbar`, `toolbar-start` or a `toolbar-<key>` slot)
   - `clickable-rows` (makes rows openable and raises `row-click`)
   - `loading`
   - `empty-headline`, `empty-description`
   - `error`, `error-headline`, `error-description`, `retryable`
-- **Error:** `error` shows `uaui-error-state` (§8) in place of the rows, passing on `error-headline`, `error-description` and `retryable`. The header stays. The rows, summary row, skeleton, "No results" and pager go. The table re-raises the state's `retry` from its own host. Precedence is error, then loading, then empty: the table in error is not `aria-busy` and shows no skeleton or loading bar. `error` is a plain property, so the product decides what an error is.
+- **Error:** `error` shows `uaui-error-state` (§8) in place of the rows, passing on `error-headline`, `error-description` and `retryable`. The header stays. The rows, column toolbar, skeleton, "No results" and pager go. The table re-raises the state's `retry` from its own host. Precedence is error, then loading, then empty: the table in error is not `aria-busy` and shows no skeleton or loading bar. `error` is a plain property, so the product decides what an error is.
 - **Loading:** cells take an optional `loading` flag and draw their own placeholder, so loading rows match loaded rows. A cell without `loading` gets a generic placeholder.
 - **Cells are elements**, as in the CMS `umb-table`: each gets `column`, `item` (the row) and `value`. A column names its cell with `elementName` (default the text cell); the package ships ready-made cells (`uaui-share-cell` and others, with exported name constants). Columns have no `type`: alignment is `align`, sorting is `sortAs` (number, text or a compare function). Cells that need table-wide data (column total and max, compare rows) read it from the table's context, so the table doesn't special-case any cell.
-- Slots: `toolbar`, for the search box (or any free layout above the header), `summary-<column key>` for a search in the first column and a total over each number column, and `footer`, left of the pager.
-- **Summary row:** content slotted as `summary-<column key>` sits in that column's cell, so it lines up with the header and the numbers below and takes the column's `align`. It is a row of the table, above the column headings (below the `toolbar`, if any), and is not sorted, searched or paged. It stays hidden while nothing is slotted for a column the table has. Content that arrives later shows it. A slot for an unknown column draws nothing. In `error` it is hidden.
-- **`uaui-table-total`** (public) is the piece for a total in the summary row: a small uppercase `label`, a `value` string shown as given, and a `uaui-delta-badge` (size `sm`) from `delta`, or from `current` and `previous` with `delta-unit` and `lower-is-better`, the same names and rules as `uaui-kpi-tile`. It takes the `text-align` of its cell. A `uaui-table-search` in a summary slot drives the table like one in `toolbar`.
+- Slots: the toolbar is one idea, filled full width or column by column. `toolbar` is the full-width slot, for a search box alone (or any free layout above the header). `toolbar-start` is the first column's cell and `toolbar-<column key>` is any column's cell, for a search in the first column and a total over each number column. `footer` is left of the pager.
+- **Column toolbar:** content slotted as `toolbar-<column key>` sits in that column's cell, so it lines up with the header and the numbers below and takes the column's `align`. `toolbar-start` is always the first column's cell, whatever its key, so every product writes `<uaui-search-field slot="toolbar-start">`; if it and `toolbar-<first column key>` are both filled, both show in that cell, `toolbar-start` first. A column keyed `start` makes the name ambiguous, so `toolbar-start` always means the first column's cell and a column keyed `start` shares it (it has no slot of its own, and the slot is drawn once). It is a row of the table, above the column headings (below the `toolbar`, if any), and is not sorted, searched or paged. It stays hidden while nothing is slotted for a column the table has (or in `toolbar-start`). Content that arrives later shows it. A slot for an unknown column draws nothing. In `error` it is hidden.
+- **`uaui-table-total`** (public) is the piece for a total in the column toolbar: a small uppercase `label`, a `value` string shown as given, and a `uaui-delta-badge` (size `sm`) from `delta`, or from `current` and `previous` with `delta-unit` and `lower-is-better`, the same names and rules as `uaui-kpi-tile`. It takes the `text-align` of its cell. A `uaui-search-field` in `toolbar-start` or a `toolbar-<column key>` slot drives the table like one in `toolbar`.
 - **Padding:** the cells pad themselves. The `toolbar` slot pads itself with the public CSS property `--uaui-table-padding` (default `12px 24px`), only when something is slotted. The reload loading bar sits outside it at the element's top edge, full width, so put the table in a `uui-box` with `--uui-box-default-padding: 0`.
 - **Share cells (`UAUI_TABLE_CELL.share`):** show the value, its percent of the column total, and a thin bar scaled to the column's largest value.
   - The first share column uses `--uaui-series-1`, the second `--uaui-series-2`.
@@ -192,7 +192,7 @@ Storybook gets a "Pane" story showing this recipe, a chart and a table in one `u
 - **Link cells (`UAUI_TABLE_CELL.link`):** render an anchor. The row's `href` comes from the column's `meta.hrefKey`.
 - **Sorting:** clicking a sortable header toggles the direction and raises `sort-change`. In `client` mode the table also sorts itself.
 - **Paging:** the footer is an internal compact pager (`uaui-compact-pager`, no table wording; its text comes from the `pager*` keys, so a product rewords it with its own localization). It has "Per page" (10, 25, 50, 100) and "1–10 of 272". It raises `page-change` with `{ page, pageSize }`, and in `client` mode it also pages itself. The footer is hidden when the rows fit on one page at the smallest page size the editor could need (row count ≤ the smaller of the current page size and 10), so a table at 50 rows per page can still go back to 10.
-- **Search:** `uaui-data-table` exports `uaui-table-search` for the toolbar. It raises `search` with `{ query }`, 300ms after typing stops. In `client` mode the table filters rows on columns marked `searchable`; if none are marked, on every column's text.
+- **Search:** The package exports `uaui-search-field` for the table's toolbar slots. It raises `search` with `{ query }`, 300ms after typing stops. In `client` mode the table filters rows on columns marked `searchable`; if none are marked, on every column's text.
 - **`UauiTableServerController`** (public) runs the server side of a `server` table, so a page doesn't write the wiring again. It is a Lit `ReactiveController` that works on any host: create it on the page, attach it with `${ref(controller.attach)}`, and don't bind the properties it sets.
   - **Options:** `load(state, signal)` (required, returns the rows and any fields of your own), `sort`, `page` (default 1), `pageSize` (default 10), `query`, `onError(error)` and `retryable` (default true).
   - **Sets on the table:** `mode="server"`, `sort`, `page`, `pageSize`, `query`, `rows`, `compareRows`, `totalRows`, `stats`, `loading`, `error` and `retryable`. `result` hands back the last good answer with your own fields.

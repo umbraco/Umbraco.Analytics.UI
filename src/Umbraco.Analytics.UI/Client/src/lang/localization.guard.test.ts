@@ -18,9 +18,9 @@ import "../error-state/error-state.element.js";
 import "../group-by/group-by.element.js";
 import "../internal/loading/loading-bar.element.js";
 import "../kpi-tile/kpi-tile.element.js";
-import "../segmented/segmented.element.js";
+import "../toggle-group/toggle-group.element.js";
 import "../table/data-table.element.js";
-import "../table-search/table-search.element.js";
+import "../search-field/search-field.element.js";
 import { UAUI_TABLE_CELL } from "../table/cells/cell-names.js";
 
 const points = (from: number, values: number[]) => values.map((value, i) => ({ date: `2026-06-${String(from + i).padStart(2, "0")}`, value }));
@@ -116,23 +116,23 @@ describe("Feature: built-in text is translated, with nothing hard-coded", () => 
         });
     });
 
-    describe("Scenario: group by and segmented", () => {
+    describe("Scenario: group by and toggle group", () => {
         it("has no hard-coded words in uaui-group-by", async () => {
             expect(await wordsIn(await renderElement(html`<uaui-group-by></uaui-group-by>`, "uaui-group-by"))).toEqual([]);
         });
 
-        it("has no hard-coded words in uaui-segmented", async () => {
+        it("has no hard-coded words in uaui-toggle-group", async () => {
             const el = await renderElement(
-                html`<uaui-segmented label="DATA" value="a" .options=${[{ value: "a", label: "DATA" }, { value: "b", label: "DATA" }]}></uaui-segmented>`,
-                "uaui-segmented",
+                html`<uaui-toggle-group label="DATA" value="a" .options=${[{ value: "a", label: "DATA" }, { value: "b", label: "DATA" }]}></uaui-toggle-group>`,
+                "uaui-toggle-group",
             );
             expect(await wordsIn(el)).toEqual([]);
         });
     });
 
-    describe("Scenario: table search", () => {
-        it("has no hard-coded words in uaui-table-search with a query to clear", async () => {
-            const el = await renderElement(html`<uaui-table-search value="DATA"></uaui-table-search>`, "uaui-table-search");
+    describe("Scenario: search field", () => {
+        it("has no hard-coded words in uaui-search-field with a query to clear", async () => {
+            const el = await renderElement(html`<uaui-search-field value="DATA"></uaui-search-field>`, "uaui-search-field");
             expect(await wordsIn(el)).toEqual([]);
         });
     });
@@ -241,7 +241,7 @@ describe("Feature: built-in text is translated, with nothing hard-coded", () => 
         it("has no hard-coded words in a sortable, paged table with a comparison", async () => {
             const el = await table(
                 html`<uaui-data-table row-key="name" page-size="5" .columns=${columns} .rows=${rows} .compareRows=${compareRows}>
-                    <uaui-table-search slot="toolbar"></uaui-table-search>
+                    <uaui-search-field slot="toolbar"></uaui-search-field>
                 </uaui-data-table>`,
             );
             expect(await wordsIn(el)).toEqual([]);

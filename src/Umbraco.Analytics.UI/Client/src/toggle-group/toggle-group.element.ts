@@ -2,30 +2,32 @@ import { css, customElement, html, ifDefined, property, repeat, type CSSResultGr
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UauiPaletteStyles } from "../theme/index.js";
 
-/** One choice of `uaui-segmented`: the `value` it reports and the `label` it shows. */
-export type UauiSegmentedOption = { value: string; label: string };
+/** One choice of `uaui-toggle-group`: the `value` it reports and the `label` it shows. */
+export type UauiToggleGroupOption = { value: string; label: string };
 
-/** The detail of the `change` event of `uaui-segmented`: the option the editor picked. */
-export type UauiSegmentedChangeDetail = { value: string };
+/** The detail of the `change` event of `uaui-toggle-group`: the option the editor picked. */
+export type UauiToggleGroupChangeDetail = { value: string };
 
 /**
- * A segmented control: a row of options where exactly one is selected, built as a radio group.
+ * A toggle group: a row of options where exactly one is selected at a time. It is a single choice, built as a radio
+ * group (`role="radiogroup"`), so unlike toggle groups in some other libraries it never allows several options on at once,
+ * and never none once `value` matches an option.
  *
  * Arrow keys move the selection and focus to the next or previous option, wrapping at the ends, as in
  * `uui-radio-group`. Only the selected option is in the tab order. Put it in a `uui-box`'s `header-actions` slot.
  *
- * @element uaui-segmented
- * @fires change - The editor picked a different option. Bubbles, not cancelable. `detail` is `{ value }` (`UauiSegmentedChangeDetail`).
+ * @element uaui-toggle-group
+ * @fires change - The editor picked a different option. Bubbles, not cancelable. `detail` is `{ value }` (`UauiToggleGroupChangeDetail`).
  */
-@customElement("uaui-segmented")
-export class UauiSegmentedElement extends UmbLitElement {
+@customElement("uaui-toggle-group")
+export class UauiToggleGroupElement extends UmbLitElement {
     /** The selected option's `value`. Picking an option updates it, as `uui-radio-group` does, then raises `change`. */
     @property({ type: String, reflect: true })
     value = "";
 
     /** The options to show, in order. */
     @property({ attribute: false })
-    options: UauiSegmentedOption[] = [];
+    options: UauiToggleGroupOption[] = [];
 
     /** The accessible name of the group, read by screen readers. Not shown. */
     @property({ type: String })
@@ -34,7 +36,7 @@ export class UauiSegmentedElement extends UmbLitElement {
     #select(value: string) {
         if (value === this.value) return;
         this.value = value;
-        this.dispatchEvent(new CustomEvent<UauiSegmentedChangeDetail>("change", { bubbles: true, detail: { value } }));
+        this.dispatchEvent(new CustomEvent<UauiToggleGroupChangeDetail>("change", { bubbles: true, detail: { value } }));
     }
 
     #onKeydown(e: KeyboardEvent, index: number) {
@@ -75,8 +77,8 @@ export class UauiSegmentedElement extends UmbLitElement {
             :host {
                 display: inline-flex;
                 /* Design's selected segment is space cadet. That vanishes on the dark surface, so dark uses malibu light. */
-                --_uaui-segmented-selected-bg: light-dark(var(--uui-palette-space-cadet), var(--uui-palette-malibu-light));
-                --_uaui-segmented-selected-fg: light-dark(var(--uui-palette-white), var(--uui-palette-space-cadet));
+                --_uaui-toggle-group-selected-bg: light-dark(var(--uui-palette-space-cadet), var(--uui-palette-malibu-light));
+                --_uaui-toggle-group-selected-fg: light-dark(var(--uui-palette-white), var(--uui-palette-space-cadet));
             }
 
             .group {
@@ -111,8 +113,8 @@ export class UauiSegmentedElement extends UmbLitElement {
             }
 
             button[aria-checked="true"] {
-                background: var(--_uaui-segmented-selected-bg);
-                color: var(--_uaui-segmented-selected-fg);
+                background: var(--_uaui-toggle-group-selected-bg);
+                color: var(--_uaui-toggle-group-selected-fg);
             }
 
             button:focus-visible {
@@ -131,6 +133,6 @@ export class UauiSegmentedElement extends UmbLitElement {
 
 declare global {
     interface HTMLElementTagNameMap {
-        "uaui-segmented": UauiSegmentedElement;
+        "uaui-toggle-group": UauiToggleGroupElement;
     }
 }

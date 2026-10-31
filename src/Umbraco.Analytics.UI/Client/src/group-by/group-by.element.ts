@@ -1,7 +1,7 @@
 import { css, customElement, html, property, type CSSResultGroup, type TemplateResult } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
-import "../segmented/segmented.element.js";
-import type { UauiSegmentedChangeDetail } from "../segmented/segmented.element.js";
+import "../toggle-group/toggle-group.element.js";
+import type { UauiToggleGroupChangeDetail } from "../toggle-group/toggle-group.element.js";
 
 /** How a chart groups its points: one per day, week or month. */
 export type UauiGroupBy = "day" | "week" | "month";
@@ -18,9 +18,9 @@ const termKeys: Record<UauiGroupBy, string> = {
 };
 
 /**
- * Switches a chart between daily, weekly and monthly points: a `uaui-segmented` control.
+ * Switches a chart between daily, weekly and monthly points: a `uaui-toggle-group` control.
  *
- * Keyboard behaviour is that of `uaui-segmented`. Put it in a `uui-box`'s `header-actions` slot.
+ * Keyboard behaviour is that of `uaui-toggle-group`. Put it in a `uui-box`'s `header-actions` slot.
  *
  * @element uaui-group-by
  * @fires change - The editor picked a different option. Bubbles, not cancelable. `detail` is `{ value }` (`UauiGroupByChangeDetail`).
@@ -35,7 +35,7 @@ export class UauiGroupByElement extends UmbLitElement {
     @property({ attribute: false })
     options: UauiGroupBy[] = allOptions();
 
-    #onChange(e: CustomEvent<UauiSegmentedChangeDetail>) {
+    #onChange(e: CustomEvent<UauiToggleGroupChangeDetail>) {
         // The inner change doesn't leave this shadow root; raise our own with the typed value.
         const value = e.detail.value as UauiGroupBy;
         if (value === this.value) return;
@@ -44,11 +44,11 @@ export class UauiGroupByElement extends UmbLitElement {
     }
 
     override render(): TemplateResult {
-        return html`<uaui-segmented
+        return html`<uaui-toggle-group
             .value=${this.value}
             .label=${this.localize.term("uauiAnalytics_groupByLabel")}
             .options=${this.options.map((value) => ({ value, label: this.localize.term(termKeys[value]) }))}
-            @change=${this.#onChange}></uaui-segmented>`;
+            @change=${this.#onChange}></uaui-toggle-group>`;
     }
 
     static override styles: CSSResultGroup = css`

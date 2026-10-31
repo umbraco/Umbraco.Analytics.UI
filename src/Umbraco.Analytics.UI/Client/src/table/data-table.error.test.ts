@@ -8,7 +8,7 @@ import "./data-table.element.js";
 import { pageColumns, pageRows } from "./table-fixtures.js";
 
 const errorState = (el: Element) => shadow(el).querySelector("uaui-error-state") as UauiTestElement | null;
-const dataRows = (el: Element) => [...shadow(el).querySelectorAll("uui-table-row:not(.summary)")].filter((row) => !row.querySelector("uui-table-head-cell"));
+const dataRows = (el: Element) => [...shadow(el).querySelectorAll("uui-table-row:not(.column-toolbar)")].filter((row) => !row.querySelector("uui-table-head-cell"));
 
 describe("Feature: table error state", () => {
     describe("Scenario: the table has an error", () => {
@@ -47,8 +47,8 @@ describe("Feature: table error state", () => {
             expect(events).toHaveLength(1);
         });
 
-        it("hides the summary row", () => {
-            expect(shadow(el).querySelector(".summary")?.hasAttribute("hidden")).toBe(true);
+        it("hides the column toolbar", () => {
+            expect(shadow(el).querySelector(".column-toolbar")?.hasAttribute("hidden")).toBe(true);
         });
 
         it("shows the rows again when the error is cleared", async () => {

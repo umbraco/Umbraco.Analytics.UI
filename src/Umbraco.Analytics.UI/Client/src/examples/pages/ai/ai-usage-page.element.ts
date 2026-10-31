@@ -4,11 +4,11 @@ import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
 import "../../../kpi-tile/kpi-tile.element.js";
 import "../../../chart/time-series-chart.element.js";
 import "../../../group-by/group-by.element.js";
-import "../../../segmented/segmented.element.js";
-import type { UauiSegmentedChangeDetail } from "../../../segmented/segmented.element.js";
+import "../../../toggle-group/toggle-group.element.js";
+import type { UauiToggleGroupChangeDetail } from "../../../toggle-group/toggle-group.element.js";
 import "../../../date-range/date-range.element.js";
 import "../../../table/data-table.element.js";
-import "../../../table-search/table-search.element.js";
+import "../../../search-field/search-field.element.js";
 import { UAUI_TABLE_CELL } from "../../../table/cells/cell-names.js";
 import type { UauiSeries } from "../../../chart/types.js";
 import { uauiCompareFor, uauiFormatDateRange } from "../../../date-helpers/index.js";
@@ -174,7 +174,7 @@ export class ExampleAiUsagePageElement extends UmbLitElement {
         this._metric = metric;
     }
 
-    #onBreakdownBy(event: CustomEvent<UauiSegmentedChangeDetail>) {
+    #onBreakdownBy(event: CustomEvent<UauiToggleGroupChangeDetail>) {
         this._by = event.detail.value as BreakdownBy;
         void this.#breakdown.reload({ resetPage: true });
     }
@@ -277,17 +277,17 @@ export class ExampleAiUsagePageElement extends UmbLitElement {
             </uui-box>
 
             <uui-box headline="Breakdown" headline-variant="h3" style="--uui-box-default-padding: 0">
-                <uaui-segmented
+                <uaui-toggle-group
                     slot="header-actions"
                     label="Break down by"
                     .value=${this._by}
                     .options=${breakdownOptions}
-                    @change=${this.#onBreakdownBy}></uaui-segmented>
+                    @change=${this.#onBreakdownBy}></uaui-toggle-group>
                 <uaui-data-table
                     ${ref(this.#breakdown.attach)}
                     row-key="name"
                     .columns=${tableColumns(this._by)}>
-                    <div slot="toolbar"><uaui-table-search></uaui-table-search></div>
+                    <div slot="toolbar"><uaui-search-field></uaui-search-field></div>
                 </uaui-data-table>
             </uui-box>
         `;

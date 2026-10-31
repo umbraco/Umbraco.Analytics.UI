@@ -13,7 +13,7 @@ import "./engage-analytics-page.element.js";
 type Series = { points: unknown[] }[];
 const chart = (page: Element) => shadow(page).querySelector("uaui-time-series-chart")!;
 const table = (page: Element) => shadow(page).querySelector("uaui-data-table")!;
-const dataRows = (page: Element) => [...shadow(table(page)).querySelectorAll("uui-table-row:not(.summary)")];
+const dataRows = (page: Element) => [...shadow(table(page)).querySelectorAll("uui-table-row:not(.column-toolbar)")];
 const firstRowText = (page: Element) => deepText(dataRows(page)[0]);
 const header = (page: Element, label: string) =>
     [...shadow(table(page)).querySelectorAll("uui-table-head-cell")].find((h) => h.textContent?.includes(label)) as HTMLElement;
@@ -53,23 +53,23 @@ describe("Feature: Engage analytics page example", () => {
             expect(deepQueryAll(shadow(table(page)), "uaui-delta-badge").length).toBeGreaterThan(0);
         });
 
-        it("shows the total pageviews with its compare badge in the table's summary row", () => {
-            expect(deepQueryAll(shadow(table(page).querySelector("[slot='summary-pageviews']")!), "uaui-delta-badge")).toHaveLength(1);
+        it("shows the total pageviews with its compare badge in the table's column toolbar", () => {
+            expect(deepQueryAll(shadow(table(page).querySelector("[slot='toolbar-pageviews']")!), "uaui-delta-badge")).toHaveLength(1);
         });
 
         it("puts the total under the Pageviews column", () => {
-            const total = table(page).querySelector("[slot='summary-pageviews']")!.getBoundingClientRect();
+            const total = table(page).querySelector("[slot='toolbar-pageviews']")!.getBoundingClientRect();
             const head = header(page, "Pageviews").getBoundingClientRect();
             expect([Math.round(total.left) >= Math.round(head.left), Math.round(total.right) <= Math.round(head.right)]).toEqual([true, true]);
         });
 
         it("works the total's change out from the two periods", () => {
-            const total = table(page).querySelector("[slot='summary-pageviews']") as HTMLElement & { current?: number; previous?: number };
+            const total = table(page).querySelector("[slot='toolbar-pageviews']") as HTMLElement & { current?: number; previous?: number };
             expect([typeof total.current, typeof total.previous]).toEqual(["number", "number"]);
         });
 
-        it("puts the search in the first column's summary", () => {
-            expect(table(page).querySelectorAll("uaui-table-search[slot='summary-url']")).toHaveLength(1);
+        it("puts the search in the first column's toolbar", () => {
+            expect(table(page).querySelectorAll("uaui-search-field[slot='toolbar-start']")).toHaveLength(1);
         });
 
         it("keeps the toolbar free for things that are not tied to a column", () => {
@@ -120,7 +120,7 @@ describe("Feature: Engage analytics page example", () => {
     describe("Scenario: searching", () => {
         it("loads only the matching pages", async () => {
             const page = await renderPage();
-            const search = table(page).querySelector("uaui-table-search")!;
+            const search = table(page).querySelector("uaui-search-field")!;
             (shadow(search).querySelector("uui-input") as HTMLElement).focus();
             await userEvent.keyboard("walnut");
             await expect.poll(() => dataRows(page).length).toBe(1);
@@ -140,7 +140,7 @@ describe("Feature: Engage analytics page example", () => {
 
         it("shows the total visitors under the Visitors column", async () => {
             const page = await renderPage("visitors");
-            expect(table(page).querySelectorAll("[slot='summary-visitors']")).toHaveLength(1);
+            expect(table(page).querySelectorAll("[slot='toolbar-visitors']")).toHaveLength(1);
         });
     });
 

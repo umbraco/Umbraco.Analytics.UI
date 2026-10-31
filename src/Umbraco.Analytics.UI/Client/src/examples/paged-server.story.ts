@@ -3,7 +3,7 @@ import { css, customElement, html, LitElement, ref } from "@umbraco-cms/backoffi
 import { regionSource, sourceDocs } from "../internal/story/source.js";
 import raw from "./paged-server.story.ts?raw";
 import "../table/data-table.element.js";
-import "../table-search/table-search.element.js";
+import "../search-field/search-field.element.js";
 import { UAUI_TABLE_CELL } from "../table/cells/cell-names.js";
 import { UauiTableServerController, type UauiTableColumn, type UauiTableServerState } from "../table/index.js";
 
@@ -60,7 +60,7 @@ export class ExamplePagedServerTableElement extends LitElement {
     override render() {
         return html`<uui-box headline="Top pages" style="--uui-box-default-padding: 0">
             <uaui-data-table ${ref(this.#pages.attach)} .columns=${columns}>
-                <div slot="toolbar"><uaui-table-search></uaui-table-search></div>
+                <div slot="toolbar"><uaui-search-field></uaui-search-field></div>
             </uaui-data-table>
         </uui-box>`;
     }

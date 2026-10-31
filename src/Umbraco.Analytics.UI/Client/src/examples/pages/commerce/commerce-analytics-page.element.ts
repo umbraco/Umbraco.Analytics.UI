@@ -5,7 +5,7 @@ import "../../../kpi-tile/kpi-tile.element.js";
 import "../../../chart/time-series-chart.element.js";
 import "../../../date-range/date-range.element.js";
 import "../../../table/data-table.element.js";
-import "../../../table-search/table-search.element.js";
+import "../../../search-field/search-field.element.js";
 import { UAUI_TABLE_CELL } from "../../../table/cells/cell-names.js";
 import type { UauiSeries } from "../../../chart/types.js";
 import { uauiCompareFor, uauiFormatDateRange } from "../../../date-helpers/index.js";
@@ -239,7 +239,7 @@ export class ExampleCommerceAnalyticsPageElement extends UmbLitElement {
                         ?error=${this._error}
                         retryable
                         @retry=${() => this.#loadSummary()}>
-                        <div slot="toolbar"><uaui-table-search></uaui-table-search></div>
+                        <div slot="toolbar"><uaui-search-field></uaui-search-field></div>
                     </uaui-data-table>
                 </uui-box>
 
@@ -261,7 +261,7 @@ export class ExampleCommerceAnalyticsPageElement extends UmbLitElement {
                     ${ref(this.#buyers.attach)}
                     row-key="email"
                     .columns=${buyerColumns}>
-                    <div slot="toolbar"><uaui-table-search></uaui-table-search></div>
+                    <div slot="toolbar"><uaui-search-field></uaui-search-field></div>
                 </uaui-data-table>
             </uui-box>
         `;

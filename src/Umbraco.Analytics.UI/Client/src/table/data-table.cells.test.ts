@@ -35,7 +35,7 @@ const columns = (elementName?: string): UauiTableColumn[] => [
     { key: "name", label: "Type", elementName },
     { key: "n", label: "N", elementName: UAUI_TABLE_CELL.number, align: "end" },
 ];
-const firstCell = (el: Element) => shadow(el).querySelector("uui-table-row:not([part~='header']):not(.summary) uui-table-cell")!.firstElementChild as TestDotCellElement;
+const firstCell = (el: Element) => shadow(el).querySelector("uui-table-row:not([part~='header']):not(.column-toolbar) uui-table-cell")!.firstElementChild as TestDotCellElement;
 const table = (el: Element) => el as UauiTestElement & { columns: UauiTableColumn[]; rows: unknown[] };
 
 describe("Feature: table cells are elements", () => {
@@ -102,7 +102,7 @@ describe("Feature: table cells are elements", () => {
     describe("Scenario: a column with a built-in cell name", () => {
         it("uses that cell element", async () => {
             const el = await renderElement(html`<uaui-data-table .columns=${columns()} .rows=${rows}></uaui-data-table>`, "uaui-data-table");
-            const cells = [...shadow(el).querySelectorAll("uui-table-row:not([part~='header']):not(.summary)")[0].querySelectorAll("uui-table-cell")];
+            const cells = [...shadow(el).querySelectorAll("uui-table-row:not([part~='header']):not(.column-toolbar)")[0].querySelectorAll("uui-table-cell")];
             expect(cells.map((c) => c.firstElementChild?.tagName.toLowerCase())).toEqual(["uaui-text-cell", "uaui-number-cell"]);
         });
     });

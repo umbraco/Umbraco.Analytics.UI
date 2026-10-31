@@ -103,7 +103,7 @@ All commands run in `src/Umbraco.Analytics.UI/Client`.
 4. `npm run build`, then `npm run check:size`. The bundle reports about 93 KB gzip, under the 120 KB budget.
 5. `npm run test:perf`. The chart and table timing specs pass (chart under 100 ms, table sort and page under 50 ms).
 6. `npm run storybook` and open http://localhost:6006:
-   - Examples › Pages › Engage › Pageviews: chart with a dashed compare line and shaded gaps, a summary row under the table header, share bars with change badges.
+   - Examples › Pages › Engage › Pageviews: chart with a dashed compare line and shaded gaps, a column toolbar above the table headings, share bars with change badges.
    - Same page, Failing API: the chart and table show "Something went wrong" with Retry. Retry loads again and fails again.
    - Examples › Pages › Commerce › Slow API: skeletons on first load, then data. Changing the date range keeps the old data under a thin loading bar.
    - Components › KPI Tile › Selectable Row: click, Enter and Space select a tile. Pressing the selected tile again in a one-selected row does nothing.
@@ -138,11 +138,11 @@ src/Umbraco.Analytics.UI/Client/
     ├── table/                 # uaui-data-table, server controller, table context
     │   ├── cells/             # text, link, number, percent, share cells
     │   └── internal/          # sort button, share bar, skeleton cell
-    ├── table-search/          # uaui-table-search
+    ├── search-field/          # uaui-search-field
     ├── date-range/            # uaui-date-range button + dialog (dialog internal)
     ├── date-helpers/          # uauiPreviousPeriod, uauiDateBuckets, uauiFormatDateRange, ...
-    ├── segmented/             # uaui-segmented
-    ├── group-by/              # uaui-group-by, built on uaui-segmented
+    ├── toggle-group/             # uaui-toggle-group
+    ├── group-by/              # uaui-group-by, built on uaui-toggle-group
     ├── empty-state/           # uaui-empty-state
     ├── error-state/           # uaui-error-state
     ├── theme/                 # UauiPaletteStyles, --uaui-* tokens
@@ -153,12 +153,12 @@ src/Umbraco.Analytics.UI/Client/
 
 The public API, by kind. Event details are exported as `Uaui…Detail` types. Every event bubbles and is not composed.
 
-- **Elements:** `uaui-kpi-tile`, `uaui-delta-badge`, `uaui-time-series-chart`, `uaui-data-table`, `uaui-table-search`, `uaui-table-compare-badge`, `uaui-date-range`, `uaui-segmented`, `uaui-group-by`, `uaui-empty-state`, `uaui-error-state`
+- **Elements:** `uaui-kpi-tile`, `uaui-delta-badge`, `uaui-time-series-chart`, `uaui-data-table`, `uaui-search-field`, `uaui-table-compare-badge`, `uaui-table-total`, `uaui-date-range`, `uaui-toggle-group`, `uaui-group-by`, `uaui-empty-state`, `uaui-error-state`
 - **Table cells:** `uaui-text-cell`, `uaui-link-cell`, `uaui-number-cell`, `uaui-percent-cell`, `uaui-share-cell`, named in `UAUI_TABLE_CELL`
 - **Table extras:** `UauiTableServerController`, `UAUI_TABLE_CONTEXT`, `UauiTableColumnMeta` (products merge their own keys in)
 - **Functions:** `uauiPreviousPeriod`, `uauiPreviousYear`, `uauiCompareFor`, `uauiDaysIn`, `uauiDateBuckets`, `uauiFormatDateRange`
 - **Styles:** `UauiPaletteStyles`, with `--uaui-*` names to override and `--uaui-color-*` names to read
-- **Events:** `selected`/`deselected` (tile), `change` (date range, group by, segmented), `marker-click`, `sort-change`, `page-change`, `search`, `row-click`, `retry` (a plain `Event`)
+- **Events:** `selected`/`deselected` (tile), `change` (date range, group by, toggle group), `marker-click`, `sort-change`, `page-change`, `search`, `row-click`, `retry` (a plain `Event`)
 
 How a server-mode table loads a page. The page owns the loader; the controller owns the table's paging state.
 
@@ -211,7 +211,7 @@ What the package adds to the backoffice. Nothing an editor sees on its own.
 - `retry` is a plain bubbling `Event` with no detail, as there is nothing to carry ([error-state.element.ts](https://github.com/umbraco/Umbraco.Analytics.UI/blob/7fc48de5220828190bc934afa1624ce4e3d9c52f/src/Umbraco.Analytics.UI/Client/src/error-state/error-state.element.ts#L35)).
 - KPI tile in error has no Retry, so a row of tiles doesn't show four buttons.
 - `marker-click` is not composed, like every other event ([time-series-chart.element.ts](https://github.com/umbraco/Umbraco.Analytics.UI/blob/7fc48de5220828190bc934afa1624ce4e3d9c52f/src/Umbraco.Analytics.UI/Client/src/chart/time-series-chart.element.ts#L534)).
-- The summary row sits under the header, as in the design's totals row ([data-table.element.ts](https://github.com/umbraco/Umbraco.Analytics.UI/blob/7fc48de5220828190bc934afa1624ce4e3d9c52f/src/Umbraco.Analytics.UI/Client/src/table/data-table.element.ts#L629)).
+- The column toolbar sits above the column headings, as in the design's totals row ([data-table.element.ts](https://github.com/umbraco/Umbraco.Analytics.UI/blob/7fc48de5220828190bc934afa1624ce4e3d9c52f/src/Umbraco.Analytics.UI/Client/src/table/data-table.element.ts#L647)).
 - The date button puts its content in `uui-button`'s `extra` slot with an empty default-slot child, so it can ellipsize and UUI doesn't draw the label twice ([date-range.element.ts](https://github.com/umbraco/Umbraco.Analytics.UI/blob/7fc48de5220828190bc934afa1624ce4e3d9c52f/src/Umbraco.Analytics.UI/Client/src/date-range/date-range.element.ts#L122)).
 - `--umb-header-layout-height` went with the reverted `umb-body-layout` attempt; nothing in the code reads it.
 - Link cells only link `http:`, `https:`, `mailto:`, `tel:` and relative URLs, since visitor URLs are untrusted ([safe-href.ts](https://github.com/umbraco/Umbraco.Analytics.UI/blob/7fc48de5220828190bc934afa1624ce4e3d9c52f/src/Umbraco.Analytics.UI/Client/src/table/internal/safe-href.ts#L1)).

@@ -13,7 +13,6 @@ export type {
     UauiTableMode,
     UauiTablePageChangeDetail,
     UauiTableRowClickDetail,
-    UauiTableSearchDetail,
     UauiTableSort,
     UauiTableSortChangeDetail,
     UauiTableSortDirection,
