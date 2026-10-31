@@ -203,12 +203,12 @@ Design: SPEC.md §10. Same rules as the follow-ups: a builder, a review and its 
 - [x] **T42** - Add `uaui-funnel` (public) as SPEC.md §10: `steps`, `compare-steps`, `label`, `compare-label`, `value-format`, loading, empty and error states, centred honest-width bars, links with the step rate, compare brackets and point badges, legend, tooltip on hover and focus (shared placement helper), one tab stop with Up/Down, hidden table, new `uauiAnalytics_funnel*` keys. Story covers no compare, compare, a step missing from compare, a zero step, narrow (280px) and wide, loading, reload, empty and error, light and dark. Test includes `expect(await axeRun(el)).toHaveNoViolations()`.
   Acceptance: every SPEC.md §10 rule has a spec; lint, test, build and `check:api` pass; the API report change is called out for sign-off.
   depends-on: none
-- [ ] **T43** - Commerce example page shows everything Commerce's analytics shows today (its 12 widgets: total orders, total revenue, average order value, cart conversion rates, abandoned cart conversion rates, repeat customer rates, top selling products, total applied discounts, popular discounts, refund rates, top buyers, stock forecast), each in the fitting package element, with made-up sample data shaped like the real endpoints' answers. User request 31-10-2026. Proposed mapping:
+- [x] **T43** - Commerce example page shows everything Commerce's analytics shows today (its 12 widgets: total orders, total revenue, average order value, cart conversion rates, abandoned cart conversion rates, repeat customer rates, top selling products, total applied discounts, popular discounts, refund rates, top buyers, stock forecast), each in the fitting package element, with made-up sample data shaped like the real endpoints' answers. User request 31-10-2026. Proposed mapping:
   - KPI tiles that pick the chart's metric, every one selectable (a row is all selectable or none): revenue, orders, average order value, cart conversion, abandoned cart recovery, repeat customer rate, applied discounts. Each has a series over time in Commerce's endpoints today.
   - Chart: the picked metric over time, with compare.
-  - "Cart conversion" box: `uaui-funnel` (carts created, reached checkout, orders placed) with "Overall" in `header-actions`, and Commerce's "range is older than the cart cleanup policy" notice as product markup.
+  - "Cart conversion" box: `uaui-funnel` (carts created, reached checkout, orders placed) with "Overall" in `header-actions`. Commerce's "range is older than the cart cleanup policy" notice is product markup above the KPI row (it affects the tile, the chart and the funnel), worded for the range, the comparison range or both.
   - "Refunds" box: the overall refund rate with its change in points in `header-actions` (`lower-is-better`), and a refund rate by product table. Not a tile: Commerce's refund endpoint has no series over time, so it couldn't drive the chart.
-  - Tables: top products, popular discounts, top buyers (server mode, clickable rows standing in for the buyer modal), refund rates by product inside the Refunds box (refund rate column `lowerIsBetter`, top reason), stock forecast (stock, average daily sales, days left; not tied to the date range, so it ignores compare).
+  - Tables, with the columns the real DTOs have: top products (name/link, SKU, quantity sold, change), popular discounts (name, active/inactive, valid from/to, times used, change), top buyers (server mode, clickable rows standing in for the buyer modal), refund rates by product inside the Refunds box (refund rate, top reason; no per-product change, as the DTO has none), stock forecast (stock, average daily sales over the chosen range, days left, "Out of stock" at 0; it sends the range and reloads when it changes, like Commerce, returning only products under the low stock threshold with an estimate within ceil(range days × the forecast window multiplier); no compare).
   - Slow and Failing API stories still cover every part.
   Acceptance: the Commerce example's specs cover the funnel with and without compare, and its Slow and Failing API stories show the funnel's loading and error states.
   depends-on: T42
@@ -220,3 +220,16 @@ Design: SPEC.md §10. Same rules as the follow-ups: a builder, a review and its 
 - [ ] **T46** - Name each table and its pager (user decision 31-10-2026). Two paged tables on one page fail axe `landmark-unique`: every compact pager is a navigation landmark named "Pagination". Add a public `label` to `uaui-data-table`, meaning the table's own accessible name (as `label` means in UUI). It names the table for screen readers, and the pager's landmark becomes "{label}, pagination" through a whole-literal key with a placeholder. With no `label`, both keep today's names. Update SPEC §7, the stories, every example table (Commerce, Engage, AI, top pages, paged server, custom cell) and both READMEs if they describe table attributes; the API report change needs sign-off.
   Acceptance: a spec with two labelled paged tables on one page passes axe with no `landmark-unique`; specs for the table's name and the pager's name with and without `label`; lint, test, build and `check:api` pass.
   depends-on: none. After it lands, T43's stock forecast goes back to Commerce's page size of 5.
+
+## Follow-ups from T43 and T46
+
+Package gaps the Commerce example and the table label reviews found. Not picked yet; each needs a user decision.
+
+1. Table compare badges in points: a column option (e.g. `meta.deltaUnit: "points"`) so rate columns compare in points, not percent (Commerce refunds by product).
+2. A status or tone cell: danger, warning or positive by threshold, with words like "Out of stock" (Commerce stock forecast days left).
+3. Date and status cells (Commerce discount validity and active state are plain text today).
+4. A row key made of more than one field.
+5. The table footer treats an empty slotted element as no content, so a page can keep a live region in place without an empty footer.
+6. A client-mode table option to go back to page 1 when its rows are replaced.
+7. T46 nits: a spec for removing `label` at runtime and for the scroll region's rename on change; trim a label of only spaces.
+

@@ -275,7 +275,11 @@ Used by Engage (conversion funnel beside the orders chart, about 360px wide) and
 
 ### Later: not in v1
 
-Nothing parked right now. The funnel moved into v1 (§10).
+The funnel moved into v1 (§10).
+
+**Pane grid (maybe).** The Commerce example lays its boxes out in a two-column grid where each box takes one column or both (`span`), collapsing to one column on narrow pages. That is one example arrangement, not a package layout: page layout stays with each product (BRIEF non-goals). Only Commerce wants columns today; revisit a shared grid element if Engage or AI do too. Adding it later is a new element, so it won't break anything.
+
+**KPI tile sub-count (maybe).** A small line under a tile's figure (e.g. "38 of 284 carts"). Only Commerce's abandoned carts wants it, and its example shows those counts in a two-step funnel instead. Revisit if a second product needs it.
 
 ## Non-functional targets
 
