@@ -418,6 +418,8 @@ export class UauiFunnelElement extends UmbLitElement {
             :host {
                 display: block;
                 font-size: 14px;
+                /* One value for the loaded bars and their skeletons, so the corners don't change when loading ends. */
+                --_uaui-funnel-bar-radius: 2px;
                 color: var(--uui-color-text);
             }
 
@@ -488,7 +490,8 @@ export class UauiFunnelElement extends UmbLitElement {
                 top: 0;
                 bottom: 0;
                 min-width: 2px;
-                border-radius: 2px;
+                border-radius: var(--_uaui-funnel-bar-radius);
+                --_uaui-skeleton-radius: var(--_uaui-funnel-bar-radius);
                 background: var(--uaui-color-bar-1);
             }
 

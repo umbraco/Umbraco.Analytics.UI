@@ -400,6 +400,15 @@ describe("Feature: conversion funnel", () => {
             expect(heights(loading)).toEqual(heights(loaded));
         });
 
+        it("draws its grey bars with the loaded bars' corners", async () => {
+            const loaded = await render(html`<uaui-funnel .steps=${cartSteps}></uaui-funnel>`);
+            const loading = await render(html`<uaui-funnel loading></uaui-funnel>`);
+            const block = shadow(loading).querySelector("uaui-skeleton")!.shadowRoot!.querySelector(".block")!;
+            const radius = getComputedStyle(block).borderTopLeftRadius;
+            expect(radius).toBe("2px");
+            expect(radius).toBe(getComputedStyle(bar(loaded, 0)!).borderTopLeftRadius);
+        });
+
         it("shows four grey bars when the steps are not known yet", async () => {
             const el = await render(html`<uaui-funnel loading></uaui-funnel>`);
             expect(shadow(el).querySelectorAll("uaui-skeleton")).toHaveLength(4);

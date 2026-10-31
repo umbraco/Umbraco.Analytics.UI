@@ -10,6 +10,8 @@ import { UauiPaletteStyles } from "../../theme/index.js";
  * `min-height` of its loaded content so the switch to loaded doesn't jump. It is the content height:
  * a region with padding or a border must subtract those from the value it declares.
  * For a smaller block, such as a table row, give the element an inline `height` and `width`.
+ * Its corners use `--_uaui-skeleton-radius` (default `var(--uui-border-radius)`). A host whose loaded marks have
+ * other corners sets it on the skeleton itself, so the corners don't change when loading finishes.
  * Decorative, so hidden from assistive tech: the host sets `aria-busy` on its region instead.
  *
  * @element uaui-skeleton
@@ -38,7 +40,7 @@ export class UauiSkeletonElement extends UmbLitElement {
             .block {
                 display: block;
                 height: 100%;
-                border-radius: var(--uui-border-radius);
+                border-radius: var(--_uaui-skeleton-radius, var(--uui-border-radius));
                 background-color: var(--uaui-color-tint-neutral);
                 background-image: linear-gradient(
                     90deg,
