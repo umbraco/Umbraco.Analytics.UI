@@ -237,27 +237,27 @@ Used by Engage (conversion funnel beside the orders chart, about 360px wide) and
 - Properties:
   - `steps` (`UauiFunnelStep[]`, in funnel order)
   - `compare-steps` (`UauiFunnelStep[]`, matched to `steps` by `id`)
-  - `label`, `compare-label`: the two periods' names for the legend (e.g. from `uauiFormatDateRange`)
+  - `current-label`, `compare-label`: the two periods' names for the legend and tooltip (e.g. from `uauiFormatDateRange`). Not `label`: in UUI and in `uaui-kpi-tile` and `uaui-table-total`, `label` names the element itself.
   - `value-format` (`Intl.NumberFormatOptions`, for the counts)
   - `loading`
   - `empty-headline`, `empty-description`
   - `error`, `error-headline`, `error-description`, `retryable`: as on the chart (§4), with the same error > loading > empty precedence
 - **Layout:** one row per step: the label on the left, a centred bar in the middle, the count on the right (tabular figures, right-aligned). Labels wrap; the count column never does. It works from 280px wide.
 - **Bars:** width is the step's value against the largest value in `steps` and `compare-steps`, so bars are honest and both periods share one scale. One colour, `--uaui-color-bar-1`. A value above 0 always draws at least 2px. A step of 0 draws no bar.
-- **Links between steps:** a pale trapezoid joins each bar to the next (decoration, a light neutral tint). On it sits the share that moved on: this step's value divided by the previous step's, as a percent with one decimal (`Intl`). When the previous step is 0 it shows a dash.
-- **What stays off the main view:** % of the first step, "dropped off" counts and per-step count changes. They are in the tooltip and the hidden table.
+- **Links between steps:** a pale trapezoid joins each bar to the next (decoration, a light neutral tint). On it sits the share that moved on: this step's value divided by the previous step's, as a percent with one decimal (`Intl`). When the previous step is 0 it shows a dash. The link is 36px tall, so the rate line clears the bars and the brackets' 5px overhang above and below.
+- **What stays off the main view:** % of the first step and per-step count changes, which are in the tooltip and the hidden table, and "dropped off" counts (the previous step's value minus this one), which are in the hidden table only.
 - **Comparison** (when `compare-steps` is set):
-  - Each matched step gets a bracket at the compare value's width: 2px `--uaui-color-compare` lines at both ends, 5px taller than the bar above and below, with a 1px `--uui-color-surface` gap on each side so it shows inside the bar too.
-  - Each link gets a small `uaui-delta-badge` (`size="sm"`, `unit="points"`) for this period's step rate against the compare one.
-  - A legend sits above the bars: a solid swatch with `label`, a bracket swatch with `compare-label`. With no comparison there is no legend, as for a single-series chart.
+  - Each matched step with a compare value above 0 gets a bracket at the compare value's width: 2px `--uaui-color-compare` lines at both ends, 5px taller than the bar above and below, with a 1px `--uui-color-surface` gap on each side so it shows inside the bar too.
+  - Each link gets a small `uaui-delta-badge` (`size="sm"`, `unit="points"`) for this period's step rate against the compare one. The badge sits on the surface colour, not the link's tint, so its text keeps 4.5:1.
+  - A legend sits above the bars: a small solid bar with `current-label`, and a small neutral bar with a compare tick at each end (a copy of the brackets) with `compare-label`. The tooltip uses the same swatches. With no comparison there is no legend, as for a single-series chart.
   - A step with no match in `compare-steps` gets no bracket and no badge.
 - **Overall conversion** is not drawn by the funnel. The pane recipe (§1) puts it in the `uui-box` `header-actions` slot with `uaui-table-total` (label "Overall", the last step over the first as the value, `delta-unit="points"` with `current` and `previous`). The funnel story shows the recipe.
-- **Tooltip:** hovering a row, or focusing it, shows the chart's dark tooltip (shared placement helper): the step label, this period's count, the compare count with a % change badge, % of the first step, and the share from the previous step.
+- **Tooltip:** hovering a row, or focusing it, shows the chart's dark tooltip (shared placement helper), in the chart tooltip's layout: the step label, this period's count, the compare count with a % change badge, % of the first step ("Of {0}", the first step's label, e.g. "Of Visitors"), and the share from the previous step. No drop-off count. It opens below the step's bar, centred on it; above when below would overflow the element and above fits; otherwise on the side with more room, then kept inside the element.
 - **Keyboard:** the rows are one tab stop. Up and Down move between steps (roving `tabindex`), and the focused step shows its tooltip. Escape hides it.
 - **Loading:** a skeleton with one grey bar per step (the length of `steps`, or 4 when there are none yet) at the loaded height. Reloading keeps the old funnel under the loading bar.
 - **Empty:** no steps, or a first step of 0, shows `uaui-empty-state`.
-- **Accessibility:** a visually hidden table holds step, count, % of first step and share from the previous step, plus the compare columns when comparing. The visible element is a labelled group ("Funnel").
-- **Localization:** new keys for the group name, the hidden table caption and headers, and the tooltip lines ("Of {0}", "From previous step"). Generic words reuse Umbraco keys.
+- **Accessibility:** a visually hidden table holds step, count, % of first step, share from the previous step and dropped off, plus the compare count, share and dropped off when comparing. The first step's "from previous" cells are blank; any other missing figure (where the funnel shows a dash, or a step has no compare value) reads "No value". The visible element is a labelled group ("Funnel").
+- **Localization:** new keys for the group name, the hidden table caption and headers (including "Of first step" and "Dropped off"), its "No value" cell, and the tooltip lines ("Of {0}", "From previous step"). Generic words reuse Umbraco keys.
 - No events in v1. A `step-click` can be added later without breaking anything.
 
 ### The five moments

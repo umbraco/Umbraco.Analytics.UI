@@ -10,6 +10,8 @@ import { markerFor, registerMarkerTranslations, untranslatedWords } from "../int
 import "../chart/time-series-chart.element.js";
 import "../chart/internal/chart-tooltip.element.js";
 import "../chart/internal/chart-marker-tooltip.element.js";
+import "../funnel/funnel.element.js";
+import "../funnel/internal/funnel-tooltip.element.js";
 import "../date-range/date-range.element.js";
 import "../date-range/date-range-modal.element.js";
 import "../delta-badge/delta-badge.element.js";
@@ -208,6 +210,47 @@ describe("Feature: built-in text is translated, with nothing hard-coded", () => 
 
         it("has no hard-coded words in a chart reloading", async () => {
             expect(await wordsIn(await chart(html`<uaui-time-series-chart style=${wide} loading .series=${series}></uaui-time-series-chart>`))).toEqual([]);
+        });
+    });
+
+    describe("Scenario: funnels", () => {
+        const steps = [
+            { id: "a", label: "DATA", value: 120 },
+            { id: "b", label: "DATA", value: 40 },
+        ];
+        const funnel = (template: ReturnType<typeof html>) => renderElement(template, "uaui-funnel");
+
+        it("has no hard-coded words in a funnel with a comparison", async () => {
+            const el = await funnel(html`<uaui-funnel style=${wide} .steps=${steps} .compareSteps=${steps.slice(0, 1)}></uaui-funnel>`);
+            expect(await wordsIn(el)).toEqual([]);
+        });
+
+        it("has no hard-coded words in an empty funnel", async () => {
+            expect(await wordsIn(await funnel(html`<uaui-funnel style=${wide}></uaui-funnel>`))).toEqual([]);
+        });
+
+        it("has no hard-coded words in a funnel in error", async () => {
+            expect(await wordsIn(await funnel(html`<uaui-funnel style=${wide} error retryable></uaui-funnel>`))).toEqual([]);
+        });
+
+        it("has no hard-coded words in a funnel loading for the first time", async () => {
+            expect(await wordsIn(await funnel(html`<uaui-funnel style=${wide} loading></uaui-funnel>`))).toEqual([]);
+        });
+
+        it("has no hard-coded words in the funnel tooltip", async () => {
+            const el = await renderElement(
+                html`<uaui-funnel-tooltip
+                    heading="DATA"
+                    value="DATA"
+                    value-label="DATA"
+                    compare="DATA"
+                    compare-label="DATA"
+                    of-first="DATA"
+                    from-previous="DATA"
+                    .change=${{ current: 2, previous: 1 }}></uaui-funnel-tooltip>`,
+                "uaui-funnel-tooltip",
+            );
+            expect(await wordsIn(el)).toEqual([]);
         });
     });
 

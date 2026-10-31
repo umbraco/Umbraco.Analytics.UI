@@ -20,6 +20,7 @@ Usage and API are in [Storybook](https://umbraco.github.io/Umbraco.Analytics.UI/
 | `uaui-kpi-tile` | A headline number as a card, with an icon and a change badge. Can be selectable. |
 | `uaui-delta-badge` | The change against a comparison period, e.g. "▲ 12.4%". |
 | `uaui-time-series-chart` | Lines, areas, bars or stacked bars over time, with compare, markers and a legend. |
+| `uaui-funnel` | Conversion funnel: honest-width bars, the share that moved on between steps, and last period as brackets. |
 | `uaui-toggle-group` | Toggle group: a row of options, exactly one selected. |
 | `uaui-group-by` | Day, week or month switch for a chart. |
 | `uaui-date-range` | Button and dialog to pick a date range and a comparison. |

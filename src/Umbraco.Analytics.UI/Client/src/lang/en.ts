@@ -45,6 +45,24 @@ export default {
         chartMarkersMore: "+{0} more",
         chartComparisonLabel: "Comparison",
 
+        // Funnel
+        funnelAriaLabel: "Funnel",
+        // Names this period in the legend and tooltip when the product gives no label.
+        funnelCurrentLabel: "This period",
+        // A step's accessible name: {0} the step, {1} its value.
+        funnelStepName: "{0}: {1}",
+        // A tooltip line: the step's share of the first step, {0} the first step's label ("Of Visitors").
+        funnelTooltipOfFirst: "Of {0}",
+        funnelFromPrevious: "From previous step",
+        funnelTableCaption: "Funnel data",
+        funnelTableStepHeader: "Step",
+        funnelTableValueHeader: "Value",
+        funnelTableOfFirstHeader: "Of first step",
+        // How many reached the previous step but not this one.
+        funnelTableDroppedOffHeader: "Dropped off",
+        // A hidden table cell with no figure, where the funnel shows a dash (the step before it is 0, or has no compare value).
+        funnelNoValue: "No value",
+
         // Date range
         // The button's accessible name is its purpose, then the lines it shows ({0} purpose, {1} range, {2} comparison).
         dateRangeButtonLabel: "Choose date range",

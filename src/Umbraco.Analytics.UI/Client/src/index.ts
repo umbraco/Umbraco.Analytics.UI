@@ -4,6 +4,7 @@
 export * from "./kpi-tile/index.js";
 export * from "./delta-badge/index.js";
 export * from "./chart/index.js";
+export * from "./funnel/index.js";
 export * from "./table/index.js";
 export * from "./search-field/index.js";
 export * from "./date-range/index.js";

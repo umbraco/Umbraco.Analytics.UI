@@ -49,6 +49,7 @@ Each links to its page in Storybook.
 - [`uaui-kpi-tile`](https://umbraco.github.io/Umbraco.Analytics.UI/?path=/docs/components-kpi-tile--docs)
 - [`uaui-delta-badge`](https://umbraco.github.io/Umbraco.Analytics.UI/?path=/docs/components-delta-badge--docs)
 - [`uaui-time-series-chart`](https://umbraco.github.io/Umbraco.Analytics.UI/?path=/docs/components-time-series-chart--docs)
+- [`uaui-funnel`](https://umbraco.github.io/Umbraco.Analytics.UI/?path=/docs/components-funnel--docs)
 - [`uaui-toggle-group`](https://umbraco.github.io/Umbraco.Analytics.UI/?path=/docs/components-toggle-group--docs)
 - [`uaui-group-by`](https://umbraco.github.io/Umbraco.Analytics.UI/?path=/docs/components-group-by--docs)
 - [`uaui-date-range`](https://umbraco.github.io/Umbraco.Analytics.UI/?path=/docs/components-date-range--docs)

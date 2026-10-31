@@ -188,6 +188,41 @@ export type UauiFormatDateRangeOptions = {
 };
 
 // @public
+export class UauiFunnelElement extends UmbLitElement {
+    compareLabel?: string;
+    compareSteps: UauiFunnelStep[];
+    // (undocumented)
+    connectedCallback(): void;
+    currentLabel?: string;
+    // (undocumented)
+    disconnectedCallback(): void;
+    emptyDescription?: string;
+    emptyHeadline?: string;
+    error: boolean;
+    errorDescription?: string;
+    errorHeadline?: string;
+    loading: boolean;
+    // (undocumented)
+    render(): TemplateResult;
+    retryable: boolean;
+    steps: UauiFunnelStep[];
+    // (undocumented)
+    static styles: CSSResultGroup;
+    // (undocumented)
+    protected updated(changed: PropertyValues<this>): void;
+    valueFormat?: Intl.NumberFormatOptions;
+    // (undocumented)
+    protected willUpdate(changed: PropertyValues<this>): void;
+}
+
+// @public
+export type UauiFunnelStep = {
+    id: string;
+    label: string;
+    value: number;
+};
+
+// @public
 export type UauiGroupBy = "day" | "week" | "month";
 
 // @public

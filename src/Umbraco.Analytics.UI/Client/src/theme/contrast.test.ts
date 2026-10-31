@@ -16,6 +16,7 @@ import "../chart/time-series-chart.element.js";
 import "../group-by/group-by.element.js";
 import "../kpi-tile/kpi-tile.element.js";
 import "../date-range/date-range.element.js";
+import "../funnel/funnel.element.js";
 
 type Rgba = [r: number, g: number, b: number, a: number];
 
@@ -181,6 +182,35 @@ describe("Feature: contrast in every theme", () => {
                         expect(badge.getAttribute("data-sentiment")).toBe(sentiment);
                         const back = over(computed(tooltip(), "backgroundColor"), surface());
                         check("text", `tooltip ${sentiment} badge`, between(computed(badge, "color"), computed(badge, "backgroundColor"), back));
+                    });
+                }
+            });
+
+            describe("the funnel's link badges, as rendered", () => {
+                // Rates of 50%, 50% and 40% against 40%, 62.5% and 40%: one badge of each sentiment.
+                const step = (id: string, value: number) => ({ id, label: id, value });
+                const values = [100, 50, 25, 10];
+                const compareValues = [100, 40, 25, 10];
+                for (const [index, sentiment] of [[0, "positive"], [1, "negative"], [2, "neutral"]] as const) {
+                    it(`gives the ${sentiment} badge on the link tint at least 4.5:1`, async () => {
+                        const funnel = await renderElement(
+                            html`<uaui-funnel
+                                style="width:400px"
+                                .steps=${values.map((v, i) => step(`s${i}`, v))}
+                                .compareSteps=${compareValues.map((v, i) => step(`s${i}`, v))}></uaui-funnel>`,
+                            "uaui-funnel",
+                        );
+                        await settle(funnel);
+                        const link = shadow(funnel).querySelectorAll(".link")[index];
+                        const badge = deepQuery(link, "uaui-delta-badge")!.shadowRoot!.querySelector(".badge")!;
+                        expect(badge.getAttribute("data-sentiment")).toBe(sentiment);
+                        // The trapezoid's tint is on the surface; the badge sits on its own host's fill on that tint.
+                        const tint = over(computed(link.querySelector(".link-shape")!, "backgroundColor"), surface());
+                        const back = over(computed(deepQuery(link, "uaui-delta-badge")!, "backgroundColor"), tint);
+                        check("text", `funnel link ${sentiment} badge`, between(computed(badge, "color"), computed(badge, "backgroundColor"), back));
+                        if (sentiment === "positive") {
+                            check("text", "funnel link rate on the tint", between(computed(link.querySelector(".rate")!, "color"), tint, tint));
+                        }
                     });
                 }
             });
