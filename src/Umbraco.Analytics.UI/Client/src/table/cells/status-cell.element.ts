@@ -6,37 +6,37 @@ import { getNumberFormat } from "../../internal/format/number-format.js";
 import "../internal/table-skeleton-cell.element.js";
 import type { UauiTableCellElement, UauiTableColumn } from "../types.js";
 
-/** The tone of a `uaui-status-cell`, by the names of `uui-tag`'s `color`. */
-export type UauiStatusTone = "default" | "positive" | "warning" | "danger";
+/** The color of a `uaui-status-cell`, by the names of `uui-tag`'s `color`. */
+export type UauiStatusColor = "default" | "positive" | "warning" | "danger";
 
-const TONES: ReadonlySet<string> = new Set<UauiStatusTone>(["default", "positive", "warning", "danger"]);
+const COLORS: ReadonlySet<string> = new Set<UauiStatusColor>(["default", "positive", "warning", "danger"]);
 
-/** The row's tone, or `"default"` for anything that isn't one. */
-const toneOf = (value: unknown): UauiStatusTone => (typeof value === "string" && TONES.has(value) ? (value as UauiStatusTone) : "default");
+/** The row's color, or `"default"` for anything that isn't one. */
+const colorOf = (value: unknown): UauiStatusColor => (typeof value === "string" && COLORS.has(value) ? (value as UauiStatusColor) : "default");
 
 /**
  * A table cell that shows a row's status as a tinted label, for "Active", "Out of stock" or "3 days". The product picks
- * the tone and the words per row, in row fields that the column's meta names: `meta.toneKey` holds a `UauiStatusTone`
+ * the color and the words per row, in row fields that the column's meta names: `meta.colorKey` holds a `UauiStatusColor`
  * (`"default"`, `"positive"`, `"warning"` or `"danger"`, as `uui-tag`'s colours; anything else is `"default"`) and
  * `meta.textKey` the text. Without text, the cell shows the value: a number formatted with the column's `valueFormat`,
- * other values as text. The words carry the meaning, the tone only repeats it, so never leave the text to the colour.
+ * other values as text. The words carry the meaning, the color only repeats it, so never leave the text to the colour.
  * Sorting and search use the value (`column.key`), as for every cell. Its name is `UAUI_TABLE_CELL.status`, and it is
  * usable on its own.
  *
  * @element uaui-status-cell
- * @cssprop --uaui-tint-neutral - Background of the `default` tone.
- * @cssprop --uaui-tint-positive - Background of the `positive` tone. Defaults to a tint of `--uui-color-positive`.
- * @cssprop --uaui-tint-warning - Background of the `warning` tone. Defaults to a tint of `--uui-color-warning`.
- * @cssprop --uaui-tint-negative - Background of the `danger` tone. Defaults to a tint of `--uui-color-danger`.
- * @cssprop --uaui-text-neutral - Text colour of the `default` tone. Defaults to `--uui-color-text-alt`.
- * @cssprop --uaui-text-positive - Text colour of the `positive` tone. Defaults to forest green (dark theme: jungle green), which passes 4.5:1 on the tint.
- * @cssprop --uaui-text-warning - Text colour of the `warning` tone. Defaults to dark sunglow (dark theme: sunglow), which passes 4.5:1 on the tint.
- * @cssprop --uaui-text-negative - Text colour of the `danger` tone. Defaults to dark maroon (dark theme: spanish pink), which passes 4.5:1 on the tint.
+ * @cssprop --uaui-tint-neutral - Background of the `default` color.
+ * @cssprop --uaui-tint-positive - Background of the `positive` color. Defaults to a tint of `--uui-color-positive`.
+ * @cssprop --uaui-tint-warning - Background of the `warning` color. Defaults to a tint of `--uui-color-warning`.
+ * @cssprop --uaui-tint-negative - Background of the `danger` color. Defaults to a tint of `--uui-color-danger`.
+ * @cssprop --uaui-text-neutral - Text of the `default` color. Defaults to `--uui-color-text-alt`.
+ * @cssprop --uaui-text-positive - Text of the `positive` color. Defaults to forest green (dark theme: jungle green), which passes 4.5:1 on the tint.
+ * @cssprop --uaui-text-warning - Text of the `warning` color. Defaults to dark sunglow (dark theme: sunglow), which passes 4.5:1 on the tint.
+ * @cssprop --uaui-text-negative - Text of the `danger` color. Defaults to dark maroon (dark theme: spanish pink), which passes 4.5:1 on the tint.
  */
 @customElement("uaui-status-cell")
 export class UauiStatusCellElement extends UmbLitElement implements UauiTableCellElement {
     /**
-     * The column the cell is in. Its `meta.toneKey` names the key in `item` that holds the tone, `meta.textKey` the
+     * The column the cell is in. Its `meta.colorKey` names the key in `item` that holds the color, `meta.textKey` the
      * key that holds the text, and `valueFormat` formats a number value when there is no text.
      */
     @property({ attribute: false })
@@ -76,9 +76,9 @@ export class UauiStatusCellElement extends UmbLitElement implements UauiTableCel
         if (this.loading) return html`<uaui-table-skeleton-cell .align=${this.column.align ?? "start"}></uaui-table-skeleton-cell>`;
         const text = this.#text();
         if (!text) return nothing;
-        const toneKey = this.column.meta?.toneKey;
-        const tone = toneOf(toneKey ? this.item[toneKey] : undefined);
-        return html`<span class="status" data-tone=${tone}>${text}</span>`;
+        const colorKey = this.column.meta?.colorKey;
+        const color = colorOf(colorKey ? this.item[colorKey] : undefined);
+        return html`<span class="status" data-color=${color}>${text}</span>`;
     }
 
     static override styles: CSSResultGroup = [
@@ -97,22 +97,22 @@ export class UauiStatusCellElement extends UmbLitElement implements UauiTableCel
                 vertical-align: middle;
             }
 
-            [data-tone="default"] {
+            [data-color="default"] {
                 color: var(--uaui-color-text-neutral);
                 background: var(--uaui-color-tint-neutral);
             }
 
-            [data-tone="positive"] {
+            [data-color="positive"] {
                 color: var(--uaui-color-text-positive);
                 background: var(--uaui-color-tint-positive);
             }
 
-            [data-tone="warning"] {
+            [data-color="warning"] {
                 color: var(--uaui-color-text-warning);
                 background: var(--uaui-color-tint-warning);
             }
 
-            [data-tone="danger"] {
+            [data-color="danger"] {
                 color: var(--uaui-color-text-negative);
                 background: var(--uaui-color-tint-negative);
             }

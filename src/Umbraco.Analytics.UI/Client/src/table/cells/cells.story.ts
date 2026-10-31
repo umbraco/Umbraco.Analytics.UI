@@ -42,7 +42,7 @@ const statusColumn: UauiTableColumn = {
     label: "Days left",
     align: "end",
     valueFormat: { style: "unit", unit: "day", unitDisplay: "long", maximumFractionDigits: 0 },
-    meta: { toneKey: "tone", textKey: "text" },
+    meta: { colorKey: "color", textKey: "text" },
 };
 const dateColumn: UauiTableColumn = { key: "validFrom", label: "Valid from", sortAs: "date" };
 const longDateColumn: UauiTableColumn = { ...dateColumn, dateFormat: { weekday: "short", day: "numeric", month: "long", year: "numeric" } };
@@ -117,23 +117,23 @@ export const Share: Story = {
 
 /**
  * `uaui-status-cell` (`UAUI_TABLE_CELL.status`): the value as a tinted label in one of `uui-tag`'s colours, `default`,
- * `positive`, `warning` or `danger`. The row picks the tone in the field `column.meta.toneKey` names (anything else is
+ * `positive`, `warning` or `danger`. The row picks the color in the field `column.meta.colorKey` names (anything else is
  * `default`) and the words in `column.meta.textKey`; without words the cell shows the value, formatted with
  * `valueFormat`. The words carry the meaning, never the colour alone. Sorting and search use the value.
  */
 export const Status: Story = {
     render: () =>
         html`<div style="display: grid; gap: var(--uui-size-space-3); justify-items: end">
-            <uaui-status-cell .column=${statusColumn} .item=${{ daysLeft: 0, tone: "danger", text: "Out of stock" }} .value=${0}></uaui-status-cell>
-            <uaui-status-cell .column=${statusColumn} .item=${{ daysLeft: 5, tone: "danger" }} .value=${5}></uaui-status-cell>
-            <uaui-status-cell .column=${statusColumn} .item=${{ daysLeft: 12, tone: "warning" }} .value=${12}></uaui-status-cell>
-            <uaui-status-cell .column=${statusColumn} .item=${{ daysLeft: 30, tone: "positive" }} .value=${30}></uaui-status-cell>
-            <uaui-status-cell .column=${statusColumn} .item=${{ daysLeft: 40, tone: "default", text: "Not tracked" }} .value=${40}></uaui-status-cell>
+            <uaui-status-cell .column=${statusColumn} .item=${{ daysLeft: 0, color: "danger", text: "Out of stock" }} .value=${0}></uaui-status-cell>
+            <uaui-status-cell .column=${statusColumn} .item=${{ daysLeft: 5, color: "danger" }} .value=${5}></uaui-status-cell>
+            <uaui-status-cell .column=${statusColumn} .item=${{ daysLeft: 12, color: "warning" }} .value=${12}></uaui-status-cell>
+            <uaui-status-cell .column=${statusColumn} .item=${{ daysLeft: 30, color: "positive" }} .value=${30}></uaui-status-cell>
+            <uaui-status-cell .column=${statusColumn} .item=${{ daysLeft: 40, color: "default", text: "Not tracked" }} .value=${40}></uaui-status-cell>
         </div>`,
     parameters: {
         docs: {
             source: {
-                code: `const column = {\n    key: "daysLeft",\n    label: "Days left",\n    elementName: UAUI_TABLE_CELL.status,\n    valueFormat: { style: "unit", unit: "day", unitDisplay: "long" },\n    sortable: true,\n    sortAs: "number",\n    meta: { toneKey: "tone", textKey: "text" },\n};\nconst row = { daysLeft: 0, tone: "danger", text: "Out of stock" };\n\n<uaui-status-cell .column=\${column} .item=\${row} .value=\${row.daysLeft}></uaui-status-cell>`,
+                code: `const column = {\n    key: "daysLeft",\n    label: "Days left",\n    elementName: UAUI_TABLE_CELL.status,\n    valueFormat: { style: "unit", unit: "day", unitDisplay: "long" },\n    sortable: true,\n    sortAs: "number",\n    meta: { colorKey: "color", textKey: "text" },\n};\nconst row = { daysLeft: 0, color: "danger", text: "Out of stock" };\n\n<uaui-status-cell .column=\${column} .item=\${row} .value=\${row.daysLeft}></uaui-status-cell>`,
                 language: "html",
             },
         },

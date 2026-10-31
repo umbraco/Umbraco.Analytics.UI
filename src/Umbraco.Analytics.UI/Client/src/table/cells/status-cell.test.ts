@@ -1,5 +1,5 @@
 /// <reference types="vite/client" />
-// T48 — Status cell: a row's value with a tone the product picks per row, never colour alone.
+// T48 — Status cell: a row's value with a color the product picks per row, never colour alone.
 import { describe, expect, it } from "vitest";
 import { html } from "@umbraco-cms/backoffice/external/lit";
 import darkCss from "@umbraco-ui/uui/themes/dark.css?inline";
@@ -22,7 +22,7 @@ const daysColumn: UauiTableColumn = {
     align: "end",
     sortable: true,
     sortAs: "number",
-    meta: { toneKey: "tone", textKey: "text" },
+    meta: { colorKey: "color", textKey: "text" },
 };
 
 async function renderCell(column: UauiTableColumn, item: Record<string, unknown>, value: unknown = item[column.key]): Promise<UauiStatusCellElement> {
@@ -38,33 +38,33 @@ describe("Feature: the status cell", () => {
         expect(UAUI_TABLE_CELL.status).toBe("uaui-status-cell");
     });
 
-    describe("Scenario: the tone comes from the row", () => {
-        for (const tone of ["default", "positive", "warning", "danger"] as const) {
-            it(`shows the ${tone} tone from the toneKey field`, async () => {
-                const cell = await renderCell(daysColumn, { days: 3, tone });
-                expect(status(cell)?.getAttribute("data-tone")).toBe(tone);
+    describe("Scenario: the color comes from the row", () => {
+        for (const color of ["default", "positive", "warning", "danger"] as const) {
+            it(`shows the ${color} color from the colorKey field`, async () => {
+                const cell = await renderCell(daysColumn, { days: 3, color });
+                expect(status(cell)?.getAttribute("data-color")).toBe(color);
             });
         }
 
-        it("falls back to default for an unknown tone", async () => {
-            const cell = await renderCell(daysColumn, { days: 3, tone: "red" });
-            expect(status(cell)?.getAttribute("data-tone")).toBe("default");
+        it("falls back to default for an unknown color", async () => {
+            const cell = await renderCell(daysColumn, { days: 3, color: "red" });
+            expect(status(cell)?.getAttribute("data-color")).toBe("default");
         });
 
-        it("falls back to default for a tone that isn't text", async () => {
-            const cell = await renderCell(daysColumn, { days: 3, tone: 2 });
-            expect(status(cell)?.getAttribute("data-tone")).toBe("default");
+        it("falls back to default for a color that isn't text", async () => {
+            const cell = await renderCell(daysColumn, { days: 3, color: 2 });
+            expect(status(cell)?.getAttribute("data-color")).toBe("default");
         });
 
-        it("is default without a toneKey", async () => {
-            const cell = await renderCell({ key: "state", label: "State", meta: {} }, { state: "Active", tone: "positive" });
-            expect(status(cell)?.getAttribute("data-tone")).toBe("default");
+        it("is default without a colorKey", async () => {
+            const cell = await renderCell({ key: "state", label: "State", meta: {} }, { state: "Active", color: "positive" });
+            expect(status(cell)?.getAttribute("data-color")).toBe("default");
         });
 
-        it("gives each tone its own colours", async () => {
+        it("gives each color its own tint and text", async () => {
             const colours = new Set<string>();
-            for (const tone of ["default", "positive", "warning", "danger"]) {
-                const cell = await renderCell(daysColumn, { days: 3, tone });
+            for (const color of ["default", "positive", "warning", "danger"]) {
+                const cell = await renderCell(daysColumn, { days: 3, color });
                 const style = getComputedStyle(status(cell)!);
                 colours.add(`${style.color}|${style.backgroundColor}`);
             }
@@ -74,12 +74,12 @@ describe("Feature: the status cell", () => {
 
     describe("Scenario: the text", () => {
         it("shows the row's textKey field", async () => {
-            const cell = await renderCell(daysColumn, { days: 0, tone: "danger", text: "Out of stock" });
+            const cell = await renderCell(daysColumn, { days: 0, color: "danger", text: "Out of stock" });
             expect(deepText(cell).trim()).toBe("Out of stock");
         });
 
         it("shows the value formatted with valueFormat when the row has no text", async () => {
-            const cell = await renderCell(daysColumn, { days: 12, tone: "warning" });
+            const cell = await renderCell(daysColumn, { days: 12, color: "warning" });
             expect(deepText(cell).trim()).toBe(new Intl.NumberFormat("en", DAYS).format(12));
         });
 
@@ -89,12 +89,12 @@ describe("Feature: the status cell", () => {
         });
 
         it("shows a text value as it is", async () => {
-            const cell = await renderCell({ key: "state", label: "State", meta: { toneKey: "tone" } }, { state: "Inactive", tone: "default" });
+            const cell = await renderCell({ key: "state", label: "State", meta: { colorKey: "color" } }, { state: "Inactive", color: "default" });
             expect(deepText(cell).trim()).toBe("Inactive");
         });
 
         it("shows nothing, not an empty label, for a missing value with no text", async () => {
-            const cell = await renderCell(daysColumn, { tone: "danger" });
+            const cell = await renderCell(daysColumn, { color: "danger" });
             expect(status(cell)).toBe(null);
         });
 
@@ -108,9 +108,9 @@ describe("Feature: the status cell", () => {
 
     describe("Scenario: in a table", () => {
         const rows = [
-            { name: "Hoodie", days: 12, tone: "warning" },
-            { name: "Mug", days: 0, tone: "danger", text: "Out of stock" },
-            { name: "Cap", days: 30, tone: "positive" },
+            { name: "Hoodie", days: 12, color: "warning" },
+            { name: "Mug", days: 0, color: "danger", text: "Out of stock" },
+            { name: "Cap", days: 30, color: "positive" },
         ];
         const columns: UauiTableColumn[] = [{ key: "name", label: "Product", searchable: true }, daysColumn];
         const cellTexts = (el: Element) =>
@@ -141,10 +141,10 @@ describe("Feature: the status cell", () => {
                             label="Stock"
                             .columns=${[{ key: "name", label: "Product" }, daysColumn]}
                             .rows=${[
-                                { name: "Mug", days: 0, tone: "danger", text: "Out of stock" },
-                                { name: "Hoodie", days: 12, tone: "warning" },
-                                { name: "Cap", days: 30, tone: "positive" },
-                                { name: "Pin", days: 40, tone: "default", text: "Unknown" },
+                                { name: "Mug", days: 0, color: "danger", text: "Out of stock" },
+                                { name: "Hoodie", days: 12, color: "warning" },
+                                { name: "Cap", days: 30, color: "positive" },
+                                { name: "Pin", days: 40, color: "default", text: "Unknown" },
                             ]}></uaui-data-table>
                     </div>`,
                 ).container.querySelector("div")!;
