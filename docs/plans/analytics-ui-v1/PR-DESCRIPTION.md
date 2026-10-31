@@ -12,7 +12,7 @@
 >
 > **2. Design: `UauiTableServerController` owns 12 table properties**\
 > Plan said: nothing about a server-mode helper. It came from a T22 follow-up.\
-> Built: [the controller sets `mode`, `sort`, `page`, `pageSize`, `query`, `rows`, `compareRows`, `totalRows`, `stats`, `loading`, `error` and `retryable` on the table directly](https://github.com/umbraco/Umbraco.Analytics.UI/blob/d61d934cb810a86a1bc7037d61f48b4ddbf24c85/src/Umbraco.Analytics.UI/Client/src/table/table-server.controller.ts#L221). A page attaches it with `${ref(controller.attach)}` and must not bind those properties itself, or the two fight.
+> Built: [the controller sets `mode`, `sort`, `page`, `pageSize`, `query`, `rows`, `compareRows`, `totalRows`, `stats`, `loading`, `error` and `retryable` on the table directly](https://github.com/umbraco/Umbraco.Analytics.UI/blob/d61d934cb810a86a1bc7037d61f48b4ddbf24c85/src/Umbraco.Analytics.UI/Client/src/table/table-server.controller.ts#L222). A page attaches it with `${ref(controller.attach)}` and must not bind those properties itself, or the two fight.
 >
 > - **A. Keep it.** It is small, works on any Lit host, and the docs say which properties it owns *(recommended)*.
 > - B. Make the controller expose the values and let the page bind them. More template code, but nothing hidden.
@@ -48,7 +48,7 @@
 >
 > **7. UI: a KPI tile with no data says "No data yet" for a past period**\
 > Plan said: `no-data` shows a dash with the hidden text "No data yet".\
-> Built: [the tile reuses the empty-state key `uauiAnalytics_emptyHeadline`](https://github.com/umbraco/Umbraco.Analytics.UI/blob/d61d934cb810a86a1bc7037d61f48b4ddbf24c85/src/Umbraco.Analytics.UI/Client/src/kpi-tile/kpi-tile.element.ts#L120). A screen reader hears "No data yet" for last year too, which reads oddly. The text is hidden, so sighted editors only see the dash.
+> Built: [the tile reuses the empty-state key `uauiAnalytics_emptyHeadline`](https://github.com/umbraco/Umbraco.Analytics.UI/blob/d61d934cb810a86a1bc7037d61f48b4ddbf24c85/src/Umbraco.Analytics.UI/Client/src/kpi-tile/kpi-tile.element.ts#L138). A screen reader hears "No data yet" for last year too, which reads oddly. The text is hidden, so sighted editors only see the dash.
 >
 > - **A. Add a tile-specific key, such as "No data for this period"** *(recommended)*. One extra translation.
 > - B. Keep the shared key, so one override rewords every no-data message.
