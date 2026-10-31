@@ -125,10 +125,9 @@ const SKELETON_WIDTHS = [72, 54, 83, 47, 65];
  *
  * The toolbar is one idea, filled across the full width (`toolbar`) or column by column (`toolbar-<column key>`). Slot content
  * into `toolbar-<column key>` to show a row above the column headings. It suits a `uaui-search-field` in the first column
- * and a `uaui-table-total` over each number column
- * (`<uaui-table-total slot="toolbar-pageviews" label="Pageviews" value="272"></uaui-table-total>`). Each piece sits in its own
- * column's cell, so it lines up with the column below and takes the column's `align`. `toolbar-start` is always the first
- * column's cell, whatever its key, so every product can write `<uaui-search-field slot="toolbar-start">`. If both
+ * and a `uaui-stat` over each number column (`<uaui-stat slot="toolbar-pageviews" label="Pageviews" value="272"></uaui-stat>`).
+ * Each piece sits in its own column's cell, so it lines up with the column below and takes the column's `align`. `toolbar-start`
+ * is always the first column's cell, whatever its key, so every product can write `<uaui-search-field slot="toolbar-start">`. If both
  * `toolbar-start` and `toolbar-<first column key>` have content, both show in that cell, `toolbar-start` first. A column whose
  * key is literally `start` has no cell of its own to fill: its `toolbar-start` is the first column's cell, which it shares.
  * A `search` event from any of these drives the table like one from the `toolbar` slot. A column with nothing slotted has an
@@ -148,7 +147,7 @@ const SKELETON_WIDTHS = [72, 54, 83, 47, 65];
  * @fires search - Not raised by the table: the `search` event of a `uaui-search-field` in the `toolbar` slot or a `toolbar-start` or `toolbar-[key]` slot bubbles through it, and the table has already set `query` and gone back to page 1 when a product's listener runs.
  * @slot toolbar - Full-width content above the header row that isn't tied to a column. Put totals, and a search beside them, in the `toolbar-start` and `toolbar-[key]` slots instead. It pads itself with `--uaui-table-padding`.
  * @slot toolbar-start - Content for the first column's cell in the row above the column headings, whatever that column's key, such as a search box. It shows before `toolbar-[key]` content for the same column, and a column keyed `start` shares this cell rather than having its own. The row shows when this has content.
- * @slot toolbar-[key] - Content for the row above the column headings, in the cell of the column whose `key` follows `toolbar-`, such as a `uaui-table-total` over a number column. The row shows when any of these has content.
+ * @slot toolbar-[key] - Content for the row above the column headings, in the cell of the column whose `key` follows `toolbar-`, such as a `uaui-stat` over a number column. The row shows when any of these has content.
  * @slot footer - Content below the rows, on the left of the pager, such as an "updated" note. The footer shows whenever this has content, even while loading, and pads itself with `--uaui-table-padding`.
  * @cssprop --uaui-table-padding - Padding of the toolbar and footer sections, as a CSS `padding` value. Defaults to `12px 24px`. The loading bar ignores it and spans the full width at the top edge.
  * @cssprop --uaui-series-1 - Bar colour of the first share column. Also `--uaui-series-2` to `--uaui-series-4` for the other slots.

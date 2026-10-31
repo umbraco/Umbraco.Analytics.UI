@@ -9,4 +9,4 @@ Reference for `uaui-funnel` (SPEC.md §10). Made 31-10-2026 from the "C2" boards
 | [`funnel-compare-tooltip.png`](funnel-compare-tooltip.png) | The tooltip on a hovered or focused step. |
 | [`funnel-compare-dark.png`](funnel-compare-dark.png) | Comparing, dark theme. |
 
-The headers' "Overall" figure is the product's `uaui-table-total` in the `uui-box` header, not part of the funnel. The dark colours are close to UUI's dark theme but not taken from it; the element uses the package's tokens.
+The headers' "Overall" figure is the product's `uaui-stat` (`layout="inline"`) in the `uui-box` header, not part of the funnel. The dark colours are close to UUI's dark theme but not taken from it; the element uses the package's tokens.

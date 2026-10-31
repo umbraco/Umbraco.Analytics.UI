@@ -26,7 +26,7 @@ Usage and API are in [Storybook](https://umbraco.github.io/Umbraco.Analytics.UI/
 | `uaui-date-range` | Button and dialog to pick a date range and a comparison. |
 | `uaui-data-table` | Sortable, searchable, pageable table. Client or server mode. |
 | `uaui-search-field` | Search box that raises `search` as you type. Works anywhere; in a table, put it in the `toolbar` or `toolbar-start` slot and the table filters itself. |
-| `uaui-table-total` | One total for the table's column toolbar: label, value and change badge, over its column. |
+| `uaui-stat` | One figure with its label and change badge. Stacked over a table column (in its column toolbar), or inline in a box header. |
 | `uaui-text-cell`, `uaui-link-cell`, `uaui-number-cell`, `uaui-percent-cell`, `uaui-share-cell` | Table cells. Name one in a column's `elementName`, or write your own. |
 | `uaui-table-compare-badge` | The change badge of a table cell: finds the compare row and shows how a value moved. Use it in your own cells. |
 | `uaui-empty-state` | "Nothing to show" message. The chart and table use it too. |

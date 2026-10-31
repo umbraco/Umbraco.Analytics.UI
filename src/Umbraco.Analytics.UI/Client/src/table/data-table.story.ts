@@ -4,7 +4,7 @@ import { UAUI_TABLE_CELL } from "./cells/cell-names.js";
 import type { UauiDataTableElement } from "./data-table.element.js";
 import "./data-table.element.js";
 import "../search-field/search-field.element.js";
-import "./table-total.element.js";
+import "../stat/stat.element.js";
 import type { UauiTableColumn, UauiTableRowClickDetail } from "./types.js";
 
 // Focused stories of the table's options. Complete, worked tables are under "Examples".
@@ -150,15 +150,15 @@ export const PagedClient: Story = {
         </uui-box>`,
 };
 
-/** A column toolbar above the column headings, for a search and totals that line up with their columns. Slot content as `toolbar-<column key>`, or `toolbar-start` for the first column whatever its key: here a search box in the first column and a `uaui-table-total` over each number column. The search drives the table like one in the `toolbar` slot. The row isn't sorted or paged, and the product works out the numbers. Columns with nothing slotted stay empty; with nothing slotted at all there is no row. */
+/** A column toolbar above the column headings, for a search and totals that line up with their columns. Slot content as `toolbar-<column key>`, or `toolbar-start` for the first column whatever its key: here a search box in the first column and a `uaui-stat` over each number column. The search drives the table like one in the `toolbar` slot. The row isn't sorted or paged, and the product works out the numbers. Columns with nothing slotted stay empty; with nothing slotted at all there is no row. */
 export const ColumnToolbar: Story = {
     args: { columns: pageColumns, rows: pageRows },
     render: (args) =>
         html`<uui-box headline="Top pages" style="--uui-box-default-padding: 0">
             <uaui-data-table label="Top pages" .columns=${args.columns} .rows=${args.rows}>
                 <uaui-search-field slot="toolbar-start"></uaui-search-field>
-                <uaui-table-total slot="toolbar-pageviews" label="Total pageviews" value="272" .current=${272} .previous=${256}></uaui-table-total>
-                <uaui-table-total slot="toolbar-sessions" label="Total sessions" value="53" .current=${53} .previous=${50}></uaui-table-total>
+                <uaui-stat slot="toolbar-pageviews" label="Total pageviews" value="272" .current=${272} .previous=${256}></uaui-stat>
+                <uaui-stat slot="toolbar-sessions" label="Total sessions" value="53" .current=${53} .previous=${50}></uaui-stat>
             </uaui-data-table>
         </uui-box>`,
 };

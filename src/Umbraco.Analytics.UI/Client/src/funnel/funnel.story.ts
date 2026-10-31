@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/web-components-vite";
 import { html } from "@umbraco-cms/backoffice/external/lit";
-import "../table/table-total.element.js";
+import "../stat/stat.element.js";
 import type { UauiFunnelElement } from "./funnel.element.js";
 import "./funnel.element.js";
 import { cartSteps, cartStepsPrevious, compareRangeLabel, currentRangeLabel, visitSteps, visitStepsPrevious } from "./internal/funnel-fixtures.js";
@@ -33,20 +33,21 @@ const meta: Meta<Args> = {
     argTypes: {
         width: { control: "inline-radio", options: ["280px", "360px", "560px"], description: "Story only: the pane's width" },
     },
-    // The pane recipe: the overall conversion goes in the box header with uaui-table-total, not in the funnel.
+    // The pane recipe: the overall conversion goes in the box header with an inline uaui-stat, not in the funnel.
     render: (args) => {
         const now = overall(args.steps);
         const before = args.compareSteps.length ? overall(args.compareSteps) : undefined;
         return html`<uui-box headline="Cart conversion" style="--uui-box-default-padding: 0; width: ${args.width}">
             ${now === undefined || args.error || args.loading
                 ? ""
-                : html`<uaui-table-total
+                : html`<uaui-stat
                       slot="header-actions"
+                      layout="inline"
                       label="Overall"
                       value=${new Intl.NumberFormat("en-US", { maximumFractionDigits: 1 }).format(now) + "%"}
                       .current=${now}
                       .previous=${before}
-                      delta-unit="points"></uaui-table-total>`}
+                      delta-unit="points"></uaui-stat>`}
             <uaui-funnel
                 .steps=${args.steps}
                 .compareSteps=${args.compareSteps}

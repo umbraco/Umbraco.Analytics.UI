@@ -4,26 +4,33 @@ import { deltaChange } from "../internal/delta/delta-change.js";
 import type { UauiDeltaUnit } from "../delta-badge/delta-badge.element.js";
 import "../delta-badge/delta-badge.element.js";
 
+/** How a `uaui-stat` lays out its label, value and badge. */
+export type UauiStatLayout = "stacked" | "inline";
+
 /**
- * One total, for the column toolbar of a `uaui-data-table`: a small uppercase label, the value in bold and an optional
- * change badge. Slot it into `toolbar-<column key>` and it sits over its column, aligned like the column's cells.
+ * One figure with its label and an optional change badge, e.g. a total in the column toolbar of a `uaui-data-table`
+ * or the overall rate in a `uui-box` header.
  *
- * The label is on its own line, with the value and the badge on the next. The total takes the `text-align` of its
- * cell, so it ends on the right in a column that is `align: "end"`.
+ * `layout="stacked"` (the default) puts a small uppercase label on its own line, with the value in bold and the badge
+ * on the next. Slot it into a table's `toolbar-<column key>` and it sits over its column: it takes the `text-align` of
+ * its cell, so it ends on the right in a column that is `align: "end"`.
+ *
+ * `layout="inline"` puts the label, value and badge on one line, lined up on their baseline, for a `uui-box`
+ * `header-actions` slot ("Overall 3.8% +0.2 pp"). The label is muted and not in capitals there.
  *
  * The value is a string, shown exactly as given: the product formats it. For the badge, set `delta` (18.7 means
  * +18.7%), or give the two numbers, `current` and `previous`, and the badge works out the change, as `uaui-kpi-tile`
  * does. `delta` wins when both are set. With neither, or with nothing to compare with, there is no badge.
  *
- * @element uaui-table-total
+ * @element uaui-stat
  */
-@customElement("uaui-table-total")
-export class UauiTableTotalElement extends UmbLitElement {
-    /** What the total is, e.g. "Total pageviews". */
+@customElement("uaui-stat")
+export class UauiStatElement extends UmbLitElement {
+    /** What the figure is, e.g. "Total pageviews". */
     @property({ type: String })
     label = "";
 
-    /** The total, already formatted by the product (e.g. "272"). It is shown exactly as given. */
+    /** The figure, already formatted by the product (e.g. "272"). It is shown exactly as given. */
     @property({ type: String })
     value?: string;
 
@@ -35,13 +42,13 @@ export class UauiTableTotalElement extends UmbLitElement {
     delta?: number;
 
     /**
-     * The total in the current period, as a number. With `previous`, the badge works out the change. Ignored when
+     * The figure in the current period, as a number. With `previous`, the badge works out the change. Ignored when
      * `delta` is set. The shown value is still `value`.
      */
     @property({ type: Number })
     current?: number;
 
-    /** The same total in the comparison period. With `current`, the badge works out the change. Ignored when `delta` is set. */
+    /** The same figure in the comparison period. With `current`, the badge works out the change. Ignored when `delta` is set. */
     @property({ type: Number })
     previous?: number;
 
@@ -52,6 +59,10 @@ export class UauiTableTotalElement extends UmbLitElement {
     /** Shows a fall as good (green) and a rise as bad (red), e.g. for a bounce rate. */
     @property({ type: Boolean, attribute: "lower-is-better", reflect: true })
     lowerIsBetter = false;
+
+    /** `stacked`: the label above the value and badge, for a table's column toolbar. `inline`: all on one line, for a `uui-box` header. */
+    @property({ type: String, reflect: true })
+    layout: UauiStatLayout = "stacked";
 
     // Whether there is a change to show: the same rule the badge uses, so no empty badge takes up room.
     #hasChange(): boolean {
@@ -78,6 +89,13 @@ export class UauiTableTotalElement extends UmbLitElement {
         :host {
             /* The text-align of the cell is inherited, so a total over an end-aligned column ends on the right. */
             display: block;
+        }
+
+        :host([layout="inline"]) {
+            display: inline-flex;
+            align-items: baseline;
+            gap: var(--uui-size-space-3);
+            white-space: nowrap;
         }
 
         .label {
@@ -110,11 +128,34 @@ export class UauiTableTotalElement extends UmbLitElement {
             vertical-align: middle;
             margin-inline-start: var(--uui-size-2);
         }
+
+        :host([layout="inline"]) .label {
+            font-size: var(--uui-type-default-size);
+            font-weight: 400;
+            letter-spacing: normal;
+            text-transform: none;
+        }
+
+        :host([layout="inline"]) .row {
+            display: inline-flex;
+            align-items: baseline;
+            gap: var(--uui-size-space-3);
+            margin-top: 0;
+        }
+
+        :host([layout="inline"]) .value {
+            /* Between the 14px label and the box headline, as in the funnel design's header. */
+            font-size: 16px;
+        }
+
+        :host([layout="inline"]) uaui-delta-badge {
+            margin-inline-start: 0;
+        }
     `;
 }
 
 declare global {
     interface HTMLElementTagNameMap {
-        "uaui-table-total": UauiTableTotalElement;
+        "uaui-stat": UauiStatElement;
     }
 }

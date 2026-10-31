@@ -10,7 +10,7 @@ import { axeRun } from "../internal/test/a11y.js";
 import { deepText, renderElement, settle, shadow, type UauiTestElement } from "../internal/test/dom.js";
 import "./data-table.element.js";
 import "../search-field/search-field.element.js";
-import "./table-total.element.js";
+import "../stat/stat.element.js";
 import { nameColumns } from "./table-fixtures.js";
 
 const rows = [
@@ -93,7 +93,7 @@ describe("Feature: a column toolbar aligned to the columns", () => {
             el = await renderElement(
                 html`<uaui-data-table .columns=${nameColumns} .rows=${rows}>
                     <span slot="toolbar-name">Total</span>
-                    <uaui-table-total slot="toolbar-views" label="Views" value="272"></uaui-table-total>
+                    <uaui-stat slot="toolbar-views" label="Views" value="272"></uaui-stat>
                 </uaui-data-table>`,
                 "uaui-data-table",
             );
@@ -110,7 +110,7 @@ describe("Feature: a column toolbar aligned to the columns", () => {
         });
 
         it("ends the total's value where the end-aligned column's data content ends", () => {
-            const value = shadow(el.querySelector("uaui-table-total")!).querySelector(".value")!.getBoundingClientRect();
+            const value = shadow(el.querySelector("uaui-stat")!).querySelector(".value")!.getBoundingClientRect();
             expect(Math.round(value.right)).toBe(Math.round(contentRight(firstDataCell(1))));
         });
     });
@@ -413,7 +413,7 @@ describe("Feature: a column toolbar aligned to the columns", () => {
         describe("with a search and a total with a badge", () => {
             const composed = html`<uaui-data-table .columns=${nameColumns} .rows=${rows}>
                 <uaui-search-field slot="toolbar-name"></uaui-search-field>
-                <uaui-table-total slot="toolbar-views" label="Total views" value="272" .current=${272} .previous=${230}></uaui-table-total>
+                <uaui-stat slot="toolbar-views" label="Total views" value="272" .current=${272} .previous=${230}></uaui-stat>
             </uaui-data-table>`;
 
             it("passes in the light theme", async () => {

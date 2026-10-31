@@ -53,7 +53,7 @@ interface Derived {
  * While `loading` is set it shows a skeleton on first load, or keeps the old funnel under a loading bar when
  * reloading. With no steps, or a first step of 0, it shows `uaui-empty-state`. While `error` is set it shows
  * `uaui-error-state` (error wins over loading, and loading over empty).
- * It draws no overall conversion: put that in the pane's header, e.g. `uaui-table-total` in the `uui-box`
+ * It draws no overall conversion: put that in the pane's header, e.g. `<uaui-stat layout="inline">` in the `uui-box`
  * `header-actions` slot.
  *
  * @element uaui-funnel

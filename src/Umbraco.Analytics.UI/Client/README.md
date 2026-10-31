@@ -55,7 +55,7 @@ Each links to its page in Storybook.
 - [`uaui-date-range`](https://umbraco.github.io/Umbraco.Analytics.UI/?path=/docs/components-date-range--docs)
 - [`uaui-data-table`](https://umbraco.github.io/Umbraco.Analytics.UI/?path=/docs/components-data-table--docs)
 - [`uaui-search-field`](https://umbraco.github.io/Umbraco.Analytics.UI/?path=/docs/components-search-field--docs)
-- [`uaui-table-total`](https://umbraco.github.io/Umbraco.Analytics.UI/?path=/docs/components-data-table-total--docs)
+- [`uaui-stat`](https://umbraco.github.io/Umbraco.Analytics.UI/?path=/docs/components-stat--docs)
 - Table cells, [`uaui-text-cell`, `uaui-link-cell`, `uaui-number-cell`, `uaui-percent-cell` and `uaui-share-cell`](https://umbraco.github.io/Umbraco.Analytics.UI/?path=/docs/components-data-table-cells--docs)
 - [`uaui-table-compare-badge`](https://umbraco.github.io/Umbraco.Analytics.UI/?path=/docs/components-data-table-compare-badge--docs)
 - [`uaui-empty-state`](https://umbraco.github.io/Umbraco.Analytics.UI/?path=/docs/components-empty-state--docs)

@@ -6,7 +6,7 @@ import "../../../date-range/date-range.element.js";
 import "../../../group-by/group-by.element.js";
 import "../../../table/data-table.element.js";
 import "../../../search-field/search-field.element.js";
-import "../../../table/table-total.element.js";
+import "../../../stat/stat.element.js";
 import type { UauiSeries } from "../../../chart/types.js";
 import { uauiCompareFor, uauiFormatDateRange } from "../../../date-helpers/index.js";
 import type { UauiCompare, UauiDateRange } from "../../../date-range/types.js";
@@ -151,12 +151,12 @@ export class ExampleEngageAnalyticsPageElement extends UmbLitElement {
     // The total sits in the column toolbar, above the headings and over the column it totals. The total works out its own
     // change from the two numbers, and shows none when there is no previous period to compare with.
     #renderTotal(valueKey: string, label: string, total: { current: number; previous?: number }) {
-        return html`<uaui-table-total
+        return html`<uaui-stat
             slot=${`toolbar-${valueKey}`}
             .label=${label}
             .value=${this.localize.number(total.current)}
             .current=${total.current}
-            .previous=${total.previous}></uaui-table-total>`;
+            .previous=${total.previous}></uaui-stat>`;
     }
 
     #renderTable() {

@@ -6,7 +6,7 @@ import "../../../chart/time-series-chart.element.js";
 import "../../../date-range/date-range.element.js";
 import "../../../funnel/funnel.element.js";
 import "../../../table/data-table.element.js";
-import "../../../table/table-total.element.js";
+import "../../../stat/stat.element.js";
 import "../../../search-field/search-field.element.js";
 import { UAUI_TABLE_CELL } from "../../../table/cells/cell-names.js";
 import type { UauiSeries } from "../../../chart/types.js";
@@ -408,13 +408,14 @@ export class ExampleCommerceAnalyticsPageElement extends UmbLitElement {
         return html`<uui-box headline="Cart conversion" headline-variant="h3" style="--uui-box-default-padding: 0">
             ${overall === undefined || this._error
                 ? nothing
-                : html`<uaui-table-total
+                : html`<uaui-stat
                       slot="header-actions"
+                      layout="inline"
                       label="Overall"
                       value=${this.localize.number(overall, PERCENT)}
                       .current=${overall}
                       .previous=${previous ? rateOf(previous.finalized, previous.totalCarts) : undefined}
-                      delta-unit="points"></uaui-table-total>`}
+                      delta-unit="points"></uaui-stat>`}
             <uaui-funnel
                 .steps=${cartSteps(current)}
                 .compareSteps=${cartSteps(previous)}
@@ -481,13 +482,14 @@ export class ExampleCommerceAnalyticsPageElement extends UmbLitElement {
         return html`<uui-box headline="Abandoned carts" headline-variant="h3" style="--uui-box-default-padding: 0">
             ${rate === undefined || this._error
                 ? nothing
-                : html`<uaui-table-total
+                : html`<uaui-stat
                       slot="header-actions"
+                      layout="inline"
                       label="Recovered"
                       value=${this.localize.number(rate, PERCENT)}
                       .current=${rate}
                       .previous=${previous ? rateOf(previous.recoveredCarts, previous.notifiedCarts) : undefined}
-                      delta-unit="points"></uaui-table-total>`}
+                      delta-unit="points"></uaui-stat>`}
             <uaui-funnel
                 .steps=${abandonedSteps(current)}
                 .compareSteps=${abandonedSteps(previous)}
@@ -508,14 +510,15 @@ export class ExampleCommerceAnalyticsPageElement extends UmbLitElement {
         return html`<uui-box headline="Refunds" headline-variant="h3" style="--uui-box-default-padding: 0">
             ${!current?.totals.orders || this._error
                 ? nothing
-                : html`<uaui-table-total
+                : html`<uaui-stat
                       slot="header-actions"
+                      layout="inline"
                       label="Refund rate"
                       value=${this.localize.number(current.refunds.refundRate, PERCENT)}
                       .current=${current.refunds.refundRate}
                       .previous=${previous?.totals.orders ? previous.refunds.refundRate : undefined}
                       delta-unit="points"
-                      lower-is-better></uaui-table-total>`}
+                      lower-is-better></uaui-stat>`}
             <uaui-data-table
                 label="Refunds by product"
                 row-key="sku"

@@ -16,7 +16,7 @@ import type { UauiCompare, UauiDateRange } from "../../../date-range/types.js";
 import type { UauiTimeSeriesChartElement } from "../../../chart/time-series-chart.element.js";
 import type { UauiKpiTileElement } from "../../../kpi-tile/kpi-tile.element.js";
 import type { UauiFunnelElement } from "../../../funnel/funnel.element.js";
-import type { UauiTableTotalElement } from "../../../table/table-total.element.js";
+import type { UauiStatElement } from "../../../stat/stat.element.js";
 import type { UauiTableColumn } from "../../../table/types.js";
 
 /** Renders the page and waits until every part has its data. */
@@ -38,7 +38,7 @@ const buyersTable = (page: Element) =>
 type TestTable = UauiTestElement & { loading: boolean; error: boolean; rows: Record<string, unknown>[]; compareRows: unknown[]; columns: UauiTableColumn[] };
 const box = (page: Element, headline: string) => shadow(page).querySelector(`uui-box[headline='${headline}']`) as HTMLElement;
 const boxTable = (page: Element, headline: string) => box(page, headline).querySelector("uaui-data-table") as unknown as TestTable;
-const headerTotal = (page: Element, headline: string) => box(page, headline).querySelector("uaui-table-total[slot='header-actions']") as UauiTableTotalElement | null;
+const headerTotal = (page: Element, headline: string) => box(page, headline).querySelector("uaui-stat[slot='header-actions']") as UauiStatElement | null;
 const funnel = (page: Element) => box(page, "Cart conversion").querySelector("uaui-funnel") as UauiFunnelElement;
 const abandonedFunnel = (page: Element) => box(page, "Abandoned carts").querySelector("uaui-funnel") as UauiFunnelElement;
 const notice = (page: Element) => shadow(page).querySelector(".notice");
@@ -190,6 +190,12 @@ describe("Feature: the Commerce analytics page", () => {
             expect(total.deltaUnit).toBe("points");
             expect(total.current).toBeCloseTo(tile(page, "Abandoned cart recovery").current!);
             expect(total.previous).toBeCloseTo(tile(page, "Abandoned cart recovery").previous!);
+        });
+
+        it("draws every header total on one line", () => {
+            for (const headline of ["Cart conversion", "Abandoned carts", "Refunds"]) {
+                expect(headerTotal(page, headline)!.layout).toBe("inline");
+            }
         });
 
         it("keeps the Abandoned cart recovery tile selectable", () => {

@@ -111,7 +111,7 @@ src/Umbraco.Analytics.UI/Client/
 
 The public API, by kind. Event details are exported as `Uaui…Detail` types. Every event bubbles and is not composed.
 
-- **Elements:** `uaui-kpi-tile`, `uaui-delta-badge`, `uaui-time-series-chart`, `uaui-data-table`, `uaui-search-field`, `uaui-table-compare-badge`, `uaui-table-total`, `uaui-date-range`, `uaui-toggle-group`, `uaui-group-by`, `uaui-empty-state`, `uaui-error-state`
+- **Elements:** `uaui-kpi-tile`, `uaui-delta-badge`, `uaui-time-series-chart`, `uaui-data-table`, `uaui-search-field`, `uaui-table-compare-badge`, `uaui-stat`, `uaui-date-range`, `uaui-toggle-group`, `uaui-group-by`, `uaui-empty-state`, `uaui-error-state`
 - **Table cells:** `uaui-text-cell`, `uaui-link-cell`, `uaui-number-cell`, `uaui-percent-cell`, `uaui-share-cell`, named in `UAUI_TABLE_CELL`
 - **Table extras:** `UauiTableServerController`, `UAUI_TABLE_CONTEXT`, `UauiTableColumnMeta` (products merge their own keys in)
 - **Functions:** `uauiPreviousPeriod`, `uauiPreviousYear`, `uauiCompareFor`, `uauiDaysIn`, `uauiDateBuckets`, `uauiFormatDateRange`

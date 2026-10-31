@@ -377,6 +377,25 @@ export class UauiShareCellElement extends UmbLitElement implements UauiTableCell
 }
 
 // @public
+export class UauiStatElement extends UmbLitElement {
+    current?: number;
+    delta?: number;
+    deltaUnit: UauiDeltaUnit;
+    label: string;
+    layout: UauiStatLayout;
+    lowerIsBetter: boolean;
+    previous?: number;
+    // (undocumented)
+    render(): TemplateResult;
+    // (undocumented)
+    static styles: CSSResultGroup;
+    value?: string;
+}
+
+// @public
+export type UauiStatLayout = "stacked" | "inline";
+
+// @public
 export interface UauiTableCellElement {
     column: UauiTableColumn;
     item: Record<string, unknown>;
@@ -509,21 +528,6 @@ export type UauiTableStats = Readonly<Record<string, UauiTableColumnStats>>;
 
 // @public
 export type UauiTableStatsInput = Readonly<Record<string, Partial<UauiTableColumnStats>>>;
-
-// @public
-export class UauiTableTotalElement extends UmbLitElement {
-    current?: number;
-    delta?: number;
-    deltaUnit: UauiDeltaUnit;
-    label: string;
-    lowerIsBetter: boolean;
-    previous?: number;
-    // (undocumented)
-    render(): TemplateResult;
-    // (undocumented)
-    static styles: CSSResultGroup;
-    value?: string;
-}
 
 // @public
 export class UauiTextCellElement extends UmbLitElement implements UauiTableCellElement {
