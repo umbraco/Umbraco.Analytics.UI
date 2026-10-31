@@ -39,8 +39,8 @@ parameters:
     type: boolean
     default: false # SBOM is still generated for release/hotfix branches and release-* tags
 
-# TODO: service connections, release environment and npm scope are placeholders copied from
-# Umbraco.Commerce until the owning team and npm scope are agreed.
+# TODO: service connections and release environment are placeholders copied from Umbraco.Commerce until
+# the Azure DevOps project is agreed. The npm scope @umbraco-analytics is agreed.
 extends:
   template: devops/templates/azure-pipelines-template.yml@build
   parameters:
