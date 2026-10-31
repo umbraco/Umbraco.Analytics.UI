@@ -613,9 +613,8 @@ export class ExampleCommerceAnalyticsPageElement extends UmbLitElement {
                     clickable-rows
                     @row-click=${this.#onBuyerClick}>
                     <div slot="toolbar"><uaui-search-field></uaui-search-field></div>
-                    ${opened
-                        ? html`<div slot="footer" class="opened" role="status">Showing orders for ${opened.name} (${opened.email})</div>`
-                        : nothing}
+                    <!-- Always mounted, so screen readers can announce its text when a buyer is opened: announcement relies on the region staying mounted (and in the accessibility tree; the table only visually hides an empty footer), and has not been tested with a real screen reader. Empty, the table shows no footer. -->
+                    <div slot="footer" class="opened" role="status">${opened ? `Showing orders for ${opened.name} (${opened.email})` : nothing}</div>
                 </uaui-data-table>
             </uui-box>`;
         const stock = html`<uui-box headline="Stock forecast" headline-variant="h3" style="--uui-box-default-padding: 0">

@@ -218,6 +218,7 @@ describe("Feature: a column toolbar aligned to the columns", () => {
             const el = await renderElement(html`<uaui-data-table .columns=${nameColumns} .rows=${rows}></uaui-data-table>`, "uaui-data-table");
             const late = document.createElement("span");
             late.slot = "toolbar-start";
+            late.textContent = "Start";
             el.append(late);
             await expect.poll(() => shown(el)).toBe(true);
         });

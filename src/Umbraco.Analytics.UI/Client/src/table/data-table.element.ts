@@ -16,9 +16,11 @@ import { getLoadingMode, isBusy } from "../internal/loading/loading-mode.js";
 import "../internal/loading/loading-bar.element.js";
 import "../internal/loading/skeleton.element.js";
 import { UauiPaletteStyles } from "../theme/index.js";
+import { UauiVisuallyHiddenStyles } from "../internal/a11y/visually-hidden.css.js";
 import "./cells/index.js";
 import { UAUI_TABLE_CELL } from "./cells/cell-names.js";
 import { UauiScrollOverflowController } from "./internal/scroll-overflow.controller.js";
+import { UauiSlotContentController, hasSlotContent } from "./internal/slot-content.controller.js";
 import { UauiTableContextController } from "./internal/table-context.controller.js";
 import "../internal/pager/compact-pager.element.js";
 import "./internal/table-skeleton-cell.element.js";
@@ -138,6 +140,11 @@ const SKELETON_WIDTHS = [72, 54, 83, 47, 65];
  * product works out its numbers, as the table's `stats` aren't totals it shows. With a `toolbar` too, the order is toolbar,
  * column toolbar, headings.
  *
+ * In every slot, an empty plain element (no element children and only whitespace text) counts as nothing slotted, and the
+ * table notices when it later gains or loses text. So a page can keep a `role="status"` live region slotted, for screen
+ * readers to announce when its text changes, without an empty toolbar or footer. Custom elements, images, form controls
+ * and SVG always count as content, as they draw themselves.
+ *
  * Each column's total and largest value are worked out from the `rows` the table holds: all of them in `client`
  * mode, but only the current page in `server` mode. Pass `stats` (the column's `total` and `max` across every
  * page, by column `key`) so a share is still a share of the whole and bars keep one scale from page to page.
@@ -151,7 +158,7 @@ const SKELETON_WIDTHS = [72, 54, 83, 47, 65];
  * @slot toolbar - Full-width content above the header row that isn't tied to a column. Put totals, and a search beside them, in the `toolbar-start` and `toolbar-[key]` slots instead. It pads itself with `--uaui-table-padding`.
  * @slot toolbar-start - Content for the first column's cell in the row above the column headings, whatever that column's key, such as a search box. It shows before `toolbar-[key]` content for the same column, and a column keyed `start` shares this cell rather than having its own. The row shows when this has content.
  * @slot toolbar-[key] - Content for the row above the column headings, in the cell of the column whose `key` follows `toolbar-`, such as a `uaui-stat` over a number column. The row shows when any of these has content.
- * @slot footer - Content below the rows, on the left of the pager, such as an "updated" note. The footer shows whenever this has content, even while loading, and pads itself with `--uaui-table-padding`.
+ * @slot footer - Content below the rows, on the left of the pager, such as an "updated" note. The footer shows whenever this has content, even while loading, and pads itself with `--uaui-table-padding`. An empty plain element (no element children, only whitespace) counts as no content, so a `role="status"` live region can stay slotted, hidden until it has text.
  * @cssprop --uaui-table-padding - Padding of the toolbar and footer sections, as a CSS `padding` value. Defaults to `12px 24px`. The loading bar ignores it and spans the full width at the top edge.
  * @cssprop --uaui-series-1 - Bar colour of the first share column. Also `--uaui-series-2` to `--uaui-series-4` for the other slots.
  * @cssprop --uaui-tint-neutral - Colour of the track behind a share bar.
@@ -270,6 +277,9 @@ export class UauiDataTableElement extends UmbLitElement {
 
     /** Whether the columns don't fit, so the scroll area scrolls sideways and has to be reachable by keyboard. */
     #overflow = new UauiScrollOverflowController(this, ".scroll", "uui-table");
+
+    /** Redraws when slotted content gains or loses text without being slotted or removed, which raises no `slotchange`. */
+    #slotContent = new UauiSlotContentController(this, () => `${this.#hasToolbar}|${this.#hasColumnToolbar}|${this.#hasFooterContent}`);
 
     protected override willUpdate(changed: PropertyValues<this>) {
         super.willUpdate(changed);
@@ -395,23 +405,29 @@ export class UauiDataTableElement extends UmbLitElement {
         this.dispatchEvent(new CustomEvent<UauiTableSortChangeDetail>("sort-change", { bubbles: true, detail: { key: column.key, direction } }));
     }
 
-    /** Whether anything is slotted into `toolbar`. `:host(:has())` can't tell, and a slot can't be styled by its content. */
+    /**
+     * Whether anything with content is slotted into `toolbar`. `:host(:has())` can't tell, and a slot can't be styled by its
+     * content. An empty plain element (no element children, only whitespace) counts as nothing, so a live region can stay
+     * slotted until it has something to say (see `hasSlotContent`).
+     */
     get #hasToolbar(): boolean {
-        return this.querySelector(':scope > [slot="toolbar"]') !== null;
+        return this.#slotHasContent("toolbar");
     }
 
-    /** Whether anything is slotted into `footer`, for the same reason as `#hasToolbar`. */
+    /** Whether anything with content is slotted into `footer`, for the same reasons as `#hasToolbar`. */
     get #hasFooterContent(): boolean {
-        return this.querySelector(':scope > [slot="footer"]') !== null;
+        return this.#slotHasContent("footer");
     }
 
-    /** Whether anything is slotted into `toolbar-start` or a column's `toolbar-<key>` slot, for the same reason as `#hasToolbar`. */
+    /** Whether anything with content is slotted into `toolbar-start` or a column's `toolbar-<key>` slot, for the same reasons as `#hasToolbar`. */
     get #hasColumnToolbar(): boolean {
         if (this.columns.length === 0) return false;
-        return (
-            this.querySelector(`:scope > [slot="${START_SLOT}"]`) !== null ||
-            this.columns.some((column) => this.querySelector(`:scope > [slot="${CSS.escape(`${SLOT_PREFIX}${column.key}`)}"]`) !== null)
-        );
+        return this.#slotHasContent(START_SLOT) || this.columns.some((column) => this.#slotHasContent(`${SLOT_PREFIX}${column.key}`));
+    }
+
+    /** Whether any element slotted as `name` has content. */
+    #slotHasContent(name: string): boolean {
+        return [...this.querySelectorAll(`:scope > [slot="${CSS.escape(name)}"]`)].some(hasSlotContent);
     }
 
     /** One cell element per row and column, reused while the column keeps its element name, as the CMS `umb-table` does. */
@@ -621,8 +637,11 @@ export class UauiDataTableElement extends UmbLitElement {
 
     /** The footer section owns the border, padding and placement, like the toolbar above the table. The pager is only its controls. */
     #renderFooter(showPager: boolean): TemplateResult {
-        // Always rendered, so the slot is there to raise `slotchange` when content arrives later. Hidden when it has nothing to show.
-        return html`<div class="footer" ?hidden=${!showPager && !this.#hasFooterContent}>
+        // Always rendered, so the slot is there to raise `slotchange` when content arrives later. With nothing to show it is
+        // visually hidden, not `hidden`: it takes no space and has no border, but an empty live region slotted into it stays
+        // in the accessibility tree, so a screen reader announces the region's text when it arrives. No pager is drawn then.
+        const empty = !showPager && !this.#hasFooterContent;
+        return html`<div class="footer ${empty ? "visually-hidden empty" : ""}">
             <slot name="footer" @slotchange=${() => this.requestUpdate()}></slot>
             ${showPager
                 ? html`<uaui-compact-pager
@@ -638,6 +657,7 @@ export class UauiDataTableElement extends UmbLitElement {
 
     static override styles: CSSResultGroup = [
         UauiPaletteStyles,
+        UauiVisuallyHiddenStyles,
         css`
             :host {
                 display: block;
@@ -671,8 +691,9 @@ export class UauiDataTableElement extends UmbLitElement {
                 border-top: 1px solid var(--uui-color-border);
             }
 
-            .footer[hidden] {
-                display: none;
+            .footer.empty {
+                padding: 0;
+                border: 0;
             }
 
             .footer slot {

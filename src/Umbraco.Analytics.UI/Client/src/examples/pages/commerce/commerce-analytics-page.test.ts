@@ -647,10 +647,55 @@ describe("Feature: the Commerce analytics page", () => {
             expect(status.textContent).toContain(name);
         });
 
-        it("forgets the buyer, and leaves no empty footer, when the range changes", async () => {
+        it("forgets the buyer, keeping the status line mounted and empty, when the range changes", async () => {
             changeRange(page, { from: "2026-04-01", to: "2026-04-30" });
             await page.updateComplete;
-            expect(box(page, "Top buyers").querySelector("[slot='footer']")).toBe(null);
+            const status = box(page, "Top buyers").querySelector("[slot='footer'][role='status']")!;
+            expect(status.textContent!.trim()).toBe("");
+        });
+    });
+
+    describe("Scenario: the buyer status line on a single page of buyers", () => {
+        let page: UauiTestElement;
+        /** The buyers table's footer section; with one page of buyers there is no pager, so it shows only for the status line. */
+        const footerShown = () => (shadow(buyersTable(page)).querySelector(".footer") as HTMLElement).getBoundingClientRect().height > 1;
+        const status = () => box(page, "Top buyers").querySelector("[slot='footer'][role='status']") as HTMLElement;
+        beforeEach(async () => {
+            page = await renderPage();
+            const search = shadow(buyersTable(page)).querySelector("slot[name='toolbar']") as HTMLSlotElement;
+            const field = search.assignedElements()[0].querySelector("uaui-search-field") as HTMLElement;
+            (shadow(field).querySelector("input, uui-input") as HTMLElement).focus();
+            await userEvent.keyboard("ada");
+            await expect.poll(() => buyerNames(page)).toEqual(["Ada Example"]);
+            await settle(page);
+        });
+
+        it("keeps the status line mounted, and the footer hidden, while no buyer is open", () => {
+            expect(status()).not.toBe(null);
+            expect(status().textContent!.trim()).toBe("");
+            expect(footerShown()).toBe(false);
+        });
+
+        it("shows the footer once a buyer is opened", async () => {
+            dataRows(buyersTable(page))[0].click();
+            await expect.poll(() => footerShown()).toBe(true);
+            expect(status().textContent).toContain("Ada Example");
+        });
+
+        it("hides the footer again when the range changes", async () => {
+            dataRows(buyersTable(page))[0].click();
+            await expect.poll(() => footerShown()).toBe(true);
+            changeRange(page, { from: "2026-04-01", to: "2026-04-30" });
+            await expect.poll(() => footerShown()).toBe(false);
+            expect(status().isConnected).toBe(true);
+        });
+
+        it("passes the a11y audit with the status line empty and filled", async () => {
+            expect(await axeRun(page)).toHaveNoViolations();
+            dataRows(buyersTable(page))[0].click();
+            await expect.poll(() => footerShown()).toBe(true);
+            await settle(page);
+            expect(await axeRun(page)).toHaveNoViolations();
         });
     });
 

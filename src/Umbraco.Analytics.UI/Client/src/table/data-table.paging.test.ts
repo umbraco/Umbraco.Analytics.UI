@@ -18,8 +18,8 @@ const pagerElement = (el: Element) => shadow(el).querySelector("uaui-compact-pag
 const controls = (el: Element) => (pagerElement(el)?.shadowRoot?.querySelector(".pager") ?? null) as HTMLElement | null;
 /** The table's own footer section, which holds the pager. */
 const footer = (el: Element) => shadow(el).querySelector(".footer") as HTMLElement | null;
-/** The footer is always in the DOM, so whether it shows is whether it takes up space. */
-const footerShown = (el: Element) => footer(el)!.checkVisibility();
+/** The footer is always in the DOM, and visually hidden (1px, clipped) when empty, so whether it shows is whether it takes up space. */
+const footerShown = (el: Element) => footer(el)!.getBoundingClientRect().height > 1;
 const pageSizeSelect = (el: Element) => controls(el)!.querySelector("uui-select[name='page-size']") as HTMLElement & {
         value: string;
         options: { value: string }[];
@@ -368,6 +368,7 @@ describe("Feature: page through rows", () => {
             const el = await clientTable(8);
             const note = document.createElement("span");
             note.slot = "footer";
+            note.textContent = "Updated";
             el.append(note);
             await settle(el);
             expect(footerShown(el)).toBe(true);
