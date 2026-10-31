@@ -5,4 +5,5 @@ export const UAUI_TABLE_CELL = {
     number: "uaui-number-cell",
     percent: "uaui-percent-cell",
     share: "uaui-share-cell",
+    status: "uaui-status-cell",
 } as const;

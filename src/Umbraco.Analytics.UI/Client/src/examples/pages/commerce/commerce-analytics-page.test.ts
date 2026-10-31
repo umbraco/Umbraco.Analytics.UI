@@ -8,7 +8,7 @@ import highContrastCss from "@umbraco-ui/uui/themes/high-contrast.css?inline";
 import { axeRun } from "../../../internal/test/a11y.js";
 import { renderPageExample, saveDateRange, withTheme } from "../../../internal/test/page-example.js";
 import { renderWithModals } from "../../../internal/test/modal-host.js";
-import { deepQuery, deepText, shadow, settle, type UauiTestElement } from "../../../internal/test/dom.js";
+import { deepQuery, deepQueryAll, deepText, shadow, settle, type UauiTestElement } from "../../../internal/test/dom.js";
 import "./commerce-analytics-page.element.js";
 import { loadSnapshot, loadStockForecast } from "./commerce-fake-data.js";
 import { uauiCompareFor } from "../../../date-helpers/index.js";
@@ -443,6 +443,15 @@ describe("Feature: the Commerce analytics page", () => {
             expect(table.rows.map((r) => r.statusText)).toContain("Inactive");
             expect(table.rows.some((r) => r.validFromText !== "" && r.validToText !== "")).toBe(true);
         });
+
+        it("shows each discount's status in a status cell, active as positive and inactive as default", () => {
+            const table = boxTable(page, "Popular discounts");
+            expect(table.columns.find((c) => c.label === "Status")?.elementName).toBe("uaui-status-cell");
+            const cells = deepQueryAll<HTMLElement>(shadow(table), "uaui-status-cell");
+            const tones = cells.map((c) => [deepText(c).trim(), c.shadowRoot!.querySelector(".status")?.getAttribute("data-tone")]);
+            expect(tones).toContainEqual(["Active", "positive"]);
+            expect(tones).toContainEqual(["Inactive", "default"]);
+        });
     });
 
     describe("Scenario: the stock forecast", () => {
@@ -505,6 +514,35 @@ describe("Feature: the Commerce analytics page", () => {
         it("says Out of stock for 0 days left", () => {
             const empty = stockTable(page).rows.find((r) => r.estimatedDaysRemaining === 0)!;
             expect(empty.daysLeftText).toBe("Out of stock");
+        });
+
+        it("shows days left in a status cell, with Commerce's tones: danger up to 7 days, warning up to 14, then positive", () => {
+            const table = stockTable(page);
+            const column = table.columns.find((c) => c.label === "Days left")!;
+            expect(column).toMatchObject({ key: "estimatedDaysRemaining", elementName: "uaui-status-cell", sortAs: "number" });
+            for (const row of table.rows) {
+                const days = row.estimatedDaysRemaining as number;
+                expect(row.daysLeftTone, `${days} days`).toBe(days <= 7 ? "danger" : days <= 14 ? "warning" : "positive");
+            }
+        });
+
+        it("draws Out of stock in the danger tone and other rows as their days", () => {
+            const cells = deepQueryAll<HTMLElement>(shadow(stockTable(page)), "uaui-status-cell");
+            const first = cells[0].shadowRoot!.querySelector(".status")!;
+            expect([first.textContent, first.getAttribute("data-tone")]).toEqual(["Out of stock", "danger"]);
+            expect(cells.slice(1).every((c) => /\d+ days?$/.test(deepText(c).trim()))).toBe(true);
+        });
+
+        it("sorts by days left, not by the words", async () => {
+            const table = stockTable(page) as TestTable & { sort?: { key: string; direction: string } };
+            const header = [...shadow(table).querySelectorAll<HTMLElement>("uaui-table-sort-button")].find((b) => deepText(b).includes("Days left"))!;
+            (header.shadowRoot?.querySelector("button") ?? header).click();
+            await expect.poll(() => table.sort?.key).toBe("estimatedDaysRemaining");
+            await settle(table);
+            const order = deepQueryAll<HTMLElement>(shadow(table), "uaui-status-cell").map((c) => deepText(c).trim());
+            // A number column sorts biggest first on the first click, so Out of stock (0 days) isn't on the first page.
+            expect(table.sort?.direction).toBe("desc");
+            expect(order).not.toContain("Out of stock");
         });
 
         it("ignores compare: no compare rows and no change badges", () => {

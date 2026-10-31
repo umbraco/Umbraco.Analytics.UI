@@ -178,7 +178,7 @@ const buyerColumns: UauiTableColumn[] = [
 // often it was used, with its change. The page turns the status and dates into words.
 const discountColumns: UauiTableColumn[] = [
     { key: "name", label: "Discount", sortable: true, sortAs: "text" },
-    { key: "statusText", label: "Status" },
+    { key: "statusText", label: "Status", elementName: UAUI_TABLE_CELL.status, meta: { toneKey: "statusTone" } },
     { key: "validFromText", label: "Valid from" },
     { key: "validToText", label: "Valid to" },
     { key: "usageCount", label: "Times used", elementName: UAUI_TABLE_CELL.share, width: "30%", valueFormat: COUNT, sortable: true, sortAs: "number" },
@@ -201,14 +201,24 @@ const refundColumns: UauiTableColumn[] = [
     { key: "topReasonText", label: "Top reason" },
 ];
 
-// The forecast follows the date range (sales per day are over the range) but has no compare. "Days left" is text, as
-// 0 days reads "Out of stock" like in Commerce, so it isn't sortable: the rows come soonest first.
+// The forecast follows the date range (sales per day are over the range) but has no compare. "Days left" is a status
+// cell on the number of days, so it sorts by days: 0 days reads "Out of stock" like in Commerce, and the tone follows
+// Commerce's thresholds (danger up to 7 days, warning up to 14, then positive). The rows come soonest first.
 const stockColumns: UauiTableColumn[] = [
     { key: "name", label: "Product", elementName: UAUI_TABLE_CELL.link, meta: { hrefKey: "url" }, sortable: true, sortAs: "text" },
     { key: "sku", label: "SKU" },
     { key: "currentStock", label: "In stock", elementName: UAUI_TABLE_CELL.number, valueFormat: COUNT, align: "end", sortable: true, sortAs: "number" },
     { key: "averageDailySales", label: "Sold per day", elementName: UAUI_TABLE_CELL.number, valueFormat: PER_DAY, align: "end", sortable: true, sortAs: "number" },
-    { key: "daysLeftText", label: "Days left", align: "end" },
+    {
+        key: "estimatedDaysRemaining",
+        label: "Days left",
+        elementName: UAUI_TABLE_CELL.status,
+        valueFormat: DAYS,
+        align: "end",
+        sortable: true,
+        sortAs: "number",
+        meta: { toneKey: "daysLeftTone", textKey: "daysLeftText" },
+    },
 ];
 
 // Commerce shows 5 forecast rows a page.
@@ -463,6 +473,7 @@ export class ExampleCommerceAnalyticsPageElement extends UmbLitElement {
         return (discounts ?? []).map((d) => ({
             ...d,
             statusText: d.isActive ? "Active" : "Inactive",
+            statusTone: d.isActive ? "positive" : "default",
             validFromText: date(d.startDate),
             validToText: date(d.expiryDate),
         }));
@@ -473,11 +484,13 @@ export class ExampleCommerceAnalyticsPageElement extends UmbLitElement {
         return data?.refunds.productBreakdown.map((r) => ({ ...r, topReasonText: r.topReason ? refundReasons[r.topReason] : "" })) ?? [];
     }
 
-    // 0 days left reads "Out of stock", as in Commerce.
+    // 0 days left reads "Out of stock", as in Commerce; other rows show the days, formatted by the column. The tone uses
+    // Commerce's thresholds: 7 days or fewer is danger, 14 or fewer warning, more positive.
     #stockRows(stock: StockForecastRow[] | undefined) {
         return (stock ?? []).map((s) => ({
             ...s,
-            daysLeftText: s.estimatedDaysRemaining === 0 ? "Out of stock" : this.localize.number(s.estimatedDaysRemaining, DAYS),
+            daysLeftText: s.estimatedDaysRemaining === 0 ? "Out of stock" : undefined,
+            daysLeftTone: s.estimatedDaysRemaining <= 7 ? "danger" : s.estimatedDaysRemaining <= 14 ? "warning" : "positive",
         }));
     }
 

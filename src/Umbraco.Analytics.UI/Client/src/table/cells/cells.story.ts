@@ -6,6 +6,7 @@ import "./link-cell.element.js";
 import "./number-cell.element.js";
 import "./percent-cell.element.js";
 import "./share-cell.element.js";
+import "./status-cell.element.js";
 import "../data-table.element.js";
 
 // Each public cell used on its own, as the table uses it: `column`, `item` and `value` are set, `loading` draws the
@@ -35,6 +36,13 @@ const numberColumn: UauiTableColumn = { key: "orders", label: "Orders", align: "
 const currencyColumn: UauiTableColumn = { key: "revenue", label: "Revenue", align: "end", valueFormat: { style: "currency", currency: "EUR", maximumFractionDigits: 0 } };
 const percentColumn: UauiTableColumn = { key: "refundRate", label: "Refund rate", align: "end" };
 const shareColumn: UauiTableColumn = { key: "pageviews", label: "Pageviews" };
+const statusColumn: UauiTableColumn = {
+    key: "daysLeft",
+    label: "Days left",
+    align: "end",
+    valueFormat: { style: "unit", unit: "day", unitDisplay: "long", maximumFractionDigits: 0 },
+    meta: { toneKey: "tone", textKey: "text" },
+};
 
 /** `uaui-text-cell` (`UAUI_TABLE_CELL.text`, the default): strings, numbers and booleans as plain text. */
 export const Text: Story = {
@@ -104,6 +112,31 @@ export const Share: Story = {
     parameters: { docs: { source: { code: `<uaui-share-cell .column=\${column} .item=\${row} .value=\${row.pageviews} .total=\${272} .max=\${210} .compareValue=\${190}></uaui-share-cell>`, language: "html" } } },
 };
 
+/**
+ * `uaui-status-cell` (`UAUI_TABLE_CELL.status`): the value as a tinted label in one of `uui-tag`'s colours, `default`,
+ * `positive`, `warning` or `danger`. The row picks the tone in the field `column.meta.toneKey` names (anything else is
+ * `default`) and the words in `column.meta.textKey`; without words the cell shows the value, formatted with
+ * `valueFormat`. The words carry the meaning, never the colour alone. Sorting and search use the value.
+ */
+export const Status: Story = {
+    render: () =>
+        html`<div style="display: grid; gap: var(--uui-size-space-3); justify-items: end">
+            <uaui-status-cell .column=${statusColumn} .item=${{ daysLeft: 0, tone: "danger", text: "Out of stock" }} .value=${0}></uaui-status-cell>
+            <uaui-status-cell .column=${statusColumn} .item=${{ daysLeft: 5, tone: "danger" }} .value=${5}></uaui-status-cell>
+            <uaui-status-cell .column=${statusColumn} .item=${{ daysLeft: 12, tone: "warning" }} .value=${12}></uaui-status-cell>
+            <uaui-status-cell .column=${statusColumn} .item=${{ daysLeft: 30, tone: "positive" }} .value=${30}></uaui-status-cell>
+            <uaui-status-cell .column=${statusColumn} .item=${{ daysLeft: 40, tone: "default", text: "Not tracked" }} .value=${40}></uaui-status-cell>
+        </div>`,
+    parameters: {
+        docs: {
+            source: {
+                code: `const column = {\n    key: "daysLeft",\n    label: "Days left",\n    elementName: UAUI_TABLE_CELL.status,\n    valueFormat: { style: "unit", unit: "day", unitDisplay: "long" },\n    sortable: true,\n    sortAs: "number",\n    meta: { toneKey: "tone", textKey: "text" },\n};\nconst row = { daysLeft: 0, tone: "danger", text: "Out of stock" };\n\n<uaui-status-cell .column=\${column} .item=\${row} .value=\${row.daysLeft}></uaui-status-cell>`,
+                language: "html",
+            },
+        },
+    },
+};
+
 /** With `loading` every cell draws its own placeholder, as tall as a loaded cell, so a table doesn't jump when its data arrives. */
 export const Loading: Story = {
     render: () =>
@@ -113,6 +146,7 @@ export const Loading: Story = {
             <uaui-number-cell loading .column=${numberColumn}></uaui-number-cell>
             <uaui-percent-cell loading .column=${percentColumn}></uaui-percent-cell>
             <uaui-share-cell loading .column=${shareColumn}></uaui-share-cell>
+            <uaui-status-cell loading .column=${statusColumn}></uaui-status-cell>
         </div>`,
     parameters: { docs: { source: { code: `<uaui-text-cell loading .column=\${column}></uaui-text-cell>`, language: "html" } } },
 };

@@ -80,6 +80,11 @@ import { css, type CSSResult } from "@umbraco-cms/backoffice/external/lit";
  * | text-positive      | forest-green-dark 4.81   | forest-green-dark 4.84   | jungle-green 4.92          |
  * | text-negative      | maroon-flush-dark 5.46   | maroon-flush-dark 5.19   | spanish-pink 9.93          |
  * | text-neutral       | text-alt 8.86            | text-alt 8.86            | text-alt 6.14              |
+ * | text-warning       | sunglow-dark 70% 6.61    | sunglow-dark 70% 6.61    | sunglow 7.07               |
+ *
+ * Warning (the status cell's `warning` tone) has no palette shade that reaches 4.5:1 on a yellow tint in light
+ * (sunglow-dark is about 3.8, chamoisee-dark 4.1), so its light text is sunglow-dark mixed 70% with black. Its tint
+ * is 20% of `--uui-color-warning`, as sunglow at 15% hardly shows on white.
  *
  * The tints themselves are decoration (the sign, arrow and hidden text carry the meaning), so they
  * stay faint: 1.2 to 1.3:1 against the surface in light and high contrast, 1.1 in dark.
@@ -172,9 +177,14 @@ export const UauiPaletteStyles: CSSResult = css`
             light-dark(var(--uui-palette-maroon-flush-dark), var(--uui-palette-spanish-pink))
         );
         --uaui-color-text-neutral: var(--uaui-text-neutral, var(--uui-color-text-alt));
+        --uaui-color-text-warning: var(
+            --uaui-text-warning,
+            light-dark(color-mix(in srgb, var(--uui-palette-sunglow-dark) 70%, black), var(--uui-palette-sunglow))
+        );
 
         --uaui-color-tint-positive: var(--uaui-tint-positive, color-mix(in srgb, var(--uui-color-positive) 15%, transparent));
         --uaui-color-tint-negative: var(--uaui-tint-negative, color-mix(in srgb, var(--uui-color-danger) 15%, transparent));
         --uaui-color-tint-neutral: var(--uaui-tint-neutral, color-mix(in srgb, var(--uui-color-text) 20%, transparent));
+        --uaui-color-tint-warning: var(--uaui-tint-warning, color-mix(in srgb, var(--uui-color-warning) 20%, transparent));
     }
 `;

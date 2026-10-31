@@ -57,17 +57,18 @@ const render = (latency?: number, failing = false) => html`
 /**
  * Commerce > Analytics rebuilt from this package, with everything Commerce's dashboard shows today: the date range
  * (with compare) in an actions row; seven KPI tiles (revenue, orders, average order value, cart conversion, abandoned
- * cart recovery, repeat customers, applied discounts) that switch the metric of one chart, rates compared in points;
- * a Cart conversion box with `uaui-funnel` and the overall conversion in its header; an Abandoned carts box with a
- * two-step funnel (notified, purchased) and the recovery rate in its header; a notice above the tiles when the
- * range or comparison range is older than the cart cleanup policy (from 25 March 2026 back); a Refunds box with the
- * overall refund rate in its header and refund rates by product; then top products, popular discounts, top buyers (a
- * `server` table run by `UauiTableServerController`, with clickable rows standing in for Commerce's buyer dialog) and the
- * stock forecast: products under the low stock threshold that run out within 1.5 times the range, with sales per day
- * over the range and no compare. The boxes use one example arrangement (layout is up to each product): at most two
- * columns, where each box spans one or both. The chart and top buyers span both, the others go in pairs, and on a
- * narrow page everything is one column. Change the date range and every part reloads. The data is made up. The docs
- * panel shows the page element's own code.
+ * cart recovery, repeat customers, applied discounts) that switch the metric of one chart, rates compared in points; a
+ * Cart conversion box with `uaui-funnel` and the overall conversion in its header; an Abandoned carts box with a
+ * two-step funnel (notified, purchased) and the recovery rate in its header; a notice above the tiles when the range
+ * or comparison range is older than the cart cleanup policy (from 25 March 2026 back); a Refunds box with the overall
+ * refund rate in its header and refund rates by product; then top products, popular discounts (active or inactive in a
+ * status cell), top buyers (a `server` table run by `UauiTableServerController`, with clickable rows standing in for
+ * Commerce's buyer dialog) and the stock forecast: products under the low stock threshold that run out within 1.5
+ * times the range, with sales per day over the range, days left in a status cell (danger up to 7 days, warning up to
+ * 14) and no compare. The boxes use one example arrangement (layout is up to each product): at most two columns, where
+ * each box spans one or both. The chart and top buyers span both, the others go in pairs, and on a narrow page
+ * everything is one column. Change the date range and every part reloads. The data is made up. The docs panel shows
+ * the page element's own code.
  */
 export const Analytics: StoryObj = {
     render: () => render(),

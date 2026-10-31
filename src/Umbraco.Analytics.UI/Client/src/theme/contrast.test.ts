@@ -17,6 +17,7 @@ import "../group-by/group-by.element.js";
 import "../kpi-tile/kpi-tile.element.js";
 import "../date-range/date-range.element.js";
 import "../funnel/funnel.element.js";
+import "../table/cells/status-cell.element.js";
 
 type Rgba = [r: number, g: number, b: number, a: number];
 
@@ -73,6 +74,7 @@ const TEXT: Pair[] = [
     { name: "badge text-positive on tint-positive", fg: "var(--uaui-color-text-positive)", bg: "var(--uaui-color-tint-positive)" },
     { name: "badge text-negative on tint-negative", fg: "var(--uaui-color-text-negative)", bg: "var(--uaui-color-tint-negative)" },
     { name: "badge text-neutral on tint-neutral", fg: "var(--uaui-color-text-neutral)", bg: "var(--uaui-color-tint-neutral)" },
+    { name: "status text-warning on tint-warning", fg: "var(--uaui-color-text-warning)", bg: "var(--uaui-color-tint-warning)" },
 ];
 
 /** The palette's own tokens against the surface: lines and dots that carry meaning, WCAG AA graphical objects, 3:1. */
@@ -211,6 +213,23 @@ describe("Feature: contrast in every theme", () => {
                         if (sentiment === "positive") {
                             check("text", "funnel link rate on the tint", between(computed(link.querySelector(".rate")!, "color"), tint, tint));
                         }
+                    });
+                }
+            });
+
+            describe("the status cell, as rendered", () => {
+                for (const tone of ["default", "positive", "warning", "danger"] as const) {
+                    it(`gives the ${tone} tone's text at least 4.5:1 on its tint`, async () => {
+                        const cell = await renderElement(
+                            html`<uaui-status-cell
+                                .column=${{ key: "status", label: "Status", meta: { toneKey: "tone" } }}
+                                .item=${{ tone }}
+                                .value=${"Out of stock"}></uaui-status-cell>`,
+                            "uaui-status-cell",
+                        );
+                        const status = shadow(cell).querySelector(".status")!;
+                        expect(status.getAttribute("data-tone")).toBe(tone);
+                        check("text", `status cell ${tone}`, between(computed(status, "color"), computed(status, "backgroundColor"), surface()));
                     });
                 }
             });

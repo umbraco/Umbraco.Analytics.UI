@@ -24,6 +24,7 @@ export const UAUI_TABLE_CELL: {
     readonly number: "uaui-number-cell";
     readonly percent: "uaui-percent-cell";
     readonly share: "uaui-share-cell";
+    readonly status: "uaui-status-cell";
 };
 
 // @public
@@ -396,6 +397,23 @@ export class UauiStatElement extends UmbLitElement {
 export type UauiStatLayout = "stacked" | "inline";
 
 // @public
+export class UauiStatusCellElement extends UmbLitElement implements UauiTableCellElement {
+    column: UauiTableColumn;
+    item: Record<string, unknown>;
+    loading: boolean;
+    // (undocumented)
+    render(): TemplateResult | typeof nothing;
+    // (undocumented)
+    static styles: CSSResultGroup;
+    value: unknown;
+    // (undocumented)
+    protected willUpdate(changed: PropertyValues<this>): void;
+}
+
+// @public
+export type UauiStatusTone = "default" | "positive" | "warning" | "danger";
+
+// @public
 export interface UauiTableCellElement {
     column: UauiTableColumn;
     item: Record<string, unknown>;
@@ -423,6 +441,8 @@ export interface UauiTableColumnMeta {
     deltaUnit?: UauiDeltaUnit;
     hrefKey?: string;
     lowerIsBetter?: boolean;
+    textKey?: string;
+    toneKey?: string;
 }
 
 // @public
