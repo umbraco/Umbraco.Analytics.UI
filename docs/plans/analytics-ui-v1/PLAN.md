@@ -238,7 +238,7 @@ Package gaps the Commerce example and the table label reviews found. Not picked 
 
 The user chose to build these now, although most are asked for by Commerce alone (logged in DECISION-LOG). One builder, one review and one commit each, in this order because most touch `data-table.element.ts`. Public API changes need the user's sign-off.
 
-- [ ] **T47** - Table compare badges in points: a column option `meta.deltaUnit: "points"` (next to `meta.lowerIsBetter`) that number, percent and share cells and `uaui-table-compare-badge` pass to their badge. Default stays percent. Commerce refunds by product gets `compareRows` back, in points.
+- [x] **T47** - Table compare badges in points: a column option `meta.deltaUnit: "points"` (next to `meta.lowerIsBetter`) that number, percent and share cells and `uaui-table-compare-badge` pass to their badge. Default stays percent. Commerce refunds by product gets `compareRows` back, in points.
 - [ ] **T48** - A status cell: shows a row's value with a tone (default, positive, warning, danger, as `uui-tag` colours), the tone and any wording (e.g. "Out of stock") chosen by the product per row, never colour alone. Commerce stock forecast days left and discount active/inactive use it.
 - [ ] **T49** - A date cell: an ISO date formatted with `Intl` in the user's culture, sortable by date. Commerce discount valid from/to use it.
 - [ ] **T50** - Row keys from more than one field: `row-key` accepts several fields (e.g. product and variant), used for rows and compare matching. Commerce product tables key on product + variant.
