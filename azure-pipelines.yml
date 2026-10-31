@@ -39,9 +39,9 @@ parameters:
     type: boolean
     default: false # SBOM is still generated for release/hotfix branches and release-* tags
 
-# Runs in the "Umbraco Extensions" Azure DevOps project. Service connections use the template's default names,
-# which that project has for NuGet (MyGet - Nightly, MyGet - Pre-releases, NuGet) and which match the npm ones
-# other product projects use (MyGet (npm) - Nightly, MyGet (npm) - Pre-releases, NPM).
+# Runs in the "Umbraco Extensions" Azure DevOps project. NuGet uses the template's default connection names
+# (MyGet - Nightly, MyGet - Pre-releases, NuGet); the project's npm MyGet connections are named below.
+# TODO before the first public npm release: an npmjs.org connection (npm_service_connection, default "NPM").
 # TODO before the first public release: a release approval environment (release_environment) and the
 # Dependency-Track variable group for SBOM uploads (sbom_dt_variable_group); the project has neither yet.
 # The package is @umbraco/analytics-ui, in Umbraco's shared @umbraco npm scope.
@@ -116,3 +116,5 @@ extends:
     # The client is bundled into the NuGet package (Chart.js included), so its dependencies ship too
     sbom_npm_paths:
       - src/Umbraco.Analytics.UI/Client
+    npm_nightly_service_connection: npm - Nightly
+    npm_prereleases_service_connection: npm - Pre-releases
