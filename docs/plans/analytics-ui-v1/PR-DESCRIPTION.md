@@ -1,18 +1,18 @@
-[Plan folder](https://github.com/umbraco/Umbraco.Analytics.UI/tree/1426f44ea58d2765832b7801a0021768a949465a/docs/plans/analytics-ui-v1)
+[Plan folder](https://github.com/umbraco/Umbraco.Analytics.UI/tree/7fc48de5220828190bc934afa1624ce4e3d9c52f/docs/plans/analytics-ui-v1)
 
 > [!IMPORTANT]
 > **7 choices were made without you.** Please check each one. Everything here is public API or visible behaviour, so it is cheap to change now and breaking to change after 19.0.0 ships.
 >
 > **1. Design: `stats` entries need both `total` and `max`**\
 > Plan said: `stats` is `{ [columnKey]: { total, max } }` for server mode. Nothing about partial entries.\
-> Built: [`UauiTableColumnStats` has both fields required](https://github.com/umbraco/Umbraco.Analytics.UI/blob/1426f44ea58d2765832b7801a0021768a949465a/src/Umbraco.Analytics.UI/Client/src/table/types.ts#L98). A product that only knows the grand total has to compute a max too. The builder logged this as waiting for sign-off.
+> Built: [`UauiTableColumnStats` has both fields required](https://github.com/umbraco/Umbraco.Analytics.UI/blob/7fc48de5220828190bc934afa1624ce4e3d9c52f/src/Umbraco.Analytics.UI/Client/src/table/types.ts#L98). A product that only knows the grand total has to compute a max too. The builder logged this as waiting for sign-off.
 >
 > - **A. Accept `Partial<UauiTableColumnStats>` per entry, and fall back to the rows for a missing field** *(recommended)*. Loosening later is non-breaking, but doing it now saves every product a workaround.
 > - B. Keep both required.
 >
 > **2. Design: `UauiTableServerController` owns 12 table properties**\
 > Plan said: nothing about a server-mode helper. It came from a T22 follow-up.\
-> Built: [the controller sets `mode`, `sort`, `page`, `pageSize`, `query`, `rows`, `compareRows`, `totalRows`, `stats`, `loading`, `error` and `retryable` on the table directly](https://github.com/umbraco/Umbraco.Analytics.UI/blob/1426f44ea58d2765832b7801a0021768a949465a/src/Umbraco.Analytics.UI/Client/src/table/table-server.controller.ts#L221). A page attaches it with `${ref(controller.attach)}` and must not bind those properties itself, or the two fight.
+> Built: [the controller sets `mode`, `sort`, `page`, `pageSize`, `query`, `rows`, `compareRows`, `totalRows`, `stats`, `loading`, `error` and `retryable` on the table directly](https://github.com/umbraco/Umbraco.Analytics.UI/blob/7fc48de5220828190bc934afa1624ce4e3d9c52f/src/Umbraco.Analytics.UI/Client/src/table/table-server.controller.ts#L221). A page attaches it with `${ref(controller.attach)}` and must not bind those properties itself, or the two fight.
 >
 > - **A. Keep it.** It is small, works on any Lit host, and the docs say which properties it owns *(recommended)*.
 > - B. Make the controller expose the values and let the page bind them. More template code, but nothing hidden.
@@ -20,35 +20,35 @@
 >
 > **3. Design: errors are a separate `uaui-error-state` element**\
 > Plan said: nothing about an error state. It came from a T22 follow-up.\
-> Built: [a new public element](https://github.com/umbraco/Umbraco.Analytics.UI/blob/1426f44ea58d2765832b7801a0021768a949465a/src/Umbraco.Analytics.UI/Client/src/error-state/error-state.element.ts#L16) with `role="alert"` and an optional Retry button, not a `variant="error"` on `uaui-empty-state`. The CMS has neither to copy.
+> Built: [a new public element](https://github.com/umbraco/Umbraco.Analytics.UI/blob/7fc48de5220828190bc934afa1624ce4e3d9c52f/src/Umbraco.Analytics.UI/Client/src/error-state/error-state.element.ts#L16) with `role="alert"` and an optional Retry button, not a `variant="error"` on `uaui-empty-state`. The CMS has neither to copy.
 >
 > - **A. Keep the separate element.** Only the error needs a role, a button and an event *(recommended)*.
 > - B. Fold it into `uaui-empty-state` as a variant, so products learn one element.
 >
 > **4. Design: `allow-compare` can't be turned off in HTML**\
 > Plan said: `allow-compare` (default true).\
-> Built: [a plain `{ type: Boolean }` attribute that defaults to true](https://github.com/umbraco/Umbraco.Analytics.UI/blob/1426f44ea58d2765832b7801a0021768a949465a/src/Umbraco.Analytics.UI/Client/src/date-range/date-range.element.ts#L47). `allow-compare="false"` still means true, so the only way off is `.allowCompare=${false}`. The docs say so.
+> Built: [a plain `{ type: Boolean }` attribute that defaults to true](https://github.com/umbraco/Umbraco.Analytics.UI/blob/7fc48de5220828190bc934afa1624ce4e3d9c52f/src/Umbraco.Analytics.UI/Client/src/date-range/date-range.element.ts#L47). `allow-compare="false"` still means true, so the only way off is `.allowCompare=${false}`. The docs say so.
 >
 > - **A. Keep it.** Same pattern as UUI's `deselectable`, and products use Lit property bindings anyway *(recommended)*.
 > - B. Rename to `hide-compare`, default false, so the attribute works in plain HTML.
 >
 > **5. Behavior: weeks always start on Monday**\
 > Plan said: nothing about the first day of the week.\
-> Built: [week buckets start on Monday for every culture](https://github.com/umbraco/Umbraco.Analytics.UI/blob/1426f44ea58d2765832b7801a0021768a949465a/src/Umbraco.Analytics.UI/Client/src/internal/date/date-math.ts#L130). This drives the chart's week grouping, marker buckets and the public `uauiDateBuckets` helper. A US editor would expect Sunday.
+> Built: [week buckets start on Monday for every culture](https://github.com/umbraco/Umbraco.Analytics.UI/blob/7fc48de5220828190bc934afa1624ce4e3d9c52f/src/Umbraco.Analytics.UI/Client/src/internal/date/date-math.ts#L130). This drives the chart's week grouping, marker buckets and the public `uauiDateBuckets` helper. A US editor would expect Sunday.
 >
 > - **A. Keep Monday for v1 and add an optional `weekStart` later.** Adding it is non-breaking *(recommended)*.
 > - B. Follow the editor's culture now. The same data would then group differently per editor.
 >
 > **6. Behavior: points on the same date add up**\
 > Plan said: nothing about two points with one date.\
-> Built: [the chart sums them](https://github.com/umbraco/Umbraco.Analytics.UI/blob/1426f44ea58d2765832b7801a0021768a949465a/src/Umbraco.Analytics.UI/Client/src/chart/internal/chart-data.ts#L43), for series, compare points and the compare total. Right for counts, wrong for rates and averages; the TSDoc warns products to aggregate those first. Last-wins was rejected because the compare total can't mix the two rules.
+> Built: [the chart sums them](https://github.com/umbraco/Umbraco.Analytics.UI/blob/7fc48de5220828190bc934afa1624ce4e3d9c52f/src/Umbraco.Analytics.UI/Client/src/chart/internal/chart-data.ts#L43), for series, compare points and the compare total. Right for counts, wrong for rates and averages; the TSDoc warns products to aggregate those first. Last-wins was rejected because the compare total can't mix the two rules.
 >
 > - **A. Keep summing, as documented** *(recommended)*.
 > - B. Last point wins, and the compare total uses the same rule.
 >
 > **7. UI: a KPI tile with no data says "No data yet" for a past period**\
 > Plan said: `no-data` shows a dash with the hidden text "No data yet".\
-> Built: [the tile reuses the empty-state key `uauiAnalytics_emptyHeadline`](https://github.com/umbraco/Umbraco.Analytics.UI/blob/1426f44ea58d2765832b7801a0021768a949465a/src/Umbraco.Analytics.UI/Client/src/kpi-tile/kpi-tile.element.ts#L120). A screen reader hears "No data yet" for last year too, which reads oddly. The text is hidden, so sighted editors only see the dash.
+> Built: [the tile reuses the empty-state key `uauiAnalytics_emptyHeadline`](https://github.com/umbraco/Umbraco.Analytics.UI/blob/7fc48de5220828190bc934afa1624ce4e3d9c52f/src/Umbraco.Analytics.UI/Client/src/kpi-tile/kpi-tile.element.ts#L120). A screen reader hears "No data yet" for last year too, which reads oddly. The text is hidden, so sighted editors only see the dash.
 >
 > - **A. Add a tile-specific key, such as "No data for this period"** *(recommended)*. One extra translation.
 > - B. Keep the shared key, so one override rewords every no-data message.
@@ -69,29 +69,29 @@ Engage, Commerce and Umbraco AI each build their own analytics charts, tables, K
 
 Engage page example, with the CMS dashboard header style (an `h2` beside the controls).
 
-![Engage page example](https://github.com/umbraco/Umbraco.Analytics.UI/blob/1426f44ea58d2765832b7801a0021768a949465a/docs/plans/analytics-ui-v1/screenshots/page-engage.png?raw=true)
+![Engage page example](https://github.com/umbraco/Umbraco.Analytics.UI/blob/7fc48de5220828190bc934afa1624ce4e3d9c52f/docs/plans/analytics-ui-v1/screenshots/page-engage.png?raw=true)
 
 | Commerce | Umbraco AI |
 |---|---|
-| ![Commerce page example](https://github.com/umbraco/Umbraco.Analytics.UI/blob/1426f44ea58d2765832b7801a0021768a949465a/docs/plans/analytics-ui-v1/screenshots/page-commerce.png?raw=true) | ![Umbraco AI page example](https://github.com/umbraco/Umbraco.Analytics.UI/blob/1426f44ea58d2765832b7801a0021768a949465a/docs/plans/analytics-ui-v1/screenshots/page-ai.png?raw=true) |
+| ![Commerce page example](https://github.com/umbraco/Umbraco.Analytics.UI/blob/7fc48de5220828190bc934afa1624ce4e3d9c52f/docs/plans/analytics-ui-v1/screenshots/page-commerce.png?raw=true) | ![Umbraco AI page example](https://github.com/umbraco/Umbraco.Analytics.UI/blob/7fc48de5220828190bc934afa1624ce4e3d9c52f/docs/plans/analytics-ui-v1/screenshots/page-ai.png?raw=true) |
 
 Chart with comparison and with markers.
 
 | Compare (light) | Markers (dark) |
 |---|---|
-| ![Chart compare](https://github.com/umbraco/Umbraco.Analytics.UI/blob/1426f44ea58d2765832b7801a0021768a949465a/docs/plans/analytics-ui-v1/screenshots/chart-compare-light.png?raw=true) | ![Chart markers](https://github.com/umbraco/Umbraco.Analytics.UI/blob/1426f44ea58d2765832b7801a0021768a949465a/docs/plans/analytics-ui-v1/screenshots/chart-markers-dark.png?raw=true) |
+| ![Chart compare](https://github.com/umbraco/Umbraco.Analytics.UI/blob/7fc48de5220828190bc934afa1624ce4e3d9c52f/docs/plans/analytics-ui-v1/screenshots/chart-compare-light.png?raw=true) | ![Chart markers](https://github.com/umbraco/Umbraco.Analytics.UI/blob/7fc48de5220828190bc934afa1624ce4e3d9c52f/docs/plans/analytics-ui-v1/screenshots/chart-markers-dark.png?raw=true) |
 
 KPI tiles and the date range dialog.
 
 | KPI tiles | Date range dialog |
 |---|---|
-| ![KPI tiles](https://github.com/umbraco/Umbraco.Analytics.UI/blob/1426f44ea58d2765832b7801a0021768a949465a/docs/plans/analytics-ui-v1/screenshots/kpi-tile-light.png?raw=true) | ![Date range dialog](https://github.com/umbraco/Umbraco.Analytics.UI/blob/1426f44ea58d2765832b7801a0021768a949465a/docs/plans/analytics-ui-v1/screenshots/date-range-compare-light.png?raw=true) |
+| ![KPI tiles](https://github.com/umbraco/Umbraco.Analytics.UI/blob/7fc48de5220828190bc934afa1624ce4e3d9c52f/docs/plans/analytics-ui-v1/screenshots/kpi-tile-light.png?raw=true) | ![Date range dialog](https://github.com/umbraco/Umbraco.Analytics.UI/blob/7fc48de5220828190bc934afa1624ce4e3d9c52f/docs/plans/analytics-ui-v1/screenshots/date-range-compare-light.png?raw=true) |
 
 Smoke test in a real CMS 19 backoffice: the import map, translations and the date range modal load from the package.
 
 | Dashboard | Date range modal |
 |---|---|
-| ![CMS 19 dashboard](https://github.com/umbraco/Umbraco.Analytics.UI/blob/1426f44ea58d2765832b7801a0021768a949465a/docs/plans/analytics-ui-v1/screenshots/int-1-dashboard.png?raw=true) | ![CMS 19 date range modal](https://github.com/umbraco/Umbraco.Analytics.UI/blob/1426f44ea58d2765832b7801a0021768a949465a/docs/plans/analytics-ui-v1/screenshots/int-1-date-range-modal.png?raw=true) |
+| ![CMS 19 dashboard](https://github.com/umbraco/Umbraco.Analytics.UI/blob/7fc48de5220828190bc934afa1624ce4e3d9c52f/docs/plans/analytics-ui-v1/screenshots/int-1-dashboard.png?raw=true) | ![CMS 19 date range modal](https://github.com/umbraco/Umbraco.Analytics.UI/blob/7fc48de5220828190bc934afa1624ce4e3d9c52f/docs/plans/analytics-ui-v1/screenshots/int-1-date-range-modal.png?raw=true) |
 
 ## How to verify
 
@@ -197,7 +197,7 @@ What the package adds to the backoffice. Nothing an editor sees on its own.
 - Paired light and dark palette, CMS 19 pink, brighter dark selected border (user decisions).
 - KPI tile selection copies UUI's `SelectableMixin`, keeps `aria-pressed`, and a selected non-deselectable tile raises nothing (user decisions).
 - Screenshot specs run in the Linux Playwright container only (user decision).
-- `v19/dev` and `v19/main` branches, `v{major}/topic/*` names; [`version.json`](https://github.com/umbraco/Umbraco.Analytics.UI/blob/1426f44ea58d2765832b7801a0021768a949465a/version.json#L12) publishes from `v\d+/main` (user decision).
+- `v19/dev` and `v19/main` branches, `v{major}/topic/*` names; [`version.json`](https://github.com/umbraco/Umbraco.Analytics.UI/blob/7fc48de5220828190bc934afa1624ce4e3d9c52f/version.json#L12) publishes from `v\d+/main` (user decision).
 - Cells as elements with a table context, internal pager, componentized chart and dialog (user decisions).
 - Storybook Examples and Internal sections; Internal stories left out of the published build (user decisions).
 - Page examples for Engage, Commerce and AI, with Slow and Failing API stories (user decisions).
@@ -206,15 +206,15 @@ What the package adds to the backoffice. Nothing an editor sees on its own.
 - T25 to T41 follow-ups: compare badge and column `meta`, segmented control, chart `.range`/`.compare`, two-line date button, "Per page", CMS dashboard header styles, localization rule (user picks).
 - Performance and bundle targets agreed and guarded by `test:perf` and `check:size`.
 - `stats` and `totalRows` names from the whole-feature review.
-- `UauiTableColumnMeta` uses interface merging, so a typo in a built-in key fails to compile ([types.ts](https://github.com/umbraco/Umbraco.Analytics.UI/blob/1426f44ea58d2765832b7801a0021768a949465a/src/Umbraco.Analytics.UI/Client/src/table/types.ts#L9)).
-- `uauiFormatDateRange` takes any `{ date, term }` object, so it follows the editor's culture and translated term ([date-helpers.ts](https://github.com/umbraco/Umbraco.Analytics.UI/blob/1426f44ea58d2765832b7801a0021768a949465a/src/Umbraco.Analytics.UI/Client/src/date-helpers/date-helpers.ts#L61)).
-- `retry` is a plain bubbling `Event` with no detail, as there is nothing to carry ([error-state.element.ts](https://github.com/umbraco/Umbraco.Analytics.UI/blob/1426f44ea58d2765832b7801a0021768a949465a/src/Umbraco.Analytics.UI/Client/src/error-state/error-state.element.ts#L35)).
+- `UauiTableColumnMeta` uses interface merging, so a typo in a built-in key fails to compile ([types.ts](https://github.com/umbraco/Umbraco.Analytics.UI/blob/7fc48de5220828190bc934afa1624ce4e3d9c52f/src/Umbraco.Analytics.UI/Client/src/table/types.ts#L9)).
+- `uauiFormatDateRange` takes any `{ date, term }` object, so it follows the editor's culture and translated term ([date-helpers.ts](https://github.com/umbraco/Umbraco.Analytics.UI/blob/7fc48de5220828190bc934afa1624ce4e3d9c52f/src/Umbraco.Analytics.UI/Client/src/date-helpers/date-helpers.ts#L61)).
+- `retry` is a plain bubbling `Event` with no detail, as there is nothing to carry ([error-state.element.ts](https://github.com/umbraco/Umbraco.Analytics.UI/blob/7fc48de5220828190bc934afa1624ce4e3d9c52f/src/Umbraco.Analytics.UI/Client/src/error-state/error-state.element.ts#L35)).
 - KPI tile in error has no Retry, so a row of tiles doesn't show four buttons.
-- `marker-click` is not composed, like every other event ([time-series-chart.element.ts](https://github.com/umbraco/Umbraco.Analytics.UI/blob/1426f44ea58d2765832b7801a0021768a949465a/src/Umbraco.Analytics.UI/Client/src/chart/time-series-chart.element.ts#L534)).
-- The summary row sits under the header, as in the design's totals row ([data-table.element.ts](https://github.com/umbraco/Umbraco.Analytics.UI/blob/1426f44ea58d2765832b7801a0021768a949465a/src/Umbraco.Analytics.UI/Client/src/table/data-table.element.ts#L629)).
-- The date button puts its content in `uui-button`'s `extra` slot with an empty default-slot child, so it can ellipsize and UUI doesn't draw the label twice ([date-range.element.ts](https://github.com/umbraco/Umbraco.Analytics.UI/blob/1426f44ea58d2765832b7801a0021768a949465a/src/Umbraco.Analytics.UI/Client/src/date-range/date-range.element.ts#L122)).
+- `marker-click` is not composed, like every other event ([time-series-chart.element.ts](https://github.com/umbraco/Umbraco.Analytics.UI/blob/7fc48de5220828190bc934afa1624ce4e3d9c52f/src/Umbraco.Analytics.UI/Client/src/chart/time-series-chart.element.ts#L534)).
+- The summary row sits under the header, as in the design's totals row ([data-table.element.ts](https://github.com/umbraco/Umbraco.Analytics.UI/blob/7fc48de5220828190bc934afa1624ce4e3d9c52f/src/Umbraco.Analytics.UI/Client/src/table/data-table.element.ts#L629)).
+- The date button puts its content in `uui-button`'s `extra` slot with an empty default-slot child, so it can ellipsize and UUI doesn't draw the label twice ([date-range.element.ts](https://github.com/umbraco/Umbraco.Analytics.UI/blob/7fc48de5220828190bc934afa1624ce4e3d9c52f/src/Umbraco.Analytics.UI/Client/src/date-range/date-range.element.ts#L122)).
 - `--umb-header-layout-height` went with the reverted `umb-body-layout` attempt; nothing in the code reads it.
-- Link cells only link `http:`, `https:`, `mailto:`, `tel:` and relative URLs, since visitor URLs are untrusted ([safe-href.ts](https://github.com/umbraco/Umbraco.Analytics.UI/blob/1426f44ea58d2765832b7801a0021768a949465a/src/Umbraco.Analytics.UI/Client/src/table/internal/safe-href.ts#L1)).
+- Link cells only link `http:`, `https:`, `mailto:`, `tel:` and relative URLs, since visitor URLs are untrusted ([safe-href.ts](https://github.com/umbraco/Umbraco.Analytics.UI/blob/7fc48de5220828190bc934afa1624ce4e3d9c52f/src/Umbraco.Analytics.UI/Client/src/table/internal/safe-href.ts#L1)).
 - No new runtime dependency: `chart.js` and `@umbraco-cms/backoffice` were already there.
 - `npm run check:api` passes on this commit, and no Chart.js type is in the API report.
 
