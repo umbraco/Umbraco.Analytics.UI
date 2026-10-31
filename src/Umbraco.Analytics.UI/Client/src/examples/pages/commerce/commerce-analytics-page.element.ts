@@ -183,7 +183,7 @@ const buyerColumns: UauiTableColumn[] = [
 // often it was used, with its change. The page turns the status into words; the date cells format the ISO dates.
 const discountColumns: UauiTableColumn[] = [
     { key: "name", label: "Discount", sortable: true, sortAs: "text" },
-    { key: "statusText", label: "Status", elementName: UAUI_TABLE_CELL.status, meta: { toneKey: "statusTone" } },
+    { key: "statusText", label: "Status", elementName: UAUI_TABLE_CELL.status, meta: { colorKey: "statusColor" } },
     { key: "startDate", label: "Valid from", elementName: UAUI_TABLE_CELL.date, sortable: true, sortAs: "date" },
     { key: "expiryDate", label: "Valid to", elementName: UAUI_TABLE_CELL.date, sortable: true, sortAs: "date" },
     { key: "usageCount", label: "Times used", elementName: UAUI_TABLE_CELL.share, width: "30%", valueFormat: COUNT, sortable: true, sortAs: "number" },
@@ -207,7 +207,7 @@ const refundColumns: UauiTableColumn[] = [
 ];
 
 // The forecast follows the date range (sales per day are over the range) but has no compare. "Days left" is a status
-// cell on the number of days, so it sorts by days: 0 days reads "Out of stock" like in Commerce, and the tone follows
+// cell on the number of days, so it sorts by days: 0 days reads "Out of stock" like in Commerce, and the color follows
 // Commerce's thresholds (danger up to 7 days, warning up to 14, then positive). The rows come soonest first.
 const stockColumns: UauiTableColumn[] = [
     { key: "name", label: "Product", elementName: UAUI_TABLE_CELL.link, meta: { hrefKey: "url" }, sortable: true, sortAs: "text" },
@@ -222,7 +222,7 @@ const stockColumns: UauiTableColumn[] = [
         align: "end",
         sortable: true,
         sortAs: "number",
-        meta: { toneKey: "daysLeftTone", textKey: "daysLeftText" },
+        meta: { colorKey: "daysLeftColor", textKey: "daysLeftText" },
     },
 ];
 
@@ -475,7 +475,7 @@ export class ExampleCommerceAnalyticsPageElement extends UmbLitElement {
         return (discounts ?? []).map((d) => ({
             ...d,
             statusText: d.isActive ? "Active" : "Inactive",
-            statusTone: d.isActive ? "positive" : "default",
+            statusColor: d.isActive ? "positive" : "default",
         }));
     }
 
@@ -484,13 +484,13 @@ export class ExampleCommerceAnalyticsPageElement extends UmbLitElement {
         return data?.refunds.productBreakdown.map((r) => ({ ...r, topReasonText: r.topReason ? refundReasons[r.topReason] : "" })) ?? [];
     }
 
-    // 0 days left reads "Out of stock", as in Commerce; other rows show the days, formatted by the column. The tone uses
+    // 0 days left reads "Out of stock", as in Commerce; other rows show the days, formatted by the column. The color uses
     // Commerce's thresholds: 7 days or fewer is danger, 14 or fewer warning, more positive.
     #stockRows(stock: StockForecastRow[] | undefined) {
         return (stock ?? []).map((s) => ({
             ...s,
             daysLeftText: s.estimatedDaysRemaining === 0 ? "Out of stock" : undefined,
-            daysLeftTone: s.estimatedDaysRemaining <= 7 ? "danger" : s.estimatedDaysRemaining <= 14 ? "warning" : "positive",
+            daysLeftColor: s.estimatedDaysRemaining <= 7 ? "danger" : s.estimatedDaysRemaining <= 14 ? "warning" : "positive",
         }));
     }
 

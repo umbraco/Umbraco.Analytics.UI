@@ -427,7 +427,7 @@ export class UauiStatusCellElement extends UmbLitElement implements UauiTableCel
 }
 
 // @public
-export type UauiStatusTone = "default" | "positive" | "warning" | "danger";
+export type UauiStatusColor = "default" | "positive" | "warning" | "danger";
 
 // @public
 export interface UauiTableCellElement {
@@ -455,11 +455,11 @@ export type UauiTableColumn = {
 // @public
 export interface UauiTableColumnMeta {
     color?: UauiColorSlot;
+    colorKey?: string;
     deltaUnit?: UauiDeltaUnit;
     hrefKey?: string;
     lowerIsBetter?: boolean;
     textKey?: string;
-    toneKey?: string;
 }
 
 // @public

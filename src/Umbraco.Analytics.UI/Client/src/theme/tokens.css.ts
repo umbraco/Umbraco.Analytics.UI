@@ -82,7 +82,7 @@ import { css, type CSSResult } from "@umbraco-cms/backoffice/external/lit";
  * | text-neutral       | text-alt 8.86            | text-alt 8.86            | text-alt 6.14              |
  * | text-warning       | sunglow-dark 70% 6.61    | sunglow-dark 70% 6.61    | sunglow 7.07               |
  *
- * Warning (the status cell's `warning` tone) has no palette shade that reaches 4.5:1 on a yellow tint in light
+ * Warning (the status cell's `warning` color) has no palette shade that reaches 4.5:1 on a yellow tint in light
  * (sunglow-dark is about 3.8, chamoisee-dark 4.1), so its light text is sunglow-dark mixed 70% with black. Its tint
  * is 20% of `--uui-color-warning`, as sunglow at 15% hardly shows on white.
  *

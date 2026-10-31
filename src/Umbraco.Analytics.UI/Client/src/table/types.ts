@@ -11,10 +11,10 @@ export interface UauiTableColumnMeta {
     /** `uaui-link-cell`: the key in each row that holds the URL. A missing or unsafe URL shows the text without a link. */
     hrefKey?: string;
     /**
-     * `uaui-status-cell`: the key in each row that holds the tone (`UauiStatusTone`: `"default"`, `"positive"`,
-     * `"warning"` or `"danger"`). A missing or unknown tone is `"default"`.
+     * `uaui-status-cell`: the key in each row that holds the color (`UauiStatusColor`: `"default"`, `"positive"`,
+     * `"warning"` or `"danger"`). A missing or unknown color is `"default"`.
      */
-    toneKey?: string;
+    colorKey?: string;
     /** `uaui-status-cell`: the key in each row that holds the text to show, e.g. "Out of stock". Without it the cell shows the value, formatted. */
     textKey?: string;
     /** `uaui-share-cell`: the palette slot of the bar (the same slots as `UauiSeries.color`). Defaults to the share column's position. */
@@ -43,7 +43,7 @@ export type UauiTableColumn = {
      * See `UauiTableCellElement`. Cells that need more than that read the table's `UAUI_TABLE_CONTEXT`.
      */
     elementName?: string;
-    /** Settings the cells read: `hrefKey`, `toneKey`, `textKey`, `color`, `lowerIsBetter`, `deltaUnit`. See `UauiTableColumnMeta`. */
+    /** Settings the cells read: `hrefKey`, `colorKey`, `textKey`, `color`, `lowerIsBetter`, `deltaUnit`. See `UauiTableColumnMeta`. */
     meta?: UauiTableColumnMeta;
     /** Formats the numbers of the number, percent, share and status cells, e.g. `{ style: "currency", currency: "EUR" }`. */
     valueFormat?: Intl.NumberFormatOptions;

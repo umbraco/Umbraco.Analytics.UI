@@ -218,18 +218,18 @@ describe("Feature: contrast in every theme", () => {
             });
 
             describe("the status cell, as rendered", () => {
-                for (const tone of ["default", "positive", "warning", "danger"] as const) {
-                    it(`gives the ${tone} tone's text at least 4.5:1 on its tint`, async () => {
+                for (const color of ["default", "positive", "warning", "danger"] as const) {
+                    it(`gives the ${color} color's text at least 4.5:1 on its tint`, async () => {
                         const cell = await renderElement(
                             html`<uaui-status-cell
-                                .column=${{ key: "status", label: "Status", meta: { toneKey: "tone" } }}
-                                .item=${{ tone }}
+                                .column=${{ key: "status", label: "Status", meta: { colorKey: "color" } }}
+                                .item=${{ color }}
                                 .value=${"Out of stock"}></uaui-status-cell>`,
                             "uaui-status-cell",
                         );
                         const status = shadow(cell).querySelector(".status")!;
-                        expect(status.getAttribute("data-tone")).toBe(tone);
-                        check("text", `status cell ${tone}`, between(computed(status, "color"), computed(status, "backgroundColor"), surface()));
+                        expect(status.getAttribute("data-color")).toBe(color);
+                        check("text", `status cell ${color}`, between(computed(status, "color"), computed(status, "backgroundColor"), surface()));
                     });
                 }
             });
