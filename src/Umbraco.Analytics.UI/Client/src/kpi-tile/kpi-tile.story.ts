@@ -62,7 +62,7 @@ export const NoChange: Story = { args: { label: "Success rate", value: "98%", de
 /** `delta` unset means unknown (nothing to compare with): no badge. Compare with `NoChange`. */
 export const UnknownChange: Story = { args: { label: "Success rate", value: "98%", delta: undefined, deltaUnit: "points" } };
 
-/** The range has no data: a dash instead of "0", no badge, "No data yet" for screen readers. Still selectable. */
+/** The range has no data: a dash instead of "0", no badge, hidden "No data for this period" for screen readers. Still selectable. */
 export const NoData: Story = { args: { value: undefined, delta: undefined, noData: true, selectable: true } };
 
 /** The load failed: a dash with hidden "Something went wrong" text in place of the value, and no badge. Wins over loading and no-data. */

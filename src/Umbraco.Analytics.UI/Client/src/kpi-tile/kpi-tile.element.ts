@@ -40,7 +40,7 @@ export class UauiKpiTileElement extends UmbLitElement {
     value?: string;
 
     /**
-     * The range has no data. Shows a dash with the hidden text "No data yet" in place of the value, and no
+     * The range has no data. Shows a dash with the hidden text "No data for this period" in place of the value, and no
      * change badge. Use it instead of showing "0". The tile stays selectable.
      */
     @property({ type: Boolean, attribute: "no-data", reflect: true })
@@ -135,7 +135,7 @@ export class UauiKpiTileElement extends UmbLitElement {
                               ${this.error || this.noData
                                   ? html`<span class="value no-data"
                                         ><span aria-hidden="true">—</span
-                                        ><span class="visually-hidden">${this.localize.term(this.error ? "uauiAnalytics_errorHeadline" : "uauiAnalytics_emptyHeadline")}</span></span
+                                        ><span class="visually-hidden">${this.localize.term(this.error ? "uauiAnalytics_errorHeadline" : "uauiAnalytics_kpiNoData")}</span></span
                                     >`
                                   : hasValue
                                     ? html`<span class="value">${this.value}</span>`

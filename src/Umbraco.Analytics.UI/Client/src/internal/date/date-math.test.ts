@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { addDays, bucketOffset, builtInPresetRange, dateOnly, compareRangeFor, firstOfNextMonth, isoToDate, parseIso, previousPeriodRange, previousYearRange, todayIso } from "./date-math.js";
+import { addDays, bucketOffset, bucketStart, builtInPresetRange, dateOnly, compareRangeFor, firstOfNextMonth, isoToDate, parseIso, previousPeriodRange, previousYearRange, resolveWeekStart, todayIso } from "./date-math.js";
 
 describe("Feature: date range maths", () => {
     describe("Scenario: today", () => {
@@ -140,5 +140,59 @@ describe("bucketOffset", () => {
 
     it("gives nothing for a date that isn't real", () => {
         expect(bucketOffset("2026-02-27", "June", "day")).toBeUndefined();
+    });
+});
+
+describe("bucketStart for weeks", () => {
+    it("starts a week on Monday when no week start is given", () => {
+        expect(bucketStart("2026-06-10", "week")).toBe("2026-06-08");
+    });
+
+    it("starts a week on Sunday for a week start of 7", () => {
+        expect(bucketStart("2026-06-10", "week", 7)).toBe("2026-06-07");
+    });
+
+    it("keeps a date that is the week start", () => {
+        expect(bucketStart("2026-06-07", "week", 7)).toBe("2026-06-07");
+    });
+
+    it("starts a week on Saturday for a week start of 6", () => {
+        expect(bucketStart("2026-06-10", "week", 6)).toBe("2026-06-06");
+    });
+
+    it("reads a week start of 0 as Monday", () => {
+        expect(bucketStart("2026-06-10", "week", 0 as never)).toBe("2026-06-08");
+    });
+
+    it("reads a week start of 8 as Monday", () => {
+        expect(bucketStart("2026-06-10", "week", 8 as never)).toBe("2026-06-08");
+    });
+});
+
+describe("bucketOffset for weeks with a week start", () => {
+    it("counts weeks between the Sundays of two dates", () => {
+        expect(bucketOffset("2026-05-06", "2026-05-10", "week", 7)).toBe(1);
+    });
+
+    it("puts a Sunday in the same Monday week as the Wednesday before it", () => {
+        expect(bucketOffset("2026-05-06", "2026-05-10", "week")).toBe(0);
+    });
+});
+
+describe("resolveWeekStart", () => {
+    it("keeps a whole number from 1 to 7", () => {
+        expect(resolveWeekStart(7)).toBe(7);
+    });
+
+    it("reads a fraction as Monday", () => {
+        expect(resolveWeekStart(2.5)).toBe(1);
+    });
+
+    it("reads NaN as Monday", () => {
+        expect(resolveWeekStart(Number.NaN)).toBe(1);
+    });
+
+    it("reads a missing value as Monday", () => {
+        expect(resolveWeekStart(undefined)).toBe(1);
     });
 });

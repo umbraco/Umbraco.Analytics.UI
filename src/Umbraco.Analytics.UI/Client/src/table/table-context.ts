@@ -9,7 +9,7 @@ import type { UauiTableColumn, UauiTableCompareLookup, UauiTableStats } from "./
 export interface UauiTableContext extends UmbContextMinimal {
     /** The columns, left to right. */
     readonly columns: Observable<UauiTableColumn[]>;
-    /** Each column's total and largest value, by column `key`, honouring the table's `stats`. */
+    /** Each column's total and largest value, by column `key`, honouring the table's `stats`, each field falling back to the rows when it gives none. */
     readonly stats: Observable<UauiTableStats>;
     /** Finds a row's compare-period row, by the table's `rowKey`. Replaced when `compare-rows` or `row-key` change. */
     readonly compare: Observable<UauiTableCompareLookup>;

@@ -1,4 +1,5 @@
 // Sample data for the chart stories: 30 days from 25 May 2026 with a spike on 11 Jun, like the Phase 1 design.
+import { uauiDateBuckets } from "../../date-helpers/index.js";
 import type { UauiMarker, UauiSeries } from "../types.js";
 
 const pageviewValues = [
@@ -52,6 +53,21 @@ export const sessionsPrevious = toSeries(
 );
 
 export const compareRangeLabel = "Apr 25, 2026 – May 24, 2026";
+
+/** The daily pageviews of a range added up into weeks that start on Sunday, each point on the Sunday its week starts. */
+const sundayWeeksOf = (range: { from: string; to: string }, values: number[], valueDay: (offset: number) => string): UauiSeries => {
+    const valueOn = new Map(values.map((value, i) => [valueDay(i), value]));
+    return {
+        id: "pageviews",
+        label: "Pageviews",
+        points: uauiDateBuckets(range, "week", { weekStart: 7 }).map(({ start, days }) => ({ date: start, value: days.reduce((sum, day) => sum + (valueOn.get(day) ?? 0), 0) })),
+    };
+};
+
+/** Pageviews for 25 May to 23 Jun 2026 as weeks starting on Sunday, for the week start story. */
+export const sundayWeeks = sundayWeeksOf({ from: "2026-05-25", to: "2026-06-23" }, pageviewValues, dayAfter25May);
+/** The 30 days before, as Sunday weeks: the compare series of the week start story. */
+export const sundayWeeksPrevious = sundayWeeksOf({ from: "2026-04-25", to: "2026-05-24" }, previousPageviewValues, dayAfter25Apr);
 
 /** Small daily counts for the bar stories (25 May to 23 Jun 2026), like the Phase 1 visitors chart. */
 const returningValues = [1, 0, 1, 0, 1, 0, 0, 2, 1, 0, 1, 0, 0, 2, 0, 1, 1, 0, 0, 2, 0, 0, 1, 0, 1, 0, 1, 0, 0, 1];

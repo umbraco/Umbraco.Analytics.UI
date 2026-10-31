@@ -102,8 +102,14 @@ export type UauiTableColumnStats = {
     max: number;
 };
 
-/** The stats of every column, by column `key`. */
+/** The stats of every column, by column `key`, as `UAUI_TABLE_CONTEXT` gives them: every field worked out. */
 export type UauiTableStats = Readonly<Record<string, UauiTableColumnStats>>;
+
+/**
+ * The stats a product gives the table, by column `key`. Each entry may hold `total`, `max`, both or neither: a field
+ * left out is worked out from the rows the table holds, as it is for a column with no entry at all.
+ */
+export type UauiTableStatsInput = Readonly<Record<string, Partial<UauiTableColumnStats>>>;
 
 /** Finds the compare-period row that matches a row, by the table's `rowKey`. `undefined` when there is none. */
 export type UauiTableCompareLookup = (item: Record<string, unknown>) => Record<string, unknown> | undefined;

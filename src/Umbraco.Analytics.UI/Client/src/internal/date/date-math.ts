@@ -122,21 +122,39 @@ export function daysIn(range: Range): string[] {
 /** How a chart groups its points. The same three values as `UauiGroupBy`. */
 export type BucketUnit = "day" | "week" | "month";
 
-/** The first day of the bucket an ISO date falls in: the day itself, the Monday of its week, or the 1st of its month. */
-export function bucketStart(iso: string, unit: BucketUnit): string {
+/**
+ * The day a week starts on, as an ISO weekday number: 1 is Monday, 2 Tuesday, up to 7 for Sunday. The same numbering as
+ * `Intl.Locale.prototype.getWeekInfo().firstDay`, so a product can pass the editor's culture straight through:
+ * `new Intl.Locale(culture).getWeekInfo().firstDay`. Anything else is read as Monday.
+ */
+export type UauiWeekStart = 1 | 2 | 3 | 4 | 5 | 6 | 7;
+
+/** The week start used when none is given, or when the one given is not a whole number from 1 to 7. */
+export const DEFAULT_WEEK_START: UauiWeekStart = 1;
+
+/** `value` when it is a whole number from 1 to 7, else Monday. Never throws, as it runs in render paths. */
+export function resolveWeekStart(value: unknown): UauiWeekStart {
+    return Number.isInteger(value) && (value as number) >= 1 && (value as number) <= 7 ? (value as UauiWeekStart) : DEFAULT_WEEK_START;
+}
+
+/**
+ * The first day of the bucket an ISO date falls in: the day itself, the first day of its week (Monday unless
+ * `weekStart` says otherwise), or the 1st of its month.
+ */
+export function bucketStart(iso: string, unit: BucketUnit, weekStart?: UauiWeekStart): string {
     const parts = parseIso(iso);
     if (!parts || unit === "day") return iso;
     if (unit === "month") return toIso(parts.year, parts.month, 1);
-    const sinceMonday = (new Date(Date.UTC(parts.year, parts.month - 1, parts.day)).getUTCDay() + 6) % 7;
-    return addDays(iso, -sinceMonday);
+    const isoWeekday = new Date(Date.UTC(parts.year, parts.month - 1, parts.day)).getUTCDay() || 7;
+    return addDays(iso, -((isoWeekday - resolveWeekStart(weekStart) + 7) % 7));
 }
 
 /**
  * How many buckets (days, weeks or months) the bucket `iso` falls in is after the bucket `from` falls in; negative when before.
  * `undefined` when either is not a real date.
  */
-export function bucketOffset(from: string, iso: string, unit: BucketUnit): number | undefined {
-    const [a, b] = [parseIso(bucketStart(from, unit)), parseIso(bucketStart(iso, unit))];
+export function bucketOffset(from: string, iso: string, unit: BucketUnit, weekStart?: UauiWeekStart): number | undefined {
+    const [a, b] = [parseIso(bucketStart(from, unit, weekStart)), parseIso(bucketStart(iso, unit, weekStart))];
     if (!a || !b) return undefined;
     if (unit === "month") return (b.year - a.year) * 12 + (b.month - a.month);
     const days = Math.round((Date.UTC(b.year, b.month - 1, b.day) - Date.UTC(a.year, a.month - 1, a.day)) / 86_400_000);
@@ -152,11 +170,11 @@ export function bucketEnd(start: string, unit: BucketUnit): string {
 /** A bucket of a range: the date its point is plotted at and the days of the range inside it. */
 export type DateBucket = { start: string; days: string[] };
 
-/** Splits `range` into day, week (Monday start) or month buckets, in order. A bucket at either end holds only the days inside the range. */
-export function dateBuckets(range: Range, unit: BucketUnit): DateBucket[] {
+/** Splits `range` into day, week (from `weekStart`, Monday by default) or month buckets, in order. A bucket at either end holds only the days inside the range. */
+export function dateBuckets(range: Range, unit: BucketUnit, weekStart?: UauiWeekStart): DateBucket[] {
     const buckets: DateBucket[] = [];
     for (const day of daysIn(range)) {
-        const start = bucketStart(day, unit);
+        const start = bucketStart(day, unit, weekStart);
         const last = buckets[buckets.length - 1];
         if (last?.start === start) last.days.push(day);
         else buckets.push({ start, days: [day] });

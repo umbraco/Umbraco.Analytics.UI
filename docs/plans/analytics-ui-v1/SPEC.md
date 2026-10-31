@@ -37,13 +37,13 @@ type UauiMarkerClickDetail = { id: string };
 type UauiToggleGroupChangeDetail = { value: string };
 ```
 
-**Date helpers** (public functions in `src/date-helpers/`, for products that use them without the picker; weeks start on Monday, not locale-dependent):
+**Date helpers** (public functions in `src/date-helpers/`, for products that use them without the picker; weeks start on Monday unless `weekStart` says otherwise; nothing reads the locale for you):
 
 - `uauiPreviousPeriod(range)`: the same number of days straight before `range` (`UauiDateSpan`, or `undefined` for an invalid range).
 - `uauiPreviousYear(range)`: the same dates one year earlier (`UauiDateSpan` or `undefined`).
 - `uauiCompareFor(mode, range)`: a full `UauiCompare` for `previous-period` or `previous-year`. `custom` and invalid ranges give `undefined`.
 - `uauiDaysIn(range)`: every day in the range, both ends included.
-- `uauiDateBuckets(range, groupBy)`: `UauiDateBucket[]`. `start` is the day, the Monday of the week or the 1st of the month. `days` holds only days inside the range.
+- `uauiDateBuckets(range, groupBy, { weekStart })`: `UauiDateBucket[]`. `start` is the day, the first day of the week or the 1st of the month. `days` holds only days inside the range. `weekStart` (`UauiWeekStart`, optional) is an ISO weekday number, 1 (Monday, the default) to 7 (Sunday), the numbering of `Intl.Locale.getWeekInfo().firstDay`, so a product can pass the editor's culture straight through. A value that isn't a whole number from 1 to 7 is read as Monday, never thrown on.
 - `uauiFormatDateRange(localize, range, { showYear })`: the range as "May 25, 2026 to Jun 23, 2026", the label the date range button and the chart's `compare-label` use. It takes `this.localize`, so it follows the user's culture and the translated "{0} to {1}" term. `showYear: false` leaves the year off.
 
 ### 1. Panes: `uui-box`, not a new element
@@ -79,7 +79,7 @@ Storybook gets a "Pane" story showing this recipe, a chart and a table in one `u
   - On a selected tile it raises a cancelable `deselected` event, then clears `selected`, unless the event was cancelled or `deselectable` is false (default true). A product keeping exactly one tile selected sets `deselectable` false and clears the others on `selected`.
   - A selected tile with `deselectable` false raises nothing when pressed. This departs from `uui-card`, which raises `selected` again.
   - Look matches `uui-card`: a 2px `--uui-color-selected` border just outside the card with a soft glow when selected; the same border at 33% on hover when not selected, 80% on hover when selected; focus is a separate `--uui-color-focus` outline.
-- **No data:** `no-data` shows a dash (hidden from screen readers) with the hidden text "No data yet" and no change badge. The tile keeps its height and stays selectable. With `loading` it keeps the dash and is busy. It is a boolean on purpose: an unset `value` means "not loaded yet", and a formatted "0" is a real value.
+- **No data:** `no-data` shows a dash (hidden from screen readers) with the hidden text "No data for this period" (`uauiAnalytics_kpiNoData`; the shared empty-state "No data yet" reads oddly for a past period) and no change badge. The tile keeps its height and stays selectable. With `loading` it keeps the dash and is busy. It is a boolean on purpose: an unset `value` means "not loaded yet", and a formatted "0" is a real value.
 - **Error:** `error` shows the label, a dash and no badge, with the hidden text "Something went wrong". The tile has no Retry button (a row of tiles would each show one) and stays selectable. `error` wins over `no-data` and `loading`, and the tile is not busy.
 - Tiles in one row keep the same height, even when a label wraps. The badge sits below the value when the tile is too narrow to fit both on one line (as in `kpi-size.png`).
 
@@ -103,6 +103,7 @@ Storybook gets a "Pane" story showing this recipe, a chart and a table in one `u
   - `compare-label`
   - `markers` (`UauiMarker[]`)
   - `group-by` (`UauiGroupBy`, sets the x-axis label format)
+  - `week-start` (`UauiWeekStart`, 1 to 7, default 1 = Monday): the day weeks start on when `group-by` is `week`. Decides which week a compare point sits in, so give it the same value as `uauiDateBuckets`. Anything but a whole number from 1 to 7 is read as Monday
   - `value-format` (`Intl.NumberFormatOptions`)
   - `range` (`UauiDateRange`), `compare` (`UauiCompare`): the period starts, to align compare points (see Comparison)
   - `loading`
@@ -169,7 +170,7 @@ Storybook gets a "Pane" story showing this recipe, a chart and a table in one `u
   - `columns`: `{ key, label, elementName?, meta?, valueFormat?, align?, width?, sortable?, sortAs?, searchable? }[]`. `elementName` picks the cell (default the text cell; constants in `UAUI_TABLE_CELL`). `valueFormat` is per column (`Intl.NumberFormatOptions`). `width` is a CSS width, as in the CMS `umb-table`. `meta` holds what cells read: `hrefKey`, `color` (1 to 4, a share bar's palette slot) and `lowerIsBetter` (for compare badges).
   - `rows`: `Record<string, unknown>[]`
   - `compare-rows`, matched to `rows` by the `row-key` property (the key in each row that identifies it). When several compare rows share a key, the last wins
-  - `stats`: `{ [columnKey]: { total, max } }` (`UauiTableStats`) across every page, for share percents and bar scales in `server` mode. A column without an entry uses the rows the table holds
+  - `stats`: `{ [columnKey]: { total, max } }` (`UauiTableStatsInput`) across every page, for share percents and bar scales in `server` mode. An entry may give just `total` or just `max` (`UauiTableStatsInput`, a partial `UauiTableColumnStats`): each field missing, or the whole entry, falls back to the sum or largest value of the rows the table holds. `UAUI_TABLE_CONTEXT` always gives cells both fields worked out
   - `sort` (`{ key, direction }`)
   - `mode` (`"client"` | `"server"`)
   - `page`, `page-size`, `total-rows` (the row count across every page, `server` mode)

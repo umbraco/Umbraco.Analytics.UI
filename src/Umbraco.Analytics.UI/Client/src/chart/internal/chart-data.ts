@@ -1,4 +1,4 @@
-import { bucketOffset, dateOnly, type BucketUnit } from "../../internal/date/date-math.js";
+import { bucketOffset, dateOnly, type BucketUnit, type UauiWeekStart } from "../../internal/date/date-math.js";
 import type { UauiChartKind, UauiSeries } from "../types.js";
 
 export interface UauiChartData {
@@ -30,8 +30,8 @@ const sortedDates = (series: UauiSeries[]) => [...new Set(series.flatMap((s) => 
  * The bucket number of each date, counted from the bucket of `anchor` (the first date when there is none). A date
  * that isn't a real calendar date takes its position in the list instead.
  */
-function offsetsOf(dates: string[], unit: BucketUnit, anchor = dates[0]): number[] {
-    return dates.map((d, i) => bucketOffset(anchor, d, unit) ?? i);
+function offsetsOf(dates: string[], unit: BucketUnit, weekStart: UauiWeekStart | undefined, anchor = dates[0]): number[] {
+    return dates.map((d, i) => bucketOffset(anchor, d, unit, weekStart) ?? i);
 }
 
 /** The first day of each side's period, when the product knows it. Without one a side starts at its first point. */
@@ -48,13 +48,13 @@ function sumByDate(points: UauiSeries["points"]): Map<string, number> {
 }
 
 /** Compare values added up per bucket offset, with the earliest real date seen in each. */
-function compareByOffset(points: UauiSeries["points"], unit: BucketUnit, start: string) {
+function compareByOffset(points: UauiSeries["points"], unit: BucketUnit, weekStart: UauiWeekStart | undefined, start: string) {
     const byOffset = new Map<number, { value: number; date: string }>();
     const position = new Map([...new Set(points.map((p) => p.date))].sort().map((d, i) => [d, i]));
     [...points]
         .sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0))
         .forEach((p) => {
-            const offset = bucketOffset(start, p.date, unit) ?? position.get(p.date)!;
+            const offset = bucketOffset(start, p.date, unit, weekStart) ?? position.get(p.date)!;
             const entry = byOffset.get(offset);
             if (entry) entry.value += p.value;
             else byOffset.set(offset, { value: p.value, date: p.date });
@@ -67,13 +67,14 @@ function compareByOffset(points: UauiSeries["points"], unit: BucketUnit, start: 
  * same date add up. A compare series is matched to its series by `id`, then by bucket offset: its point in the
  * Nth bucket (`groupBy` unit) from the compare period's start sits under the Nth bucket from the current period's
  * start. A start is `anchors.from` or `anchors.compareFrom` when given, else the first date of that side. Compare
- * points whose offset has no current date are dropped, and current dates with no compare point stay `null`.
+ * points whose offset has no current date are dropped, and current dates with no compare point stay `null`. Weeks
+ * start on `weekStart` (Monday by default).
  */
-export function buildChartData(rawSeries: UauiSeries[], rawCompareSeries: UauiSeries[] = [], groupBy: BucketUnit = "day", anchors: UauiChartAnchors = {}): UauiChartData {
+export function buildChartData(rawSeries: UauiSeries[], rawCompareSeries: UauiSeries[] = [], groupBy: BucketUnit = "day", anchors: UauiChartAnchors = {}, weekStart?: UauiWeekStart): UauiChartData {
     const series = rawSeries.map(dayPoints);
     const compareSeries = rawCompareSeries.map(dayPoints);
     const dates = sortedDates(series);
-    const indexOfOffset = new Map(offsetsOf(dates, groupBy, anchors.from ? dateOnly(anchors.from) : undefined).map((offset, i) => [offset, i]));
+    const indexOfOffset = new Map(offsetsOf(dates, groupBy, weekStart, anchors.from ? dateOnly(anchors.from) : undefined).map((offset, i) => [offset, i]));
     const compareStart = anchors.compareFrom ? dateOnly(anchors.compareFrom) : sortedDates(compareSeries)[0];
     const place = (byOffset: Map<number, { value: number; date: string }>) => {
         const values = dates.map(() => null as number | null);
@@ -86,7 +87,7 @@ export function buildChartData(rawSeries: UauiSeries[], rawCompareSeries: UauiSe
         }
         return { values, compareDates };
     };
-    const allCompare = compareByOffset(compareSeries.flatMap((s) => s.points), groupBy, compareStart);
+    const allCompare = compareByOffset(compareSeries.flatMap((s) => s.points), groupBy, weekStart, compareStart);
     const total = place(allCompare);
     return {
         dates,
@@ -96,7 +97,7 @@ export function buildChartData(rawSeries: UauiSeries[], rawCompareSeries: UauiSe
             const values = dates.map((d) => sums.get(d) ?? null);
             const match = compareSeries.find((c) => c.id === s.id);
             if (!match) return { id: s.id, label: s.label, values };
-            const { values: compare, compareDates } = place(compareByOffset(match.points, groupBy, compareStart));
+            const { values: compare, compareDates } = place(compareByOffset(match.points, groupBy, weekStart, compareStart));
             return { id: s.id, label: s.label, values, compare, compareDates };
         }),
     };

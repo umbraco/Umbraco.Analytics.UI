@@ -110,6 +110,24 @@ describe("buildChartData compare alignment", () => {
     });
 });
 
+describe("buildChartData with a week start", () => {
+    const main = (...items: [string, number][]) => ({ id: "a", label: "A", points: items.map(([date, value]) => ({ date, value })) });
+    const weeks = [main(["2026-05-31", 1], ["2026-06-07", 2])];
+    const wedAndSun = [main(["2026-05-06", 10], ["2026-05-10", 20])];
+
+    it("matches compare points to Sunday weeks for a week start of 7", () => {
+        expect(buildChartData(weeks, wedAndSun, "week", {}, 7).series[0].compare).toEqual([10, 20]);
+    });
+
+    it("puts the Wednesday and the Sunday in one Monday week by default", () => {
+        expect(buildChartData(weeks, wedAndSun, "week").series[0].compare).toEqual([30, null]);
+    });
+
+    it("reads an out-of-range week start as Monday", () => {
+        expect(buildChartData(weeks, wedAndSun, "week", {}, 8 as never).series[0].compare).toEqual([30, null]);
+    });
+});
+
 describe("buildChartData with the periods' ranges", () => {
     const pts = (...items: [string, number][]) => items.map(([date, value]) => ({ date, value }));
     const main = (...items: [string, number][]) => [{ id: "a", label: "A", points: pts(...items) }];

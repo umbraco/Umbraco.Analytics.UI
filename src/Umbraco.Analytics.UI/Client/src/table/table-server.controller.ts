@@ -1,6 +1,6 @@
 import type { ReactiveController, ReactiveControllerHost } from "@umbraco-cms/backoffice/external/lit";
 import type { UauiDataTableElement } from "./data-table.element.js";
-import type { UauiTablePageChangeDetail, UauiTableSort, UauiTableSortChangeDetail, UauiTableStats } from "./types.js";
+import type { UauiTablePageChangeDetail, UauiTableSort, UauiTableSortChangeDetail, UauiTableStatsInput } from "./types.js";
 import type { UauiSearchFieldDetail } from "../search-field/search-field.element.js";
 
 /** Shared so a table with no answer yet keeps the same arrays and doesn't work its columns out again. */
@@ -26,8 +26,8 @@ export type UauiTableServerResult = {
     compareRows?: Record<string, unknown>[];
     /** How many rows match across every page. */
     totalRows?: number;
-    /** Each column's total and largest value across every page. */
-    stats?: UauiTableStats;
+    /** Each column's total and largest value across every page. An entry may give just one: the table works the other out from the rows. */
+    stats?: UauiTableStatsInput;
 };
 
 /** Loads one page. Pass `signal` on to `fetch`: it aborts when a newer request starts or the host leaves the page. */

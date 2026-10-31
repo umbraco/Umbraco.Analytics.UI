@@ -66,7 +66,7 @@ export class UauiDataTableElement extends UmbLitElement {
     rowKey?: string;
     rows: Record<string, unknown>[];
     sort?: UauiTableSort;
-    stats?: UauiTableStats;
+    stats?: UauiTableStatsInput;
     // (undocumented)
     static styles: CSSResultGroup;
     totalRows?: number;
@@ -81,7 +81,12 @@ export type UauiDateBucket = {
 };
 
 // @public
-export function uauiDateBuckets(range: UauiDateSpan, groupBy: UauiGroupBy): UauiDateBucket[];
+export function uauiDateBuckets(range: UauiDateSpan, groupBy: UauiGroupBy, options?: UauiDateBucketsOptions): UauiDateBucket[];
+
+// @public
+export type UauiDateBucketsOptions = {
+    weekStart?: UauiWeekStart;
+};
 
 // @public
 export type UauiDatePreset = {
@@ -440,7 +445,7 @@ export type UauiTableServerResult = {
     rows: Record<string, unknown>[];
     compareRows?: Record<string, unknown>[];
     totalRows?: number;
-    stats?: UauiTableStats;
+    stats?: UauiTableStatsInput;
 };
 
 // @public
@@ -465,6 +470,9 @@ export type UauiTableSortDirection = "asc" | "desc";
 
 // @public
 export type UauiTableStats = Readonly<Record<string, UauiTableColumnStats>>;
+
+// @public
+export type UauiTableStatsInput = Readonly<Record<string, Partial<UauiTableColumnStats>>>;
 
 // @public
 export class UauiTableTotalElement extends UmbLitElement {
@@ -519,6 +527,7 @@ export class UauiTimeSeriesChartElement extends UmbLitElement {
     // (undocumented)
     protected updated(changed: PropertyValues<this>): void;
     valueFormat?: Intl.NumberFormatOptions;
+    weekStart: UauiWeekStart;
     // (undocumented)
     protected willUpdate(changed: PropertyValues<this>): void;
 }
@@ -544,6 +553,9 @@ export type UauiToggleGroupOption = {
     value: string;
     label: string;
 };
+
+// @public
+export type UauiWeekStart = 1 | 2 | 3 | 4 | 5 | 6 | 7;
 
 // (No @packageDocumentation comment for this package)
 

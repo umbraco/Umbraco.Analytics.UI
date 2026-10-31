@@ -14,7 +14,7 @@ import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import "../empty-state/empty-state.element.js";
 import "../error-state/error-state.element.js";
 import type { UauiGroupBy } from "../group-by/group-by.element.js";
-import { dateOnly } from "../internal/date/date-math.js";
+import { dateOnly, resolveWeekStart, type UauiWeekStart } from "../internal/date/date-math.js";
 import { formatIsoDate } from "../internal/date/format-date.js";
 import { getNumberFormat } from "../internal/format/number-format.js";
 import { getLoadingMode, isBusy } from "../internal/loading/loading-mode.js";
@@ -55,6 +55,7 @@ interface DerivedFrom {
     range?: UauiDateRange;
     compare?: UauiCompare;
     groupBy: UauiGroupBy;
+    weekStart: UauiWeekStart;
     valueFormat?: Intl.NumberFormatOptions;
     lang: string;
 }
@@ -192,9 +193,18 @@ export class UauiTimeSeriesChartElement extends UmbLitElement {
     @property({ attribute: false })
     markers: UauiMarker[] = [];
 
-    /** Sets the format of the x-axis labels, and the bucket unit (day, Monday week, month) that compare points are aligned in. The points themselves are not grouped: pass them already grouped, with each bucket at its first day. */
+    /** Sets the format of the x-axis labels, and the bucket unit (day, week, month) that compare points are aligned in. The points themselves are not grouped: pass them already grouped, with each bucket at its first day. */
     @property({ type: String, attribute: "group-by" })
     groupBy: UauiGroupBy = "day";
+
+    /**
+     * The day weeks start on when `groupBy` is `week`, as an ISO weekday number: 1 is Monday up to 7 for Sunday, the same
+     * as `Intl.Locale.prototype.getWeekInfo().firstDay`, so the editor's culture can be passed straight through:
+     * `new Intl.Locale(culture).getWeekInfo().firstDay`. It decides which week a compare point falls in, so give
+     * `uauiDateBuckets` the same value. Defaults to 1 (Monday). A value that isn't a whole number from 1 to 7 is read as Monday.
+     */
+    @property({ type: Number, attribute: "week-start" })
+    weekStart: UauiWeekStart = 1;
 
     /** How numbers are formatted, e.g. `{ style: "currency", currency: "EUR" }`. */
     @property({ type: Object, attribute: "value-format" })
@@ -291,7 +301,7 @@ export class UauiTimeSeriesChartElement extends UmbLitElement {
 
     protected override willUpdate(changed: PropertyValues<this>) {
         super.willUpdate(changed);
-        const next = { series: this.series, compareSeries: this.compareSeries, range: this.range, compare: this.compare, groupBy: this.groupBy, valueFormat: this.valueFormat, lang: this.localize.lang() };
+        const next = { series: this.series, compareSeries: this.compareSeries, range: this.range, compare: this.compare, groupBy: this.groupBy, weekStart: resolveWeekStart(this.weekStart), valueFormat: this.valueFormat, lang: this.localize.lang() };
         const prev = this.#derivedFrom;
         if (!prev || (Object.keys(next) as (keyof typeof next)[]).some((key) => prev[key] !== next[key])) {
             this.#derivedFrom = next;
@@ -338,8 +348,8 @@ export class UauiTimeSeriesChartElement extends UmbLitElement {
      * too slow for the hundreds of labels and table cells of a long chart. These formatters use the
      * same language `localize` does.
      */
-    #derive({ series, compareSeries, range, compare, groupBy, valueFormat, lang }: DerivedFrom): Derived {
-        const data = buildChartData(series, compareSeries, groupBy, { from: range?.from, compareFrom: compare?.from });
+    #derive({ series, compareSeries, range, compare, groupBy, weekStart, valueFormat, lang }: DerivedFrom): Derived {
+        const data = buildChartData(series, compareSeries, groupBy, { from: range?.from, compareFrom: compare?.from }, weekStart);
         const axisDate = new Intl.DateTimeFormat(lang, axisDateFormat[groupBy] ?? axisDateFormat.day);
         const tooltipDate = new Intl.DateTimeFormat(lang, tooltipDateFormat[groupBy] ?? tooltipDateFormat.day);
         const tooltipLabel = (iso: string | null) => (iso ? formatIsoDate(iso, tooltipDate) : "");

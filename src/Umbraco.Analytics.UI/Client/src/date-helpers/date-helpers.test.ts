@@ -7,6 +7,7 @@ import {
     uauiFormatDateRange,
     uauiPreviousPeriod,
     uauiPreviousYear,
+    type UauiWeekStart,
 } from "./index.js";
 
 // Stands in for a localization controller: real dates, and the "{0} to {1}" term the package ships.
@@ -77,6 +78,36 @@ describe("Feature: public date helpers", () => {
         });
         it("gives no buckets for a range that isn't valid", () => {
             expect(uauiDateBuckets({ from: "2026-07-05", to: "2026-06-03" }, "week")).toEqual([]);
+        });
+    });
+
+    describe("Scenario: splitting a range into weeks with a week start", () => {
+        const range = { from: "2026-06-03", to: "2026-07-05" };
+        const starts = (options?: { weekStart?: UauiWeekStart }) => uauiDateBuckets(range, "week", options).map((b) => b.start);
+
+        it("starts each week on a Sunday for a week start of 7", () => {
+            expect(starts({ weekStart: 7 })).toEqual(["2026-05-31", "2026-06-07", "2026-06-14", "2026-06-21", "2026-06-28", "2026-07-05"]);
+        });
+        it("still starts on Monday when no options are given", () => {
+            expect(starts()).toEqual(["2026-06-01", "2026-06-08", "2026-06-15", "2026-06-22", "2026-06-29"]);
+        });
+        it("still starts on Monday when the options have no week start", () => {
+            expect(starts({})).toEqual(["2026-06-01", "2026-06-08", "2026-06-15", "2026-06-22", "2026-06-29"]);
+        });
+        it("starts the first bucket before a range that begins mid-week", () => {
+            expect(starts({ weekStart: 7 })[0] < range.from).toBe(true);
+        });
+        it("holds only the days of the range in that first bucket", () => {
+            expect(uauiDateBuckets(range, "week", { weekStart: 7 })[0].days).toEqual(["2026-06-03", "2026-06-04", "2026-06-05", "2026-06-06"]);
+        });
+        it("reads a week start of 0 as Monday instead of throwing", () => {
+            expect(starts({ weekStart: 0 as never })[0]).toBe("2026-06-01");
+        });
+        it("reads a week start of 8 as Monday instead of throwing", () => {
+            expect(starts({ weekStart: 8 as never })[0]).toBe("2026-06-01");
+        });
+        it("ignores the week start for day buckets", () => {
+            expect(uauiDateBuckets({ from: "2026-06-03", to: "2026-06-04" }, "day", { weekStart: 7 }).map((b) => b.start)).toEqual(["2026-06-03", "2026-06-04"]);
         });
     });
 

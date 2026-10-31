@@ -1,7 +1,7 @@
 import type { UmbLocalizationController } from "@umbraco-cms/backoffice/localization-api";
 import type { UauiCompare, UauiDateRange } from "../date-range/types.js";
 import type { UauiGroupBy } from "../group-by/group-by.element.js";
-import { compareRangeFor, dateBuckets, daysIn, previousPeriodRange, previousYearRange } from "../internal/date/date-math.js";
+import { compareRangeFor, dateBuckets, daysIn, previousPeriodRange, previousYearRange, type UauiWeekStart } from "../internal/date/date-math.js";
 import { displayIsoDate, displayIsoDateWithoutYear } from "../internal/date/format-date.js";
 
 /** The two ISO dates every helper reads. A `UauiDateRange` or a `UauiCompare` fits. */
@@ -9,7 +9,7 @@ export type UauiDateSpan = Pick<UauiDateRange, "from" | "to">;
 
 /** One bucket of a range: the date its chart point is plotted at, and the days of the range inside it. */
 export type UauiDateBucket = {
-    /** ISO date: the day itself, the Monday of its week or the 1st of its month. Before the range's own start for a first week or month that begins earlier. */
+    /** ISO date: the day itself, the first day of its week (Monday unless `weekStart` says otherwise) or the 1st of its month. Before the range's own start for a first week or month that begins earlier. */
     start: string;
     /** ISO dates in order. Only days inside the range, so the first and last bucket can be short. */
     days: string[];
@@ -39,12 +39,24 @@ export function uauiDaysIn(range: UauiDateSpan): string[] {
     return daysIn(range);
 }
 
+/** Options for `uauiDateBuckets`. */
+export type UauiDateBucketsOptions = {
+    /**
+     * The day weeks start on, as an ISO weekday number: 1 is Monday up to 7 for Sunday, the same as
+     * `Intl.Locale.prototype.getWeekInfo().firstDay`, so the editor's culture can be passed straight through:
+     * `{ weekStart: new Intl.Locale(culture).getWeekInfo().firstDay }`. Defaults to 1 (Monday), also for any other value.
+     * Give the chart the same value in its `weekStart`.
+     */
+    weekStart?: UauiWeekStart;
+};
+
 /**
- * Splits `range` into the buckets `uaui-group-by` offers, in order: one per day, per week (Monday to Sunday) or per
- * month. Plot each at its `start`, as `uaui-time-series-chart` expects its points' dates. Empty when `range` isn't a valid range.
+ * Splits `range` into the buckets `uaui-group-by` offers, in order: one per day, per week (seven days from the
+ * `weekStart` day, Monday by default) or per month. Plot each at its `start`, as `uaui-time-series-chart` expects its
+ * points' dates. Empty when `range` isn't a valid range.
  */
-export function uauiDateBuckets(range: UauiDateSpan, groupBy: UauiGroupBy): UauiDateBucket[] {
-    return dateBuckets(range, groupBy);
+export function uauiDateBuckets(range: UauiDateSpan, groupBy: UauiGroupBy, options: UauiDateBucketsOptions = {}): UauiDateBucket[] {
+    return dateBuckets(range, groupBy, options.weekStart);
 }
 
 /** Options for `uauiFormatDateRange`. */

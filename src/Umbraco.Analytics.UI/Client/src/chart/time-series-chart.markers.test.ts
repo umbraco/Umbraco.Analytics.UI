@@ -200,6 +200,33 @@ describe("Feature: event markers", () => {
         });
     });
 
+    describe("Scenario: grouped by week starting on Sunday", () => {
+        const sundayWeeks = [{ id: "pv", label: "Pageviews", points: [
+            { date: "2026-05-31", value: 120 }, { date: "2026-06-07", value: 280 }, { date: "2026-06-14", value: 140 },
+        ] }];
+        const sundayChart = (list: UauiMarker[]) =>
+            renderElement(
+                html`<uaui-time-series-chart group-by="week" week-start="7" .series=${sundayWeeks} .markers=${list} style="width:400px"></uaui-time-series-chart>`,
+                "uaui-time-series-chart",
+            );
+
+        it("puts a Saturday marker on the dot of the Sunday week it ends", async () => {
+            const el = await sundayChart([{ id: "w", date: "2026-06-13", title: "Saturday" }]);
+            const canvas = shadow(el).querySelector("canvas")!;
+            const x = Chart.getChart(canvas)!.getDatasetMeta(0).data[1].x;
+            const box = markers(el)[0].getBoundingClientRect();
+            expect(box.left + box.width / 2 - canvas.getBoundingClientRect().left).toBeCloseTo(x, 0);
+        });
+
+        it("puts the Sunday that starts the next week on that week's dot", async () => {
+            const el = await sundayChart([{ id: "w", date: "2026-06-14", title: "Sunday" }]);
+            const canvas = shadow(el).querySelector("canvas")!;
+            const x = Chart.getChart(canvas)!.getDatasetMeta(0).data[2].x;
+            const box = markers(el)[0].getBoundingClientRect();
+            expect(box.left + box.width / 2 - canvas.getBoundingClientRect().left).toBeCloseTo(x, 0);
+        });
+    });
+
     describe("Scenario: a stacked bar chart", () => {
         it("draws a dot for the marker", async () => {
             const el = await chart([launch], "stacked-bar", [series[0], { ...series[0], id: "b", label: "Sessions" }]);

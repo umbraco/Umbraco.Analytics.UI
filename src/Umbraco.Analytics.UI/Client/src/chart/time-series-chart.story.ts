@@ -13,6 +13,8 @@ import {
     revenue,
     sessions,
     sessionsPrevious,
+    sundayWeeks,
+    sundayWeeksPrevious,
 } from "./internal/chart-fixtures.js";
 
 const meta: Meta<UauiTimeSeriesChartElement> = {
@@ -25,6 +27,7 @@ const meta: Meta<UauiTimeSeriesChartElement> = {
         compareLabel: undefined,
         markers: [],
         groupBy: "day",
+        weekStart: 1,
         valueFormat: undefined,
         loading: false,
         error: false,
@@ -37,6 +40,7 @@ const meta: Meta<UauiTimeSeriesChartElement> = {
     argTypes: {
         kind: { control: "inline-radio", options: ["line", "area", "bar", "stacked-bar"] },
         groupBy: { control: "inline-radio", options: ["day", "week", "month"] },
+        weekStart: { control: "inline-radio", options: [1, 2, 3, 4, 5, 6, 7], description: "ISO weekday: 1 is Monday, 7 is Sunday" },
     },
     render: (args) =>
         html`<uui-box headline="Pageviews over time" style="--uui-box-default-padding: 0">
@@ -47,6 +51,7 @@ const meta: Meta<UauiTimeSeriesChartElement> = {
                 .compareLabel=${args.compareLabel}
                 .markers=${args.markers}
                 .groupBy=${args.groupBy}
+                .weekStart=${args.weekStart}
                 .valueFormat=${args.valueFormat}
                 .loading=${args.loading}
                 .error=${args.error}
@@ -96,6 +101,15 @@ export const Compare: Story = {
 export const CompareTwoSeries: Story = {
     name: "Compare, two series",
     args: { series: [pageviews, sessions], compareSeries: [pageviewsPrevious, sessionsPrevious], compareLabel: compareRangeLabel },
+};
+
+/**
+ * Weeks that start on Sunday (`week-start="7"`, the same as `Intl.Locale.getWeekInfo().firstDay` for en-US): the
+ * points are the Sundays of `uauiDateBuckets(range, "week", { weekStart: 7 })` and the compare weeks line up on them.
+ */
+export const SundayWeekStart: Story = {
+    name: "Sunday week start",
+    args: { groupBy: "week", weekStart: 7, series: [sundayWeeks], compareSeries: [sundayWeeksPrevious], compareLabel: compareRangeLabel },
 };
 
 /** One bar per date. */

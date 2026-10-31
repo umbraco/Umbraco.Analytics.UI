@@ -448,6 +448,43 @@ describe("Feature: page through rows", () => {
         });
     });
 
+    describe("Scenario: stats entries may be partial in server mode", () => {
+        const columns = [
+            { key: "name", label: "Name" },
+            { key: "views", label: "Views", elementName: UAUI_TABLE_CELL.share },
+        ];
+        const rows = [{ name: "A", views: 50 }, { name: "B", views: 25 }];
+        const withStats = (stats: unknown) =>
+            renderElement(
+                html`<uaui-data-table mode="server" .columns=${columns} .rows=${rows} total-rows="272" .stats=${stats}></uaui-data-table>`,
+                "uaui-data-table",
+            );
+
+        it("uses a total given alone for the share", async () => {
+            expect(shares(await withStats({ views: { total: 200 } }))).toEqual(["(25.0%)", "(12.5%)"]);
+        });
+
+        it("takes the max from the rows when only a total is given", async () => {
+            expect(barWidths(await withStats({ views: { total: 200 } }))).toEqual(["100%", "50%"]);
+        });
+
+        it("uses a max given alone for the bar", async () => {
+            expect(barWidths(await withStats({ views: { max: 200 } }))).toEqual(["25%", "12.5%"]);
+        });
+
+        it("takes the total from the rows when only a max is given", async () => {
+            expect(shares(await withStats({ views: { max: 200 } }))).toEqual(["(66.7%)", "(33.3%)"]);
+        });
+
+        it("uses both when both are given", async () => {
+            expect(shares(await withStats({ views: { total: 200, max: 100 } }))).toEqual(["(25.0%)", "(12.5%)"]);
+        });
+
+        it("uses the rows for both when an entry is empty", async () => {
+            expect(shares(await withStats({ views: {} }))).toEqual(["(66.7%)", "(33.3%)"]);
+        });
+    });
+
     describe("Scenario: share bars in server mode", () => {
         const columns = [
             { key: "name", label: "Name" },

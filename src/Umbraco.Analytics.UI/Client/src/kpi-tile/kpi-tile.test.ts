@@ -109,7 +109,7 @@ describe("Feature: KPI tile shows a headline number", () => {
         });
 
         it("tells assistive tech there is no data", () => {
-            expect(shadow(el).querySelector(".value .visually-hidden")?.textContent).toBe("No data yet");
+            expect(shadow(el).querySelector(".value .visually-hidden")?.textContent).toBe("No data for this period");
         });
 
         it("shows no change badge", () => {

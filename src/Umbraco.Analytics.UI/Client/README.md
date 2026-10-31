@@ -55,7 +55,7 @@ Say what the change is:
 - `.delta=${0}` is "no change": a neutral badge ("0%" or "0 pp").
 - `delta` unset is "unknown" (no comparison data): no badge.
 
-Add `no-data` when the range has no data. The tile shows a dash and no badge, instead of "0", and says "No data yet" to screen readers (key `uauiAnalytics_emptyHeadline`).
+Add `no-data` when the range has no data. The tile shows a dash and no badge, instead of "0", and says "No data for this period" to screen readers (key `uauiAnalytics_kpiNoData`).
 
 Add `error` when the load failed. The tile keeps its label, shows a dash and no badge, and says "Something went wrong" to screen readers (key `uauiAnalytics_errorHeadline`). `error` wins over `loading`, `no-data` and `value`. The message is for screen readers only, so a page of tiles with no chart or table should show its own alert.
 
@@ -83,7 +83,7 @@ const series: UauiSeries[] = [
 html`<uaui-time-series-chart kind="area" group-by="day" .series=${series}></uaui-time-series-chart>`;
 ```
 
-`kind` is `line`, `area`, `bar` or `stacked-bar`. Add `.compareSeries` for last period's points, plus `.range` and `.compare` (the `{ from, to }` that `uaui-date-range` emits) so they line up by bucket: compare points sit under the same bucket number of the current period, counted from each range's first bucket. Pass both: without them each side starts at its first point, so sparse data that omits a period's first days (or weeks, or months) shifts the compare out of line. Points on one date are added, so aggregate rates and averages first. Add `.markers` (`{ id, date, title }`) for events on the x-axis. Set `.valueFormat` to `Intl.NumberFormat` options. Listen for `marker-click` (`UauiMarkerClickDetail`).
+`kind` is `line`, `area`, `bar` or `stacked-bar`. Add `.compareSeries` for last period's points, plus `.range` and `.compare` (the `{ from, to }` that `uaui-date-range` emits) so they line up by bucket: compare points sit under the same bucket number of the current period, counted from each range's first bucket. Pass both: without them each side starts at its first point, so sparse data that omits a period's first days (or weeks, or months) shifts the compare out of line. Points on one date are added, so aggregate rates and averages first. Weeks start on Monday. For another first day set `week-start` (1 is Monday up to 7 for Sunday, like `new Intl.Locale(culture).getWeekInfo().firstDay`) and pass the same value to `uauiDateBuckets`; any other value is read as Monday. Add `.markers` (`{ id, date, title }`) for events on the x-axis. Set `.valueFormat` to `Intl.NumberFormat` options. Listen for `marker-click` (`UauiMarkerClickDetail`).
 
 Set `error` when the load failed: the chart shows `uaui-error-state` in place of the plot. Add `retryable` for a Retry button, and listen for `retry` on the chart. `error-headline` and `error-description` reword it. `error` wins over `loading`, and `loading` over the empty state.
 
@@ -149,7 +149,7 @@ import { uauiCompareFor, uauiDateBuckets, uauiFormatDateRange } from "@umbraco/a
 const range = { from: "2026-05-25", to: "2026-06-23" };
 const compare = uauiCompareFor("previous-period", range); // { mode, from: "2026-04-25", to: "2026-05-24" }
 
-// Chart points per bucket: a day, a week (Monday start) or a month, plotted at the bucket's `start`.
+// Chart points per bucket: a day, a week (Monday start unless you pass `{ weekStart }`) or a month, plotted at the bucket's `start`.
 const points = uauiDateBuckets(range, "week").map(({ start, days }) => ({ date: start, value: sum(days) }));
 
 // The label `uaui-date-range` shows, for the chart's compareLabel. Pass your element's `this.localize`.
@@ -162,7 +162,7 @@ html`<uaui-time-series-chart .compareLabel=${compare && uauiFormatDateRange(this
 | `uauiPreviousYear(range)` | The same dates one year earlier. |
 | `uauiCompareFor(mode, range)` | A `UauiCompare` for `previous-period` or `previous-year`. `undefined` for `custom`. |
 | `uauiDaysIn(range)` | Every ISO date in `range`, both ends included. |
-| `uauiDateBuckets(range, groupBy)` | `{ start, days }[]` for `day`, `week` or `month`, the same buckets `uaui-group-by` offers. |
+| `uauiDateBuckets(range, groupBy, { weekStart })` | `{ start, days }[]` for `day`, `week` or `month`, the same buckets `uaui-group-by` offers. `weekStart` is 1 (Monday, the default) to 7 (Sunday), as in `Intl.Locale.getWeekInfo().firstDay`; give the chart the same `week-start`. |
 | `uauiFormatDateRange(localize, range, { showYear })` | Text such as "May 25, 2026 to Jun 23, 2026" in the user's culture. |
 
 ### uaui-data-table
@@ -188,7 +188,7 @@ html`<uaui-data-table
 ```
 
 - **Client mode** (default): the table sorts, searches and pages the rows you give it.
-- **Server mode**: set `mode="server"` and `total-rows` (the row count across every page). The table never reorders or filters. Load new rows on `sort-change`, `page-change` and `search`. Pass `.stats` (`{ [columnKey]: { total, max } }` across every page) so shares and bars stay right across pages. `UauiTableServerController` does this wiring for you (below).
+- **Server mode**: set `mode="server"` and `total-rows` (the row count across every page). The table never reorders or filters. Load new rows on `sort-change`, `page-change` and `search`. Pass `.stats` (`{ [columnKey]: { total, max } }` across every page; give one of the two and the table works the other out from its rows) so shares and bars stay right across pages. `UauiTableServerController` does this wiring for you (below).
 - **Compare**: pass `.compareRows` and `row-key` to show a change badge on number, percent and share cells. Set `meta: { lowerIsBetter: true }` on a column where a fall is good.
 - **Toolbar**: one idea, filled across the full width (`toolbar`) or column by column (`toolbar-<column key>`). Column by column shows a row above the column headings: a `uaui-search-field` in `toolbar-start` (always the first column's cell, whatever its key) and a `uaui-table-total` over each number column (below). Each piece sits in its column's cell and takes its `align`. If `toolbar-start` and the first column's own `toolbar-<key>` are both filled, both show, `toolbar-start` first. A column keyed `start` shares the first column's cell rather than having its own. With nothing slotted there is no row. The row isn't sorted or paged, and you work out its numbers.
 - **Slots**: `toolbar` (full width, above everything), `toolbar-start` (first column, above the headings), `toolbar-<key>` (any column, above the headings), and `footer` (left of the pager).

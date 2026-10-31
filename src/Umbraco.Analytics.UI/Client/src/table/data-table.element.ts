@@ -27,6 +27,7 @@ import type {
     UauiTableCellElement,
     UauiTableColumn,
     UauiTableColumnStats,
+    UauiTableStatsInput,
     UauiTableMode,
     UauiTablePageChangeDetail,
     UauiTableRowClickDetail,
@@ -48,7 +49,7 @@ interface DerivedFrom {
     rows: UauiTableRow[];
     compareRows: UauiTableRow[];
     rowKey?: string;
-    stats?: UauiTableStats;
+    stats?: UauiTableStatsInput;
     lang: string;
 }
 
@@ -237,11 +238,11 @@ export class UauiDataTableElement extends UmbLitElement {
 
     /**
      * Each column's `total` and `max` across every page, by column `key`: the number a share is a percent of
-     * and what a full bar stands for. Not a total the table shows. A column without an entry uses the sum and the
-     * largest value of the `rows` the table holds.
+     * and what a full bar stands for. Not a total the table shows. An entry may give just one of them. Whatever is
+     * missing, a field or the whole entry, uses the sum or the largest value of the `rows` the table holds.
      */
     @property({ attribute: false })
-    stats?: UauiTableStats;
+    stats?: UauiTableStatsInput;
 
     /**
      * The text to search for. Set by the product, and by the table itself when a `search` event reaches it from a

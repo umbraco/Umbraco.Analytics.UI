@@ -14,6 +14,9 @@ export default {
         errorHeadline: "Something went wrong",
         errorDescription: "The data could not be loaded.",
 
+        // KPI tile (an error uses errorHeadline above)
+        kpiNoData: "No data for this period",
+
         // Delta badge
         deltaPercentagePoints: "{0} pp",
         deltaImprovement: "improvement",

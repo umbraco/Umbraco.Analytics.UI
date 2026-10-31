@@ -9,6 +9,7 @@ export type {
     UauiTableColumn,
     UauiTableColumnMeta,
     UauiTableColumnStats,
+    UauiTableStatsInput,
     UauiTableCompareLookup,
     UauiTableMode,
     UauiTablePageChangeDetail,
