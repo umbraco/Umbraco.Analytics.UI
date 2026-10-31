@@ -29,6 +29,8 @@ const meta: Meta<UauiKpiTileElement> = {
                 .value=${args.value}
                 .icon=${args.icon}
                 .delta=${args.delta}
+                .current=${args.current}
+                .previous=${args.previous}
                 .deltaUnit=${args.deltaUnit}
                 .lowerIsBetter=${args.lowerIsBetter}
                 .loading=${args.loading}
@@ -45,6 +47,9 @@ type Story = StoryObj<UauiKpiTileElement>;
 export const Default: Story = {};
 
 export const Decrease: Story = { args: { delta: -3.2 } };
+
+/** Give the two numbers instead of the change: 150 orders against 120 is +25%. */
+export const FromTwoNumbers: Story = { args: { label: "Orders", value: "150", icon: "icon-inbox", delta: undefined, current: 150, previous: 120 } };
 
 /** A fall in refund rate is good, so it shows green. */
 export const LowerIsBetter: Story = {

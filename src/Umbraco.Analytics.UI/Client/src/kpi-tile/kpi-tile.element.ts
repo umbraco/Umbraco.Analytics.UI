@@ -18,7 +18,8 @@ import "../delta-badge/delta-badge.element.js";
  *
  * Set `no-data` when the range has no data: the tile shows a dash instead of a number and no change badge.
  * Leave `delta` unset when there is nothing to compare with (no badge); a `delta` of 0 is "no change" and
- * shows a neutral badge.
+ * shows a neutral badge. Instead of `delta` you can give the two numbers, `current` and `previous`, and the badge
+ * works out the change, as `uaui-delta-badge` does. `delta` wins when both are set.
  *
  * @element uaui-kpi-tile
  * @fires selected - A selectable, unselected tile was pressed. Cancelable: cancel it to keep the tile unselected.
@@ -59,7 +60,18 @@ export class UauiKpiTileElement extends UmbLitElement {
     @property({ type: Number })
     delta?: number;
 
-    /** Whether `delta` is a percent change or a change in percentage points. */
+    /**
+     * The value in the current period, as a number. With `previous`, the badge works out the change. Ignored when
+     * `delta` is set. The shown value is still `value`.
+     */
+    @property({ type: Number })
+    current?: number;
+
+    /** The same value in the comparison period. With `current`, the badge works out the change. Ignored when `delta` is set. */
+    @property({ type: Number })
+    previous?: number;
+
+    /** Whether the change is a percent change or a change in percentage points. */
     @property({ type: String, attribute: "delta-unit" })
     deltaUnit: UauiDeltaUnit = "percent";
 
@@ -100,6 +112,14 @@ export class UauiKpiTileElement extends UmbLitElement {
         this.selected = !deselecting;
     }
 
+    // Whether there is a change to show: a `delta`, or two numbers the badge can work one out from (a percent
+    // change needs a `previous` other than 0). Kept in step with `uaui-delta-badge`, so no empty badge takes up room.
+    #hasChange(): boolean {
+        if (this.delta !== undefined) return Number.isFinite(this.delta);
+        if (!Number.isFinite(this.current) || !Number.isFinite(this.previous)) return false;
+        return this.deltaUnit === "points" || this.previous !== 0;
+    }
+
     override render(): TemplateResult {
         const hasValue = this.value !== undefined && this.value !== null && this.value !== "";
         const mode = getLoadingMode(this.loading, hasValue || this.noData, this.error);
@@ -122,10 +142,12 @@ export class UauiKpiTileElement extends UmbLitElement {
                                   : hasValue
                                     ? html`<span class="value">${this.value}</span>`
                                     : nothing}
-                              ${this.error || this.noData || !Number.isFinite(this.delta)
+                              ${this.error || this.noData || !this.#hasChange()
                                   ? nothing
                                   : html`<uaui-delta-badge
                                         .value=${this.delta}
+                                        .current=${this.current}
+                                        .previous=${this.previous}
                                         .unit=${this.deltaUnit}
                                         .lowerIsBetter=${this.lowerIsBetter}></uaui-delta-badge>`}
                           </span>

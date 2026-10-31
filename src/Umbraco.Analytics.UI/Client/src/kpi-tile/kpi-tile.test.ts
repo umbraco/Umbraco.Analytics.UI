@@ -266,4 +266,54 @@ describe("Feature: KPI tile shows a headline number", () => {
             expect(shadow(el).querySelector(".icon")?.getAttribute("aria-hidden")).toBe("true");
         });
     });
+
+    describe("Scenario: with current and previous instead of a delta", () => {
+        const tile = (current: number, previous: number, extra = html``) =>
+            renderElement(
+                html`<uaui-kpi-tile label="Orders" value="150" .current=${current} .previous=${previous}>${extra}</uaui-kpi-tile>`,
+                "uaui-kpi-tile",
+            );
+        const badgeText = async (el: UauiTestElement) => {
+            const badge = shadow(el).querySelector<UauiDeltaBadgeElement>("uaui-delta-badge");
+            await badge?.updateComplete;
+            return badge?.shadowRoot?.textContent ?? "";
+        };
+
+        it("shows the change worked out from the two numbers", async () => {
+            expect(await badgeText(await tile(150, 120))).toContain("+25%");
+        });
+
+        it("shows no badge when the previous value is 0", async () => {
+            expect(shadow(await tile(5, 0)).querySelector("uaui-delta-badge")).toBeNull();
+        });
+
+        it("shows no badge with only a current value", async () => {
+            const el = await renderElement(html`<uaui-kpi-tile label="Orders" value="150" .current=${150}></uaui-kpi-tile>`, "uaui-kpi-tile");
+            expect(shadow(el).querySelector("uaui-delta-badge")).toBeNull();
+        });
+
+        it("shows the difference in points with delta-unit points", async () => {
+            const el = await renderElement(
+                html`<uaui-kpi-tile label="Refund rate" value="3.1%" .current=${3.1} .previous=${4.3} delta-unit="points"></uaui-kpi-tile>`,
+                "uaui-kpi-tile",
+            );
+            expect(await badgeText(el)).toContain("-1.2 pp");
+        });
+
+        it("shows a points badge even when the previous value is 0", async () => {
+            const el = await renderElement(
+                html`<uaui-kpi-tile label="Refund rate" value="1%" .current=${1} .previous=${0} delta-unit="points"></uaui-kpi-tile>`,
+                "uaui-kpi-tile",
+            );
+            expect(await badgeText(el)).toContain("+1 pp");
+        });
+
+        it("uses delta over current and previous", async () => {
+            const el = await renderElement(
+                html`<uaui-kpi-tile label="Orders" value="150" .delta=${18.7} .current=${150} .previous=${120}></uaui-kpi-tile>`,
+                "uaui-kpi-tile",
+            );
+            expect(await badgeText(el)).toContain("+18.7%");
+        });
+    });
 });

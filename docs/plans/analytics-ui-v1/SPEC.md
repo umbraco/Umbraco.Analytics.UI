@@ -67,7 +67,7 @@ Storybook gets a "Pane" story showing this recipe, a chart and a table in one `u
   - `label`
   - `value` (pre-formatted string)
   - `icon`
-  - `delta`, `delta-unit` and `lower-is-better` (passed to `uaui-delta-badge`)
+  - `delta`, `delta-unit` and `lower-is-better` (passed to `uaui-delta-badge`). Or `current` and `previous` in place of `delta`, and the badge works out the change; `delta` wins.
   - `selectable`, `selected`
   - `no-data`: the metric has no data for the period (see below)
   - `error`: the data could not be loaded (see below)

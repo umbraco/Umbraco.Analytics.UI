@@ -202,6 +202,7 @@ export class UauiGroupByElement extends UmbLitElement {
 
 // @public
 export class UauiKpiTileElement extends UmbLitElement {
+    current?: number;
     delta?: number;
     deltaUnit: UauiDeltaUnit;
     deselectable: boolean;
@@ -211,6 +212,7 @@ export class UauiKpiTileElement extends UmbLitElement {
     loading: boolean;
     lowerIsBetter: boolean;
     noData: boolean;
+    previous?: number;
     // (undocumented)
     render(): TemplateResult;
     selectable: boolean;
