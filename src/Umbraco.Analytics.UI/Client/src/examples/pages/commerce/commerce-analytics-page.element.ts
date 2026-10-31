@@ -158,6 +158,11 @@ const boxes: { id: BoxId; span: BoxSpan }[] = [
 /** A page of buyers and last period's buyers, which the controller hands to the table. */
 type BuyerResult = BuyerPage & { compareRows: BuyerRow[] };
 
+// Top products and stock forecast rows are per variant. Commerce identifies a variant by its product and variant
+// references, so those tables key on both; a product without variants has no variant reference, which the table reads
+// as empty. Refunds by product is per product (no variant reference), so it keys on the product reference alone.
+const PRODUCT_ROW_KEY = ["productReference", "productVariantReference"];
+
 // What Commerce's top selling products endpoint answers: the product, its SKU and the quantity sold, with its change.
 const productColumns: UauiTableColumn[] = [
     { key: "name", label: "Product", elementName: UAUI_TABLE_CELL.link, meta: { hrefKey: "url" }, sortable: true, sortAs: "text" },
@@ -274,7 +279,8 @@ export class ExampleCommerceAnalyticsPageElement extends UmbLitElement {
     @state() private _stockPage = 1;
 
     // The table rows, worked out once when an answer arrives rather than on every render, so the tables get the same
-    // arrays until the data changes. Rows are per variant, so the product tables key on the SKU.
+    // arrays until the data changes. Top products and stock forecast rows are per variant, so they key on product and
+    // variant (PRODUCT_ROW_KEY); refunds are per product.
     @state() private _refundRows: Record<string, unknown>[] = [];
     @state() private _discountRows: Record<string, unknown>[] = [];
     @state() private _stockRows: Record<string, unknown>[] = [];
@@ -540,7 +546,7 @@ export class ExampleCommerceAnalyticsPageElement extends UmbLitElement {
                       lower-is-better></uaui-stat>`}
             <uaui-data-table
                 label="Refunds by product"
-                row-key="sku"
+                row-key="productReference"
                 .columns=${refundColumns}
                 .rows=${this._refundRows}
                 .compareRows=${this._compareData?.refunds.productBreakdown ?? []}
@@ -577,7 +583,7 @@ export class ExampleCommerceAnalyticsPageElement extends UmbLitElement {
         const products = html`<uui-box headline="Top products" headline-variant="h3" style="--uui-box-default-padding: 0">
                 <uaui-data-table
                     label="Top products"
-                    row-key="sku"
+                    .rowKey=${PRODUCT_ROW_KEY}
                     .columns=${productColumns}
                     .rows=${this._data?.products ?? []}
                     .compareRows=${this._compareData?.products ?? []}
@@ -615,7 +621,7 @@ export class ExampleCommerceAnalyticsPageElement extends UmbLitElement {
         const stock = html`<uui-box headline="Stock forecast" headline-variant="h3" style="--uui-box-default-padding: 0">
                 <uaui-data-table
                     label="Stock forecast"
-                    row-key="sku"
+                    .rowKey=${PRODUCT_ROW_KEY}
                     .columns=${stockColumns}
                     .rows=${this._stockRows}
                     page-size=${STOCK_PAGE_SIZE}

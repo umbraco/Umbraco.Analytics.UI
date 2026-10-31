@@ -66,7 +66,7 @@ export class UauiDataTableElement extends UmbLitElement {
     // (undocumented)
     render(): TemplateResult;
     retryable: boolean;
-    rowKey?: string;
+    rowKey?: string | string[];
     rows: Record<string, unknown>[];
     sort?: UauiTableSort;
     stats?: UauiTableStatsInput;

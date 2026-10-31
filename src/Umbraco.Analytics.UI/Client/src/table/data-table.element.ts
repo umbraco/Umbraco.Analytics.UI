@@ -35,6 +35,7 @@ import {
     pageCountOf,
     pageOfRows,
     pageSizeOptions,
+    rowKeyFields,
     searchNeedle,
     searchRows,
     showsPager,
@@ -57,7 +58,8 @@ interface DerivedFrom {
     columns: UauiTableColumn[];
     rows: UauiTableRow[];
     compareRows: UauiTableRow[];
-    rowKey?: string;
+    /** The row key's fields as JSON, so a new array with the same fields doesn't rebuild the compare index. */
+    rowKeySignature: string;
     stats?: UauiTableStatsInput;
     lang: string;
 }
@@ -91,8 +93,9 @@ const SKELETON_WIDTHS = [72, 54, 83, 47, 65];
  * The table provides `UAUI_TABLE_CONTEXT` to its cells, with each column's total and largest value (so a share
  * cell can draw a percent and a bar) and the compare-row lookup.
  *
- * Pass last period's rows in `compare-rows` and name the column that identifies a row in `row-key` so cells
- * can compare a row with its match. A row with no matching compare row shows no badge. Without a `row-key` there is no match.
+ * Pass last period's rows in `compare-rows` and name the field that identifies a row in `row-key` so cells
+ * can compare a row with its match, or set `rowKey` to several fields (e.g. product and variant) when one isn't
+ * enough. A row with no matching compare row shows no badge. Without a `row-key` there is no match.
  *
  * While `loading` is set it shows skeleton rows on first load, or keeps the old rows under a loading
  * bar when reloading. With no rows it shows `uaui-empty-state` under the header. While `error` is set it shows
@@ -172,13 +175,18 @@ export class UauiDataTableElement extends UmbLitElement {
     @property({ attribute: false })
     rows: Record<string, unknown>[] = [];
 
-    /** Last period's rows. Each is matched to a row in `rows` by its `rowKey` value. When several share a key, the last one wins. */
+    /** Last period's rows. Each is matched to a row in `rows` by its `rowKey` values. When several share a key, the last one wins. */
     @property({ attribute: false })
     compareRows: Record<string, unknown>[] = [];
 
-    /** The key in each row, and compare row, that identifies it, such as a URL. Without it no compare badges are shown. */
+    /**
+     * The field in each row, and compare row, that identifies it, such as a URL. Set the property to an array of fields
+     * when it takes several to identify a row, such as `["productReference", "productVariantReference"]`: rows then
+     * match when every field matches, and a field a row lacks (`undefined` or `null`) counts as empty. The attribute
+     * always names one field. Without it no compare badges are shown.
+     */
     @property({ type: String, attribute: "row-key" })
-    rowKey?: string;
+    rowKey?: string | string[];
 
     /** Shows skeleton rows on first load, or a loading bar over the old rows when reloading. */
     @property({ type: Boolean, reflect: true })
@@ -255,7 +263,9 @@ export class UauiDataTableElement extends UmbLitElement {
     #sorted?: { rows: UauiTableRow[]; sort: UauiTableSort; column: UauiTableColumn; lang: string; sortedRows: UauiTableRow[] };
     #derivedFrom?: DerivedFrom;
     #searched?: { rows: UauiTableRow[]; columns: UauiTableColumn[]; needle: string; lang: string; searchedRows: UauiTableRow[] };
-    /** The compare rows by their `rowKey` value, rebuilt when `compareRows` or `rowKey` change. */
+    /** The fields `rowKey` names. */
+    #rowKeyFields: string[] = [];
+    /** The compare rows by their `rowKey` values, rebuilt when `compareRows` or the fields `rowKey` names change. */
     #compareByKey = new Map<string, UauiTableRow>();
 
     /** Whether the columns don't fit, so the scroll area scrolls sideways and has to be reachable by keyboard. */
@@ -265,8 +275,11 @@ export class UauiDataTableElement extends UmbLitElement {
         super.willUpdate(changed);
         const lang = this.localize.lang();
         const prev = this.#derivedFrom;
-        if (!prev || prev.compareRows !== this.compareRows || prev.rowKey !== this.rowKey) {
-            this.#compareByKey = indexCompareRows(this.compareRows, this.rowKey);
+        const rowKeyFieldsNow = rowKeyFields(this.rowKey);
+        const rowKeySignature = JSON.stringify(rowKeyFieldsNow);
+        if (!prev || prev.compareRows !== this.compareRows || prev.rowKeySignature !== rowKeySignature) {
+            this.#rowKeyFields = rowKeyFieldsNow;
+            this.#compareByKey = indexCompareRows(this.compareRows, rowKeyFieldsNow);
             this.#context.setCompare((item) => this.#compareRowFor(item));
         }
         if (
@@ -279,12 +292,12 @@ export class UauiDataTableElement extends UmbLitElement {
             this.#context.setColumns(this.columns);
             this.#context.setStats(computeStats(this.columns, this.rows, this.stats));
         }
-        this.#derivedFrom = { columns: this.columns, rows: this.rows, compareRows: this.compareRows, rowKey: this.rowKey, stats: this.stats, lang };
+        this.#derivedFrom = { columns: this.columns, rows: this.rows, compareRows: this.compareRows, rowKeySignature, stats: this.stats, lang };
     }
 
     /** The compare row that matches the row, or undefined when there is no `rowKey` or no matching row. */
     #compareRowFor(row: UauiTableRow): UauiTableRow | undefined {
-        return findCompareRow(this.#compareByKey, this.rowKey, row);
+        return findCompareRow(this.#compareByKey, this.#rowKeyFields, row);
     }
 
     /** The rows to draw: the searched rows, sorted, cut down to the current page in client mode. */

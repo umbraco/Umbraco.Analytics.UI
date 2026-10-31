@@ -139,6 +139,8 @@ html`<uaui-data-table
 ></uaui-data-table>`;
 ```
 
+`row-key` names the field that identifies a row, so `compareRows` (last period's rows) can be matched to `rows`. When it takes more than one field, set the property to an array, such as `.rowKey=${["productReference", "productVariantReference"]}`: a row matches when every field matches, and a field a row lacks counts as empty.
+
 Replace `rows` and `columns` with new arrays to update the table. Changing them in place isn't noticed.
 
 ## Date helpers

@@ -17,26 +17,57 @@ export type UauiTableRow = Record<string, unknown>;
 export const PAGE_SIZES = [10, 25, 50, 100];
 export const DEFAULT_PAGE_SIZE = PAGE_SIZES[0];
 
-/** A row's identity for matching: strings and numbers only. Anything else never matches. */
-function rowIdentity(value: unknown): string | undefined {
+/** The fields a `rowKey` names: the one field of a string, the non-empty names of an array. Empty without a key. */
+export function rowKeyFields(rowKey: string | readonly string[] | undefined): string[] {
+    if (typeof rowKey === "string") return rowKey ? [rowKey] : [];
+    return Array.isArray(rowKey) ? rowKey.filter((field): field is string => typeof field === "string" && field !== "") : [];
+}
+
+/** One field's value as part of a key: strings and numbers as text. `undefined` for anything else. */
+function keyPart(value: unknown): string | undefined {
     return typeof value === "string" || typeof value === "number" ? String(value) : undefined;
 }
 
-/** The compare rows by their `rowKey` value. Empty without a `rowKey`. When several share a key, the last one wins. */
-export function indexCompareRows(compareRows: UauiTableRow[], rowKey?: string): Map<string, UauiTableRow> {
+/**
+ * A row's identity for matching, from the `rowKeyFields`. One field: its value, strings and numbers only, so a row
+ * without it, or with another kind of value, never matches (as before keys could have several fields). Several
+ * fields: the values as a JSON array of text, so ["a b", "c"] and ["a", "b c"] differ. A missing field (`undefined`
+ * or `null`) counts as empty text, so a product without a variant matches its own compare row; a row with none of the
+ * fields, or a field of another kind, never matches.
+ */
+export function rowIdentity(row: UauiTableRow, fields: readonly string[]): string | undefined {
+    if (fields.length === 0) return undefined;
+    if (fields.length === 1) return keyPart(row[fields[0]]);
+    const parts: string[] = [];
+    let any = false;
+    for (const field of fields) {
+        const value = row[field];
+        if (value === undefined || value === null) {
+            parts.push("");
+            continue;
+        }
+        const part = keyPart(value);
+        if (part === undefined) return undefined;
+        parts.push(part);
+        any = true;
+    }
+    return any ? JSON.stringify(parts) : undefined;
+}
+
+/** The compare rows by their identity (`rowIdentity`). Empty without key fields. When several share a key, the last one wins. */
+export function indexCompareRows(compareRows: UauiTableRow[], fields: readonly string[]): Map<string, UauiTableRow> {
     const byKey = new Map<string, UauiTableRow>();
-    if (!rowKey) return byKey;
+    if (fields.length === 0) return byKey;
     for (const row of compareRows) {
-        const key = rowIdentity(row[rowKey]);
+        const key = rowIdentity(row, fields);
         if (key !== undefined) byKey.set(key, row);
     }
     return byKey;
 }
 
-/** The compare row that matches the row, or undefined when there is no `rowKey` or no matching row. */
-export function findCompareRow(index: ReadonlyMap<string, UauiTableRow>, rowKey: string | undefined, row: UauiTableRow): UauiTableRow | undefined {
-    if (!rowKey) return undefined;
-    const key = rowIdentity(row[rowKey]);
+/** The compare row that matches the row, or undefined when there are no key fields or no matching row. */
+export function findCompareRow(index: ReadonlyMap<string, UauiTableRow>, fields: readonly string[], row: UauiTableRow): UauiTableRow | undefined {
+    const key = rowIdentity(row, fields);
     return key === undefined ? undefined : index.get(key);
 }
 

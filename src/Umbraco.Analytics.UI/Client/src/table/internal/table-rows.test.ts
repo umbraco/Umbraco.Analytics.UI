@@ -7,6 +7,8 @@ import {
     countRows,
     findCompareRow,
     indexCompareRows,
+    rowIdentity,
+    rowKeyFields,
     nextSortDirection,
     normalizePageSize,
     pageCountOf,
@@ -303,31 +305,98 @@ describe("Feature: the table's row rules", () => {
         const compareRows = [{ url: "/a", v: 1 }, { url: "/b", v: 2 }, { url: "/a", v: 3 }, { url: 7, v: 4 }, { v: 5 }];
 
         it("finds the compare row with the same row-key value", () => {
-            expect(findCompareRow(indexCompareRows(compareRows, "url"), "url", { url: "/b" })).toBe(compareRows[1]);
+            expect(findCompareRow(indexCompareRows(compareRows, ["url"]), ["url"], { url: "/b" })).toBe(compareRows[1]);
         });
         it("takes the last compare row when several share a key", () => {
-            expect(findCompareRow(indexCompareRows(compareRows, "url"), "url", { url: "/a" })).toBe(compareRows[2]);
+            expect(findCompareRow(indexCompareRows(compareRows, ["url"]), ["url"], { url: "/a" })).toBe(compareRows[2]);
         });
         it("matches a number key as text", () => {
-            expect(findCompareRow(indexCompareRows(compareRows, "url"), "url", { url: "7" })).toBe(compareRows[3]);
+            expect(findCompareRow(indexCompareRows(compareRows, ["url"]), ["url"], { url: "7" })).toBe(compareRows[3]);
         });
         it("has no match for a key the compare rows lack", () => {
-            expect(findCompareRow(indexCompareRows(compareRows, "url"), "url", { url: "/zzz" })).toBe(undefined);
+            expect(findCompareRow(indexCompareRows(compareRows, ["url"]), ["url"], { url: "/zzz" })).toBe(undefined);
         });
         it("has no match for a row without the key", () => {
-            expect(findCompareRow(indexCompareRows(compareRows, "url"), "url", {})).toBe(undefined);
+            expect(findCompareRow(indexCompareRows(compareRows, ["url"]), ["url"], {})).toBe(undefined);
         });
         it("has no match for a key that isn't text or a number", () => {
-            expect(findCompareRow(indexCompareRows(compareRows, "url"), "url", { url: {} })).toBe(undefined);
+            expect(findCompareRow(indexCompareRows(compareRows, ["url"]), ["url"], { url: {} })).toBe(undefined);
         });
         it("indexes nothing without a row-key", () => {
-            expect(indexCompareRows(compareRows).size).toBe(0);
+            expect(indexCompareRows(compareRows, []).size).toBe(0);
         });
         it("has no match without a row-key", () => {
-            expect(findCompareRow(indexCompareRows(compareRows, "url"), undefined, { url: "/a" })).toBe(undefined);
+            expect(findCompareRow(indexCompareRows(compareRows, ["url"]), [], { url: "/a" })).toBe(undefined);
         });
         it("skips compare rows without the key when indexing", () => {
-            expect(indexCompareRows(compareRows, "url").size).toBe(3);
+            expect(indexCompareRows(compareRows, ["url"]).size).toBe(3);
+        });
+    });
+    describe("Scenario: the fields a row key names", () => {
+        it("names the one field of a string", () => {
+            expect(rowKeyFields("sku")).toEqual(["sku"]);
+        });
+        it("names each field of an array, in order", () => {
+            expect(rowKeyFields(["productReference", "productVariantReference"])).toEqual(["productReference", "productVariantReference"]);
+        });
+        it("names no field for an empty string, an empty array or no key", () => {
+            expect(rowKeyFields("")).toEqual([]);
+            expect(rowKeyFields([])).toEqual([]);
+            expect(rowKeyFields(undefined)).toEqual([]);
+        });
+        it("skips empty names in an array", () => {
+            expect(rowKeyFields(["", "sku"])).toEqual(["sku"]);
+        });
+    });
+
+    describe("Scenario: matching compare rows by several fields", () => {
+        const fields = ["product", "variant"];
+        const compareRows = [
+            { product: "hoodie", variant: "m", v: 1 },
+            { product: "hoodie", variant: "l", v: 2 },
+            { product: "mug", v: 3 },
+            { product: "hoodie", variant: "m", v: 4 },
+        ];
+        const index = indexCompareRows(compareRows, fields);
+
+        it("finds the compare row where every field matches", () => {
+            expect(findCompareRow(index, fields, { product: "hoodie", variant: "l" })).toBe(compareRows[1]);
+        });
+        it("has no match when only some fields match", () => {
+            expect(findCompareRow(index, fields, { product: "hoodie", variant: "xl" })).toBe(undefined);
+        });
+        it("takes the last compare row when several share a key", () => {
+            expect(findCompareRow(index, fields, { product: "hoodie", variant: "m" })).toBe(compareRows[3]);
+        });
+        it("counts a missing field as empty, so a row without a variant matches its own compare row", () => {
+            expect(findCompareRow(index, fields, { product: "mug" })).toBe(compareRows[2]);
+            expect(findCompareRow(index, fields, { product: "mug", variant: null })).toBe(compareRows[2]);
+            expect(findCompareRow(index, fields, { product: "mug", variant: "" })).toBe(compareRows[2]);
+        });
+        it("has no match for a row with none of the fields", () => {
+            expect(rowIdentity({}, fields)).toBe(undefined);
+            expect(findCompareRow(indexCompareRows([{ v: 1 }], fields), fields, {})).toBe(undefined);
+        });
+        it("has no match when a field isn't text or a number", () => {
+            expect(rowIdentity({ product: "hoodie", variant: {} }, fields)).toBe(undefined);
+        });
+        it("matches a number field as text", () => {
+            expect(findCompareRow(indexCompareRows([{ product: 7, variant: "m" }], fields), fields, { product: "7", variant: "m" })).toEqual({
+                product: 7,
+                variant: "m",
+            });
+        });
+        it("keeps values apart that a plain join would run together", () => {
+            const a = { product: "a b", variant: "c" };
+            const b = { product: "a", variant: "b c" };
+            expect(rowIdentity(a, fields)).not.toBe(rowIdentity(b, fields));
+            const commas = [{ product: "a,b", variant: "c" }, { product: "a", variant: "b,c" }];
+            expect(rowIdentity(commas[0], fields)).not.toBe(rowIdentity(commas[1], fields));
+            expect(findCompareRow(indexCompareRows([a], fields), fields, b)).toBe(undefined);
+        });
+        it("matches by one field in an array the same as by the string", () => {
+            expect(rowIdentity({ sku: "TS-1" }, ["sku"])).toBe("TS-1");
+            expect(rowIdentity({}, ["sku"])).toBe(undefined);
         });
     });
 });

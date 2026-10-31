@@ -66,7 +66,10 @@ export type CartConversion = {
 /** Commerce's refund reasons. The page turns them into words. */
 export type RefundReason = "itemDefectiveOrDamaged" | "wrongItemSent" | "itemNotAsDescribed" | "itemDidNotArrive" | "customerChangedMind" | "productQualityNotSatisfactory";
 
-/** One product of the refund breakdown. `refundRate` is in % (0 to 100). */
+/**
+ * One product of the refund breakdown (ProductRefundBreakdownDto). Per product, not per variant: a product's variants
+ * share one row, so it has no variant reference. `refundRate` is in % (0 to 100).
+ */
 export type RefundRow = { productReference: string; productName: string; sku: string; refundRate: number; topReason?: RefundReason };
 
 /** The answer of Commerce's refund rates endpoint. It has no series over time. */
@@ -250,16 +253,30 @@ function cartConversionFor(range: UauiDateRange, totals: Totals): CartConversion
     };
 }
 
-/** Refund rates by product: only products with refunds, highest rate first, as the endpoint answers. */
+/** The name of a product with variants, for the rows that cover all its variants. */
+const parentNames: Record<string, string> = { "HD-014": "Fleece hoodie" };
+
+/**
+ * Refund rates by product: one row per product, its variants added up, as Commerce's repository groups the breakdown
+ * by product reference. Only products with refunds, highest rate first, as the endpoint answers.
+ */
 function refundsFor(range: UauiDateRange, totals: Totals, sold: ProductRow[]): Refunds {
-    const productBreakdown = sold
-        .map((row): RefundRow | undefined => {
-            const product = products.find((p) => p.sku === row.sku)!;
-            const refunded = Math.round(row.totalQuantity * product.refunds * wobble(range, `${row.sku}:refunds`));
+    const byProduct = new Map<string, { sku: string; name: string; quantity: number; refunded: number }>();
+    for (const row of sold) {
+        const product = products.find((p) => p.sku === row.sku)!;
+        const refunded = Math.round(row.totalQuantity * product.refunds * wobble(range, `${row.sku}:refunds`));
+        const sku = product.product ?? product.sku;
+        const entry = byProduct.get(row.productReference) ?? { sku, name: product.product ? (parentNames[sku] ?? row.name) : row.name, quantity: 0, refunded: 0 };
+        entry.quantity += row.totalQuantity;
+        entry.refunded += refunded;
+        byProduct.set(row.productReference, entry);
+    }
+    const productBreakdown = [...byProduct]
+        .map(([productReference, entry]): RefundRow | undefined => {
             // Products with no refunds are left out, like Commerce's endpoint, so one going from none to some has no compare row and no badge.
-            if (!refunded) return undefined;
-            const reason = refundReasons[Math.floor(noise(`${range.from}:${row.sku}:reason`) * refundReasons.length)];
-            return { productReference: row.productReference, productName: row.name, sku: row.sku, refundRate: rate(refunded, row.totalQuantity), topReason: reason };
+            if (!entry.refunded) return undefined;
+            const reason = refundReasons[Math.floor(noise(`${range.from}:${entry.sku}:reason`) * refundReasons.length)];
+            return { productReference, productName: entry.name, sku: entry.sku, refundRate: rate(entry.refunded, entry.quantity), topReason: reason };
         })
         .filter((row): row is RefundRow => row !== undefined)
         .sort((a, b) => b.refundRate - a.refundRate);

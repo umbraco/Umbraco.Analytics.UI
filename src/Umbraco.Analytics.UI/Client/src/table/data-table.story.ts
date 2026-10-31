@@ -154,6 +154,46 @@ export const CompareInPoints: Story = {
     },
 };
 
+const variantColumns: UauiTableColumn[] = [
+    { key: "name", label: "Product" },
+    { key: "sold", label: "Quantity sold", elementName: UAUI_TABLE_CELL.number, align: "end", width: "30%" },
+];
+
+// Two variants of one hoodie share a product reference; the mug has no variants.
+const variantRows = [
+    { productReference: "hoodie", productVariantReference: "hoodie-m", name: "Umbraco hoodie, M", sold: 120 },
+    { productReference: "hoodie", productVariantReference: "hoodie-l", name: "Umbraco hoodie, L", sold: 90 },
+    { productReference: "mug", name: "Dev mug", sold: 50 },
+];
+
+const variantCompareRows = [
+    { productReference: "hoodie", productVariantReference: "hoodie-m", sold: 100 },
+    { productReference: "hoodie", productVariantReference: "hoodie-l", sold: 60 },
+    { productReference: "mug", sold: 40 },
+];
+
+/** When one field doesn't identify a row, set the `rowKey` property to several: here product and variant, so each hoodie size matches its own compare row. A row matches when every field matches; a field a row lacks counts as empty, so the mug (no variant) still matches. The `row-key` attribute names one field. */
+export const CompareBySeveralFields: Story = {
+    name: "Compare by several fields",
+    render: () =>
+        html`<uui-box headline="Top products" style="--uui-box-default-padding: 0">
+            <uaui-data-table
+                label="Top products"
+                .columns=${variantColumns}
+                .rows=${variantRows}
+                .compareRows=${variantCompareRows}
+                .rowKey=${["productReference", "productVariantReference"]}></uaui-data-table>
+        </uui-box>`,
+    parameters: {
+        docs: {
+            source: {
+                code: `<uaui-data-table .rows=\${rows} .compareRows=\${compareRows} .rowKey=\${["productReference", "productVariantReference"]}></uaui-data-table>`,
+                language: "html",
+            },
+        },
+    },
+};
+
 /** Click a header to sort: the first click on a number column sorts biggest first, a second click flips it. In `client` mode (the default) the table sorts the rows itself and raises `sort-change`. Shares stay a share of the whole column. */
 export const Sortable: Story = {
     args: {

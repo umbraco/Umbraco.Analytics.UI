@@ -36,7 +36,7 @@ const tile = (page: Element, label: string) => tiles(page).find((t) => t.label =
 const chart = (page: Element) => shadow(page).querySelector("uaui-time-series-chart") as UauiTimeSeriesChartElement;
 const buyersTable = (page: Element) =>
     shadow(page).querySelector("uaui-data-table[row-key='email']") as unknown as TestTable;
-type TestTable = UauiTestElement & { loading: boolean; error: boolean; rows: Record<string, unknown>[]; compareRows: unknown[]; columns: UauiTableColumn[] };
+type TestTable = UauiTestElement & { loading: boolean; error: boolean; rows: Record<string, unknown>[]; compareRows: unknown[]; columns: UauiTableColumn[]; rowKey?: string | string[] };
 const box = (page: Element, headline: string) => shadow(page).querySelector(`uui-box[headline='${headline}']`) as HTMLElement;
 const boxTable = (page: Element, headline: string) => box(page, headline).querySelector("uaui-data-table") as unknown as TestTable;
 const headerTotal = (page: Element, headline: string) => box(page, headline).querySelector("uaui-stat[slot='header-actions']") as UauiStatElement | null;
@@ -395,6 +395,27 @@ describe("Feature: the Commerce analytics page", () => {
             expect(rate.meta).toMatchObject({ deltaUnit: "points", lowerIsBetter: true });
         });
 
+        it("has one row per product, its variants together, matched to last period's by product reference", () => {
+            const table = boxTable(page, "Refunds") as TestTable & { getAttribute(name: string): string | null };
+            expect(table.getAttribute("row-key")).toBe("productReference");
+            const references = table.rows.map((r) => r.productReference);
+            expect(new Set(references).size).toBe(references.length);
+            expect(table.rows.every((r) => r.productVariantReference === undefined)).toBe(true);
+            expect(table.rows.filter((r) => r.productReference === "prod-hd-014").map((r) => r.productName)).toEqual(["Fleece hoodie"]);
+        });
+
+        it("matches a product's refund row to last period's by its product reference", async () => {
+            const table = boxTable(page, "Refunds");
+            table.rows = [{ productReference: "p1", productName: "Test tee", sku: "TT-1", refundRate: 6, topReasonText: "Wrong item sent" }];
+            table.compareRows = [
+                { productReference: "p2", productName: "Other", sku: "TT-1", refundRate: 1 },
+                { productReference: "p1", productName: "Test tee", sku: "OLD-SKU", refundRate: 4 },
+            ];
+            await settle(table);
+            const badge = deepQuery<UauiDeltaBadgeElement>(shadow(table), "uaui-delta-badge")!;
+            expect(deepText(shadow(badge)).replace(/\s+/g, " ")).toContain("+2 pp");
+        });
+
         it("shows a product whose rate went from 5% to 6% as +1 pp, a decline", async () => {
             const table = boxTable(page, "Refunds");
             table.rows = [{ productReference: "p1", productName: "Test tee", sku: "TT-1", refundRate: 6, topReasonText: "Wrong item sent" }];
@@ -423,7 +444,7 @@ describe("Feature: the Commerce analytics page", () => {
                 const hoodies = table.rows.filter((r) => r.productReference === "prod-hd-014");
                 expect(hoodies.map((r) => r.sku).sort(), headline).toEqual(["HD-014-L", "HD-014-M"]);
                 expect(new Set(hoodies.map((r) => r.productVariantReference)).size, headline).toBe(2);
-                expect(table.getAttribute("row-key"), headline).toBe("sku");
+                expect(table.rowKey, headline).toEqual(["productReference", "productVariantReference"]);
             }
             const compare = boxTable(page, "Top products").compareRows as Record<string, unknown>[];
             expect(compare.filter((r) => r.productReference === "prod-hd-014")).toHaveLength(2);
