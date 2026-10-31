@@ -107,6 +107,7 @@ Storybook gets a "Pane" story showing this recipe, a chart and a table in one `u
   - `week-start` (`UauiWeekStart`, 1 to 7, default 1 = Monday): the day weeks start on when `group-by` is `week`. Decides which week a compare point sits in, so give it the same value as `uauiDateBuckets`. Anything but a whole number from 1 to 7 is read as Monday
   - `value-format` (`Intl.NumberFormatOptions`)
   - `range` (`UauiDateRange`), `compare` (`UauiCompare`): the period starts, to align compare points (see Comparison)
+  - `lower-is-better` (boolean, reflected, default false): see Lower is better
   - `loading`
   - `empty-headline`, `empty-description`
   - `error`, `error-headline`, `error-description`, `retryable`: see Error
@@ -115,6 +116,7 @@ Storybook gets a "Pane" story showing this recipe, a chart and a table in one `u
   - `line` and `area`: a dashed `--uaui-compare` line, with the gap between the two lines shaded.
   - `bar` and `stacked-bar`: the comparison total is drawn as a bar behind each date's bars. For bar kinds, all compare series are summed per date and aligned by bucket offset like any compare series (no `id` matching), and the current total for that date is shown in the tooltip and hidden table whenever it's compared against two or more series.
   - Comparison points line up by bucket offset, not by date: the Nth day, week or month (per `group-by`) from the compare range start sits under the Nth from the current range start. The chart takes optional `range` (`UauiDateRange`) and `compare` (`UauiCompare`) for those starts, as `uaui-date-range` emits them; without them each side starts at its first point, which misaligns when sparse data omits the first buckets. A shorter compare leaves trailing dates empty. Points on the same date add up (series, compare and compare total alike).
+- **Lower is better:** `lower-is-better` is for a metric where a fall is good (refund rate, bounce rate, average duration). It flips the gap shading (below the compare line uses `--uaui-gap-positive`, above uses `--uaui-gap-negative`; those tokens mean good and bad) and is passed to every change badge in the tooltip, rows and bar total alike. One chart-level flag, since one chart shows one metric and its series are breakdowns of it.
 - **Tooltip:** hovering a point shows a dark tooltip with the date, each series' value and, when comparing, the comparison value and a delta.
 - **Markers:** each marker shows as a dot on the x-axis, with a dashed line up the chart.
   - Hovering or focusing a dot shows its title and description.
@@ -234,8 +236,6 @@ Storybook gets a "Pane" story showing this recipe, a chart and a table in one `u
 | The return | Product's job | Elements don't store state. Products keep the date range, group-by, sort and page size between visits. `change` events carry everything needed to save them. |
 
 ### Later: not in v1
-
-**Chart `lower-is-better`.** For metrics where a drop is good (bounce rate, refund rate): flip the gap shading colours and pass it to the tooltip badge. The chart treats higher as better until then.
 
 **`uaui-funnel` (conversion funnel).** Parked until a product commits to using it. Today none does:
 

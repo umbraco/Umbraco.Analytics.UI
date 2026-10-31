@@ -54,6 +54,21 @@ describe("Feature: compare with another period", () => {
         });
     });
 
+    describe("Scenario: hovering a date whose compare value is 0", () => {
+        it("shows no change badge in the compare row", async () => {
+            const zero = { ...previous, points: previous.points.map((point) => ({ ...point, value: 0 })) };
+            const el = await renderElement(
+                html`<uaui-time-series-chart .series=${[current]} .compareSeries=${[zero]} style="width:400px"></uaui-time-series-chart>`,
+                "uaui-time-series-chart",
+            );
+            const canvas = shadow(el).querySelector("canvas")!;
+            const x = Chart.getChart(canvas)!.getDatasetMeta(0).data[2].x;
+            await userEvent.hover(page.elementLocator(canvas), { position: { x, y: canvas.getBoundingClientRect().height / 2 } });
+            await expect.poll(() => tooltip(el)?.style.visibility).toBe("visible");
+            expect(deepQuery(tooltip(el).shadowRoot!, ".tooltip-compare uaui-delta-badge")).toBeNull();
+        });
+    });
+
     describe("Scenario: a line chart with a compare series in the dark theme", () => {
         let theme: HTMLStyleElement;
         let host: HTMLElement;
@@ -111,7 +126,7 @@ describe("Feature: compare with another period", () => {
 
         it("shows the change as a badge", () => {
             const badge = deepQuery(tooltip(el).shadowRoot!, "uaui-delta-badge") as UauiDeltaBadgeElement;
-            expect(badge.value).toBeCloseTo(9.09, 1);
+            expect(deepText(badge)).toContain("+9.1%");
         });
     });
 

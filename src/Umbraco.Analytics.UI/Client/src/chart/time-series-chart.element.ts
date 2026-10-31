@@ -147,8 +147,8 @@ function tickFormat(valueFormat: Intl.NumberFormatOptions | undefined, max: numb
  * @cssprop --uaui-bar-4 - Colour of the fourth series' bars.
  * @cssprop --uaui-compare - Colour of the compare line, and of the compare bar (at 45% opacity).
  * @cssprop --uaui-marker - Colour of the marker dots and their dashed lines (the lines at 26% opacity). Defaults to space cadet in light and white in dark.
- * @cssprop --uaui-gap-positive - Shading between a series and its compare line where the series is above it.
- * @cssprop --uaui-gap-negative - Shading between a series and its compare line where the series is below it.
+ * @cssprop --uaui-gap-positive - Shading between a series and its compare line where the series is doing better than it (above it, or below it with `lower-is-better`).
+ * @cssprop --uaui-gap-negative - Shading between a series and its compare line where the series is doing worse than it (below it, or above it with `lower-is-better`).
  */
 @customElement("uaui-time-series-chart")
 export class UauiTimeSeriesChartElement extends UmbLitElement {
@@ -186,6 +186,14 @@ export class UauiTimeSeriesChartElement extends UmbLitElement {
     /** Names the compared period in the legend and tooltip, e.g. "Apr 25, 2026 – May 24, 2026". Defaults to the translation of "Comparison". */
     @property({ type: String, attribute: "compare-label" })
     compareLabel?: string;
+
+    /**
+     * Shows a fall as good, for a metric like refund rate, bounce rate or average duration. The gap shading between a series
+     * and its compare line flips (below the compare line is good) and every change badge in the tooltip reads a fall as an
+     * improvement. One chart shows one metric, so it applies to every series and to the total.
+     */
+    @property({ type: Boolean, attribute: "lower-is-better", reflect: true })
+    lowerIsBetter = false;
 
     /** Events shown as a dot on the x-axis with a dashed line. One outside the chart's dates draws nothing. */
     @property({ attribute: false })
@@ -300,7 +308,7 @@ export class UauiTimeSeriesChartElement extends UmbLitElement {
             this.#derived = this.#derive(next);
             this.#dirty = true;
         }
-        if (changed.has("kind")) this.#dirty = true;
+        if (changed.has("kind") || changed.has("lowerIsBetter")) this.#dirty = true;
 
         const markersNext = { markers: this.markers, dates: this.#derived.data.dates, groupBy: this.groupBy };
         const markersPrev = this.#markersFrom;
@@ -425,6 +433,7 @@ export class UauiTimeSeriesChartElement extends UmbLitElement {
             yStep: scale.step,
             formatTick: (value) => tick.format(value),
             colors: this.#colors,
+            lowerIsBetter: this.lowerIsBetter,
         });
     }
 
@@ -484,6 +493,7 @@ export class UauiTimeSeriesChartElement extends UmbLitElement {
             .date=${dateLabels[index]}
             .rows=${rows}
             .bars=${bars}
+            .lowerIsBetter=${this.lowerIsBetter}
             .total=${bars && this.#showsTotal && total !== null ? { value: total, label: this.#totalText } : undefined}
             .compareTotal=${compareTotal}
             .numberFormat=${numberFormat}></uaui-chart-tooltip>`;

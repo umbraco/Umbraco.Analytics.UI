@@ -136,7 +136,7 @@ describe("Feature: bar and stacked bar chart", () => {
 
             it("shows the change from the compare total to that total", () => {
                 const badge = deepQuery(tooltip(el).shadowRoot!, "uaui-delta-badge") as UauiDeltaBadgeElement;
-                expect(badge.value).toBeCloseTo(100, 5);
+                expect(deepText(badge)).toContain("+100%");
             });
         });
     });
@@ -245,7 +245,7 @@ describe("Feature: bar and stacked bar chart", () => {
 
             it("shows the change from the compare total to the current total", () => {
                 const badge = deepQuery(tooltip(el).shadowRoot!, "uaui-delta-badge") as UauiDeltaBadgeElement;
-                expect(badge.value).toBeCloseTo(0, 5);
+                expect(deepQuery(badge.shadowRoot!, ".badge")?.getAttribute("data-sentiment")).toBe("neutral");
             });
         });
     });

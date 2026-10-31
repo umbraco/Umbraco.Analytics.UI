@@ -17,6 +17,8 @@ export interface UauiChartModel {
     yStep: number;
     formatTick: (value: number) => string;
     colors: UauiChartColors;
+    /** Line kinds: a series below its compare line is doing better, so the gap shading flips. */
+    lowerIsBetter?: boolean;
     /** One dot on the x-axis per entry. */
     markers?: UauiMarkerPin[];
 }
@@ -184,6 +186,7 @@ export class UauiChartRenderer {
     // The datasets are built as plain objects: Chart.js types the dataset by chart type, and the two families differ.
     #lineDatasets(model: UauiChartModel) {
         const { colors } = model;
+        const gap = model.lowerIsBetter ? { above: colors.gapBad, below: colors.gapGood } : { above: colors.gapGood, below: colors.gapBad };
         const showDots = model.labels.length <= MAX_POINTS_WITH_DOTS;
         // Compare lines come after every series, so each series keeps its dataset index.
         const compared = model.datasets.flatMap((set, i) => (set.compare ? [i] : []));
@@ -201,7 +204,7 @@ export class UauiChartRenderer {
                 spanGaps: true,
                 fill:
                     compareIndex >= 0
-                        ? { target: model.datasets.length + compareIndex, above: colors.gapAbove, below: colors.gapBelow }
+                        ? { target: model.datasets.length + compareIndex, ...gap }
                         : model.kind === "area"
                           ? ("origin" as const)
                           : false,

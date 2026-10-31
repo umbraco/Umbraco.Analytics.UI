@@ -5,9 +5,9 @@ export interface UauiChartColors {
     compare: string;
     /** The compare bar: the compare colour at reduced opacity, drawn behind the current bars. */
     compareBar: string;
-    /** The gap between a series and its compare line where the series is above / below it. */
-    gapAbove: string;
-    gapBelow: string;
+    /** The gap between a series and its compare line where the series is doing better / worse than it. */
+    gapGood: string;
+    gapBad: string;
     grid: string;
     tick: string;
     surface: string;
@@ -45,8 +45,8 @@ export function resolveChartColors(probe: HTMLElement, slots: number[]): UauiCha
         series,
         compare: colorOf("var(--uaui-color-compare)"),
         compareBar: colorOf("var(--uaui-color-compare-bar)"),
-        gapAbove: colorOf("var(--uaui-color-gap-positive)"),
-        gapBelow: colorOf("var(--uaui-color-gap-negative)"),
+        gapGood: colorOf("var(--uaui-color-gap-positive)"),
+        gapBad: colorOf("var(--uaui-color-gap-negative)"),
         grid: colorOf("var(--uui-color-divider-standalone)"),
         tick: colorOf("var(--uui-color-text-alt)"),
         surface: colorOf("var(--uui-color-surface)"),

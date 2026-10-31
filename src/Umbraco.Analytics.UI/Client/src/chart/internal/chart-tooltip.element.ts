@@ -2,6 +2,7 @@ import { css, customElement, html, nothing, property, type CSSResultGroup, type 
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { getNumberFormat } from "../../internal/format/number-format.js";
 import "../../delta-badge/delta-badge.element.js";
+import { deltaChange } from "../../internal/delta/delta-change.js";
 import { UauiChartTooltipSurface } from "./chart-tooltip-surface.css.js";
 
 /** The compared period's value for a row or a total, with the date it is from and the current value to measure the change against. */
@@ -54,6 +55,10 @@ export class UauiChartTooltipElement extends UmbLitElement {
     @property({ attribute: false })
     compareTotal?: UauiChartTooltipCompare;
 
+    /** Shows a fall against the compare value as good in every badge. */
+    @property({ type: Boolean, attribute: "lower-is-better", reflect: true })
+    lowerIsBetter = false;
+
     /** Formats every number. Defaults to the backoffice user's culture with no options. */
     @property({ attribute: false })
     numberFormat?: Intl.NumberFormat;
@@ -62,14 +67,14 @@ export class UauiChartTooltipElement extends UmbLitElement {
         return (this.numberFormat ?? getNumberFormat(this.localize.lang())).format(value);
     }
 
-    /** The compare value, with the change from it to the current value. No badge when there is nothing to divide by. */
+    /** The compare value, with the change from it to the current value, worked out by the badge: none when there is nothing to divide by. */
     #renderCompare({ value, date, current }: UauiChartTooltipCompare): TemplateResult {
         return html`<div class="tooltip-compare">
             <div class="tooltip-row">
                 <span class=${this.bars ? "swatch swatch-compare swatch-square" : "swatch swatch-compare"}></span>
                 <span class="tooltip-value">${this.#format(value)}</span>
-                ${value !== 0 && current !== null
-                    ? html`<uaui-delta-badge size="sm" .value=${((current - value) / Math.abs(value)) * 100}></uaui-delta-badge>`
+                ${Number.isFinite(deltaChange(undefined, current ?? undefined, value, "percent"))
+                    ? html`<uaui-delta-badge size="sm" .current=${current} .previous=${value} .lowerIsBetter=${this.lowerIsBetter}></uaui-delta-badge>`
                     : nothing}
             </div>
             <div class="tooltip-sub">${date}</div>

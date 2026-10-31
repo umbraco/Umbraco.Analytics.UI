@@ -114,6 +114,8 @@ render() {
 
 Each series is `{ id, label, points: [{ date, value }] }`, with dates as `YYYY-MM-DD`. Points are not grouped for you: send one point per bucket, at the bucket's first day. `uauiDateBuckets` (below) gives you those buckets.
 
+For a metric where a fall is good (refund rate, bounce rate, average duration), add `lower-is-better` to the chart, as on `uaui-kpi-tile`. The gap shading against the compare line and the change badges in the tooltip then read a fall as good. It covers every series and the total, since one chart shows one metric.
+
 ## A table
 
 Each column names the cell that shows it.

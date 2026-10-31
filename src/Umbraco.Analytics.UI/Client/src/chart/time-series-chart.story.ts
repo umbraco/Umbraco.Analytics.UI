@@ -25,6 +25,7 @@ const meta: Meta<UauiTimeSeriesChartElement> = {
         series: [pageviews],
         compareSeries: [],
         compareLabel: undefined,
+        lowerIsBetter: false,
         markers: [],
         groupBy: "day",
         weekStart: 1,
@@ -49,6 +50,7 @@ const meta: Meta<UauiTimeSeriesChartElement> = {
                 .series=${args.series}
                 .compareSeries=${args.compareSeries}
                 .compareLabel=${args.compareLabel}
+                .lowerIsBetter=${args.lowerIsBetter}
                 .markers=${args.markers}
                 .groupBy=${args.groupBy}
                 .weekStart=${args.weekStart}
@@ -92,9 +94,24 @@ export const LoadFailed: Story = { args: { error: true, retryable: true } };
 /** Two series get a legend. */
 export const TwoSeries: Story = { args: { series: [pageviews, sessions] } };
 
-/** One series against the previous period: a dashed line, the gap shaded (green where above, red where below) and a legend. */
+/** One series against the previous period: a dashed line, the gap shaded (green where above, red where below; see Lower is better) and a legend. */
 export const Compare: Story = {
     args: { series: [pageviews], compareSeries: [pageviewsPrevious], compareLabel: compareRangeLabel },
+};
+
+/**
+ * For a metric where a fall is good (refund rate, bounce rate, average duration), set `lower-is-better`: the gap is green
+ * where the series is below the compare line and red where above, and the tooltip's change badges read a fall as an
+ * improvement. It applies to every series and the total, because one chart shows one metric.
+ */
+export const LowerIsBetter: Story = {
+    name: "Lower is better",
+    args: {
+        series: [{ ...pageviews, id: "duration", label: "Average duration (ms)" }],
+        compareSeries: [{ ...pageviewsPrevious, id: "duration", label: "Average duration (ms)" }],
+        compareLabel: compareRangeLabel,
+        lowerIsBetter: true,
+    },
 };
 
 /** Each series is matched to its compare series by `id`; they share the one compare colour and label. */

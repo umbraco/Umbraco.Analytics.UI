@@ -516,6 +516,7 @@ export class UauiTimeSeriesChartElement extends UmbLitElement {
     groupBy: UauiGroupBy;
     kind: UauiChartKind;
     loading: boolean;
+    lowerIsBetter: boolean;
     markers: UauiMarker[];
     range?: UauiDateRange;
     // (undocumented)
