@@ -15,6 +15,7 @@ import "../delta-badge/delta-badge.element.js";
 import "../chart/time-series-chart.element.js";
 import "../group-by/group-by.element.js";
 import "../kpi-tile/kpi-tile.element.js";
+import "../date-range/date-range.element.js";
 
 type Rgba = [r: number, g: number, b: number, a: number];
 
@@ -192,6 +193,19 @@ describe("Feature: contrast in every theme", () => {
                     const fill = computed(selected, "backgroundColor");
                     check("text", "group-by selected text on fill", between(computed(selected, "color"), fill, surface()));
                     check("graphic", "group-by selected fill on surface", between(fill, surface(), surface()));
+                });
+            });
+
+            describe("the date range button, as rendered", () => {
+                it("gives the comparison line at least 4.5:1 on the surface", async () => {
+                    const el = await renderElement(
+                        html`<uaui-date-range
+                            .value=${{ from: "2026-05-25", to: "2026-06-23" }}
+                            .compare=${{ mode: "previous-period", from: "2026-04-25", to: "2026-05-24" }}></uaui-date-range>`,
+                        "uaui-date-range",
+                    );
+                    const line = shadow(el).querySelector(".compare")!;
+                    check("text", "date range comparison line on surface", between(computed(line, "color"), surface(), surface()));
                 });
             });
 

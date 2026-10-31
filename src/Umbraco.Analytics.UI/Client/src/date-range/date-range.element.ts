@@ -178,9 +178,15 @@ export class UauiDateRangeElement extends UmbLitElement {
                 white-space: nowrap;
             }
 
+            /* With a comparison the range steps down a pixel, so the two lines sit in 40px without looking cramped. */
+            uui-button.has-compare .range {
+                font-size: calc(var(--uui-type-default-size) - 1px);
+            }
+
+            /* Lighter than text-alt, which is nearly black in UUI's light theme, and still 4.5:1 on the surface in every theme. */
             .compare {
                 font-size: var(--uui-type-small-size);
-                color: var(--uui-color-text-alt);
+                color: color-mix(in srgb, var(--uui-color-text-alt) 70%, var(--uui-color-surface));
             }
         `,
     ];
