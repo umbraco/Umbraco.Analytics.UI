@@ -312,7 +312,9 @@ export class UauiDataTableElement extends UmbLitElement {
 
     /** How many rows there are across every page. */
     get #totalRows(): number {
-        return countRows(this.mode, this.#searchedRows.length, this.rows.length, this.totalRows);
+        // Only client mode searches, so only it needs the matched rows.
+        const matched = this.mode === "client" ? this.#searchedRows.length : this.rows.length;
+        return countRows({ mode: this.mode, matched, held: this.rows.length, totalRows: this.totalRows });
     }
 
     get #pageCount(): number {

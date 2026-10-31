@@ -112,7 +112,7 @@ export function normalizePageSize(pageSize: number): number {
  * How many rows there are across every page. `client` counts the rows that matched. `server` reads `totalRows`,
  * or counts the rows it holds when that isn't a number.
  */
-export function countRows(mode: UauiTableMode, matched: number, held: number, totalRows?: number): number {
+export function countRows({ mode, matched, held, totalRows }: { mode: UauiTableMode; matched: number; held: number; totalRows?: number }): number {
     if (mode !== "server") return matched;
     const total = asNumber(totalRows);
     return total === undefined ? held : Math.max(0, Math.floor(total));

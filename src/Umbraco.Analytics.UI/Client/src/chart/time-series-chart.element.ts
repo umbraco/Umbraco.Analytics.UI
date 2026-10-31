@@ -4,7 +4,6 @@ import {
     html,
     nothing,
     property,
-    repeat,
     state,
     type CSSResultGroup,
     type PropertyValues,
@@ -15,7 +14,7 @@ import "../empty-state/empty-state.element.js";
 import "../error-state/error-state.element.js";
 import type { UauiGroupBy } from "../group-by/group-by.element.js";
 import type { UauiWeekStart } from "../date-helpers/date-helpers.js";
-import { dateOnly, resolveWeekStart } from "../internal/date/date-math.js";
+import { resolveWeekStart } from "../internal/date/date-math.js";
 import { formatIsoDate } from "../internal/date/format-date.js";
 import { getNumberFormat } from "../internal/format/number-format.js";
 import { getLoadingMode, isBusy } from "../internal/loading/loading-mode.js";
@@ -27,13 +26,14 @@ import type { UauiMarkerPlacement } from "./internal/markers-plugin.js";
 import { allWhole, buildChartData, maxValue, seriesTotals, type UauiChartData } from "./internal/chart-data.js";
 import "./internal/chart-data-table.element.js";
 import "./internal/chart-legend.element.js";
-import "./internal/chart-marker-tooltip.element.js";
+import "./internal/chart-markers.element.js";
 import "./internal/chart-tooltip.element.js";
-import type { UauiChartMarkerTooltipElement } from "./internal/chart-marker-tooltip.element.js";
+import type { UauiChartMarkersActiveDetail } from "./internal/chart-markers.element.js";
 import type { UauiChartTooltipCompare, UauiChartTooltipElement, UauiChartTooltipRow } from "./internal/chart-tooltip.element.js";
 import { colorsDiffer, resolveChartColors, type UauiChartColors } from "./internal/chart-colors.js";
 import { UauiChartRenderer, type UauiChartHover } from "./internal/chart-renderer.js";
 import { niceScale } from "./internal/nice-scale.js";
+import { clampInside, placeTooltip } from "./internal/place-tooltip.js";
 import { watchTheme } from "./internal/theme-watch.js";
 import type { UauiCompare, UauiDateRange } from "../date-range/types.js";
 import type { UauiChartKind, UauiMarker, UauiMarkerClickDetail, UauiSeries } from "./types.js";
@@ -82,9 +82,6 @@ interface MarkersFrom {
     dates: string[];
     groupBy: UauiGroupBy;
 }
-
-/** A tooltip lists this many markers of a crowded dot, then says how many more there are. */
-const MAX_MARKERS_IN_TOOLTIP = 4;
 
 const emptyDerived: Derived = {
     data: { dates: [], series: [] },
@@ -251,12 +248,9 @@ export class UauiTimeSeriesChartElement extends UmbLitElement {
     @state()
     private _markerPlacements: UauiMarkerPlacement[] = [];
 
-    /** The marker dots (by date index) the pointer is over and the keyboard is on. Hover wins. */
+    /** The marker dot (by date index) that shows its tooltip, as `uaui-chart-markers` reports it. */
     @state()
-    private _hoverMarker?: number;
-
-    @state()
-    private _focusMarker?: number;
+    private _activeMarker?: number;
 
     #renderer?: UauiChartRenderer;
     #stopThemeWatch?: () => void;
@@ -287,18 +281,14 @@ export class UauiTimeSeriesChartElement extends UmbLitElement {
         this.#colors = undefined;
         this._hover = undefined;
         this._markerPlacements = [];
-        this._hoverMarker = undefined;
-        this._focusMarker = undefined;
+        this._activeMarker = undefined;
         this._hoverDismissed = false;
         document.removeEventListener("keydown", this.#onDocumentKeydown);
     }
 
-    /** WCAG 1.4.13: Escape hides a tooltip that opened on hover or focus, without moving the pointer or focus. */
+    /** WCAG 1.4.13: Escape hides the date tooltip without moving the pointer; `uaui-chart-markers` does the same for its own. */
     #onDocumentKeydown = (e: KeyboardEvent) => {
-        if (e.key !== "Escape") return;
-        if (this._hover) this._hoverDismissed = true;
-        this._hoverMarker = undefined;
-        this._focusMarker = undefined;
+        if (e.key === "Escape" && this._hover) this._hoverDismissed = true;
     };
 
     protected override willUpdate(changed: PropertyValues<this>) {
@@ -317,9 +307,6 @@ export class UauiTimeSeriesChartElement extends UmbLitElement {
         if (!markersPrev || (Object.keys(markersNext) as (keyof MarkersFrom)[]).some((key) => markersPrev[key] !== markersNext[key])) {
             this.#markersFrom = markersNext;
             this.#markerBuckets = bucketMarkers(markersNext.markers, markersNext.dates, markersNext.groupBy);
-            // The old buttons go without a mouseleave or blur, so what they set would stick.
-            this._hoverMarker = undefined;
-            this._focusMarker = undefined;
             this.#dirty = true;
         }
     }
@@ -327,9 +314,7 @@ export class UauiTimeSeriesChartElement extends UmbLitElement {
     protected override updated(changed: PropertyValues<this>) {
         super.updated(changed);
         this.#syncChart();
-        this.#renderer?.setActiveMarker(this.#activeMarker);
         if (this._hover) void this.#placeTooltip();
-        if (this.#activeMarker !== undefined) void this.#placeMarkerTooltip();
     }
 
     get #hasData() {
@@ -458,23 +443,20 @@ export class UauiTimeSeriesChartElement extends UmbLitElement {
         const tip = this.shadowRoot?.querySelector<UauiChartTooltipElement>("uaui-chart-tooltip");
         const plot = this.shadowRoot?.querySelector<HTMLElement>(".plot");
         if (!tip || !plot) return;
-        // The tooltip draws its rows a microtask after this render, and its size depends on them.
-        await tip.updateComplete;
-        const hover = this._hover;
-        if (!hover || !tip.isConnected) return;
-        const gap = 14;
-        const left = hover.x + gap + tip.offsetWidth > plot.clientWidth ? hover.x - gap - tip.offsetWidth : hover.x + gap;
-        const top = Math.min(Math.max(hover.y - tip.offsetHeight - 8, 0), Math.max(plot.clientHeight - tip.offsetHeight, 0));
-        tip.style.left = `${Math.max(left, 0)}px`;
-        tip.style.top = `${top}px`;
-        tip.style.visibility = "visible";
+        await placeTooltip(tip, ({ width, height }) => {
+            const hover = this._hover;
+            if (!hover) return undefined;
+            const gap = 14;
+            const left = hover.x + gap + width > plot.clientWidth ? hover.x - gap - width : hover.x + gap;
+            return { left: Math.max(left, 0), top: clampInside(hover.y - height - 8, height, plot.clientHeight) };
+        });
     }
 
     /** One row per series with a point at the hovered date, and for the bar kinds the total and the compare total. */
     #renderTooltip() {
         const hover = this._hover;
         const { data, dateLabels, compareDateLabels, compareTotalDateLabels, totals, numberFormat } = this.#derived;
-        if (!hover || this._hoverDismissed || !dateLabels[hover.index] || this.#activeMarker !== undefined) return nothing;
+        if (!hover || this._hoverDismissed || !dateLabels[hover.index] || this._activeMarker !== undefined) return nothing;
         const { index } = hover;
         const bars = this.#isBars;
         const rows = data.series.flatMap((s, i): UauiChartTooltipRow[] => {
@@ -507,80 +489,24 @@ export class UauiTimeSeriesChartElement extends UmbLitElement {
             .numberFormat=${numberFormat}></uaui-chart-tooltip>`;
     }
 
-    /** The hovered or focused dot, only while it has a bucket and a placement. */
-    get #activeMarker() {
-        const index = this._hoverMarker ?? this._focusMarker;
-        if (index === undefined) return undefined;
-        const drawn = this.#markerBuckets.some((b) => b.index === index) && this._markerPlacements.some((p) => p.index === index);
-        return drawn ? index : undefined;
+    #onActiveMarker(e: CustomEvent<UauiChartMarkersActiveDetail>) {
+        this._activeMarker = e.detail.index;
+        this.#renderer?.setActiveMarker(e.detail.index);
     }
 
-    /** Puts the marker tooltip over its dot, centred, kept inside the plot. */
-    async #placeMarkerTooltip() {
-        const tip = this.shadowRoot?.querySelector<UauiChartMarkerTooltipElement>("uaui-chart-marker-tooltip");
-        const plot = this.shadowRoot?.querySelector<HTMLElement>(".plot");
-        if (!tip || !plot) return;
-        // The tooltip draws its entries a microtask after this render, and its width depends on them.
-        await tip.updateComplete;
-        const placement = this._markerPlacements.find((p) => p.index === this.#activeMarker);
-        if (!placement || !tip.isConnected) return;
-        const left = Math.min(Math.max(placement.x - tip.offsetWidth / 2, 0), Math.max(plot.clientWidth - tip.offsetWidth, 0));
-        tip.style.left = `${left}px`;
-        tip.style.visibility = "visible";
+    // The markers' own `marker-click` doesn't bubble, so the chart raises the public one.
+    #onMarkerClick(e: CustomEvent<UauiMarkerClickDetail>) {
+        this.dispatchEvent(new CustomEvent<UauiMarkerClickDetail>("marker-click", { bubbles: true, detail: e.detail }));
     }
 
-    /** The marker's date, whatever time of day it carries. */
-    #markerDateText(marker: UauiMarker) {
-        return formatIsoDate(dateOnly(marker.date), this.#derived.markerDate);
-    }
-
-    #markerLabel(bucket: MarkerBucket) {
-        const entries = bucket.markers.map((m) => this.localize.term("uauiAnalytics_chartMarkerEntry", m.title, this.#markerDateText(m)));
-        const text = entries.join(this.localize.term("uauiAnalytics_chartMarkerSeparator"));
-        return this.localize.term("uauiAnalytics_chartMarkerAriaLabel", text);
-    }
-
-    #onMarkerClick(e: MouseEvent, bucket: MarkerBucket) {
-        // A pointer click leaves focus on the button; only the hover then shows the tooltip, so it goes when the pointer does.
-        if (e.detail > 0) this._focusMarker = undefined;
-        this.dispatchEvent(new CustomEvent<UauiMarkerClickDetail>("marker-click", { bubbles: true, detail: { id: bucket.markers[0].id } }));
-    }
-
-    /** One button over each dot, in date order so the tab order follows the timeline. */
+    /** One button over each dot, and the tooltip of the one the pointer or keyboard is on. */
     #renderMarkers() {
-        const placements = new Map(this._markerPlacements.map((p) => [p.index, p]));
-        const active = this.#activeMarker;
-        const drawn = this.#markerBuckets.filter((b) => placements.has(b.index));
-        // Keyed by what the button stands for, so a reused button never stands for a different bucket.
-        return repeat(
-            drawn,
-            (bucket) => `${bucket.index}:${bucket.markers.map((m) => m.id).join(",")}`,
-            (bucket) => {
-            const placement = placements.get(bucket.index)!;
-            return html`<button
-                type="button"
-                class="marker"
-                style="left:${placement.x}px; top:${placement.y}px"
-                aria-label=${this.#markerLabel(bucket)}
-                aria-describedby=${active === bucket.index ? "marker-tooltip" : nothing}
-                @mouseenter=${() => (this._hoverMarker = bucket.index)}
-                @mouseleave=${() => (this._hoverMarker = undefined)}
-                @focus=${() => (this._focusMarker = bucket.index)}
-                @blur=${() => (this._focusMarker = undefined)}
-                @click=${(e: MouseEvent) => this.#onMarkerClick(e, bucket)}></button>`;
-            },
-        );
-    }
-
-    #renderMarkerTooltip() {
-        const bucket = this.#markerBuckets.find((b) => b.index === this.#activeMarker);
-        if (!bucket || !this._markerPlacements.some((p) => p.index === bucket.index)) return nothing;
-        const shown = bucket.markers.slice(0, MAX_MARKERS_IN_TOOLTIP);
-        return html`<uaui-chart-marker-tooltip
-            id="marker-tooltip"
-            style="visibility:hidden"
-            .entries=${shown.map((m) => ({ date: this.#markerDateText(m), title: m.title, description: m.description }))}
-            .more=${bucket.markers.length - shown.length}></uaui-chart-marker-tooltip>`;
+        return html`<uaui-chart-markers
+            .buckets=${this.#markerBuckets}
+            .placements=${this._markerPlacements}
+            .dateFormat=${this.#derived.markerDate}
+            @active-change=${this.#onActiveMarker}
+            @marker-click=${this.#onMarkerClick}></uaui-chart-markers>`;
     }
 
     #renderLegend() {
@@ -643,7 +569,7 @@ export class UauiTimeSeriesChartElement extends UmbLitElement {
             <div class="plot" ?hidden=${!showPlot}>
                 <canvas aria-hidden="true"></canvas>
                 ${this.#renderTooltip()}
-                ${showPlot ? this.#renderMarkers() : nothing} ${showPlot ? this.#renderMarkerTooltip() : nothing}
+                ${showPlot ? this.#renderMarkers() : nothing}
             </div>
             ${showPlot ? this.#renderLegend() : nothing} ${showPlot ? this.#renderTable() : nothing}
             </div>
@@ -683,25 +609,6 @@ export class UauiTimeSeriesChartElement extends UmbLitElement {
             uaui-empty-state,
             uaui-error-state {
                 width: 100%;
-            }
-
-            /* The canvas draws the dot; this transparent button over it is the hover and focus target. */
-            .marker {
-                position: absolute;
-                z-index: 1;
-                width: 24px;
-                height: 24px;
-                margin: -12px 0 0 -12px;
-                padding: 0;
-                border: 0;
-                border-radius: 50%;
-                background: transparent;
-                cursor: pointer;
-            }
-
-            .marker:focus-visible {
-                outline: 2px solid var(--uui-color-focus);
-                outline-offset: 0;
             }
         `,
     ];

@@ -208,22 +208,22 @@ describe("Feature: the table's row rules", () => {
 
     describe("Scenario: counting rows", () => {
         it("counts the matched rows in client mode", () => {
-            expect(countRows("client", 7, 20, 500)).toBe(7);
+            expect(countRows({ mode: "client", matched: 7, held: 20, totalRows: 500 })).toBe(7);
         });
         it("reads total-rows in server mode", () => {
-            expect(countRows("server", 7, 20, 500)).toBe(500);
+            expect(countRows({ mode: "server", matched: 7, held: 20, totalRows: 500 })).toBe(500);
         });
         it("counts the held rows in server mode without total-rows", () => {
-            expect(countRows("server", 7, 20, undefined)).toBe(20);
+            expect(countRows({ mode: "server", matched: 7, held: 20, totalRows: undefined })).toBe(20);
         });
         it("floors a fractional total-rows", () => {
-            expect(countRows("server", 7, 20, 99.9)).toBe(99);
+            expect(countRows({ mode: "server", matched: 7, held: 20, totalRows: 99.9 })).toBe(99);
         });
         it("never goes below 0", () => {
-            expect(countRows("server", 7, 20, -5)).toBe(0);
+            expect(countRows({ mode: "server", matched: 7, held: 20, totalRows: -5 })).toBe(0);
         });
         it("counts the held rows for a total-rows that isn't a number", () => {
-            expect(countRows("server", 7, 20, Number.NaN)).toBe(20);
+            expect(countRows({ mode: "server", matched: 7, held: 20, totalRows: Number.NaN })).toBe(20);
         });
     });
 

@@ -9,7 +9,7 @@ import darkCss from "@umbraco-ui/uui/themes/dark.css?inline";
 import highContrastCss from "@umbraco-ui/uui/themes/high-contrast.css?inline";
 import { render } from "vitest-browser-lit";
 import { axeRun } from "../internal/test/a11y.js";
-import { deepText, nextEvent, renderElement, shadow, type UauiTestElement } from "../internal/test/dom.js";
+import { deepQuery, deepQueryAll, deepText, nextEvent, recordEvents, renderElement, settle, shadow, type UauiTestElement } from "../internal/test/dom.js";
 import { screenshotIt } from "../internal/test/screenshot.js";
 import type { UauiMarker } from "./types.js";
 import "./time-series-chart.element.js";
@@ -25,8 +25,9 @@ const earlier = { id: "m0", date: "2026-06-10", title: "Newsletter" };
 const sameDay = { id: "m2", date: "2026-06-11", title: "Paid push" };
 const outside = { id: "m9", date: "2026-07-01", title: "Summer sale" };
 
-const markers = (el: Element) => [...shadow(el).querySelectorAll(".marker")] as HTMLElement[];
-const markerTooltip = (el: Element) => shadow(el).querySelector("uaui-chart-marker-tooltip") as HTMLElement | null;
+// The buttons live in the shadow root of the chart's `uaui-chart-markers`.
+const markers = (el: Element) => deepQueryAll<HTMLElement>(shadow(el), ".marker");
+const markerTooltip = (el: Element) => deepQuery<HTMLElement>(shadow(el), "uaui-chart-marker-tooltip");
 const markerTooltipText = (el: Element) => {
     const tip = markerTooltip(el);
     return tip ? deepText(tip) : undefined;
@@ -39,11 +40,14 @@ const hoverDate = async (el: Element, index: number) => {
     const x = Chart.getChart(canvas)!.getDatasetMeta(0).data[index].x;
     await userEvent.hover(page.elementLocator(canvas), { position: { x, y: canvas.getBoundingClientRect().height / 2 } });
 };
-const chart = (list: UauiMarker[], kind = "line", data = series, groupBy = "day") =>
-    renderElement(
+const chart = async (list: UauiMarker[], kind = "line", data = series, groupBy = "day") => {
+    const el = await renderElement(
         html`<uaui-time-series-chart kind=${kind} group-by=${groupBy} .series=${data} .markers=${list} style="width:400px"></uaui-time-series-chart>`,
         "uaui-time-series-chart",
     );
+    await settle(el);
+    return el;
+};
 
 describe("Feature: event markers", () => {
     describe("Scenario: a marker within the range", () => {
@@ -121,6 +125,14 @@ describe("Feature: event markers", () => {
             const { bubbles, composed } = await event;
             expect([bubbles, composed]).toEqual([true, false]);
         });
+
+        it("reaches a listener on the chart once per click", async () => {
+            const el = await chart([launch]);
+            const events = recordEvents(el, "marker-click");
+            markers(el)[0].click();
+            await settle(el);
+            expect(events).toHaveLength(1);
+        });
     });
 
     describe("Scenario: pressing Enter on a focused marker", () => {
@@ -140,7 +152,7 @@ describe("Feature: event markers", () => {
             focusedTitles = [];
             for (let i = 0; i < 2; i++) {
                 await userEvent.tab();
-                focusedTitles.push(shadow(el).activeElement?.getAttribute("aria-label") ?? "");
+                focusedTitles.push(shadow(el).querySelector("uaui-chart-markers")?.shadowRoot?.activeElement?.getAttribute("aria-label") ?? "");
             }
         });
 
@@ -205,11 +217,14 @@ describe("Feature: event markers", () => {
         const sundayWeeks = [{ id: "pv", label: "Pageviews", points: [
             { date: "2026-05-31", value: 120 }, { date: "2026-06-07", value: 280 }, { date: "2026-06-14", value: 140 },
         ] }];
-        const sundayChart = (list: UauiMarker[]) =>
-            renderElement(
+        const sundayChart = async (list: UauiMarker[]) => {
+            const el = await renderElement(
                 html`<uaui-time-series-chart group-by="week" week-start="7" .series=${sundayWeeks} .markers=${list} style="width:400px"></uaui-time-series-chart>`,
                 "uaui-time-series-chart",
             );
+            await settle(el);
+            return el;
+        };
 
         it("puts a Saturday marker on the dot of the Sunday week it ends", async () => {
             const el = await sundayChart([{ id: "w", date: "2026-06-13", title: "Saturday" }]);
@@ -239,7 +254,7 @@ describe("Feature: event markers", () => {
         it("drops the dot of a removed marker", async () => {
             const el = await chart([launch, earlier]);
             el.markers = [launch];
-            await el.updateComplete;
+            await settle(el);
             await expect.poll(() => markers(el)).toHaveLength(1);
         });
     });
@@ -251,7 +266,7 @@ describe("Feature: event markers", () => {
             await userEvent.hover(page.elementLocator(markers(el)[0]));
             await expect.poll(() => markerTooltip(el)).not.toBeNull();
             el.markers = [];
-            await el.updateComplete;
+            await settle(el);
             await hoverDate(el, 0);
         });
 
@@ -261,7 +276,7 @@ describe("Feature: event markers", () => {
 
         it("doesn't open a tooltip for a new marker on the same date", async () => {
             el.markers = [launch];
-            await el.updateComplete;
+            await settle(el);
             await expect.poll(() => markers(el)).toHaveLength(1);
             expect(markerTooltip(el)).toBeNull();
         });
@@ -301,6 +316,7 @@ describe("Feature: event markers", () => {
                     .markers=${[launch]} style="width:400px"></uaui-time-series-chart>`,
                 "uaui-time-series-chart",
             );
+            await settle(el);
             expect(markers(el)).toHaveLength(1);
         });
     });
@@ -317,7 +333,7 @@ describe("Feature: event markers", () => {
                     <uaui-time-series-chart .series=${series} .markers=${[launch]}></uaui-time-series-chart>
                 </div>`,
             ).container.querySelector("div")!;
-            await host.querySelector("uaui-time-series-chart")!.updateComplete;
+            await settle(host.querySelector("uaui-time-series-chart")!);
             await parkPointer(host);
         });
         afterEach(() => theme.remove());
@@ -340,7 +356,7 @@ describe("Feature: event markers", () => {
                         <uaui-time-series-chart .series=${series} .markers=${[launch, sameDay, earlier]}></uaui-time-series-chart>
                     </div>`,
                 ).container.querySelector("div")!;
-                await host.querySelector("uaui-time-series-chart")!.updateComplete;
+                await settle(host.querySelector("uaui-time-series-chart")!);
                 return await axeRun(host);
             } finally {
                 theme?.remove();

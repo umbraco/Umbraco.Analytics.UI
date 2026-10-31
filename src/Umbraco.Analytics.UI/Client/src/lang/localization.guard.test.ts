@@ -4,7 +4,7 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { html } from "@umbraco-cms/backoffice/external/lit";
 import { umbLocalizationManager } from "@umbraco-cms/backoffice/localization-api";
-import { deepQuery, renderElement, settle, shadow, type UauiTestElement } from "../internal/test/dom.js";
+import { deepQuery, deepQueryAll, renderElement, settle, shadow, type UauiTestElement } from "../internal/test/dom.js";
 import { renderWithModals } from "../internal/test/modal-host.js";
 import { markerFor, registerMarkerTranslations, untranslatedWords } from "../internal/test/untranslated.js";
 import "../chart/time-series-chart.element.js";
@@ -183,7 +183,7 @@ describe("Feature: built-in text is translated, with nothing hard-coded", () => 
             const el = await chart(
                 html`<uaui-time-series-chart style=${wide} .series=${[...series, second]} .compareSeries=${previous} .compare=${compare} .range=${range} .markers=${markers}></uaui-time-series-chart>`,
             );
-            await expect.poll(() => shadow(el).querySelectorAll(".marker").length).toBeGreaterThan(0);
+            await expect.poll(() => deepQueryAll(shadow(el), ".marker").length).toBeGreaterThan(0);
             expect(await wordsIn(el)).toEqual([]);
         });
 
