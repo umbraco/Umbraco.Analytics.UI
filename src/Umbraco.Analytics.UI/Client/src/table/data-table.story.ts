@@ -52,10 +52,15 @@ const mixedRows = [
     { name: "Sticker pack", orders: 2310, revenue: 6930, refundRate: 0.004 },
 ];
 
+/**
+ * Give each table a `label`, usually the heading of the box it sits in. It isn't shown: it names the table for
+ * screen readers, and names its pager "{label}, pagination", so two paged tables on one page don't repeat a landmark.
+ */
 const meta: Meta<UauiDataTableElement> = {
     title: "Components/Data Table",
     component: "uaui-data-table",
     args: {
+        label: "Top pages",
         columns: pageColumns,
         rows: pageRows,
         loading: false,
@@ -69,6 +74,7 @@ const meta: Meta<UauiDataTableElement> = {
     render: (args) =>
         html`<uui-box headline="Top pages" style="--uui-box-default-padding: 0">
             <uaui-data-table
+                .label=${args.label}
                 .columns=${args.columns}
                 .rows=${args.rows}
                 .loading=${args.loading}
@@ -89,7 +95,7 @@ export const Columns: Story = {
     args: { columns: mixedColumns, rows: mixedRows },
     render: (args) =>
         html`<uui-box headline="Products" style="--uui-box-default-padding: 0">
-            <uaui-data-table .columns=${args.columns} .rows=${args.rows}></uaui-data-table>
+            <uaui-data-table label="Products" .columns=${args.columns} .rows=${args.rows}></uaui-data-table>
         </uui-box>`,
 };
 
@@ -99,7 +105,7 @@ export const Narrow: Story = {
     render: (args) =>
         html`<div style="width: 420px">
             <uui-box headline="Products" style="--uui-box-default-padding: 0">
-                <uaui-data-table .columns=${args.columns} .rows=${args.rows}></uaui-data-table>
+                <uaui-data-table label="Products" .columns=${args.columns} .rows=${args.rows}></uaui-data-table>
             </uui-box>
         </div>`,
 };
@@ -109,7 +115,7 @@ export const CompareBadges: Story = {
     name: "Compare badges",
     render: (args) =>
         html`<uui-box headline="Top pages" style="--uui-box-default-padding: 0">
-            <uaui-data-table .columns=${args.columns} .rows=${args.rows} .compareRows=${compareRows} row-key="url"></uaui-data-table>
+            <uaui-data-table label="Top pages" .columns=${args.columns} .rows=${args.rows} .compareRows=${compareRows} row-key="url"></uaui-data-table>
         </uui-box>`,
 };
 
@@ -120,7 +126,7 @@ export const Sortable: Story = {
     },
     render: (args) =>
         html`<uui-box headline="Top pages" style="--uui-box-default-padding: 0">
-            <uaui-data-table .columns=${args.columns} .rows=${args.rows} .sort=${{ key: "pageviews", direction: "desc" }}></uaui-data-table>
+            <uaui-data-table label="Top pages" .columns=${args.columns} .rows=${args.rows} .sort=${{ key: "pageviews", direction: "desc" }}></uaui-data-table>
         </uui-box>`,
 };
 
@@ -140,7 +146,7 @@ export const PagedClient: Story = {
     },
     render: (args) =>
         html`<uui-box headline="Top pages" style="--uui-box-default-padding: 0">
-            <uaui-data-table .columns=${args.columns} .rows=${args.rows}></uaui-data-table>
+            <uaui-data-table label="Top pages" .columns=${args.columns} .rows=${args.rows}></uaui-data-table>
         </uui-box>`,
 };
 
@@ -149,7 +155,7 @@ export const ColumnToolbar: Story = {
     args: { columns: pageColumns, rows: pageRows },
     render: (args) =>
         html`<uui-box headline="Top pages" style="--uui-box-default-padding: 0">
-            <uaui-data-table .columns=${args.columns} .rows=${args.rows}>
+            <uaui-data-table label="Top pages" .columns=${args.columns} .rows=${args.rows}>
                 <uaui-search-field slot="toolbar-start"></uaui-search-field>
                 <uaui-table-total slot="toolbar-pageviews" label="Total pageviews" value="272" .current=${272} .previous=${256}></uaui-table-total>
                 <uaui-table-total slot="toolbar-sessions" label="Total sessions" value="53" .current=${53} .previous=${50}></uaui-table-total>
@@ -163,7 +169,7 @@ export const FooterSlot: Story = {
     args: { columns: pageColumns, rows: manyPageRows },
     render: (args) =>
         html`<uui-box headline="Top pages" style="--uui-box-default-padding: 0">
-            <uaui-data-table .columns=${args.columns} .rows=${args.rows}>
+            <uaui-data-table label="Top pages" .columns=${args.columns} .rows=${args.rows}>
                 <span slot="footer">Updated 5 minutes ago</span>
             </uaui-data-table>
         </uui-box>`,
@@ -177,7 +183,7 @@ export const Search: Story = {
     },
     render: (args) =>
         html`<uui-box headline="Top pages" style="--uui-box-default-padding: 0">
-            <uaui-data-table .columns=${args.columns} .rows=${args.rows}>
+            <uaui-data-table label="Top pages" .columns=${args.columns} .rows=${args.rows}>
                 <uaui-search-field slot="toolbar"></uaui-search-field>
             </uaui-data-table>
         </uui-box>`,
@@ -190,6 +196,7 @@ export const ClickableRows: Story = {
         log.textContent = "Click a row, or Tab to one and press Enter.";
         return html`<uui-box headline="Top pages" style="--uui-box-default-padding: 0">
                 <uaui-data-table
+                    label="Top pages"
                     .columns=${args.columns}
                     .rows=${args.rows}
                     clickable-rows

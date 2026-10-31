@@ -163,6 +163,7 @@ export class ExampleEngageAnalyticsPageElement extends UmbLitElement {
         if (this.view === "visitors") {
             const visitors = this._visitors;
             return html`<uaui-data-table
+                label="Visitors"
                 .columns=${visitorColumns}
                 .rows=${visitors?.rows ?? []}
                 .compareRows=${visitors?.compareRows ?? []}
@@ -175,6 +176,7 @@ export class ExampleEngageAnalyticsPageElement extends UmbLitElement {
         const pages = this.#pages?.result;
         return html`<uaui-data-table
             ${ref(this.#pages?.attach)}
+            label="Pages"
             .columns=${pageColumns}
             row-key="url"
             empty-headline="No pages found"

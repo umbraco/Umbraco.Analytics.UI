@@ -54,7 +54,7 @@ const compareRows = [
 // both totals and the value to show, already formatted.
 const renderTopPages = () => html`
     <uui-box headline="Top pages" style="--uui-box-default-padding: 0">
-        <uaui-data-table .columns=${columns} .rows=${rows} .compareRows=${compareRows} row-key="url">
+        <uaui-data-table label="Top pages" .columns=${columns} .rows=${rows} .compareRows=${compareRows} row-key="url">
             <uaui-search-field slot="toolbar-start"></uaui-search-field>
             <uaui-table-total slot="toolbar-pageviews" label="Total pageviews" value="272" .current=${272} .previous=${251}></uaui-table-total>
             <uaui-table-total slot="toolbar-sessions" label="Total sessions" value="52" .current=${52} .previous=${54}></uaui-table-total>

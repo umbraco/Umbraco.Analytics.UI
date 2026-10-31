@@ -55,6 +55,7 @@ export class UauiDataTableElement extends UmbLitElement {
     error: boolean;
     errorDescription?: string;
     errorHeadline?: string;
+    label: string;
     loading: boolean;
     mode: UauiTableMode;
     page: number;

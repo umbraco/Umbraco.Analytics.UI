@@ -285,6 +285,7 @@ export class ExampleAiUsagePageElement extends UmbLitElement {
                     @change=${this.#onBreakdownBy}></uaui-toggle-group>
                 <uaui-data-table
                     ${ref(this.#breakdown.attach)}
+                    label="Breakdown"
                     row-key="name"
                     .columns=${tableColumns(this._by)}>
                     <div slot="toolbar"><uaui-search-field></uaui-search-field></div>

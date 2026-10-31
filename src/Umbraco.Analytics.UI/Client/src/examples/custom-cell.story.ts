@@ -110,7 +110,7 @@ const compareRows = [
 
 const renderProducts = () => html`
     <uui-box headline="Products" style="--uui-box-default-padding: 0">
-        <uaui-data-table .columns=${columns} .rows=${rows} .compareRows=${compareRows} row-key="name"></uaui-data-table>
+        <uaui-data-table label="Products" .columns=${columns} .rows=${rows} .compareRows=${compareRows} row-key="name"></uaui-data-table>
     </uui-box>
 `;
 // #endregion

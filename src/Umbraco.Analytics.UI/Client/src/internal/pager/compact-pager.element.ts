@@ -30,6 +30,10 @@ export class UauiCompactPagerElement extends UmbLitElement {
     @property({ type: Number })
     total = 0;
 
+    /** What the pager pages, e.g. the table's own name. Names the navigation "{label}, pagination", so two pagers on a page differ. Without it the navigation is named "Pagination". */
+    @property({ type: String })
+    label = "";
+
     /** The page sizes to offer. */
     @property({ attribute: false })
     pageSizes: number[] = [10, 25, 50, 100];
@@ -72,7 +76,9 @@ export class UauiCompactPagerElement extends UmbLitElement {
         const format = getNumberFormat(this.localize.lang()).format;
         const from = (page - 1) * size + 1;
         const to = Math.min(total, page * size);
-        return html`<div class="pager" role="navigation" aria-label=${this.localize.term("uauiAnalytics_pagerLabel")}>
+        return html`<div class="pager" role="navigation" aria-label=${this.label
+                ? this.localize.term("uauiAnalytics_pagerLabelNamed", this.label)
+                : this.localize.term("uauiAnalytics_pagerLabel")}>
             <div class="page-size">
                 <span aria-hidden="true">${this.localize.term("uauiAnalytics_pagerPageSize")}</span>
                 <uui-select

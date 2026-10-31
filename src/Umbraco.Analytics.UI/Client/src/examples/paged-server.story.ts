@@ -59,7 +59,7 @@ export class ExamplePagedServerTableElement extends LitElement {
 
     override render() {
         return html`<uui-box headline="Top pages" style="--uui-box-default-padding: 0">
-            <uaui-data-table ${ref(this.#pages.attach)} .columns=${columns}>
+            <uaui-data-table ${ref(this.#pages.attach)} label="Top pages" .columns=${columns}>
                 <div slot="toolbar"><uaui-search-field></uaui-search-field></div>
             </uaui-data-table>
         </uui-box>`;

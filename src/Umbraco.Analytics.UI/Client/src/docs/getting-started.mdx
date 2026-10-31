@@ -130,6 +130,7 @@ const columns: UauiTableColumn[] = [
 const rows = [{ title: "Home", url: "https://example.com/", views: 1240 }];
 
 html`<uaui-data-table
+  label="Top pages"
   .columns=${columns}
   .rows=${rows}
   row-key="url"

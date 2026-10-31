@@ -58,7 +58,7 @@ const rows = [
 
 const renderVisitors = () => html`
     <uui-box headline="Visitors" style="--uui-box-default-padding: 0">
-        <uaui-data-table .columns=${columns} .rows=${rows}></uaui-data-table>
+        <uaui-data-table label="Visitors" .columns=${columns} .rows=${rows}></uaui-data-table>
     </uui-box>
 `;
 // #endregion

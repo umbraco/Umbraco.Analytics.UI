@@ -92,6 +92,8 @@ export default {
         // Compact pager (used by the data table; override these keys to reword it)
         pagerPageSize: "Per page",
         pagerLabel: "Pagination",
+        // The pager's name when its table has a `label`: {0} is that label, "Top pages, pagination".
+        pagerLabelNamed: "{0}, pagination",
         pagerPosition: "{0}–{1} of {2}",
         pagerPreviousPage: "Previous page",
         pagerNextPage: "Next page",
@@ -99,5 +101,7 @@ export default {
         // Data table
         // Names the scrolling table area, only while its columns don't fit.
         tableScrollRegion: "Table, scroll sideways to see more columns",
+        // The same when the table has a `label`: {0} is that label, "Top pages, scroll sideways to see more columns".
+        tableScrollRegionNamed: "{0}, scroll sideways to see more columns",
     },
 } satisfies UmbLocalizationDictionary;
