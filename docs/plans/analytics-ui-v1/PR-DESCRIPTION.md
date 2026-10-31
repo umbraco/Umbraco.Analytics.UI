@@ -99,7 +99,7 @@ All commands run in `src/Umbraco.Analytics.UI/Client`.
 
 1. `npm ci`, then `npx playwright install chromium` once. Both finish without errors.
 2. `npm test`. About 938 specs pass in Chromium. On macOS, two WebKit Tab specs may fail if you run WebKit; see Good to know.
-3. `npm run check:api`. API Extractor completes with no change to `api/ui.api.md`.
+3. `npm run check:api`. API Extractor completes with no change to `api/analytics-ui.api.md`.
 4. `npm run build`, then `npm run check:size`. The bundle reports about 93 KB gzip, under the 120 KB budget.
 5. `npm run test:perf`. The chart and table timing specs pass (chart under 100 ms, table sort and page under 50 ms).
 6. `npm run storybook` and open http://localhost:6006:
@@ -114,7 +114,7 @@ All commands run in `src/Umbraco.Analytics.UI/Client`.
 
 ## Good to know
 
-- The public API in `src/Umbraco.Analytics.UI/Client/api/ui.api.md` is new and becomes frozen for the v19 major once released. It needs a reviewer's sign-off.
+- The public API in `src/Umbraco.Analytics.UI/Client/api/analytics-ui.api.md` is new and becomes frozen for the v19 major once released. It needs a reviewer's sign-off.
 - Two WebKit Tab specs fail on macOS only. They failed before this branch too, and pass in the Linux container CI uses.
 - Storybook publishing to GitHub Pages is wired up, but Pages still has to be turned on for the repo (pending IT).
 - `main` has open Dependabot alerts. This PR doesn't change any dependency versions.
@@ -127,7 +127,7 @@ Where the code lives. Everything under `src/` is new except `delta-badge/`, whic
 
 ```text
 src/Umbraco.Analytics.UI/Client/
-├── api/ui.api.md              # public API report, needs sign-off
+├── api/analytics-ui.api.md  # public API report, needs sign-off
 ├── public/umbraco-package.json # changed: localization + modal extensions
 └── src/
     ├── index.ts               # the public barrel: everything below except internal/ and examples/
@@ -187,7 +187,7 @@ What the package adds to the backoffice. Nothing an editor sees on its own.
 |---|---|---|---|
 | **New** | Localization | Uaui English (weight 200) | Package strings; a product's own at weight 100 wins |
 | **New** | Modal | Date range dialog | Opened by `uaui-date-range` |
-| | Import map | `@umbraco-analytics/ui` | One shared copy for every product on a site |
+| | Import map | `@umbraco/analytics-ui` | One shared copy for every product on a site |
 
 <details>
 <summary>Checked and fine (24)</summary>

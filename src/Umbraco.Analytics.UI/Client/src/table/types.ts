@@ -3,7 +3,7 @@ import type { UauiColorSlot } from "../theme/types.js";
 /**
  * Per-column settings that the cells and `uaui-table-compare-badge` read, so `UauiTableColumn` doesn't grow a field per cell.
  * Add your own keys for a custom cell of your own by merging into this interface:
- * `declare module "@umbraco-analytics/ui" { interface UauiTableColumnMeta { myKey?: string } }`. The block must sit in a file
+ * `declare module "@umbraco/analytics-ui" { interface UauiTableColumnMeta { myKey?: string } }`. The block must sit in a file
  * with a top-level `import` or `export`, or TypeScript treats it as a new module instead of merging.
  */
 export interface UauiTableColumnMeta {

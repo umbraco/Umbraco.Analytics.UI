@@ -20,7 +20,7 @@ import {
     type UauiTableColumn,
     type UauiTableStats,
     // Importing the package also registers <uaui-table-compare-badge>.
-} from "@umbraco-analytics/ui";`;
+} from "@umbraco/analytics-ui";`;
 
 // #region cell
 /**

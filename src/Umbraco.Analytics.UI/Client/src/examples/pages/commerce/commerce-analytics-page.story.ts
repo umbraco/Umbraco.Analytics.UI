@@ -18,7 +18,7 @@ import {
     type UauiSearchFieldDetail,
     type UauiTableSort,
     type UauiTableSortChangeDetail,
-} from "@umbraco-analytics/ui";
+} from "@umbraco/analytics-ui";
 // Your API client: loadSnapshot, loadBuyers, loadBuyerCompare and their types. In this story they are a fake, generated from the dates.
 import { loadBuyerCompare, loadBuyers, loadSnapshot, type BuyerPage, type BuyerRow, type Day, type Snapshot, type Totals } from "./commerce-api.js";`;
 

@@ -8,7 +8,7 @@ import { UAUI_TABLE_CELL } from "../table/cells/cell-names.js";
 import { UauiTableServerController, type UauiTableColumn, type UauiTableServerState } from "../table/index.js";
 
 const imports = `import { css, customElement, html, LitElement, ref } from "@umbraco-cms/backoffice/external/lit";
-import { UAUI_TABLE_CELL, UauiTableServerController, type UauiTableColumn, type UauiTableServerState } from "@umbraco-analytics/ui";`;
+import { UAUI_TABLE_CELL, UauiTableServerController, type UauiTableColumn, type UauiTableServerState } from "@umbraco/analytics-ui";`;
 
 // #region example
 type PageRow = { url: string; pageviews: number; sessions: number };

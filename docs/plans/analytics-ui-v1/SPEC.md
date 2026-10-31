@@ -6,7 +6,7 @@ None. The package has no server code. Products call their own APIs and pass data
 
 ## Frontend components
 
-All elements live in `src/Umbraco.Analytics.UI/Client/src/<name>/` and are exported from `@umbraco-analytics/ui`. Every element:
+All elements live in `src/Umbraco.Analytics.UI/Client/src/<name>/` and are exported from `@umbraco/analytics-ui`. Every element:
 
 - extends `UmbLitElement` and localizes every visible string, `aria-label` and placeholder
 - uses `--uui-*` tokens and reads colours through the `--uaui-color-*` read tokens (ARCHITECTURE.md decision 6), and reads correctly in the light, dark and high-contrast themes
@@ -246,7 +246,7 @@ When it comes back, the starting point is [`funnel-final.png`](../../design/phas
 
 - **Accessibility:** zero axe violations in every story, in light and dark. Every interactive part (KPI tile when selectable, markers, group-by, sort headers, pager, rows) is reachable and usable by keyboard.
 - **Contrast:** text, badges and chart labels are at least 4.5:1 against their background in light, dark and high-contrast.
-- **Public API:** no Chart.js type appears in `api/ui.api.md`.
+- **Public API:** no Chart.js type appears in `api/analytics-ui.api.md`.
 - **Chart speed:** the chart renders 6 series × 366 daily points in under 100ms on a mid-range laptop.
 - **Table speed:** in `client` mode the table stays responsive (sort or page in under 50ms) up to 1,000 rows. Above that, products use `server` mode.
 - **Bundle size:** the built bundle, including Chart.js, is under 120 KB gzipped.

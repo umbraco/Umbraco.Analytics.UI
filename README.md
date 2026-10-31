@@ -7,7 +7,7 @@ Shared backoffice charts, tables, KPI tiles and filters for the analytics sectio
 ## What it is
 
 - A Razor Class Library that ships built web components to `App_Plugins/Umbraco.Analytics.UI`.
-- Registers `@umbraco-analytics/ui` in the backoffice import map, so every product on a site loads the same single copy.
+- Registers `@umbraco/analytics-ui` in the backoffice import map, so every product on a site loads the same single copy.
 - Components only draw. Products fetch their own data and pass it in.
 - Chart.js is bundled inside and is not part of the public API.
 
@@ -38,7 +38,7 @@ Also public: `UAUI_TABLE_CELL` (the cell element names), `UAUI_TABLE_CONTEXT` (w
 | Package | Feed | Purpose |
 |---|---|---|
 | `Umbraco.Analytics.UI` | NuGet | Puts the files on the site. Products reference it with a one-major range, e.g. `[19.0.0, 20.0.0)`. |
-| `@umbraco-analytics/ui` | npm | Types only. Products add it as a dev dependency and mark `@umbraco-analytics/*` as external in Vite. |
+| `@umbraco/analytics-ui` | npm | Types only. Products add it as a dev dependency and mark `@umbraco/analytics-ui` as external in Vite. |
 
 Both share the version in `version.json`. The package major tracks the CMS major.
 

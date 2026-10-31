@@ -21,7 +21,7 @@
   ],
   "importmap": {
     "imports": {
-      "@umbraco-analytics/ui": "/App_Plugins/Umbraco.Analytics.UI/umbraco-analytics-ui.js"
+      "@umbraco/analytics-ui": "/App_Plugins/Umbraco.Analytics.UI/umbraco-analytics-ui.js"
     }
   }
 }

@@ -9,7 +9,7 @@ import type { UauiTableCellElement, UauiTableColumn } from "../table/types.js";
 
 const imports = `import { css, customElement, html, property } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
-import { UAUI_TABLE_CELL, type UauiTableCellElement, type UauiTableColumn } from "@umbraco-analytics/ui";`;
+import { UAUI_TABLE_CELL, type UauiTableCellElement, type UauiTableColumn } from "@umbraco/analytics-ui";`;
 
 // #region cell
 /**

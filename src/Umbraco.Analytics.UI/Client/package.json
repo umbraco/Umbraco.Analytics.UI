@@ -1,5 +1,5 @@
 {
-  "name": "@umbraco-analytics/ui",
+  "name": "@umbraco/analytics-ui",
   "version": "19.0.0-alpha.1",
   "type": "module",
   "types": "./types/umbraco-analytics-ui-public.d.ts",

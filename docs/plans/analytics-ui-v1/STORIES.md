@@ -67,7 +67,7 @@ Not a story: the `uui-box` pane recipe (SPEC.md §1) is a Storybook story with n
 **Done:**
 - Every criterion passes as an executable spec, sad paths included.
 - The element has Storybook stories for each state, and passes axe in light and dark.
-- It's exported from `src/index.ts`, and the `api/ui.api.md` change is committed.
+- It's exported from `src/index.ts`, and the `api/analytics-ui.api.md` change is committed.
 - `npm run lint`, `npm test` and `npm run build` pass.
 
 </details>
@@ -759,7 +759,7 @@ so that my product and others on the same site share one copy.
 AC1 — Import map entry
   Given a site with the Umbraco.Analytics.UI NuGet package installed
   When  the backoffice loads
-  Then  @umbraco-analytics/ui resolves to /App_Plugins/Umbraco.Analytics.UI/umbraco-analytics-ui.js
+  Then  @umbraco/analytics-ui resolves to /App_Plugins/Umbraco.Analytics.UI/umbraco-analytics-ui.js
 
 AC2 — Localization registered
   Given that site

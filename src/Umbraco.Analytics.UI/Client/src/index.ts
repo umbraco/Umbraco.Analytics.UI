@@ -1,4 +1,4 @@
-// Public API of @umbraco-analytics/ui.
+// Public API of @umbraco/analytics-ui.
 // Anything exported here is public: element names, attributes, events and types
 // must not break within a major (one version is shared by every product on a site).
 export * from "./kpi-tile/index.js";

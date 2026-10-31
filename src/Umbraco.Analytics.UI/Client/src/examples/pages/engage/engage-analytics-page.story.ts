@@ -20,7 +20,7 @@ import {
     type UauiSearchFieldDetail,
     type UauiTableSort,
     type UauiTableSortChangeDetail,
-} from "@umbraco-analytics/ui";
+} from "@umbraco/analytics-ui";
 // Your API client (the story fakes it, and wait stands in for the network): fetchChartSeries, fetchCompareSeries, fetchPages, fetchVisitorTypes and their types. In this story they are a fake, generated from the dates.
 import { fetchChartSeries, fetchCompareSeries, fetchPages, fetchVisitorTypes, markers, wait, type ChartView, type PagesResult, type VisitorTypeRow } from "./engage-api.js";`;
 

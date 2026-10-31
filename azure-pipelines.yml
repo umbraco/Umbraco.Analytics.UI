@@ -40,12 +40,12 @@ parameters:
     default: false # SBOM is still generated for release/hotfix branches and release-* tags
 
 # TODO: service connections and release environment are placeholders copied from Umbraco.Commerce until
-# the Azure DevOps project is agreed. The npm scope @umbraco-analytics is agreed.
+# the Azure DevOps project is agreed. The package is @umbraco/analytics-ui, in Umbraco's shared @umbraco npm scope.
 extends:
   template: devops/templates/azure-pipelines-template.yml@build
   parameters:
     product_name: Umbraco.Analytics.UI
-    npm_scope: '@umbraco-analytics'
+    npm_scope: '@umbraco'
     prerelease: ${{ parameters.prerelease }}
     # Prerelease tags (e.g. release-19.0.0-rc.1) only go to MyGet, never NuGet.org/npmjs.org
     ${{ if and(eq(parameters.release, 'auto'), startsWith(variables['Build.SourceBranch'], 'refs/tags/release-'), contains(replace(variables['Build.SourceBranch'], 'refs/tags/release-', ''), '-')) }}:

@@ -124,7 +124,7 @@
 
 - [x] **T21** - **wire: localization and date range modal into `umbraco-package.json`.** story: INT-1 (AC1–AC4). Add a `localization` extension (`culture: "en"`, `weight: 200`, `js: /App_Plugins/Umbraco.Analytics.UI/lang/en.js`) and a `modal` extension (alias `Uaui.Modal.DateRange`, `elementName: "uaui-date-range-modal"`) to `public/umbraco-package.json`.
   Acceptance (real backoffice, not unit tests):
-  - On a CMS 19 site referencing `Umbraco.Analytics.UI.csproj`, `@umbraco-analytics/ui` resolves in the browser.
+  - On a CMS 19 site referencing `Umbraco.Analytics.UI.csproj`, `@umbraco/analytics-ui` resolves in the browser.
   - `uauiAnalytics_emptyHeadline` translates.
   - A test page using `uaui-date-range` opens the modal.
   - `dotnet pack` output's `umbraco-package.json` version equals the package version.

@@ -1,8 +1,8 @@
-# @umbraco-analytics/ui
+# @umbraco/analytics-ui
 
 TypeScript types for Umbraco Analytics UI: shared backoffice charts, tables, KPI tiles and filters used by the analytics sections of Umbraco products.
 
-> This npm package contains **types only**. The components themselves ship in the `Umbraco.Analytics.UI` NuGet package, which registers `@umbraco-analytics/ui` in the backoffice import map so every product on a site shares one copy.
+> This npm package contains **types only**. The components themselves ship in the `Umbraco.Analytics.UI` NuGet package, which registers `@umbraco/analytics-ui` in the backoffice import map so every product on a site shares one copy.
 
 ## Using it in a backoffice extension
 
@@ -15,21 +15,21 @@ TypeScript types for Umbraco Analytics UI: shared backoffice charts, tables, KPI
 2. Add the types as a dev dependency:
 
    ```bash
-   npm install -D @umbraco-analytics/ui
+   npm install -D @umbraco/analytics-ui
    ```
 
 3. Mark it as external in your bundler, so you use the backoffice's copy instead of bundling your own. For Vite:
 
    ```ts
    rollupOptions: {
-     external: [/^@umbraco-cms\//, /^@umbraco-analytics\//],
+     external: [/^@umbraco-cms\//, /^@umbraco\/analytics-ui(\/|$)/],
    }
    ```
 
 4. Import and use the components:
 
    ```ts
-   import "@umbraco-analytics/ui";
+   import "@umbraco/analytics-ui";
 
    html`<uaui-delta-badge .value=${12.4}></uaui-delta-badge>`;
    ```
@@ -74,7 +74,7 @@ html`<uaui-delta-badge .value=${-3.2} lower-is-better unit="points"></uaui-delta
 A metric over time. It only draws: pass the points. [Storybook](https://umbraco.github.io/Umbraco.Analytics.UI/?path=/docs/components-time-series-chart--docs)
 
 ```ts
-import type { UauiSeries } from "@umbraco-analytics/ui";
+import type { UauiSeries } from "@umbraco/analytics-ui";
 
 const series: UauiSeries[] = [
   { id: "visitors", label: "Visitors", points: [{ date: "2026-06-01", value: 120 }, { date: "2026-06-02", value: 142 }] },
@@ -92,7 +92,7 @@ Set `error` when the load failed: the chart shows `uaui-error-state` in place of
 A row of options where exactly one is selected at a time (single choice, a radio group under the hood, so not a multi-select toggle group): arrow keys move the selection, only the selected option is in the tab order. UUI has no such control (`uui-button-group` and `uui-tabs` have different semantics). Sets its own `value`, then raises `change`. [Storybook](https://umbraco.github.io/Umbraco.Analytics.UI/?path=/docs/components-toggle-group--docs)
 
 ```ts
-import type { UauiToggleGroupChangeDetail } from "@umbraco-analytics/ui";
+import type { UauiToggleGroupChangeDetail } from "@umbraco/analytics-ui";
 
 html`<uaui-toggle-group
   label="Break down by"
@@ -109,7 +109,7 @@ html`<uaui-toggle-group
 Day, week or month switch. Sets its own `value`, then raises `change`. [Storybook](https://umbraco.github.io/Umbraco.Analytics.UI/?path=/docs/components-group-by--docs)
 
 ```ts
-import type { UauiGroupByChangeDetail } from "@umbraco-analytics/ui";
+import type { UauiGroupByChangeDetail } from "@umbraco/analytics-ui";
 
 html`<uaui-group-by
   .value=${this._groupBy}
@@ -124,7 +124,7 @@ html`<uaui-group-by
 A button that opens a dialog to pick a range and a comparison. Put it in a `uui-box`'s `header-actions` slot. [Storybook](https://umbraco.github.io/Umbraco.Analytics.UI/?path=/docs/components-date-range--docs)
 
 ```ts
-import type { UauiDateRangeChangeDetail } from "@umbraco-analytics/ui";
+import type { UauiDateRangeChangeDetail } from "@umbraco/analytics-ui";
 
 html`<uui-box headline="Visitors">
   <uaui-date-range
@@ -144,7 +144,7 @@ Dates are `YYYY-MM-DD`. The package registers the dialog for you. `.presets`, `.
 Functions for the dates around the picker, so each product doesn't write its own. Ranges are `{ from, to }` ISO dates: a `UauiDateRange` or `UauiCompare` fits. A range that isn't valid (an unreal date, or `to` before `from`) gives `undefined`, or an empty list for the day and bucket helpers.
 
 ```ts
-import { uauiCompareFor, uauiDateBuckets, uauiFormatDateRange } from "@umbraco-analytics/ui";
+import { uauiCompareFor, uauiDateBuckets, uauiFormatDateRange } from "@umbraco/analytics-ui";
 
 const range = { from: "2026-05-25", to: "2026-06-23" };
 const compare = uauiCompareFor("previous-period", range); // { mode, from: "2026-04-25", to: "2026-05-24" }
@@ -170,7 +170,7 @@ html`<uaui-time-series-chart .compareLabel=${compare && uauiFormatDateRange(this
 Rows and columns. Each column names the cell that shows it. [Storybook](https://umbraco.github.io/Umbraco.Analytics.UI/?path=/docs/components-data-table--docs)
 
 ```ts
-import { UAUI_TABLE_CELL, type UauiTableColumn } from "@umbraco-analytics/ui";
+import { UAUI_TABLE_CELL, type UauiTableColumn } from "@umbraco/analytics-ui";
 
 const columns: UauiTableColumn[] = [
   { key: "title", label: "Page", elementName: UAUI_TABLE_CELL.link, meta: { hrefKey: "url" }, searchable: true },
@@ -204,7 +204,7 @@ Wires a server-mode table so you only write the loader. It keeps the sort, page,
 
 ```ts
 import { ref } from "@umbraco-cms/backoffice/external/lit";
-import { UauiTableServerController } from "@umbraco-analytics/ui";
+import { UauiTableServerController } from "@umbraco/analytics-ui";
 
 #pages = new UauiTableServerController(this, {
   sort: { key: "views", direction: "desc" },
@@ -274,7 +274,7 @@ html`${value}<uaui-table-compare-badge .column=${this.column} .item=${this.item}
 ```
 
 ```ts
-import { UAUI_TABLE_CONTEXT } from "@umbraco-analytics/ui";
+import { UAUI_TABLE_CONTEXT } from "@umbraco/analytics-ui";
 
 this.consumeContext(UAUI_TABLE_CONTEXT, (context) => {
   this.observe(context?.stats, (stats) => (this._max = stats?.[this.column.key]?.max ?? 0), "_max");
@@ -311,7 +311,7 @@ Our elements read their colours from `--uaui-*` custom properties. To colour you
 
 ```ts
 import { css, html, LitElement } from "@umbraco-cms/backoffice/external/lit";
-import { UauiPaletteStyles } from "@umbraco-analytics/ui";
+import { UauiPaletteStyles } from "@umbraco/analytics-ui";
 
 class MyLegend extends LitElement {
   render() {

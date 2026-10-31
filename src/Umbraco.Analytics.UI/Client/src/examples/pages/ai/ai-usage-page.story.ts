@@ -19,7 +19,7 @@ import {
     type UauiSearchFieldDetail,
     type UauiTableSort,
     type UauiTableSortChangeDetail,
-} from "@umbraco-analytics/ui";
+} from "@umbraco/analytics-ui";
 // Your API client: getUsage, getBreakdown and their types. In this story they are a fake, generated from the date.
 import { getBreakdown, getUsage, type BreakdownBy, type BreakdownResult, type BreakdownSortKey, type UsageBucket, type UsageResult, type UsageTotals } from "./usage-api.js";`;
 

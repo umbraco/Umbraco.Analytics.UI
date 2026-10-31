@@ -37,7 +37,7 @@ describe("Feature: the package registers itself in the backoffice", () => {
         });
 
         it("loads the bundle that defines the dialog, so it opens before any other element is used", () => {
-            expect(extension("modal").element).toBe(shipped.importmap.imports["@umbraco-analytics/ui"]);
+            expect(extension("modal").element).toBe(shipped.importmap.imports["@umbraco/analytics-ui"]);
         });
     });
 });
