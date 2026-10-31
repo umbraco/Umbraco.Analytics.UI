@@ -83,7 +83,9 @@ describe("Feature: a stat, stacked for the column toolbar or inline for a box he
         it("is no taller than its tallest part", async () => {
             const el = await inline();
             const tallest = Math.max(rect(el, ".label").height, rect(el, ".value").height, badge(el)!.getBoundingClientRect().height);
-            expect(el.getBoundingClientRect().height).toBeLessThanOrEqual(Math.ceil(tallest) + 1);
+            // Baseline alignment of parts in different sizes can add a fraction of a pixel (21.1px over a 20px part in
+            // Firefox on Linux); a second line would add a whole line. So: well under one and a half of the tallest part.
+            expect(el.getBoundingClientRect().height).toBeLessThan(tallest * 1.5);
         });
 
         it("stays on one line in a narrow space", async () => {
