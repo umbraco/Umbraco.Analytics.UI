@@ -7,4 +7,5 @@ export const UAUI_TABLE_CELL = {
     share: "uaui-share-cell",
     status: "uaui-status-cell",
     date: "uaui-date-cell",
+    progress: "uaui-progress-cell",
 } as const;

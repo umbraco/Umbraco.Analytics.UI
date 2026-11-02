@@ -37,7 +37,7 @@ const press = async (el: UauiTestElement, button: HTMLElement) => {
 const innerButton = (button: HTMLElement) => button.shadowRoot!.querySelector("button") as HTMLButtonElement;
 const rowNames = (el: Element) => [...shadow(el).querySelectorAll("uui-table-row:not(.column-toolbar) uui-table-cell:first-child")].map((c) => deepText(c).trim());
 const shares = (el: Element) => deepQueryAll(shadow(el), ".share-percent").map((c) => c.textContent);
-const barWidths = (el: Element) => deepQueryAll<HTMLElement>(shadow(el), ".share-bar").map((b) => b.style.width);
+const barWidths = (el: Element) => deepQueryAll<HTMLElement>(shadow(el), ".meter-bar").map((b) => b.style.width);
 
 const serverTable = (attrs: { page?: number; pageSize?: number; total?: number } = {}) =>
     renderElement(

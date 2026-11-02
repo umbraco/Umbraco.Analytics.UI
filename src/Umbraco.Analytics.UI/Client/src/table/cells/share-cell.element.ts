@@ -2,7 +2,7 @@ import { css, customElement, html, nothing, property, state, type CSSResultGroup
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import "../table-compare-badge.element.js";
 import { UauiPaletteStyles, type UauiColorSlot } from "../../theme/index.js";
-import "../internal/share-bar.element.js";
+import "../../internal/meter-bar/meter-bar.element.js";
 import { asNumber } from "../internal/cell-values.js";
 import { getNumberFormat } from "../../internal/format/number-format.js";
 import { UAUI_TABLE_CONTEXT } from "../table-context.js";
@@ -112,7 +112,7 @@ export class UauiShareCellElement extends UmbLitElement implements UauiTableCell
                 <span class="share-value">${valueFormat.format(value)}</span> <span class="share-percent">(${percentFormat.format(share)})</span>
                 <uaui-table-compare-badge .column=${this.column} .item=${this.item} .value=${this.value} .compareValue=${this.compareValue}></uaui-table-compare-badge>
             </div>
-            <uaui-share-bar .percent=${width} .color=${this.#color}></uaui-share-bar>
+            <uaui-meter-bar .percent=${width} .color=${this.#color}></uaui-meter-bar>
         </div>`;
     }
 

@@ -8,6 +8,7 @@ import "./percent-cell.element.js";
 import "./share-cell.element.js";
 import "./status-cell.element.js";
 import "./date-cell.element.js";
+import "./progress-cell.element.js";
 import "../data-table.element.js";
 
 // Each public cell used on its own, as the table uses it: `column`, `item` and `value` are set, `loading` draws the
@@ -45,6 +46,7 @@ const statusColumn: UauiTableColumn = {
     meta: { colorKey: "color", textKey: "text" },
 };
 const dateColumn: UauiTableColumn = { key: "validFrom", label: "Valid from", sortAs: "date" };
+const progressColumn: UauiTableColumn = { key: "completed", label: "Progress", sortAs: "number", meta: { totalKey: "steps" } };
 const longDateColumn: UauiTableColumn = { ...dateColumn, dateFormat: { weekday: "short", day: "numeric", month: "long", year: "numeric" } };
 
 /** `uaui-text-cell` (`UAUI_TABLE_CELL.text`, the default): strings, numbers and booleans as plain text. */
@@ -165,6 +167,32 @@ export const DateCell: Story = {
     },
 };
 
+/**
+ * `uaui-progress-cell` (`UAUI_TABLE_CELL.progress`): "2 of 3" with a thin bar, e.g. a workflow's completed steps. The
+ * value is the completed count and `column.meta.totalKey` names the row field with the total. The text carries the
+ * meaning; the bar is decorative. Without a total it shows the count alone; a total of 0 shows "0 of 0" and an empty
+ * bar. The bar fills from the start, so it runs right to left in RTL. Sort by the completed count with `sortAs: "number"`.
+ */
+export const Progress: Story = {
+    render: () =>
+        html`<div style="display: grid; gap: var(--uui-size-space-4)">
+            <uaui-progress-cell .column=${progressColumn} .item=${{ completed: 2, steps: 3 }} .value=${2}></uaui-progress-cell>
+            <uaui-progress-cell .column=${progressColumn} .item=${{ completed: 3, steps: 3 }} .value=${3}></uaui-progress-cell>
+            <uaui-progress-cell .column=${progressColumn} .item=${{ completed: 0, steps: 4 }} .value=${0}></uaui-progress-cell>
+            <uaui-progress-cell .column=${progressColumn} .item=${{ completed: 0, steps: 0 }} .value=${0}></uaui-progress-cell>
+            <uaui-progress-cell .column=${progressColumn} .item=${{ completed: 2 }} .value=${2}></uaui-progress-cell>
+            <uaui-progress-cell dir="rtl" .column=${progressColumn} .item=${{ completed: 1, steps: 3 }} .value=${1}></uaui-progress-cell>
+        </div>`,
+    parameters: {
+        docs: {
+            source: {
+                code: `const column = {\n    key: "completed",\n    label: "Progress",\n    elementName: UAUI_TABLE_CELL.progress,\n    sortable: true,\n    sortAs: "number",\n    meta: { totalKey: "steps" },\n};\nconst row = { completed: 2, steps: 3 };\n\n<uaui-progress-cell .column=\${column} .item=\${row} .value=\${row.completed}></uaui-progress-cell>`,
+                language: "html",
+            },
+        },
+    },
+};
+
 /** With `loading` every cell draws its own placeholder, as tall as a loaded cell, so a table doesn't jump when its data arrives. */
 export const Loading: Story = {
     render: () =>
@@ -176,6 +204,7 @@ export const Loading: Story = {
             <uaui-share-cell loading .column=${shareColumn}></uaui-share-cell>
             <uaui-status-cell loading .column=${statusColumn}></uaui-status-cell>
             <uaui-date-cell loading .column=${dateColumn}></uaui-date-cell>
+            <uaui-progress-cell loading .column=${progressColumn}></uaui-progress-cell>
         </div>`,
     parameters: { docs: { source: { code: `<uaui-text-cell loading .column=\${column}></uaui-text-cell>`, language: "html" } } },
 };

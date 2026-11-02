@@ -18,9 +18,13 @@ const meta: Meta<UauiKpiTileElement> = {
         error: false,
         selectable: false,
         selected: false,
+        openable: false,
+        href: undefined,
+        color: undefined,
     },
     argTypes: {
         deltaUnit: { control: "inline-radio", options: ["percent", "points"] },
+        color: { control: "select", options: [undefined, "default", "positive", "warning", "danger"] },
     },
     render: (args) =>
         html`<div style="width: 240px">
@@ -37,7 +41,10 @@ const meta: Meta<UauiKpiTileElement> = {
                 .noData=${args.noData}
                 .error=${args.error}
                 .selectable=${args.selectable}
-                .selected=${args.selected}></uaui-kpi-tile>
+                .selected=${args.selected}
+                .openable=${args.openable}
+                .href=${args.href}
+                .color=${args.color}></uaui-kpi-tile>
         </div>`,
 };
 
@@ -106,5 +113,26 @@ export const SelectableRow: Story = {
             <uaui-kpi-tile label="Orders" value="26" icon="icon-inbox" .delta=${8.1} selectable .deselectable=${false}></uaui-kpi-tile>
             <uaui-kpi-tile label="Carts created" value="64" icon="icon-shopping-basket" .delta=${12.4} selectable .deselectable=${false}></uaui-kpi-tile>
             <uaui-kpi-tile label="New customers" value="13" icon="icon-user" .delta=${4.8} selectable .deselectable=${false}></uaui-kpi-tile>
+        </div>`,
+};
+
+
+/** A link that drills down, as `uui-card`'s `href`: hover underlines the label, focus is the card's outline. Enter follows it. */
+export const Link: Story = { args: { label: "Approved", value: "128", icon: "icon-check", delta: undefined, href: "#history?status=approved", color: "positive" } };
+
+/** `openable`: a button that raises `open` (click, Enter or Space) for a product that navigates itself, as `uui-card`'s `open`. */
+export const Openable: Story = { args: { label: "Pending", value: "12", icon: "icon-time", delta: undefined, openable: true, color: "warning" } };
+
+/**
+ * Status tiles, as Workflow's approval activity: each tints its icon square with a status `color` and links to the
+ * history filtered by that status. Unset `color` keeps the pink square. The label carries the meaning.
+ */
+export const StatusTiles: Story = {
+    render: () =>
+        html`<div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; width: 880px">
+            <uaui-kpi-tile label="Approved" value="128" icon="icon-check" color="positive" href="#history?status=approved"></uaui-kpi-tile>
+            <uaui-kpi-tile label="Pending" value="12" icon="icon-time" color="warning" href="#active"></uaui-kpi-tile>
+            <uaui-kpi-tile label="Rejected" value="7" icon="icon-wrong" color="danger" href="#history?status=rejected"></uaui-kpi-tile>
+            <uaui-kpi-tile label="Cancelled" value="3" icon="icon-block" color="default" href="#history?status=cancelled"></uaui-kpi-tile>
         </div>`,
 };

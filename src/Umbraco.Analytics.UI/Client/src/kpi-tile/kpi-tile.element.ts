@@ -1,9 +1,11 @@
-import { css, customElement, html, nothing, property, type CSSResultGroup, type TemplateResult } from "@umbraco-cms/backoffice/external/lit";
+import { css, customElement, html, ifDefined, nothing, property, type CSSResultGroup, type TemplateResult } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { getLoadingMode, isBusy } from "../internal/loading/index.js";
 import { UauiVisuallyHiddenStyles } from "../internal/a11y/visually-hidden.css.js";
 import { UauiPaletteStyles } from "../theme/index.js";
 import { deltaChange } from "../internal/delta/delta-change.js";
+import { safeHref } from "../table/internal/safe-href.js";
+import type { UauiStatusColor } from "../theme/types.js";
 import type { UauiDeltaUnit } from "../delta-badge/delta-badge.element.js";
 import "../delta-badge/delta-badge.element.js";
 
@@ -17,6 +19,10 @@ import "../delta-badge/delta-badge.element.js";
  * Set `error` when the load failed: the tile keeps its label and shows a dash with the hidden text "Something went
  * wrong" in place of the value, and no change badge. It wins over `loading`, `no-data` and `value`. The tile stays selectable.
  *
+ * Set `href` to make the tile a link that drills down (e.g. to a list filtered by the tile's metric), or `openable` to
+ * make it a button that raises `open` for a product that navigates itself, as `uui-card` does. A tile is one target,
+ * so only one of these applies: `selectable` wins over `href`, and `href` over `openable`.
+ *
  * Set `no-data` when the range has no data: the tile shows a dash instead of a number and no change badge.
  * Leave `delta` unset when there is nothing to compare with (no badge); a `delta` of 0 is "no change" and
  * shows a neutral badge. Instead of `delta` you can give the two numbers, `current` and `previous`, and the badge
@@ -25,9 +31,10 @@ import "../delta-badge/delta-badge.element.js";
  * @element uaui-kpi-tile
  * @fires selected - A selectable, unselected tile was pressed. Cancelable: cancel it to keep the tile unselected.
  * @fires deselected - A selectable, selected tile was pressed while `deselectable`. Cancelable: cancel it to keep the tile selected.
- * @cssprop --uaui-kpi-icon-bg - Background of the icon square. Defaults to spanish pink in every theme.
+ * @fires open - An `openable` tile (without `selectable` or a usable `href`) was pressed. Not cancelable and doesn't bubble, as `uui-card`'s `open`.
+ * @cssprop --uaui-kpi-icon-bg - Background of the icon square. Defaults to spanish pink in every theme, or the status tint when `color` is set.
  * @cssprop --uaui-kpi-selected - Colour of the selection border. Defaults to `--uui-color-selected` in light and high contrast, and to malibu light in dark, where the UUI colour is under 3:1 on the surface.
- * @cssprop --uaui-kpi-icon-fg - Icon colour. Defaults to space cadet, which passes 3:1 on the default square. A product that overrides either owns that contrast.
+ * @cssprop --uaui-kpi-icon-fg - Icon colour. Defaults to space cadet, which passes 3:1 on the default square, or the status text colour when `color` is set. A product that overrides either owns that contrast.
  */
 @customElement("uaui-kpi-tile")
 export class UauiKpiTileElement extends UmbLitElement {
@@ -53,6 +60,36 @@ export class UauiKpiTileElement extends UmbLitElement {
     /** Name of a backoffice icon, shown in the pink square. */
     @property({ type: String })
     icon?: string;
+
+    /**
+     * Tints the icon square with a status color, as the status cell does (`uui-tag`'s names: `"default"` is neutral
+     * grey, then `"positive"`, `"warning"` and `"danger"`), for a row of status tiles such as approved, pending and
+     * rejected. Unset keeps the pink square. The label carries the meaning; the color only repeats it.
+     */
+    @property({ type: String, reflect: true })
+    color?: UauiStatusColor;
+
+    /**
+     * Makes the tile a link to this URL, as `uui-card`'s `href`, to drill down to the details. A URL that isn't
+     * `http:`, `https:`, `mailto:`, `tel:` or relative is ignored. Ignored while `selectable`.
+     */
+    @property({ type: String })
+    href?: string;
+
+    /** The link's `target`, as `uui-card`'s. Only used with `href`. */
+    @property({ type: String })
+    target?: "_blank" | "_parent" | "_self" | "_top";
+
+    /** The link's `rel`, as `uui-card`'s. Only used with `href`. Defaults to `noopener noreferrer` when `target` is `_blank`. */
+    @property({ type: String })
+    rel?: string;
+
+    /**
+     * Makes the tile a button that raises `open` when pressed (click, Enter or Space), for a product that handles the
+     * navigation itself. Ignored while `selectable` or with a usable `href`.
+     */
+    @property({ type: Boolean, reflect: true })
+    openable = false;
 
     /**
      * The change against the comparison period. 18.7 means +18.7%. 0 is "no change" (a neutral badge).
@@ -113,6 +150,11 @@ export class UauiKpiTileElement extends UmbLitElement {
         this.selected = !deselecting;
     }
 
+    #open() {
+        // As uui-card's open: a plain event that doesn't bubble.
+        this.dispatchEvent(new CustomEvent("open", { detail: {} }));
+    }
+
     // Whether there is a change to show: the same rule the badge uses, so no empty badge takes up room.
     #hasChange(): boolean {
         return Number.isFinite(deltaChange(this.delta, this.current, this.previous, this.deltaUnit));
@@ -128,7 +170,8 @@ export class UauiKpiTileElement extends UmbLitElement {
                 : nothing}
             <span class="content" aria-busy=${busy ? "true" : "false"}>
                 ${mode === "skeleton"
-                    ? html`<uaui-skeleton></uaui-skeleton>`
+                    ? // The skeleton is hidden from assistive tech, so the label stays as hidden text: a link or button tile keeps its name while loading.
+                      html`<span class="visually-hidden">${this.label}</span><uaui-skeleton></uaui-skeleton>`
                     : html`<span class="body">
                           <span class="label">${this.label}</span>
                           <span class="row">
@@ -153,14 +196,22 @@ export class UauiKpiTileElement extends UmbLitElement {
             </span>`;
 
         // A native button gives Enter and Space for free, and both arrive as one click.
-        return this.selectable
-            ? html`<button
-                  type="button"
-                  class="tile selectable"
-                  aria-pressed=${this.selected ? "true" : "false"}
-                  @click=${this.#toggle}>
-                  ${content}<span class="select-border" aria-hidden="true"></span>
-              </button>`
+        if (this.selectable) {
+            return html`<button
+                type="button"
+                class="tile selectable"
+                aria-pressed=${this.selected ? "true" : "false"}
+                @click=${this.#toggle}>
+                ${content}<span class="select-border" aria-hidden="true"></span>
+            </button>`;
+        }
+        const href = safeHref(this.href);
+        if (href) {
+            const rel = this.rel || (this.target === "_blank" ? "noopener noreferrer" : undefined);
+            return html`<a class="tile open" href=${href} target=${ifDefined(this.target || undefined)} rel=${ifDefined(rel)}>${content}</a>`;
+        }
+        return this.openable
+            ? html`<button type="button" class="tile open" @click=${this.#open}>${content}</button>`
             : html`<div class="tile">${content}</div>`;
     }
 
@@ -197,8 +248,9 @@ export class UauiKpiTileElement extends UmbLitElement {
                 box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
             }
 
-            button.tile {
-                /* Reset the button so it fills the row like the div card does. */
+            button.tile,
+            a.tile {
+                /* Reset the button and link so they fill the row like the div card does. */
                 appearance: none;
                 position: relative;
                 margin: 0;
@@ -207,6 +259,13 @@ export class UauiKpiTileElement extends UmbLitElement {
                 font: inherit;
                 color: inherit;
                 cursor: pointer;
+                text-decoration: none;
+            }
+
+            /* Hover on a link or open button, as uui-card's open part: the label turns the interactive colour and underlines. */
+            .open:hover .label {
+                color: var(--uui-color-interactive-emphasis);
+                text-decoration: underline;
             }
 
             /* The selection border copies uui-card: 2px just outside the card, with a glow. */
@@ -275,7 +334,8 @@ export class UauiKpiTileElement extends UmbLitElement {
             }
 
             /* Same as uui-card: 3px wide and 3px off. */
-            button.tile:focus-visible {
+            button.tile:focus-visible,
+            a.tile:focus-visible {
                 outline: 3px solid var(--uui-color-focus);
                 outline-offset: 3px;
             }
@@ -291,6 +351,27 @@ export class UauiKpiTileElement extends UmbLitElement {
                 background: var(--_uaui-kpi-icon-bg);
                 color: var(--_uaui-kpi-icon-fg);
                 font-size: 20px;
+            }
+
+            /* Status colours: the status cell's tint and text pairs, which pass 4.5:1 (an icon needs 3:1). */
+            :host([color="default"]) {
+                --_uaui-kpi-icon-bg: var(--uaui-kpi-icon-bg, var(--uaui-color-tint-neutral));
+                --_uaui-kpi-icon-fg: var(--uaui-kpi-icon-fg, var(--uaui-color-text-neutral));
+            }
+
+            :host([color="positive"]) {
+                --_uaui-kpi-icon-bg: var(--uaui-kpi-icon-bg, var(--uaui-color-tint-positive));
+                --_uaui-kpi-icon-fg: var(--uaui-kpi-icon-fg, var(--uaui-color-text-positive));
+            }
+
+            :host([color="warning"]) {
+                --_uaui-kpi-icon-bg: var(--uaui-kpi-icon-bg, var(--uaui-color-tint-warning));
+                --_uaui-kpi-icon-fg: var(--uaui-kpi-icon-fg, var(--uaui-color-text-warning));
+            }
+
+            :host([color="danger"]) {
+                --_uaui-kpi-icon-bg: var(--uaui-kpi-icon-bg, var(--uaui-color-tint-negative));
+                --_uaui-kpi-icon-fg: var(--uaui-kpi-icon-fg, var(--uaui-color-text-negative));
             }
 
             .content {
