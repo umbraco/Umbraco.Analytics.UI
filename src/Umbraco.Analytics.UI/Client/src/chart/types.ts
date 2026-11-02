@@ -21,6 +21,13 @@ export type UauiSeries = {
      */
     color?: UauiColorSlot | UauiStatusColor;
     /**
+     * Draws this series as bars or as a line, whatever the chart's `kind`, so bars and a line can share one chart (daily
+     * counts as bars with a running total as a line). Leave it out to draw the series as the chart's `kind` says. A line
+     * is filled when the chart's `kind` is `"area"`; bars stack when it is `"stacked-bar"`, and a line never stacks.
+     * Any other value is ignored. All series share one y-axis.
+     */
+    kind?: UauiSeriesKind;
+    /**
      * The chart does not aggregate: points on the same date are added, which is wrong for rates and averages, so
      * aggregate those first. With `group-by` week or month pass one point per bucket, not daily data.
      */
@@ -41,3 +48,12 @@ export type UauiMarkerClickDetail = { id: string };
 
 /** How a chart draws its series. */
 export type UauiChartKind = "line" | "area" | "bar" | "stacked-bar";
+
+/** How one series is drawn, overriding the chart's `kind`: as a line or as bars. */
+export type UauiSeriesKind = "line" | "bar";
+
+/**
+ * How a chart's y-axis spaces its values. `"linear"` is even steps from 0. `"log"` gives each power of ten the same
+ * height, for values that span widely (a few errors beside hundreds of approvals).
+ */
+export type UauiChartScale = "linear" | "log";

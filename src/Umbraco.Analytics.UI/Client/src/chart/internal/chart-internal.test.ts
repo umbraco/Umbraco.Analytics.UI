@@ -1,7 +1,74 @@
 import { describe, expect, it } from "vitest";
-import { allWhole, buildChartData, maxValue, seriesTotals } from "./chart-data.js";
+import { allWhole, buildChartData, maxValue, minPositive, seriesTotals } from "./chart-data.js";
+import { logScale } from "./log-scale.js";
 import { bucketMarkers } from "./marker-buckets.js";
 import { niceScale } from "./nice-scale.js";
+
+describe("logScale", () => {
+    it("ticks at 0 and each power of ten from the smallest value's up past the largest", () => {
+        expect(logScale(900, 3).ticks).toEqual([0, 1, 10, 100, 1000]);
+        expect(logScale(900, 3).top).toBe(1000);
+    });
+
+    it("adds the 2s and 5s when there are one or two decades", () => {
+        expect(logScale(8, 1).ticks).toEqual([0, 1, 2, 5, 10]);
+        expect(logScale(60, 1).ticks).toEqual([0, 1, 2, 5, 10, 20, 50, 100]);
+    });
+
+    it("starts below 1 for small values, without rounding errors", () => {
+        expect(logScale(0.5, 0.02).ticks).toEqual([0, 0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 1]);
+    });
+
+    it("starts at 1 when there is no value above 0", () => {
+        expect(logScale(0, undefined).ticks).toEqual([0, 1, 2, 5, 10]);
+    });
+
+    it("draws 0 and anything below it on the axis line, and keeps a missing value missing", () => {
+        const { toAxis } = logScale(100, 1);
+        expect([toAxis(0), toAxis(-5), toAxis(null)]).toEqual([0, 0, null]);
+    });
+
+    it("gives the unit a height, so the smallest bar shows", () => {
+        expect(logScale(100, 1).toAxis(1)).toBeCloseTo(Math.log10(2));
+    });
+
+    it("keeps the order of values", () => {
+        const { toAxis } = logScale(1000, 1);
+        const heights = [0, 1, 2, 9, 10, 99, 100, 1000].map((v) => toAxis(v)!);
+        expect([...heights].sort((a, b) => a - b)).toEqual(heights);
+    });
+});
+
+describe("mixed bars and lines", () => {
+    const day = (values: number[], from = "2026-06-0") => values.map((value, i) => ({ date: `${from}${i + 1}`, value }));
+    const bars = { id: "b", label: "B", points: day([1, 2]) };
+    const line = { id: "l", label: "L", points: day([10, 20]) };
+    const previousBars = { id: "b", label: "B", points: day([3, 3], "2026-05-0") };
+    const previousLine = { id: "l", label: "L", points: day([30, 30], "2026-05-0") };
+    const data = buildChartData([bars, line], [previousBars, previousLine], "day", {}, undefined, [false, true]);
+
+    it("gives only a line series its compare values", () => {
+        expect(data.series.map((s) => s.compare)).toEqual([undefined, [30, 30]]);
+    });
+
+    it("adds up only the compare series not matched to a line into the compare total", () => {
+        expect(data.compareTotal?.values).toEqual([3, 3]);
+    });
+
+    it("totals only the bars", () => {
+        expect(seriesTotals(data, [true, false])).toEqual([1, 2]);
+    });
+
+    it("reaches the line and its compare line on the y-axis", () => {
+        expect(maxValue(data, "bar", [true, false])).toBe(30);
+        expect(maxValue(data, "stacked-bar", [true, false])).toBe(30);
+    });
+
+    it("finds the smallest value above 0 for a log axis", () => {
+        expect(minPositive(buildChartData([{ id: "a", label: "A", points: day([0, 0.4, 7]) }]))).toBe(0.4);
+        expect(minPositive(buildChartData([{ id: "a", label: "A", points: day([0, 0]) }]))).toBeUndefined();
+    });
+});
 
 describe("niceScale", () => {
     it("starts at 0 and ends on a round number above the maximum", () => {

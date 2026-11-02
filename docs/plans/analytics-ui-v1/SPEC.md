@@ -20,12 +20,14 @@ Screenshots are from the Phase 1 design ([`docs/design/phase-1`](../../design/ph
 
 ```ts
 type UauiPoint = { date: string; value: number };              // date: ISO "2026-06-11"
-type UauiSeries = { id: string; label: string; points: UauiPoint[]; color?: UauiColorSlot | UauiStatusColor }; // color: palette slot or status colour, defaults to the series' position
+type UauiSeries = { id: string; label: string; points: UauiPoint[]; color?: UauiColorSlot | UauiStatusColor; kind?: UauiSeriesKind }; // color: palette slot or status colour, defaults to the series' position; kind: overrides the chart's kind for this series
 type UauiMarker = { id: string; date: string; title: string; description?: string };
 type UauiColorSlot = 1 | 2 | 3 | 4;                           // --uaui-series-1 to --uaui-series-4
 type UauiStatusColor = "default" | "positive" | "warning" | "danger"; // uui-tag's names; status cell and series colour
 type UauiGroupBy = "day" | "week" | "month";
 type UauiChartKind = "line" | "area" | "bar" | "stacked-bar";
+type UauiSeriesKind = "line" | "bar";                          // one series drawn as a line or as bars, whatever the chart's kind
+type UauiChartScale = "linear" | "log";                        // the time-series chart's y-axis
 type UauiDateRange = { from: string; to: string; preset?: string };
 type UauiCompare = { mode: "previous-period" | "previous-year" | "custom"; from: string; to: string };
 type UauiDateSpan = { from: string; to: string };              // any range; a UauiDateRange or UauiCompare fits
@@ -100,7 +102,9 @@ Storybook gets a "Pane" story showing this recipe, a chart and a table in one `u
 ![Marker tooltip](../../design/phase-1/screenshots/an-pin-tip.png)
 
 - Properties:
-  - `kind` (`UauiChartKind`)
+  - `kind` (`UauiChartKind`); a series' own `kind` overrides it for that series (see Bars and a line)
+  - `y-scale` (`UauiChartScale`, reflected, default `"linear"`): see Log scale
+  - `today` (ISO date): see Today
   - `series` (`UauiSeries[]`)
   - `compare-series` (`UauiSeries[]`, matched to `series` by `id`)
   - `compare-label`
@@ -125,11 +129,20 @@ Storybook gets a "Pane" story showing this recipe, a chart and a table in one `u
   - Clicking or pressing Enter raises `marker-click` with `{ id }` (`UauiMarkerClickDetail`).
   - Dots are keyboard-focusable, in date order.
 - **Series colour:** a series' `color` is a palette slot (1 to 4) or a status colour (`UauiStatusColor`: `"default"`, `"positive"`, `"warning"`, `"danger"`), for a series that carries a meaning (Forms' workflow errors in danger, Workflow's approved, pending, errored and cancelled). A status draws the line, fill and bar from `--uaui-color-series-<status>`, `-fill-<status>` and `-bar-<status>` (overridable with `--uaui-series-<status>` and `--uaui-bar-<status>`) in every kind, and in the legend and tooltip swatches; the hidden table has no colour. Status lines reach 3:1 on the surface in light, dark and high contrast. A compare line or bar keeps the compare colour. Any other value (and no value) takes the slot of the series' position.
+- **Bars and a line (T58):** a series' `kind` (`"line"` or `"bar"`) draws it that way whatever the chart's `kind`, for Workflow's approved, cancelled and errored as daily bars with pending (a running total) as a line. Left out, or any other value, the series follows the chart's `kind`.
+  - A line is filled when the chart's `kind` is `area`. Bars stack when it is `stacked-bar`; a line never stacks, so each of its points sits at its own value. Lines are drawn over the bars, with their points over the middle of each date.
+  - One shared y-axis, reaching the highest of the bars (or stacks) and the lines with their compare lines.
+  - Comparison: a compare series matched by `id` to a line series is that line's dashed compare line (gap shading and tooltip badge as for `line`). Every other compare series is added into the one compare bar per date behind the bars, as in the bar kinds. With no line series this is the bar kinds' rule, and with no bar series the line kinds'.
+  - The total (tooltip, hidden table) adds up the bars only, and shows where the bar kinds show it: two or more bar series, stacked or compared.
+  - Legend: a square for each bar series and a line for each line series; the comparison entry shows a square, a dashed line or both, for how the compared period is drawn. Tooltip rows likewise (square or dot), and a line's compare row keeps its dot.
+  - The hidden table lists every series, with a compare column for each compared line and the compare total for the bars.
+- **Today (T58):** `today` (an ISO date from the product, not the clock) draws a thin solid `--uui-color-text-alt` line up the plot at the date, week or month that contains it, labelled "Today" (`uauiAnalytics_chartToday`) above the plot; the plot gets the room for the label only while there is one. Not a marker: it isn't a focus stop or a button, and it never shares a dot with markers. The tooltip and the hidden table name that date "{date} (today)" (`uauiAnalytics_chartTodayDate`). No date contains it, no line. Dates after today are plotted like any other: the chart's dates are its points' dates, so pass a point (0) for each future day.
+- **Log scale (T58):** `y-scale="log"` gives each power of ten the same height. Values are drawn at `log10(1 + value / unit)`, with `unit` the power of ten at or below the smallest value above 0 (1 for counts), so 0 sits on the axis line (no gaps, no clamping to an arbitrary floor), the smallest bar still has height, and from `unit` up the axis is log (the first decade is a little shorter as it bends down to 0). Ticks are 0 and each power of ten from `unit` up to the first at or above the largest value, with the 2s and 5s while there are only one or two decades, formatted with `value-format` in the user's culture. Values below 0 are drawn at 0, as on the linear axis. Compare lines and the compare bar use the same heights; the tooltip and hidden table show real values. `stacked-bar` keeps a linear axis (stacked segments on a log axis don't add up by height), with one console warning per chart. Any other value is linear.
 - **Legend:** one entry per series, plus the comparison range when comparing. A single series with no comparison has no legend, as in the design.
 - **Height:** the plot height comes from the public CSS property `--uaui-chart-height` (default 260px). The loading skeleton uses the same value.
 - **Padding:** the chart pads its own content with the public CSS property `--uaui-chart-padding` (default the design's 12px 24px 28px). The reload loading bar sits outside that padding, at the element's top edge and full width.
 - **Other rules:**
-  - The y-axis starts at 0, with about 5 ticks on round numbers.
+  - The y-axis starts at 0, with about 5 ticks on round numbers (on a log axis, at 0 and the powers of ten).
   - X-axis labels rotate when crowded and never overlap.
   - Bar kinds have no smoothing.
 - **Accessibility:** a visually hidden table holds the same data, for screen readers.

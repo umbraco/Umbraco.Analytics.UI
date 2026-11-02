@@ -89,6 +89,34 @@ export const cancelled: UauiSeries = { ...toSeries("cancelled", "Cancelled", app
 /** Errors for 25 Apr to 24 May 2026: the compare series of `errored`. */
 export const erroredPrevious = toSeries("errored", "Errored", approvedValues.map((v, i) => (i % 5 === 1 ? Math.ceil(v / 2) : 0)), dayAfter25Apr);
 
+/** "Today" for the Workflow stories: 28 days after 25 May. Their series run 7 days past it. */
+export const workflowToday = "2026-06-22";
+
+/** 28 days back to `workflowToday` and 7 ahead: the values given, then zeros, as nothing has happened yet. */
+const workflowSeries = (id: string, label: string, values: number[]): UauiSeries =>
+    toSeries(id, label, Array.from({ length: 36 }, (_, i) => (i <= 28 ? (values[i] ?? 0) : 0)));
+
+/**
+ * Workflow's approval activity: approved, cancelled and errored as daily bars in their status colours, and pending
+ * (workflows still waiting, a running total) as a line over them.
+ */
+export const workflowActivity: UauiSeries[] = [
+    { ...workflowSeries("approved", "Approved", approvedValues), color: "positive" },
+    { ...workflowSeries("cancelled", "Cancelled", approvedValues.map((v, i) => (i % 4 === 1 ? 1 : 0))), color: "default" },
+    { ...workflowSeries("errored", "Errored", approvedValues.map((v, i) => (i % 6 === 2 ? Math.ceil(v / 3) : 0))), color: "danger" },
+    {
+        ...workflowSeries("pending", "Pending", approvedValues.map((v, i) => 8 + (i % 7) * 2 - (i % 5))),
+        color: "warning",
+        kind: "line",
+    },
+];
+
+/** Counts that span widely, for the log axis: hundreds of pageviews a day beside a few errors (and days with none). */
+export const wideRange: UauiSeries[] = [
+    toSeries("pageviews", "Pageviews", pageviewValues.map((v) => v * 12)),
+    { ...toSeries("errors", "Errors", approvedValues.map((v, i) => (i % 3 === 0 ? 0 : Math.ceil(v / 4)))), color: "danger" },
+];
+
 /** Events inside the 25 May to 23 Jun range of the series above. Two share 18 Jun, so that dot carries a count. */
 export const markers: UauiMarker[] = [
     { id: "m1", date: "2026-05-29", title: "Newsletter sent", description: "May issue to 12,400 subscribers." },

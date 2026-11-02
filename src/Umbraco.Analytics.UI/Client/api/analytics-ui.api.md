@@ -35,6 +35,9 @@ export const UAUI_TABLE_CONTEXT: UmbContextToken<UauiTableContext, UauiTableCont
 export type UauiChartKind = "line" | "area" | "bar" | "stacked-bar";
 
 // @public
+export type UauiChartScale = "linear" | "log";
+
+// @public
 export type UauiColorSlot = 1 | 2 | 3 | 4;
 
 // @public
@@ -371,8 +374,12 @@ export type UauiSeries = {
     id: string;
     label: string;
     color?: UauiColorSlot | UauiStatusColor;
+    kind?: UauiSeriesKind;
     points: UauiPoint[];
 };
+
+// @public
+export type UauiSeriesKind = "line" | "bar";
 
 // @public
 export class UauiShareCellElement extends UmbLitElement implements UauiTableCellElement {
@@ -603,12 +610,14 @@ export class UauiTimeSeriesChartElement extends UmbLitElement {
     series: UauiSeries[];
     // (undocumented)
     static styles: CSSResultGroup;
+    today?: string;
     // (undocumented)
     protected updated(changed: PropertyValues<this>): void;
     valueFormat?: Intl.NumberFormatOptions;
     weekStart: UauiWeekStart;
     // (undocumented)
     protected willUpdate(changed: PropertyValues<this>): void;
+    yScale: UauiChartScale;
 }
 
 // @public

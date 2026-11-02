@@ -44,6 +44,10 @@ export default {
         chartMarkerSeparator: "; ",
         chartMarkersMore: "+{0} more",
         chartComparisonLabel: "Comparison",
+        // Drawn over the chart's today line.
+        chartToday: "Today",
+        // Today's date in the tooltip and the hidden table, "Nov 2, 2026 (today)".
+        chartTodayDate: "{0} (today)",
 
         // Funnel
         funnelAriaLabel: "Funnel",

@@ -18,8 +18,10 @@ const meta: Meta<UauiChartLegendElement> = {
         ],
         bars: false,
         compareLabel: undefined,
+        compareShapes: undefined,
     },
-    render: (args) => html`<uaui-chart-legend .entries=${args.entries} .bars=${args.bars} .compareLabel=${args.compareLabel}></uaui-chart-legend>`,
+    render: (args) =>
+        html`<uaui-chart-legend .entries=${args.entries} .bars=${args.bars} .compareLabel=${args.compareLabel} .compareShapes=${args.compareShapes}></uaui-chart-legend>`,
 };
 
 export default meta;
@@ -33,3 +35,18 @@ export const WithCompare: Story = { name: "With compare", args: { compareLabel: 
 
 /** The bar kinds use squares in the bar colours. */
 export const Bars: Story = { args: { bars: true, compareLabel: "Comparison" } };
+
+/** Bars and a line in one chart: each entry its own swatch, and the compare entry both a bar and a dashed line. */
+export const BarsAndLine: Story = {
+    name: "Bars and a line",
+    args: {
+        bars: true,
+        entries: [
+            { id: "approved", label: "Approved", color: "positive" },
+            { id: "errored", label: "Errored", color: "danger" },
+            { id: "pending", label: "Pending", color: "warning", bar: false },
+        ],
+        compareLabel: "Comparison",
+        compareShapes: ["bar", "line"],
+    },
+};
