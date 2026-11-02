@@ -34,6 +34,15 @@ export function seriesTotals(data: UauiChartData, include?: boolean[]): (number 
     });
 }
 
+/**
+ * The share view's values: per series, each value's share (0 to 1) of its x value's total. A value below 0 counts as 0.
+ * `null` where the series has no value, or where the total is 0 (no share to show, rather than NaN).
+ */
+export function shareValues(data: UauiChartData): (number | null)[][] {
+    const totals = data.labels.map((_, i) => data.series.reduce((sum, s) => sum + Math.max(s.values[i] ?? 0, 0), 0));
+    return data.series.map((s) => s.values.map((v, i) => (v === null || !(totals[i] > 0) ? null : Math.max(v, 0) / totals[i])));
+}
+
 /** Every value the chart plots: each series, its compare values and the compare total. */
 function plottedValues(data: UauiChartData): (number | null)[] {
     return [...data.series.flatMap((s) => [...s.values, ...(s.compare ?? [])]), ...(data.compareTotal?.values ?? [])];

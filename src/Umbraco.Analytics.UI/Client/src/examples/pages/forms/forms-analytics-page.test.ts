@@ -28,6 +28,7 @@ import type { UauiKpiTileElement } from "../../../kpi-tile/kpi-tile.element.js";
 import type { UauiFunnelElement } from "../../../funnel/funnel.element.js";
 import type { UauiStatElement } from "../../../stat/stat.element.js";
 import type { UauiTableColumn } from "../../../table/types.js";
+import type { UauiToggleGroupElement } from "../../../toggle-group/toggle-group.element.js";
 
 type TestTable = UauiTestElement & {
     loading: boolean;
@@ -571,6 +572,29 @@ describe("Feature: the Forms analytics page", () => {
             const links = deepQueryAll<HTMLElement>(dataRows(table)[0], "uaui-link-cell").map((c) => c.shadowRoot!.querySelector("a")?.getAttribute("href"));
             expect(links[0]).toMatch(/^\/umbraco\/section\/content\/workspace\/document\/edit\//);
             expect(links[1]).toMatch(/^https:\/\/www\.example\.com\//);
+        });
+
+        it("has more source pages than palette slots, so the legend folds", async () => {
+            expect(SAMPLE_FORM.pages.length).toBeGreaterThan(8);
+            const legend = deepQuery<HTMLElement>(shadow(chartIn(page, "origins")), "uaui-chart-legend")!;
+            await settle(legend);
+            expect(legend.shadowRoot!.querySelector(".legend-toggle")?.textContent?.trim()).toBe(`+${SAMPLE_FORM.pages.length - 7} more`);
+        });
+
+        it("shows entries per page as lines at first", () => {
+            const chart = chartIn(page, "origins");
+            expect([chart.kind, chart.stack]).toEqual(["line", "normal"]);
+        });
+
+        it("switches to each page's share of the day's entries, and back", async () => {
+            const view = box(page, "origins").querySelector("uaui-toggle-group") as UauiToggleGroupElement;
+            expect(view.options.map((o) => o.label)).toEqual(["Entries", "Share"]);
+            (shadow(view).querySelector("[data-value='percent']") as HTMLElement).click();
+            await page.updateComplete;
+            expect([chartIn(page, "origins").kind, chartIn(page, "origins").stack]).toEqual(["area", "percent"]);
+            (shadow(view).querySelector("[data-value='normal']") as HTMLElement).click();
+            await page.updateComplete;
+            expect([chartIn(page, "origins").kind, chartIn(page, "origins").stack]).toEqual(["line", "normal"]);
         });
 
         it("follows the picked form", async () => {

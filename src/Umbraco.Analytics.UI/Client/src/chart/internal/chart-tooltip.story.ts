@@ -69,6 +69,46 @@ export const Bars: Story = {
     },
 };
 
+/** The share view (`stack="percent"`): each row's share first, its value at the end, and the total. */
+export const Share: Story = {
+    args: {
+        bars: true,
+        rows: [
+            { color: 1, value: 64, share: 0.5, label: "Summer conference" },
+            { color: 2, value: 40, share: 0.3125, label: "Events" },
+            { color: 3, value: 24, share: 0.1875, label: "Home" },
+        ],
+        total: { value: 128, label: "Total" },
+    },
+};
+
+/** More than 8 rows (11 source pages): the 7 largest, largest first, and "+4 more" for the rest. */
+export const ManyRows: Story = {
+    name: "Many rows",
+    args: {
+        bars: true,
+        rows: [
+            ["Summer conference", 61],
+            ["Events", 44],
+            ["Workshop: Getting started", 31],
+            ["Home", 28],
+            ["Newsletter, June", 26],
+            ["Blog: Spring recap", 20],
+            ["Contact", 18],
+            ["Pricing", 12],
+            ["About us", 9],
+            ["Careers", 9],
+            ["Partners", 5],
+        ].map(([label, value], i) => ({
+            color: ((i % 8) + 1) as 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8,
+            value: value as number,
+            share: (value as number) / 263,
+            label: label as string,
+        })),
+        total: { value: 263, label: "Total" },
+    },
+};
+
 /** Bars and a line in one chart, on today's date: square swatches for the bars, a dot for the line, each row's own. */
 export const BarsAndLine: Story = {
     name: "Bars and a line",

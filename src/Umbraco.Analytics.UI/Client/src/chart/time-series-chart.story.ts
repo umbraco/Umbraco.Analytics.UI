@@ -18,7 +18,9 @@ import {
     revenue,
     sessions,
     sessionsPrevious,
+    sourcePages,
     sundayWeeks,
+    topSourcePages,
     sundayWeeksPrevious,
     wideRange,
     workflowActivity,
@@ -30,6 +32,7 @@ const meta: Meta<UauiTimeSeriesChartElement> = {
     component: "uaui-time-series-chart",
     args: {
         kind: "line",
+        stack: "normal",
         series: [pageviews],
         compareSeries: [],
         compareLabel: undefined,
@@ -50,6 +53,7 @@ const meta: Meta<UauiTimeSeriesChartElement> = {
     },
     argTypes: {
         kind: { control: "inline-radio", options: ["line", "area", "bar", "stacked-bar"] },
+        stack: { control: "inline-radio", options: ["normal", "percent"] },
         yScale: { control: "inline-radio", options: ["linear", "log"] },
         groupBy: { control: "inline-radio", options: ["day", "week", "month"] },
         weekStart: { control: "inline-radio", options: [1, 2, 3, 4, 5, 6, 7], description: "ISO weekday: 1 is Monday, 7 is Sunday" },
@@ -58,6 +62,7 @@ const meta: Meta<UauiTimeSeriesChartElement> = {
         html`<uui-box headline="Pageviews over time" style="--uui-box-default-padding: 0">
             <uaui-time-series-chart
                 .kind=${args.kind}
+                .stack=${args.stack}
                 .series=${args.series}
                 .compareSeries=${args.compareSeries}
                 .compareLabel=${args.compareLabel}
@@ -222,4 +227,64 @@ export const LogScaleManyDecades: Story = {
 export const LogScaleMixed: Story = {
     name: "Log scale, bars and a line",
     args: { kind: "bar", series: workflowActivity, today: workflowToday, yScale: "log" },
+};
+
+/**
+ * `stack="percent"` with `kind="stacked-bar"`: each date's entries per source page as shares of that date's total, on a
+ * 0 to 100% axis. Hover a bar: each page's share with its entries beside it, and the total. 31 May had no entries, so
+ * it shows nothing rather than an empty 100%.
+ */
+export const ShareStackedBar: Story = {
+    name: "Share, stacked bar",
+    args: { kind: "stacked-bar", stack: "percent", series: topSourcePages },
+};
+
+/** `stack="percent"` with `kind="area"`: the same shares as bands, each filled down to the one below. */
+export const ShareArea: Story = {
+    name: "Share, area",
+    args: { kind: "area", stack: "percent", series: topSourcePages },
+};
+
+/** The share view in the dark theme. */
+export const ShareDark: Story = {
+    name: "Share, dark",
+    args: { kind: "area", stack: "percent", series: topSourcePages },
+    globals: { theme: "dark" },
+};
+
+/**
+ * One line per source page, 11 in all: series 5 to 8 take the teal, orchid, coral and olive slots, then the colours
+ * repeat. The legend lists the first 7 and folds the rest behind "+4 more"; hover a date and the tooltip lists the 7
+ * largest and "+4 more" (the hidden table has every page). Order the series largest first, so the fold hides the
+ * smallest. Past eight series, consider grouping the smallest into one "Other" series with `color: "default"`.
+ */
+export const ManySeries: Story = {
+    name: "Many series",
+    args: { kind: "line", series: sourcePages },
+};
+
+/** The many series in the dark theme: slots 5 to 8 have their own dark shades. */
+export const ManySeriesDark: Story = {
+    name: "Many series, dark",
+    args: { kind: "line", series: sourcePages },
+    globals: { theme: "dark" },
+};
+
+/** The legend folded: "+4 more" is a button (Tab to it, Enter or Space) that lists every series and becomes "Show fewer". */
+export const LegendFolded: Story = {
+    name: "Legend, folded",
+    args: { kind: "stacked-bar", stack: "percent", series: sourcePages },
+};
+
+/** The legend unfolded, as after pressing "+4 more". */
+export const LegendExpanded: Story = {
+    name: "Legend, expanded",
+    args: { kind: "stacked-bar", stack: "percent", series: sourcePages },
+    play: async ({ canvasElement }) => {
+        const chart = canvasElement.querySelector("uaui-time-series-chart")!;
+        await chart.updateComplete;
+        const legend = chart.shadowRoot!.querySelector("uaui-chart-legend")!;
+        await legend.updateComplete;
+        legend.shadowRoot!.querySelector<HTMLButtonElement>(".legend-toggle")?.click();
+    },
 };

@@ -8,6 +8,7 @@ export type {
     UauiChartKind,
     UauiSeriesKind,
     UauiChartScale,
+    UauiChartStack,
     UauiMarkerClickDetail,
     UauiCategory,
     UauiCategoryPoint,

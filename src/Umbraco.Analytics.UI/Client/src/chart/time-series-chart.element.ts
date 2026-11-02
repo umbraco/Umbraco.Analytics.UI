@@ -18,7 +18,7 @@ import { getNumberFormat } from "../internal/format/number-format.js";
 import { bucketMarkers, type MarkerBucket } from "./internal/marker-buckets.js";
 import type { UauiMarkerPlacement } from "./internal/markers-plugin.js";
 import { buildChartData } from "./internal/chart-data.js";
-import { maxValue, seriesTotals, type UauiChartData } from "./internal/chart-values.js";
+import { maxValue, seriesTotals, shareValues, type UauiChartData } from "./internal/chart-values.js";
 import "./internal/chart-data-table.element.js";
 import "./internal/chart-legend.element.js";
 import "./internal/chart-markers.element.js";
@@ -34,7 +34,7 @@ import { chartYAxis, usesLogScale } from "./internal/chart-y-axis.js";
 import { UauiTimeSeriesOverlays } from "./internal/time-series-overlays.js";
 import { TODAY_LABEL_ROOM } from "./internal/today-plugin.js";
 import type { UauiCompare, UauiDateRange } from "../date-range/types.js";
-import type { UauiChartKind, UauiMarker, UauiMarkerClickDetail, UauiSeries, UauiSeriesKind } from "./types.js";
+import type { UauiChartKind, UauiChartStack, UauiMarker, UauiMarkerClickDetail, UauiSeries, UauiSeriesKind } from "./types.js";
 
 const axisDateFormat: Record<UauiGroupBy, Intl.DateTimeFormatOptions> = {
     day: { day: "numeric", month: "short" },
@@ -48,6 +48,12 @@ const tooltipDateFormat: Record<UauiGroupBy, Intl.DateTimeFormatOptions> = {
     month: { month: "long", year: "numeric" },
 };
 
+/** The share view's y-axis: 0 to 100% in quarters. */
+const SHARE_STEP = 0.25;
+const SHARE_TICK_FORMAT: Intl.NumberFormatOptions = { style: "percent", maximumFractionDigits: 0 };
+/** A share in the tooltip and the hidden table: "42.5%". */
+const SHARE_FORMAT: Intl.NumberFormatOptions = { style: "percent", maximumFractionDigits: 1 };
+
 interface DerivedFrom {
     kind: UauiChartKind;
     series: UauiSeries[];
@@ -58,6 +64,8 @@ interface DerivedFrom {
     weekStart: UauiWeekStart;
     valueFormat?: Intl.NumberFormatOptions;
     lang: string;
+    /** The share view is on (`stack="percent"` with a kind that stacks). */
+    share: boolean;
 }
 
 interface Derived {
@@ -72,7 +80,14 @@ interface Derived {
     totals: (number | null)[];
     /** For the bar kinds, the formatted date of each compare total (empty string where there is none). */
     compareTotalDateLabels: string[];
+    /**
+     * The share view: per series, each value's share (0 to 1) of its date's total, `null` where the series has no point
+     * or the date's total is 0. Absent otherwise.
+     */
+    shares?: (number | null)[][];
     numberFormat: Intl.NumberFormat;
+    /** Formats a share: "42.5%". */
+    shareFormat: Intl.NumberFormat;
     /** A marker's own date, whichever bucket it is drawn in. */
     markerDate: Intl.DateTimeFormat;
     lang: string;
@@ -93,6 +108,7 @@ const emptyDerived: Derived = {
     totals: [],
     compareTotalDateLabels: [],
     numberFormat: getNumberFormat("en"),
+    shareFormat: getNumberFormat("en", SHARE_FORMAT),
     markerDate: new Intl.DateTimeFormat("en", tooltipDateFormat.day),
     lang: "en",
 };
@@ -119,6 +135,11 @@ export const UauiTimeSeriesChartElementBase = UauiChartMixin(UmbLitElement);
  * bar. The total counts the bars only.
  * `today` draws a thin labelled line at today's date, for dates that run past it. `y-scale="log"` spaces the y-axis by
  * powers of ten, bending toward 0 at the bottom so 0 stays on the axis line.
+ * `stack="percent"` with `kind="stacked-bar"` or `"area"` is a 100% share view: each date's series as its share of that
+ * date's total, on a 0 to 100% axis, with the share and the value in the tooltip and the hidden table.
+ * Many series stay readable: series 5 to 8 get their own palette slots (teal, orchid, coral, olive) before the colours
+ * repeat, a legend of more than 8 series folds to the first 7 and a "+N more" button, and a tooltip of more than 8 rows
+ * lists the 7 largest and "+N more".
  * `markers` draw a dashed line and a dot on the x-axis at their date (in the bucket that contains it when grouped by
  * week or month; none when it is outside the chart). Each dot is a button: hover or focus shows the markers' dates,
  * titles and descriptions, and click or Enter raises `marker-click`. Markers in one bucket share a dot.
@@ -133,11 +154,12 @@ export const UauiTimeSeriesChartElementBase = UauiChartMixin(UmbLitElement);
  * @fires marker-click - The editor clicked a marker's dot, or pressed Enter or Space on it. Bubbles, not composed or cancelable, like `uaui-group-by`'s `change`. `detail` is `{ id }` (`UauiMarkerClickDetail`); a dot standing for several markers raises the earliest one's id.
  * @cssprop --uaui-chart-height - Height of the plot, without the legend or padding. Defaults to 260px.
  * @cssprop --uaui-chart-padding - Padding around the plot, legend and empty state, as a CSS `padding` value. Defaults to `12px 24px 28px`. The loading bar ignores it and spans the full width at the top edge, so put the chart in a `uui-box` with `--uui-box-default-padding: 0`.
- * @cssprop --uaui-series-1 - Colour of the first series. Series 2 to 4 follow, then the colours repeat.
+ * @cssprop --uaui-series-1 - Colour of the first series. Series 2 to 8 follow (5 to 8 for charts with many series), then the colours repeat.
  * @cssprop --uaui-series-2 - Colour of the second series.
  * @cssprop --uaui-series-3 - Colour of the third series.
  * @cssprop --uaui-series-4 - Colour of the fourth series.
- * @cssprop --uaui-bar-1 - Colour of the first series' bars. Bars 2 to 4 follow. Each falls back to `--uaui-series-N`, then to a livelier default than the line colour.
+ * @cssprop --uaui-series-5 - Colour of the fifth series (teal by default). `--uaui-series-6` to `--uaui-series-8` (orchid, coral, olive) follow.
+ * @cssprop --uaui-bar-1 - Colour of the first series' bars. Bars 2 to 8 follow (`--uaui-bar-5` to `--uaui-bar-8` default to their line colours). Each falls back to `--uaui-series-N`, then to a livelier default than the line colour.
  * @cssprop --uaui-bar-2 - Colour of the second series' bars.
  * @cssprop --uaui-bar-3 - Colour of the third series' bars.
  * @cssprop --uaui-bar-4 - Colour of the fourth series' bars.
@@ -156,6 +178,19 @@ export class UauiTimeSeriesChartElement extends UauiTimeSeriesChartElementBase {
     /** How the series are drawn. A series' own `kind` (`"line"` or `"bar"`) overrides it for that series. */
     @property({ type: String, reflect: true })
     kind: UauiChartKind = "line";
+
+    /**
+     * `"percent"` is a 100% share view, for how a whole splits (entries per source page): each date's series as its
+     * share of that date's total, stacked to 100% on a 0 to 100% axis. It needs a kind that stacks: `"stacked-bar"`
+     * (segments) or `"area"` (bands, each filled down to the one below). With `"line"` or `"bar"` it is ignored, with a
+     * warning once. The tooltip and the hidden table show each share with its value, and the total. A date whose total
+     * is 0 shows no share (nothing is drawn there), and a value below 0 counts as 0. In the share view every series is
+     * drawn as the chart's `kind` (a series' own `kind` is ignored), `compare-series` isn't drawn (each date adds up to
+     * 100%, so the compared period would hide in it; show it beside the chart instead) and `y-scale` is linear; each
+     * of these warns once. `"normal"` (the default, and any other value) draws the values as `kind` says.
+     */
+    @property({ type: String, reflect: true })
+    stack: UauiChartStack = "normal";
 
     /**
      * The period the series cover, as `uaui-date-range` emits it. Optional but recommended with `compare`: compare
@@ -261,14 +296,14 @@ export class UauiTimeSeriesChartElement extends UauiTimeSeriesChartElementBase {
 
     protected override willUpdate(changed: PropertyValues<this>) {
         super.willUpdate(changed);
-        const next = { kind: this.kind, series: this.series, compareSeries: this.compareSeries, range: this.range, compare: this.compare, groupBy: this.groupBy, weekStart: resolveWeekStart(this.weekStart), valueFormat: this.valueFormat, lang: this.localize.lang() };
+        const next = { kind: this.kind, series: this.series, compareSeries: this.compareSeries, range: this.range, compare: this.compare, groupBy: this.groupBy, weekStart: resolveWeekStart(this.weekStart), valueFormat: this.valueFormat, lang: this.localize.lang(), share: this.#isShare };
         const prev = this.#derivedFrom;
         if (!prev || (Object.keys(next) as (keyof typeof next)[]).some((key) => prev[key] !== next[key])) {
             this.#derivedFrom = next;
             this.#derived = this.#derive(next);
             this.#chart.invalidate();
         }
-        if (changed.has("kind") || changed.has("lowerIsBetter") || changed.has("yScale") || changed.has("today")) this.#chart.invalidate();
+        if (changed.has("kind") || changed.has("stack") || changed.has("lowerIsBetter") || changed.has("yScale") || changed.has("today")) this.#chart.invalidate();
 
         const todayIndex = this.today ? bucketMarkers([{ id: "today", date: this.today, title: "" }], this.#derived.data.labels, this.groupBy)[0]?.index : undefined;
         if (todayIndex !== this.#todayIndex || this.#tableDatesFrom !== this.#derived) {
@@ -302,11 +337,12 @@ export class UauiTimeSeriesChartElement extends UauiTimeSeriesChartElementBase {
      * too slow for the hundreds of labels and table cells of a long chart. These formatters use the
      * same language `localize` does.
      */
-    #derive({ kind, series, compareSeries, range, compare, groupBy, weekStart, valueFormat, lang }: DerivedFrom): Derived {
-        const kinds = series.map((s) => seriesKindOf(s, kind));
+    #derive({ kind, series, compareSeries, range, compare, groupBy, weekStart, valueFormat, lang, share }: DerivedFrom): Derived {
+        // The share view draws every series as the chart's kind, so they all stack, and draws no compare.
+        const kinds = series.map((s) => (share ? seriesKindOf({}, kind) : seriesKindOf(s, kind)));
         const lines = kinds.map((k) => k === "line");
         const bars = kinds.map((k) => k === "bar");
-        const data = buildChartData(series, compareSeries, groupBy, { from: range?.from, compareFrom: compare?.from }, weekStart, lines);
+        const data = buildChartData(series, share ? [] : compareSeries, groupBy, { from: range?.from, compareFrom: compare?.from }, weekStart, lines);
         const axisDate = new Intl.DateTimeFormat(lang, axisDateFormat[groupBy] ?? axisDateFormat.day);
         const tooltipDate = new Intl.DateTimeFormat(lang, tooltipDateFormat[groupBy] ?? tooltipDateFormat.day);
         const tooltipLabel = (iso: string | null) => (iso ? formatIsoDate(iso, tooltipDate) : "");
@@ -316,9 +352,11 @@ export class UauiTimeSeriesChartElement extends UauiTimeSeriesChartElementBase {
             axisLabels: data.labels.map((d) => formatIsoDate(d, axisDate)),
             dateLabels: data.labels.map(tooltipLabel),
             compareDateLabels: data.series.map((s) => (s.compareLabels ?? []).map(tooltipLabel)),
-            totals: seriesTotals(data, bars.some(Boolean) ? bars : undefined),
+            totals: seriesTotals(data, share ? undefined : bars.some(Boolean) ? bars : undefined),
             compareTotalDateLabels: (data.compareTotal?.labels ?? []).map(tooltipLabel),
+            shares: share ? shareValues(data) : undefined,
             numberFormat: getNumberFormat(lang, valueFormat),
+            shareFormat: getNumberFormat(lang, SHARE_FORMAT),
             markerDate: new Intl.DateTimeFormat(lang, tooltipDateFormat.day),
             lang,
         };
@@ -352,11 +390,17 @@ export class UauiTimeSeriesChartElement extends UauiTimeSeriesChartElementBase {
      * what the bars stack to or what the compare total is compared against.
      */
     get #showsTotal() {
+        if (this.#isShare) return this.#derived.data.series.length > 1;
         return this.#barCount > 1 && (this.kind === "stacked-bar" || this.#comparesBars);
     }
 
     get #isLog() {
-        return usesLogScale(this.yScale, this.kind, this.#barCount);
+        return !this.#isShare && usesLogScale(this.yScale, this.kind, this.#barCount);
+    }
+
+    /** The share view: `stack="percent"` with a kind that stacks. */
+    get #isShare() {
+        return this.stack === "percent" && (this.kind === "stacked-bar" || this.kind === "area");
     }
 
     /** A date as the tooltip and the hidden table name it when it is today's. */
@@ -385,6 +429,22 @@ export class UauiTimeSeriesChartElement extends UauiTimeSeriesChartElementBase {
             this.#todayIndex === undefined ? undefined : { index: this.#todayIndex, label: this.localize.term("uauiAnalytics_chartToday") },
         );
         this.#warnLogStacked();
+        this.#warnShare();
+        if (this.#isShare) {
+            const tick = getNumberFormat(lang, SHARE_TICK_FORMAT);
+            renderer.update({
+                kind: this.kind,
+                share: true,
+                labels: axisLabels,
+                roomAbove: this.today ? TODAY_LABEL_ROOM : 0,
+                colors,
+                datasets: data.series.map((s, i) => ({ label: s.label, kind: kinds[i], values: this.#derived.shares?.[i] ?? [] })),
+                yMax: 1,
+                yStep: SHARE_STEP,
+                formatTick: (value) => tick.format(value),
+            });
+            return;
+        }
         const axis = chartYAxis(data, max, this.#isLog, lang, this.valueFormat);
         const to = axis.toAxis ?? ((value: number | null) => value);
         const compareTotal = this.#barCount > 0 ? data.compareTotal?.values : undefined;
@@ -412,20 +472,45 @@ export class UauiTimeSeriesChartElement extends UauiTimeSeriesChartElementBase {
 
     /** Warns once per chart that `y-scale="log"` is ignored while bars stack. */
     #warnLogStacked() {
-        if (this.yScale !== "log" || this.#isLog || !this.#barCount) return;
+        if (this.yScale !== "log" || this.#isLog || !this.#barCount || this.#isShare) return;
         this.#chart.warnOnce(
             "log-stacked",
             'y-scale="log" is ignored with kind="stacked-bar", as stacked bars on a log axis don\'t add up by height. Use kind="bar".',
         );
     }
 
+    /** Warns once per chart about what `stack="percent"` ignores, or that it is ignored. */
+    #warnShare() {
+        if (this.stack !== "percent") return;
+        if (!this.#isShare) {
+            this.#chart.warnOnce(
+                "share-kind",
+                `stack="percent" is ignored with kind="${this.kind}": a share view stacks the series. Use kind="stacked-bar" or kind="area".`,
+            );
+            return;
+        }
+        if (this.compareSeries.length)
+            this.#chart.warnOnce(
+                "share-compare",
+                'compare-series is not drawn with stack="percent": every date adds up to 100%, so the compared period would hide in it. Show the compare beside the chart, or use stack="normal".',
+            );
+        if (this.yScale === "log")
+            this.#chart.warnOnce("share-log", 'y-scale="log" is ignored with stack="percent": shares are drawn on a 0 to 100% axis.');
+        if (this.series.some((s) => (s.kind === "line" || s.kind === "bar") && s.kind !== seriesKindOf({}, this.kind)))
+            this.#chart.warnOnce(
+                "share-series-kind",
+                `a series' own kind is ignored with stack="percent": every series is drawn as kind="${this.kind}", so the shares stack to 100%.`,
+            );
+    }
+
     /** One row per series with a point at the hovered date, and for the bar kinds the total and the compare total. */
     #renderTooltip() {
         const hover = this.#chart.hover;
-        const { data, kinds, dateLabels, compareDateLabels, compareTotalDateLabels, totals, numberFormat } = this.#derived;
+        const { data, kinds, dateLabels, compareDateLabels, compareTotalDateLabels, totals, shares, numberFormat, shareFormat } = this.#derived;
         if (!hover || !dateLabels[hover.index] || this._activeMarker !== undefined) return nothing;
         const { index } = hover;
-        const bars = this.#barCount > 0;
+        // The share view draws bands and segments in the bar colours, so its swatches are squares.
+        const bars = this.#barCount > 0 || !!shares;
         const rows = data.series.flatMap((s, i): UauiChartTooltipRow[] => {
             const value = s.values[index];
             if (value === null) return [];
@@ -433,9 +518,10 @@ export class UauiTimeSeriesChartElement extends UauiTimeSeriesChartElementBase {
             return [
                 {
                     color: colorKeyOf(this.series[i], i),
-                    bar: kinds[i] === "bar",
+                    bar: !!shares || kinds[i] === "bar",
                     value,
                     label: data.series.length > 1 ? s.label : undefined,
+                    ...(shares ? { share: shares[i][index] } : {}),
                     compare: compare === null || compare === undefined ? undefined : { value: compare, label: compareDateLabels[i][index], current: value },
                 },
             ];
@@ -453,9 +539,10 @@ export class UauiTimeSeriesChartElement extends UauiTimeSeriesChartElementBase {
             .rows=${rows}
             .bars=${bars}
             .lowerIsBetter=${this.lowerIsBetter}
-            .total=${bars && this.#showsTotal && total !== null ? { value: total, label: this.#totalText } : undefined}
+            .total=${(bars || shares) && this.#showsTotal && total !== null ? { value: total, label: this.#totalText } : undefined}
             .compareTotal=${compareTotal}
-            .numberFormat=${numberFormat}></uaui-chart-tooltip>`;
+            .numberFormat=${numberFormat}
+            .shareFormat=${shareFormat}></uaui-chart-tooltip>`;
     }
 
     #onActiveMarker(e: CustomEvent<UauiChartMarkersActiveDetail>) {
@@ -481,19 +568,20 @@ export class UauiTimeSeriesChartElement extends UauiTimeSeriesChartElementBase {
     #renderLegend() {
         if (this.series.length < 2 && !this.#isComparing) return nothing;
         const { kinds } = this.#derived;
-        const entries = this.series.map((s, i) => ({ id: s.id, label: s.label, color: colorKeyOf(s, i), bar: kinds[i] === "bar" }));
+        const share = this.#isShare;
+        const entries = this.series.map((s, i) => ({ id: s.id, label: s.label, color: colorKeyOf(s, i), bar: share || kinds[i] === "bar" }));
         // The compare entry shows each way the chart draws the compared period: a bar, a dashed line, or both.
         const compareShapes = [...(this.#comparesBars ? (["bar"] as const) : []), ...(this.#comparesLines ? (["line"] as const) : [])];
         return html`<uaui-chart-legend
             .entries=${entries}
-            .bars=${this.#barCount > 0}
+            .bars=${share || this.#barCount > 0}
             .compareShapes=${compareShapes}
             .compareLabel=${this.#isComparing ? this.#compareText : undefined}></uaui-chart-legend>`;
     }
 
     /** The same data for screen readers. Every input is stable until the data changes, so it re-renders only then. */
     #renderTable() {
-        const { data, totals, numberFormat } = this.#derived;
+        const { data, totals, shares, numberFormat, shareFormat } = this.#derived;
         return html`<uaui-chart-data-table
             .labelsHeader=${this.localize.term("uauiAnalytics_chartTableDateHeader")}
             .labels=${this.#tableDates}
@@ -502,6 +590,8 @@ export class UauiTimeSeriesChartElement extends UauiTimeSeriesChartElementBase {
             .totalLabel=${this.#totalText}
             .compareTotal=${this.#comparesBars ? data.compareTotal?.values : undefined}
             .logScale=${this.#isLog}
+            .shares=${shares}
+            .shareFormat=${shareFormat}
             .numberFormat=${numberFormat}></uaui-chart-data-table>`;
     }
 

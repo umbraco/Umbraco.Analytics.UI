@@ -167,7 +167,7 @@ export const UauiDataTableElementBase = UauiLoadStateMixin(UmbLitElement);
  * @slot toolbar-[key] - Content for the row above the column headings, in the cell of the column whose `key` follows `toolbar-`, such as a `uaui-stat` over a number column. The row shows when any of these has content.
  * @slot footer - Content below the rows, on the left of the pager, such as an "updated" note. The footer shows whenever this has content, even while loading, and pads itself with `--uaui-table-padding`. An empty plain element (no element children, only whitespace) counts as no content, so a `role="status"` live region can stay slotted, hidden until it has text.
  * @cssprop --uaui-table-padding - Padding of the toolbar and footer sections, as a CSS `padding` value. Defaults to `12px 24px`. The loading bar ignores it and spans the full width at the top edge.
- * @cssprop --uaui-series-1 - Bar colour of the first share column. Also `--uaui-series-2` to `--uaui-series-4` for the other slots.
+ * @cssprop --uaui-series-1 - Bar colour of the first share column. Also `--uaui-series-2` to `--uaui-series-8` for the other slots.
  * @cssprop --uaui-tint-neutral - Colour of the track behind a share bar.
  */
 @customElement("uaui-data-table")

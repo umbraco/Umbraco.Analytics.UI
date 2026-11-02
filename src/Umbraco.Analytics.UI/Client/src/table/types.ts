@@ -20,7 +20,7 @@ export interface UauiTableColumnMeta {
     /** `uaui-progress-cell`: the key in each row that holds the total the value (the completed count) is out of. Without it the cell shows the value alone. */
     totalKey?: string;
     /**
-     * `uaui-share-cell` and `uaui-progress-cell`: the palette slot of the bar (the same slot values (1–4) as
+     * `uaui-share-cell` and `uaui-progress-cell`: the palette slot of the bar (the same slot values (1–8) as
      * `UauiSeries.color`). Defaults to the share column's position, or 1 for a progress cell.
      */
     color?: UauiColorSlot;

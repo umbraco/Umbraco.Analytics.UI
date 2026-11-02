@@ -18,20 +18,30 @@ export interface UauiChartTooltipCompare {
 
 /** One series' point at the hovered x value. */
 export interface UauiChartTooltipRow {
-    /** What the series is coloured by: a palette slot (1 to 4) or a status colour. */
+    /** What the series is coloured by: a palette slot (1 to 8) or a status colour. */
     color: UauiSeriesColorKey;
     /** Draws a square in the bar colour (`true`) or a dot (`false`) for this row. Defaults to the tooltip's `bars`. */
     bar?: boolean;
     value: number;
+    /**
+     * The share view: the value's share (0 to 1) of the hovered x value's total, shown first, with `value` after it.
+     * `null` when there is no share to show (the total is 0): the row shows `value` alone. Left out outside the share view.
+     */
+    share?: number | null;
     /** The series' label. Left out when there is only one series. */
     label?: string;
     /** Line kinds: this series' compare point. */
     compare?: UauiChartTooltipCompare;
 }
 
+/** Above this many rows the tooltip lists the largest and a "+N more" line, so it stays inside a chart of many series. */
+export const TOOLTIP_MAX_ROWS = 8;
+
 /**
  * The tooltip over the hovered x value (a date, a category) of a chart: its heading, one row per series with its
- * compare point and change, and for the bar kinds the total and the compare total. It draws what it is given and has no
+ * compare point and change, and for the bar kinds the total and the compare total. With more rows than `maxRows` it
+ * lists the `maxRows - 1` largest (by share, else value), largest first, and a "+N more" line for the rest: the hidden
+ * table has them all. It draws what it is given and has no
  * position of its own: the chart places it. Internal: not exported.
  *
  * @element uaui-chart-tooltip
@@ -66,6 +76,14 @@ export class UauiChartTooltipElement extends UmbLitElement {
     @property({ attribute: false })
     numberFormat?: Intl.NumberFormat;
 
+    /** Formats a row's `share`. Defaults to a percent with up to one decimal in the backoffice user's culture. */
+    @property({ attribute: false })
+    shareFormat?: Intl.NumberFormat;
+
+    /** The most lines of rows to show: more rows show the `maxRows - 1` largest and a "+N more" line. */
+    @property({ type: Number, attribute: "max-rows" })
+    maxRows = TOOLTIP_MAX_ROWS;
+
     #format(value: number) {
         return (this.numberFormat ?? getNumberFormat(this.localize.lang())).format(value);
     }
@@ -84,17 +102,36 @@ export class UauiChartTooltipElement extends UmbLitElement {
         </div>`;
     }
 
+    #formatShare(share: number) {
+        return (this.shareFormat ?? getNumberFormat(this.localize.lang(), { style: "percent", maximumFractionDigits: 1 })).format(share);
+    }
+
+    /** The rows to show, and how many are left out: all of them, or the largest when there are more than `maxRows`. */
+    get #shownRows(): { rows: UauiChartTooltipRow[]; more: number } {
+        const max = Math.max(Math.floor(this.maxRows) || TOOLTIP_MAX_ROWS, 2);
+        if (this.rows.length <= max) return { rows: this.rows, more: 0 };
+        const size = (row: UauiChartTooltipRow) => row.share ?? row.value;
+        const largest = [...this.rows].sort((a, b) => size(b) - size(a)).slice(0, max - 1);
+        return { rows: largest, more: this.rows.length - largest.length };
+    }
+
+    #renderRow(row: UauiChartTooltipRow) {
+        const bar = row.bar ?? this.bars;
+        const share = row.share ?? undefined;
+        return html`<div class="tooltip-row tooltip-series">
+                <span class=${bar ? "swatch swatch-square" : "swatch"} style="--swatch: var(--uaui-color-${bar ? "bar" : "series"}-${row.color})"></span>
+                <span class="tooltip-value">${share === undefined ? this.#format(row.value) : this.#formatShare(share)}</span>
+                ${row.label === undefined ? nothing : html`<span class="tooltip-label">${row.label}</span>`}
+                ${share === undefined ? nothing : html`<span class="tooltip-amount">${this.#format(row.value)}</span>`}
+            </div>
+            ${row.compare ? this.#renderCompare(row.compare, bar) : nothing}`;
+    }
+
     override render(): TemplateResult {
+        const { rows, more } = this.#shownRows;
         return html`<div class="tooltip-date">${this.heading}</div>
-            ${this.rows.map((row) => {
-                const bar = row.bar ?? this.bars;
-                return html`<div class="tooltip-row tooltip-series">
-                        <span class=${bar ? "swatch swatch-square" : "swatch"} style="--swatch: var(--uaui-color-${bar ? "bar" : "series"}-${row.color})"></span>
-                        <span class="tooltip-value">${this.#format(row.value)}</span>
-                        ${row.label === undefined ? nothing : html`<span class="tooltip-label">${row.label}</span>`}
-                    </div>
-                    ${row.compare ? this.#renderCompare(row.compare, bar) : nothing}`;
-            })}
+            ${rows.map((row) => this.#renderRow(row))}
+            ${more ? html`<div class="tooltip-row tooltip-more">${this.localize.term("uauiAnalytics_chartTooltipMore", more)}</div>` : nothing}
             ${this.total
                 ? html`<div class="tooltip-row tooltip-total">
                       <span class="tooltip-value">${this.#format(this.total.value)}</span>
@@ -171,6 +208,22 @@ export class UauiChartTooltipElement extends UmbLitElement {
                 margin-top: 2px;
                 padding: 2px 0 0 calc(8px + var(--uui-size-space-2));
                 border-top: 1px solid color-mix(in srgb, var(--uui-palette-white) 18%, transparent);
+            }
+
+            /* The share view: the value after the share and label, at the end of the row. */
+            .tooltip-amount {
+                margin-left: auto;
+                padding-left: var(--uui-size-space-3);
+                font-size: 12px;
+                white-space: nowrap;
+                color: color-mix(in srgb, var(--uui-palette-white) 82%, transparent);
+            }
+
+            /* Indented under the values, past the swatch and its gap: the rows left out. */
+            .tooltip-more {
+                padding-left: calc(8px + var(--uui-size-space-2));
+                font-size: 12px;
+                color: color-mix(in srgb, var(--uui-palette-white) 82%, transparent);
             }
 
             .tooltip-label {

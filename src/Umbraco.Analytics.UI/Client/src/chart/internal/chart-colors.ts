@@ -22,7 +22,7 @@ export interface UauiChartDrawColors extends UauiChartColors {
 
 /**
  * Resolves the palette for `host` in its current theme: `uauiChartColors` for the shared part, with `series` in the
- * order of `keys` (a slot 1 to 4 or a status colour each) rather than slot order, and the rest read back from `probe` (a hidden element in the
+ * order of `keys` (a slot 1 to 8 or a status colour each) rather than slot order, and the rest read back from `probe` (a hidden element in the
  * host's shadow root) as computed `color`s, since a canvas can't read CSS custom properties.
  */
 export function resolveChartColors(host: HTMLElement, probe: HTMLElement, keys: UauiSeriesColorKey[]): UauiChartDrawColors {

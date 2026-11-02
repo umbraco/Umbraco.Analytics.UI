@@ -8,8 +8,8 @@ import { watchTheme } from "./theme-watch.js";
 /** The palette for a chart, resolved to real colours (computed `rgb()`/`color()` strings) for the host's current theme. */
 export interface UauiChartColors {
     /**
-     * The four series slots, in order: `series[0]` is slot 1 (`--uaui-color-series-1`). Use `series[i % 4]` for the
-     * `i`th series or slice. `line` is the line, point and border colour; `fill` the area under a line (the fill token
+     * The eight series slots, in order: `series[0]` is slot 1 (`--uaui-color-series-1`). Use `series[i % series.length]`
+     * for the `i`th series or slice (`series[i % 4]` keeps to the four main slots, as before slots 5 to 8 were added). `line` is the line, point and border colour; `fill` the area under a line (the fill token
      * at 12% alpha); `bar` an opaque bar or slice.
      */
     series: { line: string; fill: string; bar: string }[];
@@ -39,7 +39,7 @@ const FALLBACK_FONT_FAMILY = '"Lato", "Helvetica Neue", Helvetica, Arial, sans-s
 /** Chart.js's default events, set per chart so a change to `Chart.defaults.events` doesn't stop hover. */
 const EVENTS = ["mousemove", "mouseout", "click", "touchstart", "touchmove"] as const;
 
-const SLOTS = [1, 2, 3, 4];
+const SLOTS = [1, 2, 3, 4, 5, 6, 7, 8];
 
 const STATUSES = ["default", "positive", "warning", "danger"] as const;
 

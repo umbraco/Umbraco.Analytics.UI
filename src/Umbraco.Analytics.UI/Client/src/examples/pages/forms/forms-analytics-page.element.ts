@@ -9,8 +9,10 @@ import "../../../group-by/group-by.element.js";
 import "../../../funnel/funnel.element.js";
 import "../../../table/data-table.element.js";
 import "../../../stat/stat.element.js";
+import "../../../toggle-group/toggle-group.element.js";
 import { UAUI_TABLE_CELL } from "../../../table/cells/cell-names.js";
-import type { UauiCategory, UauiSeries } from "../../../chart/types.js";
+import type { UauiCategory, UauiChartStack, UauiSeries } from "../../../chart/types.js";
+import type { UauiToggleGroupOption } from "../../../toggle-group/toggle-group.element.js";
 import { uauiCompareFor, uauiFormatDateRange } from "../../../date-helpers/index.js";
 import type { UauiCompare, UauiDateRange } from "../../../date-range/types.js";
 import type { UauiGroupBy } from "../../../group-by/group-by.element.js";
@@ -239,6 +241,12 @@ const formBoxes: { id: FormBoxId; span: BoxSpan }[] = [
     { id: "origins", span: 2 },
 ];
 
+// The origins chart's switch: entries per page, or each page's share of the day's entries (a 100% chart).
+const originViews: UauiToggleGroupOption[] = [
+    { value: "normal", label: "Entries" },
+    { value: "percent", label: "Share" },
+];
+
 /** The answers of the form section, for one range. */
 type FormAnswers = { workflows: FormsAnalyticsResult; pages: FormsAnalyticsResult; states: FormsAnalyticsResult; hours: FormsAnalyticsResult };
 type FormSeriesAnswers = { submissions: FormsAnalyticsResult; origins: FormsAnalyticsResult };
@@ -248,8 +256,8 @@ type FormSeriesAnswers = { submissions: FormsAnalyticsResult; origins: FormsAnal
  * the overview (KPI tiles that pick the metric of the submissions chart, and the forms overview table), then one
  * form's analytics, as on the form's Analytics tab (its submissions, submissions by hour of day, workflows, a funnel
  * of record states, and the source pages chart and table). Forms has these on two screens with a date range each; the
- * example puts them on one page under one date range. Not here yet: the absolute or percent-share toggle of the
- * origins chart (T59).
+ * example puts them on one page under one date range. The origins chart switches between each page's entries and its
+ * share of the day's entries.
  */
 @customElement("example-forms-analytics-page")
 export class ExampleFormsAnalyticsPageElement extends UmbLitElement {
@@ -265,6 +273,8 @@ export class ExampleFormsAnalyticsPageElement extends UmbLitElement {
     @state() private _compare?: UauiCompare = uauiCompareFor("previous-period", initialRange);
     @state() private _groupBy: UauiGroupBy = "day";
     @state() private _metric: MetricId = "entries";
+    /** The origins chart: entries per page (`"normal"`) or each page's share of the day's entries (`"percent"`). */
+    @state() private _originView: UauiChartStack = "normal";
     /** On the form's Analytics tab the form comes from the workspace; the example picks one. */
     @state() private _formId = FORMS[0].id;
 
@@ -481,6 +491,10 @@ export class ExampleFormsAnalyticsPageElement extends UmbLitElement {
         void this.#loadFormSeries();
     }
 
+    #onOriginViewChange(e: CustomEvent<{ value: string }>) {
+        this._originView = e.detail.value === "percent" ? "percent" : "normal";
+    }
+
     #onFormChange(e: Event) {
         this._formId = String((e.target as HTMLSelectElement).value);
         void this.#loadFormSeries();
@@ -662,11 +676,20 @@ export class ExampleFormsAnalyticsPageElement extends UmbLitElement {
                     @retry=${() => this.#loadForm()}></uaui-data-table>
             </uui-box>`,
             funnel: this.#renderFunnel(),
-            // One line per source page. No compare lines here: with a line per page they would double the lines, and
-            // the pages table below compares each page's entries instead.
+            // One line per source page, or in the share view one band per page stacked to 100%. No compare lines
+            // here: with a line per page they would double the lines, and the pages table below compares each page's
+            // entries instead. With more than eight pages the colours repeat and the legend folds; the pages come
+            // largest first, so the fold hides the smallest.
             origins: html`<uui-box headline="Origins by source page" headline-variant="h3" style="--uui-box-default-padding: 0">
+                <uaui-toggle-group
+                    slot="header-actions"
+                    label="Show"
+                    .options=${originViews}
+                    .value=${this._originView}
+                    @change=${this.#onOriginViewChange}></uaui-toggle-group>
                 <uaui-time-series-chart
-                    kind="line"
+                    kind=${this._originView === "percent" ? "area" : "line"}
+                    stack=${this._originView}
                     .series=${series && !this.#noEntries(series.submissions) ? formsSeriesBy(series.origins, "pageName", "entries") : []}
                     .range=${this._range}
                     .groupBy=${this._groupBy}

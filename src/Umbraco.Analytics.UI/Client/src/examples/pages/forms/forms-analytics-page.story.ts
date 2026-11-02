@@ -71,9 +71,10 @@ const render = (latency?: number, failing = false, startRange?: UauiDateRange) =
  * (`uaui-category-chart`, the hours labelled in the editor's culture, last period's behind them); the Workflows table (triggered, success,
  * failures, and the failure rate in a status cell: none is positive, under 5% warning, 5% or more danger); a funnel
  * from record states (opened, partially submitted, submitted), an idea the data supports; and Origins by source page,
- * one line per page over a table of pages linking to the page and its URL.
+ * one line per page over a table of pages linking to the page and its URL. Its Entries / Share switch shows each
+ * page's share of the day's entries instead (`stack="percent"` with `kind="area"`); with eleven pages the colours
+ * repeat past the eighth and the legend folds.
  *
- * Not here yet: the origins chart's switch between absolute numbers and each page's share (T59).
  * Some queries ask for what Forms' API doesn't answer yet, proposals for the Forms team: workflow runs (`triggered`)
  * and unique members on the submissions endpoint, week and month buckets for unique members (which can't be added up
  * from days), and record states for the funnel. The fake API's types mark them as proposed.

@@ -65,11 +65,11 @@ export const UauiCategoryChartElementBase = UauiChartMixin(UmbLitElement);
  * @fires retry - The Retry button of the error state was pressed (needs `retryable`). Bubbles, not composed.
  * @cssprop --uaui-chart-height - Height of the plot, without the legend or padding. Defaults to 260px.
  * @cssprop --uaui-chart-padding - Padding around the plot, legend and empty state, as a CSS `padding` value. Defaults to `12px 24px 28px`. The loading bar ignores it and spans the full width at the top edge, so put the chart in a `uui-box` with `--uui-box-default-padding: 0`.
- * @cssprop --uaui-bar-1 - Colour of the first series' bars. Bars 2 to 4 follow. Each falls back to `--uaui-series-N`, then to a livelier default than the line colour.
+ * @cssprop --uaui-bar-1 - Colour of the first series' bars. Bars 2 to 8 follow (`--uaui-bar-5` to `--uaui-bar-8` default to their line colours). Each falls back to `--uaui-series-N`, then to a livelier default than the line colour.
  * @cssprop --uaui-bar-2 - Colour of the second series' bars.
  * @cssprop --uaui-bar-3 - Colour of the third series' bars.
  * @cssprop --uaui-bar-4 - Colour of the fourth series' bars.
- * @cssprop --uaui-series-1 - The fallback of `--uaui-bar-1`. Series 2 to 4 follow, then the colours repeat.
+ * @cssprop --uaui-series-1 - The fallback of `--uaui-bar-1`. Series 2 to 8 follow, then the colours repeat.
  * @cssprop --uaui-bar-default - Colour of a `color: "default"` series' bars. The other statuses follow (`--uaui-bar-positive`, `--uaui-bar-warning`, `--uaui-bar-danger`). Each falls back to `--uaui-series-<status>`.
  * @cssprop --uaui-compare - Colour of the compare bar (at 45% opacity).
  */

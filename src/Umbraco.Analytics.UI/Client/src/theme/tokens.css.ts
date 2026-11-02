@@ -36,6 +36,19 @@ import { css, type CSSResult } from "@umbraco-cms/backoffice/external/lit";
  * 3:1 on the dark surface, and its greens read as the positive status (jungle-green, the old series 4, was 1.56:1
  * against forest-green-light). It is paler than series 1's malibu-light, so the two still differ.
  *
+ * Slots 5 to 8 (teal, orchid, coral, olive) are for charts with many series, such as one per source page. The UUI
+ * palette has no teal, purple or olive, so each is a `color-mix()` of two palette shades, as lavender is. They are
+ * picked to clear 3:1 and to stay apart from slots 1 to 4, the status colours and the compare colour: the nearest of
+ * those is at least 26 CIELAB (CIE76) apart in light and 30 in dark (T64 asked for 30 against a slot it replaced).
+ * Their fills and bars are the line colour. Past 8 series the slots repeat.
+ *
+ * | token      | light (on #fff)                                  | dark (on #2d333b)                                        |
+ * | ---------- | ------------------------------------------------ | -------------------------------------------------------- |
+ * | series-5   | teal: forest-green 70% + malibu 4.77             | teal: jungle-green-light 60% + malibu-light 5.53         |
+ * | series-6   | orchid: maroon-flush 60% + violet-blue-light 6.76| orchid: malibu-light 60% + maroon-flush-light 3.12       |
+ * | series-7   | coral: sunglow-dark 50% + maroon-flush 4.73      | coral: deep-saffron-light 60% + maroon-flush 4.73        |
+ * | series-8   | olive: sunglow-dark 70% + jungle-green-dark 3.83 | olive: deep-saffron 60% + forest-green 3.94              |
+ *
  * Fills (areas) use `--uaui-color-fill-N` at low alpha, not the line colour: the line
  * tokens are darker so lines clear 3:1, and a pale tint of them looks grey. In light, fill 1 is the
  * design's violet blue, fill 3 is sunglow, and fill 4 is malibu so it differs from fill 1; fills 2 and
@@ -167,6 +180,42 @@ export const UauiPaletteStyles: CSSResult = css`
             --uaui-bar-4,
             var(--uaui-series-4, light-dark(var(--uui-palette-malibu), color-mix(in srgb, var(--uui-palette-violet-blue-light) 45%, white)))
         );
+        --uaui-color-series-5: var(
+            --uaui-series-5,
+            light-dark(
+                color-mix(in srgb, var(--uui-palette-forest-green) 70%, var(--uui-palette-malibu)),
+                color-mix(in srgb, var(--uui-palette-jungle-green-light) 60%, var(--uui-palette-malibu-light))
+            )
+        );
+        --uaui-color-series-6: var(
+            --uaui-series-6,
+            light-dark(
+                color-mix(in srgb, var(--uui-palette-maroon-flush) 60%, var(--uui-palette-violet-blue-light)),
+                color-mix(in srgb, var(--uui-palette-malibu-light) 60%, var(--uui-palette-maroon-flush-light))
+            )
+        );
+        --uaui-color-series-7: var(
+            --uaui-series-7,
+            light-dark(
+                color-mix(in srgb, var(--uui-palette-sunglow-dark) 50%, var(--uui-palette-maroon-flush)),
+                color-mix(in srgb, var(--uui-palette-deep-saffron-light) 60%, var(--uui-palette-maroon-flush))
+            )
+        );
+        --uaui-color-series-8: var(
+            --uaui-series-8,
+            light-dark(
+                color-mix(in srgb, var(--uui-palette-sunglow-dark) 70%, var(--uui-palette-jungle-green-dark)),
+                color-mix(in srgb, var(--uui-palette-deep-saffron) 60%, var(--uui-palette-forest-green))
+            )
+        );
+        --uaui-color-fill-5: var(--uaui-color-series-5);
+        --uaui-color-fill-6: var(--uaui-color-series-6);
+        --uaui-color-fill-7: var(--uaui-color-series-7);
+        --uaui-color-fill-8: var(--uaui-color-series-8);
+        --uaui-color-bar-5: var(--uaui-bar-5, var(--uaui-color-series-5));
+        --uaui-color-bar-6: var(--uaui-bar-6, var(--uaui-color-series-6));
+        --uaui-color-bar-7: var(--uaui-bar-7, var(--uaui-color-series-7));
+        --uaui-color-bar-8: var(--uaui-bar-8, var(--uaui-color-series-8));
         --uaui-color-series-default: var(
             --uaui-series-default,
             light-dark(var(--uui-palette-dusty-grey-dark), var(--uui-palette-dusty-grey))
