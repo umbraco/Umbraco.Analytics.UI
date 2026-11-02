@@ -9,7 +9,7 @@ Shared backoffice charts, tables, KPI tiles and filters for the analytics sectio
 - A Razor Class Library that ships built web components to `App_Plugins/Umbraco.Analytics.UI`.
 - Registers `@umbraco/analytics-ui` in the backoffice import map, so every product on a site loads the same single copy.
 - Components only draw. Products fetch their own data and pass it in.
-- Ships the site's one copy of Chart.js, mapped as `@umbraco/analytics-ui/external/chart.js`, so products' own charts share it. Chart.js types are never part of our own elements' API.
+- Ships the site's one copy of Chart.js, mapped as `@umbraco/analytics-ui/external/chart.js`, so products' own charts share it, with helpers that give those charts the package's look (`uauiChartColors`, `uauiChartOptions`, `uauiWatchTheme`; under our semver, guarded by `api/analytics-ui-external-chart.api.md`). Chart.js types are never part of our own elements' API.
 
 ## Elements
 

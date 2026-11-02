@@ -14,7 +14,7 @@ The `Umbraco.Analytics.UI` NuGet package maps `@umbraco/analytics-ui/external/ch
 import { ArcElement, Chart, DoughnutController } from "@umbraco/analytics-ui/external/chart.js";
 ```
 
-- It is Chart.js as is: its whole API (`Chart`, `registerables`, controllers, elements, scales, plugins) and its own types.
+- It is Chart.js as is: its whole API (`Chart`, `registerables`, controllers, elements, scales, plugins) and its own types. The package adds only three helpers for the [package's look](#give-your-chart-the-packages-look).
 - The types come with the npm package, which installs `chart.js` for them. Its code always comes from the site, never from npm.
 - Keep it external in your bundler. The rule from [Getting started](?path=/docs/guides-getting-started--docs), `/^@umbraco\/analytics-ui(\/|$)/`, already covers it.
 - Never import from `"chart.js"` in backoffice code. That bundles a second copy, with its own registry.
@@ -35,17 +35,45 @@ Chart.js's own plugins (`Legend`, `Title`, `Tooltip`, `Filler`, `Colors`) are th
 
 `uaui-time-series-chart` doesn't depend on any of this. It sets everything it relies on per chart and keeps every registered plugin it doesn't use off, even one registered after it was drawn, so a product's globals can't change it.
 
-## Use the package's colours
+## Give your chart the package's look
 
-A canvas can't read CSS custom properties. Add `UauiPaletteStyles` to your element, set a colour on a hidden probe element and read it back as a computed `color`:
+The entry also exports three helpers, so your chart looks like `uaui-time-series-chart` and follows the backoffice theme. They take and return Chart.js types, so they are here rather than in `@umbraco/analytics-ui`. The package's own chart uses them too.
 
 ```ts
-this._probe.style.color = "var(--uaui-color-series-1)";
-const color = getComputedStyle(this._probe).color;
+import { uauiChartColors, uauiChartOptions, uauiWatchTheme } from "@umbraco/analytics-ui/external/chart.js";
 ```
 
-The [Theming and palette](?path=/docs/guides-theming-and-palette--docs) guide lists the names. When the backoffice theme changes, read the colours again and call `chart.update()`.
+Add `UauiPaletteStyles` to your element's `styles`: the colours are read from its palette tokens. Call the helpers once the element is connected (for example in `firstUpdated` or `updated`), with the element as `host`.
+
+| Helper | Returns |
+|---|---|
+| `uauiChartColors(host)` | `UauiChartColors`: the palette as real colours for the host's current theme (light, dark or high contrast), with any `--uaui-series-N` overrides. `series` holds the four slots in order (`series[0]` is slot 1), each `{ line, fill, bar }`: the line colour, the area fill under a line (12% alpha) and an opaque bar or slice colour. Then `compare`, `compareBar`, `grid` (grid lines and axis borders), `text` (ticks and labels), `surface` and `fontFamily`. |
+| `uauiChartOptions(host, type, colors?)` | Base `ChartOptions` for a chart of `type`: the host's font at our sizes, grid, axis and tick colours, legend and title off, responsive, no animation. Line, bar and other x/y charts get `x` and `y` styled as ours (`x` the category axis, with no grid lines; for horizontal bars, `indexAxis: "y"`, swap the two axes' `grid` yourself); radar and polar area get `r`; doughnut and pie get no `scales` (Chart.js would draw any it's given). Pass `colors` if you already resolved them. A new object each call. |
+| `uauiWatchTheme(host, chart, onChange?)` | A function that stops watching. When the theme changes, it puts the new colours in your chart's options (where they are still the ones `uauiChartOptions` set), calls `onChange(colors, chart)` for you to recolour your datasets, then `chart.update()`. A change while `host` is disconnected is applied when the chart's canvas is laid out again after it reconnects (or at the next theme change), with no timer running meanwhile. It stops by itself once the chart is destroyed. Start it right after you create the chart, and call the stop function or destroy the chart when you are done: until then the watch holds on to both. |
+
+```ts
+const colors = uauiChartColors(this);
+const look = uauiChartOptions(this, "line", colors);
+const chart = new Chart(canvas, {
+    type: "line",
+    data: { labels, datasets: [{ data, borderColor: colors.series[0].line, backgroundColor: colors.series[0].fill }] },
+    options: {
+        ...look,
+        // Spread a nested object you change part of, and set each Chart.js plugin you rely on, on or off.
+        plugins: { ...look.plugins, tooltip: { ...look.plugins?.tooltip, enabled: false } },
+    },
+});
+const stop = uauiWatchTheme(this, chart, (next) => {
+    chart.data.datasets[0].borderColor = next.series[0].line;
+    chart.data.datasets[0].backgroundColor = next.series[0].fill;
+});
+// In disconnectedCallback: stop(); chart.destroy();
+```
+
+The helpers and `UauiChartColors` follow the package's [versioning](?path=/docs/guides-versioning--docs) like its elements: a minor never breaks them (`api/analytics-ui-external-chart.api.md` guards them). The Chart.js types they take and return follow Chart.js's own semver.
+
+Everything the helpers give is set on your chart; nothing is read from or written to `Chart.defaults`. An option you set yourself on top of `look` stays yours when the theme changes. To use a colour the helpers don't give, read it the same way: set it on a hidden element in your shadow root and read back its computed `color`. The [Theming and palette](?path=/docs/guides-theming-and-palette--docs) guide lists the names.
 
 ## Example
 
-[Examples > Custom chart with the shared Chart.js](?path=/docs/examples-custom-chart-with-the-shared-chart-js--docs) is a doughnut chart with an HTML legend, coloured with the series palette. Its source is in the docs panel.
+[Examples > Custom chart with the shared Chart.js](?path=/docs/examples-custom-chart-with-the-shared-chart-js--docs) is a doughnut chart with an HTML legend, in the package's look with these helpers. Its source is in the docs panel.

@@ -1,6 +1,15 @@
-import { Chart, registry, type ChartConfiguration, type PointElement, type Plugin } from "@umbraco/analytics-ui/external/chart.js";
+import {
+    Chart,
+    registry,
+    uauiChartOptions,
+    uauiWatchTheme,
+    type CartesianScaleOptions,
+    type ChartConfiguration,
+    type PointElement,
+    type Plugin,
+} from "@umbraco/analytics-ui/external/chart.js";
 import type { UauiChartKind } from "../types.js";
-import type { UauiChartColors } from "./chart-colors.js";
+import type { UauiChartDrawColors } from "./chart-colors.js";
 import { createMarkersPlugin, type UauiMarkerPin, type UauiMarkerPlacement, type UauiMarkersState } from "./markers-plugin.js";
 import "./register.js";
 
@@ -16,7 +25,7 @@ export interface UauiChartModel {
     yMax: number;
     yStep: number;
     formatTick: (value: number) => string;
-    colors: UauiChartColors;
+    colors: UauiChartDrawColors;
     /** Line kinds: a series below its compare line is doing better, so the gap shading flips. */
     lowerIsBetter?: boolean;
     /** One dot on the x-axis per entry. */
@@ -60,9 +69,6 @@ const onlyOwnPlugins = <T extends object>(plugins: T): T =>
                 : Reflect.get(target, key, receiver),
     });
 
-/** Chart.js's default events, set per chart so a product changing `Chart.defaults.events` doesn't stop our hover. */
-const EVENTS = ["mousemove", "mouseout", "click", "touchstart", "touchmove"] as const;
-
 /**
  * Where a line may draw past the chart area, set per dataset so a product's `Chart.defaults.clip` can't let our lines
  * and fills spill over the axes. It is the clip Chart.js works out itself (`LineController.getMaxOverflow`): none above
@@ -90,20 +96,32 @@ const MAX_POINTS_WITH_DOTS = 45;
 export class UauiChartRenderer {
     #chart?: Chart;
     #family?: "line" | "bar";
-    #colors?: UauiChartColors;
+    #colors?: UauiChartDrawColors;
     #lastHover?: UauiChartHover;
     #canvas: HTMLCanvasElement;
+    #host: HTMLElement;
     #onHover: (hover: UauiChartHover | undefined) => void;
+    #onThemeChange: () => void;
+    #stopThemeWatch?: () => void;
+    #inThemeChange = false;
     #markers: UauiMarkersState;
 
-    /** `onMarkerLayout` is told where the marker dots are drawn, after every layout in which they moved. */
+    /**
+     * `host` is the element whose palette the chart draws in. `onMarkerLayout` is told where the marker dots are drawn,
+     * after every layout in which they moved. `onThemeChange` is called when the theme's chart colours change
+     * (`uauiWatchTheme`, as a product's chart uses), for the owner to resolve its colours again and call `update`.
+     */
     constructor(
         canvas: HTMLCanvasElement,
+        host: HTMLElement,
         onHover: (hover: UauiChartHover | undefined) => void,
         onMarkerLayout: (placements: UauiMarkerPlacement[]) => void = () => {},
+        onThemeChange: () => void = () => {},
     ) {
         this.#canvas = canvas;
+        this.#host = host;
         this.#onHover = onHover;
+        this.#onThemeChange = onThemeChange;
         this.#markers = { pins: [], onLayout: onMarkerLayout };
     }
 
@@ -115,7 +133,7 @@ export class UauiChartRenderer {
     }
 
     /** Chart.js can't change a chart's type, so moving between the line and bar kinds builds a new chart. */
-    #create(family: "line" | "bar"): Chart {
+    #create(family: "line" | "bar", colors: UauiChartDrawColors): Chart {
         const hoverLine: Plugin = {
             id: "uauiHoverLine",
             beforeDatasetsDraw: (chart) => {
@@ -142,20 +160,23 @@ export class UauiChartRenderer {
             },
         };
 
+        // The package look a product's chart gets too (`uauiChartOptions`): only the parts our chart uses, as its plugins
+        // are its own (see `onlyOwnPlugins`). The scales are styled from it in `update`.
+        const { responsive, maintainAspectRatio, animation, events } = uauiChartOptions(this.#host, family, colors);
         const config: ChartConfiguration = {
             type: family,
             data: { labels: [], datasets: [] },
             plugins: [hoverLine, createMarkersPlugin(this.#markers)],
             // Everything we rely on is set here rather than left to `Chart.defaults`, which products share.
             options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                animation: false,
+                responsive,
+                maintainAspectRatio,
+                animation,
                 indexAxis: "x",
                 // Chart.js types `parsing` as keys or `false`; `true` (its default) parses our plain number arrays.
                 parsing: true as unknown as false,
                 normalized: false,
-                events: [...EVENTS],
+                events,
                 layout: { padding: { top: 8, right: 12, bottom: 0, left: 0 } },
                 interaction: { mode: "index", intersect: false, axis: "x" },
                 hover: { mode: "index", intersect: false, axis: "x" },
@@ -192,7 +213,18 @@ export class UauiChartRenderer {
             },
         };
         config.options!.plugins = onlyOwnPlugins(config.options!.plugins!);
-        return new Chart(this.#canvas, config);
+        const chart = new Chart(this.#canvas, config);
+        this.#stopThemeWatch?.();
+        this.#stopThemeWatch = uauiWatchTheme(this.#host, chart, () => {
+            // The watch calls `chart.update()` right after this, so an `update` from the owner skips its own.
+            this.#inThemeChange = true;
+            try {
+                this.#onThemeChange();
+            } finally {
+                this.#inThemeChange = false;
+            }
+        });
+        return chart;
     }
 
     update(model: UauiChartModel): void {
@@ -201,8 +233,8 @@ export class UauiChartRenderer {
         this.#markers.pins = model.markers ?? [];
         const family = isBarKind(model.kind) ? "bar" : "line";
         if (!this.#chart || this.#family !== family) {
-            this.#chart?.destroy();
-            this.#chart = this.#create(family);
+            this.#destroyChart();
+            this.#chart = this.#create(family, model.colors);
             this.#family = family;
             this.#lastHover = undefined;
             this.#onHover(undefined);
@@ -211,50 +243,24 @@ export class UauiChartRenderer {
         chart.data.labels = model.labels;
         chart.data.datasets = family === "bar" ? this.#barDatasets(model) : this.#lineDatasets(model);
 
-        const { colors } = model;
-        // The whole font, not just family and size, so `Chart.defaults.font` can't restyle the ticks.
-        const font = { family: colors.fontFamily, size: 11, style: "normal" as const, weight: "normal" as const, lineHeight: 1.2 };
         const stacked = model.kind === "stacked-bar";
-        const options = chart.options;
-        const scales = options.scales!;
-        // Chart.js's own values for what we don't style, set here so a product's `Chart.defaults.scale` can't move them.
-        const ticks = {
-            display: true,
-            color: colors.tick,
-            font,
-            align: "center" as const,
-            crossAlign: "near" as const,
-            mirror: false,
-            minRotation: 0,
-            autoSkipPadding: 3,
-            showLabelBackdrop: false,
-            textStrokeWidth: 0,
-        };
-        const axis = { reverse: false, grace: 0, border: { dash: [], dashOffset: 0 } };
-        scales["x"] = {
-            ...axis,
-            stacked,
-            position: "bottom",
-            grid: { display: false, lineWidth: 1, tickLength: 8 },
-            border: { ...axis.border, display: true, color: colors.grid, width: 1 },
-            ticks: { ...ticks, padding: 3, maxRotation: 45, autoSkip: true },
-        };
+        const scales = chart.options.scales!;
+        // The package's axis look (`uauiChartOptions`, as a product's chart gets it): our font, colours and Chart.js's
+        // own values for what we don't style, all set per chart so a product's `Chart.defaults.scale` can't move them.
+        const look = uauiChartOptions(this.#host, family, model.colors).scales as { x: CartesianScaleOptions; y: CartesianScaleOptions };
+        scales["x"] = { ...look.x, stacked };
         scales["y"] = {
-            ...axis,
+            ...look.y,
             stacked,
-            position: "left",
             min: 0,
             max: model.yMax,
-            grid: { display: true, color: colors.grid, lineWidth: 1, tickLength: 8, drawTicks: false },
-            border: { ...axis.border, display: false },
             ticks: {
-                ...ticks,
+                ...look.y.ticks,
                 stepSize: model.yStep,
-                padding: 8,
                 callback: (value) => model.formatTick(Number(value)),
             },
-        };
-        chart.update();
+        } as typeof look.y;
+        if (!this.#inThemeChange) chart.update();
     }
 
     // The datasets are built as plain objects: Chart.js types the dataset by chart type, and the two families differ.
@@ -375,8 +381,14 @@ export class UauiChartRenderer {
         this.#chart?.update();
     }
 
-    destroy(): void {
+    #destroyChart(): void {
+        this.#stopThemeWatch?.();
+        this.#stopThemeWatch = undefined;
         this.#chart?.destroy();
         this.#chart = undefined;
+    }
+
+    destroy(): void {
+        this.#destroyChart();
     }
 }
