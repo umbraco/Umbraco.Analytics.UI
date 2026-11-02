@@ -264,6 +264,12 @@ Research of umbraco/Forms `v19/dev` (1f7f14c) and umbraco/Umbraco-Workflow `v19/
 - [ ] **T60** - A categorical bar chart for a non-date x-axis (Forms' submissions by hour of day): new element or a mode of the chart, sharing its look, tooltip, legend, hidden table, loading, empty and error states.
 - [ ] **T61** - Workflow tiles and cells: a KPI tile that links or drills down (an `href`, or a non-selectable press event; decide with UUI's card/button patterns) and a progress cell ("2 of 3", with a bar). Forms' yes/no columns use the status cell.
 - [ ] **T62** - Forms example page: the analytics overview (submissions chart with compare and group-by, overview table) and a form's analytics tab (submissions, by hour of day, workflows, origins chart and pages table), plus KPI tiles (entries, unique members, workflow failure rate) and a funnel from record states, with sample data shaped like Forms' analytics API (`columns` and `rows`).
+  - Not in the example yet, add when the package can draw them: "submissions by hour of day" (needs the categorical bar chart, T60) and the origins chart's absolute/percent-share toggle (needs the 100% share view, T59).
+  - Forms API asks (proposals for the Forms team, not commitments; the example's fake API marks them as proposed):
+    - `/analytics/submissions`: answer more than `Metrics[0..1]`, so `triggered` (workflow runs, for a failure rate) and `uniqueMembers` can come with entries and workflow errors.
+    - `week` and `month` time dimensions, for unique members only: entries and errors add up from days on the client, distinct members don't.
+    - A record states endpoint (opened, partially submitted, submitted per form and range), for a completion funnel.
+    - `retentionDays` comes back as server-built English text ("Forever", "90 / Forever / 30"): send numbers (0 for forever) so the client can translate and format it.
 - [ ] **T63** - Workflow example page: admin dashboard with the approval activity chart (status tiles that drill down, fastest/slowest/average stats) and the content review chart, plus a filtered history table with the progress cell, with sample data shaped like Workflow's chart API.
 
 Candidates noticed but not planned: Forms' entries list could use a simpler date-only range input; Workflow's history filters (document, user, language, type, status) stay product-specific.
