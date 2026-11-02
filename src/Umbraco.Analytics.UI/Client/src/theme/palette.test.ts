@@ -37,7 +37,7 @@ const swatch = (el: UauiTestElement, name: "one" | "two") =>
     getComputedStyle(el.shadowRoot!.querySelector(`.${name}`)!).backgroundColor;
 
 const bar = (cell: UauiTestElement) =>
-    getComputedStyle(deepQuery(cell.shadowRoot!, ".share-bar")!).backgroundColor;
+    getComputedStyle(deepQuery(cell.shadowRoot!, ".meter-bar")!).backgroundColor;
 
 const themes = { light: lightCss, dark: darkCss, "high contrast": highContrastCss };
 

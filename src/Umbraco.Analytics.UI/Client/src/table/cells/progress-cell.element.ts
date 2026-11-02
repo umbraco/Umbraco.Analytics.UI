@@ -1,7 +1,7 @@
 import { css, customElement, html, nothing, property, type CSSResultGroup, type PropertyValues, type TemplateResult } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UauiPaletteStyles } from "../../theme/index.js";
-import "../internal/share-bar.element.js";
+import "../../internal/meter-bar/meter-bar.element.js";
 import { asNumber } from "../internal/cell-values.js";
 import { getNumberFormat } from "../../internal/format/number-format.js";
 import "../../internal/loading/skeleton.element.js";
@@ -78,7 +78,7 @@ export class UauiProgressCellElement extends UmbLitElement implements UauiTableC
         const percent = total > 0 ? Math.round(Math.min(Math.max(done / total, 0), 1) * 10000) / 100 : 0;
         return html`<div class="progress ${end}">
             <div class="progress-top">${this.localize.term("uauiAnalytics_tableProgress", format.format(done), format.format(total))}</div>
-            <uaui-share-bar .percent=${percent} .color=${this.column.meta?.color ?? 1}></uaui-share-bar>
+            <uaui-meter-bar .percent=${percent} .color=${this.column.meta?.color ?? 1}></uaui-meter-bar>
         </div>`;
     }
 

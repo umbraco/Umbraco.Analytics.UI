@@ -3,13 +3,13 @@ import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UauiPaletteStyles, type UauiColorSlot } from "../../theme/index.js";
 
 /**
- * The thin bar under a share value: a filled part on a neutral track. Decorative, so hidden from assistive
+ * The thin bar under a share or progress value: a filled part (0 to 100%) on a neutral track. Decorative, so hidden from assistive
  * tech. Internal: not exported.
  *
- * @element uaui-share-bar
+ * @element uaui-meter-bar
  */
-@customElement("uaui-share-bar")
-export class UauiShareBarElement extends UmbLitElement {
+@customElement("uaui-meter-bar")
+export class UauiMeterBarElement extends UmbLitElement {
     /** How much of the track is filled, 0 to 100. */
     @property({ type: Number })
     percent = 0;
@@ -20,7 +20,7 @@ export class UauiShareBarElement extends UmbLitElement {
 
     override render() {
         return html`<div class="track" aria-hidden="true">
-            <div class="share-bar" style="width: ${this.percent}%; background-color: var(--uaui-color-series-${this.color})"></div>
+            <div class="meter-bar" style="width: ${this.percent}%; background-color: var(--uaui-color-series-${this.color})"></div>
         </div>`;
     }
 
@@ -38,7 +38,7 @@ export class UauiShareBarElement extends UmbLitElement {
                 overflow: hidden;
             }
 
-            .share-bar {
+            .meter-bar {
                 height: 100%;
                 border-radius: 999px;
             }
@@ -48,6 +48,6 @@ export class UauiShareBarElement extends UmbLitElement {
 
 declare global {
     interface HTMLElementTagNameMap {
-        "uaui-share-bar": UauiShareBarElement;
+        "uaui-meter-bar": UauiMeterBarElement;
     }
 }

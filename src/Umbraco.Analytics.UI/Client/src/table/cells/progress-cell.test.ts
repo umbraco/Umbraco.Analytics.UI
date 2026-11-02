@@ -38,7 +38,7 @@ async function renderCell(
 }
 
 const text = (cell: Element) => shadow(cell).querySelector(".progress-top")?.textContent?.trim() ?? "";
-const bar = (cell: Element) => deepQuery<HTMLElement>(shadow(cell), ".share-bar");
+const bar = (cell: Element) => deepQuery<HTMLElement>(shadow(cell), ".meter-bar");
 const track = (cell: Element) => deepQuery<HTMLElement>(shadow(cell), ".track");
 
 describe("Feature: the progress cell", () => {
