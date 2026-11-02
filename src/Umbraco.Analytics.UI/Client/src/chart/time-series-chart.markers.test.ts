@@ -9,6 +9,7 @@ import darkCss from "@umbraco-ui/uui/themes/dark.css?inline";
 import highContrastCss from "@umbraco-ui/uui/themes/high-contrast.css?inline";
 import { render } from "vitest-browser-lit";
 import { axeRun } from "../internal/test/a11y.js";
+import { pressTab } from "../internal/test/keyboard.js";
 import { deepQuery, deepQueryAll, deepText, nextEvent, recordEvents, renderElement, settle, shadow, type UauiTestElement } from "../internal/test/dom.js";
 import { screenshotIt } from "../internal/test/screenshot.js";
 import type { UauiMarker } from "./types.js";
@@ -151,7 +152,7 @@ describe("Feature: event markers", () => {
             const el = await chart([launch, earlier]);
             focusedTitles = [];
             for (let i = 0; i < 2; i++) {
-                await userEvent.tab();
+                await pressTab();
                 focusedTitles.push(shadow(el).querySelector("uaui-chart-markers")?.shadowRoot?.activeElement?.getAttribute("aria-label") ?? "");
             }
         });

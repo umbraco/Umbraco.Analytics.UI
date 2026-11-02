@@ -4,6 +4,7 @@ import { page, userEvent } from "vitest/browser";
 import { html } from "@umbraco-cms/backoffice/external/lit";
 import "@umbraco-cms/backoffice/external/uui";
 import { axeRun } from "../internal/test/a11y.js";
+import { pressTab } from "../internal/test/keyboard.js";
 import { deepQuery, deepText, pressed, recordEvents, renderElement, settle, shadow, type UauiTestElement } from "../internal/test/dom.js";
 import "./funnel.element.js";
 import { cartSteps, cartStepsPrevious, compareRangeLabel, currentRangeLabel, visitSteps, visitStepsPrevious } from "./internal/funnel-fixtures.js";
@@ -445,11 +446,11 @@ describe("Feature: conversion funnel", () => {
     describe("Scenario: the editor uses the keyboard", () => {
         let el: UauiTestElement;
         beforeEach(async () => {
-            // "after" gives Tab somewhere to go: Firefox keeps focus in place when Tab runs off the end of the page. A span, as WebKit skips buttons on Tab.
+            // "after" gives Tab somewhere to go: Firefox keeps focus in place when Tab runs off the end of the page. A span, though `pressTab` reaches buttons in every engine too.
             el = await render(html`<button>before</button><uaui-funnel .steps=${cartSteps}></uaui-funnel><span tabindex="0">after</span>`);
             await parkPointer(document.body);
             (el.previousElementSibling as HTMLElement).focus();
-            await userEvent.tab();
+            await pressTab();
             await settle(el);
         });
 
@@ -488,7 +489,7 @@ describe("Feature: conversion funnel", () => {
         });
 
         it("hides the tooltip when focus leaves", async () => {
-            await userEvent.tab();
+            await pressTab();
             await settle(el);
             expect([tooltip(el), document.activeElement]).toEqual([null, el.nextElementSibling]);
         });
@@ -503,7 +504,7 @@ describe("Feature: conversion funnel", () => {
             await userEvent.hover(page.elementLocator(steps(el)[1]));
             steps(el)[0].focus();
             await settle(el);
-            await userEvent.tab();
+            await pressTab();
             await settle(el);
             expect(document.activeElement).toBe(el.nextElementSibling);
             expect(tooltipText(el)).toContain("Reached checkout");
