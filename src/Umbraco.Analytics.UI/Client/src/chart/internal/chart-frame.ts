@@ -1,7 +1,7 @@
 import { css, html, nothing, type CSSResultGroup, type TemplateResult } from "@umbraco-cms/backoffice/external/lit";
 import "../../empty-state/empty-state.element.js";
 import "../../error-state/error-state.element.js";
-import { getLoadingMode, isBusy } from "../../internal/loading/loading-mode.js";
+import type { UauiLoadingMode } from "../../internal/loading/loading-mode.js";
 import "../../internal/loading/loading-bar.element.js";
 import "../../internal/loading/skeleton.element.js";
 import { UauiPaletteStyles } from "../../theme/index.js";
@@ -12,13 +12,18 @@ export interface UauiChartFrame {
     label: string;
     /** Whether any series has a point. */
     hasData: boolean;
-    loading: boolean;
+    /** The chart's `loadingMode(hasData)` (`UauiLoadStateMixin`): error wins over loading, and loading over empty. */
+    mode: UauiLoadingMode;
+    /** The chart's `isBusy()`, for `aria-busy`. */
+    busy: boolean;
     error: boolean;
     errorHeadline?: string;
     errorDescription?: string;
     retryable: boolean;
     emptyHeadline?: string;
     emptyDescription?: string;
+    /** Raises the chart's own `retry` (its `dispatchRetry`), as the error state's stops at the shadow root. Lit calls it with the chart as `this`. */
+    onRetry: () => void;
     /** The hover tooltip (or `nothing`), in the plot over the canvas. */
     tooltip: unknown;
     /** Rendered only while the plot shows: over the plot (the markers' buttons), the legend under it and the hidden table. */
@@ -27,20 +32,14 @@ export interface UauiChartFrame {
     table: () => unknown;
 }
 
-/** The error state's `retry` stops at its shadow root, so the chart raises its own. Lit calls it with the chart as `this`. */
-function onRetry(this: HTMLElement) {
-    this.dispatchEvent(new Event("retry", { bubbles: true }));
-}
-
 /**
  * What every chart element draws around its plot, whatever its x-axis: the figure, the loading bar or skeleton, the
  * error and empty states (error wins over loading, and loading over empty), the plot with its canvas, and the hidden
- * probe `UauiChartController` reads colours from. Raises `retry` on the chart from the error state's Retry button.
+ * probe `UauiChartController` reads colours from. Raises `retry` on the chart (`onRetry`) from the error state's Retry button.
  * Use with `UauiChartFrameStyles` and a `UauiChartController`.
  */
 export function renderChartFrame(frame: UauiChartFrame): TemplateResult {
-    const mode = getLoadingMode(frame.loading, frame.hasData, frame.error);
-    const busy = isBusy(frame.loading, frame.error);
+    const { mode, busy } = frame;
     const showPlot = frame.hasData && mode !== "skeleton" && !frame.error;
     return html`<div
             class="region"
@@ -56,7 +55,7 @@ export function renderChartFrame(frame: UauiChartFrame): TemplateResult {
                           .headline=${frame.errorHeadline}
                           .description=${frame.errorDescription}
                           .retryable=${frame.retryable}
-                          @retry=${onRetry}></uaui-error-state>
+                          @retry=${frame.onRetry}></uaui-error-state>
                   </div>`
                 : nothing}
             ${mode === "idle" && !frame.error && !frame.hasData

@@ -101,7 +101,7 @@ const emptyDerived: Derived = {
  * `UmbLitElement` with the settings every chart shares (`UauiChartMixin`), for dated series: the base of
  * `uaui-time-series-chart`. Exported so its type has a name in the public API; extend the element, not this.
  */
-export const UauiTimeSeriesChartElementBase = UauiChartMixin<UauiSeries>()(UmbLitElement);
+export const UauiTimeSeriesChartElementBase = UauiChartMixin(UmbLitElement);
 
 /**
  * Shows a metric over time as lines, filled areas, bars or stacked bars, with a legend, a hover tooltip and a visually
@@ -509,11 +509,13 @@ export class UauiTimeSeriesChartElement extends UauiTimeSeriesChartElementBase {
         return renderChartFrame({
             label: this.localize.term("uauiAnalytics_chartAriaLabel"),
             hasData: this.#hasData,
-            loading: this.loading,
+            mode: this.loadingMode(this.#hasData),
+            busy: this.isBusy(),
             error: this.error,
             errorHeadline: this.errorHeadline,
             errorDescription: this.errorDescription,
             retryable: this.retryable,
+            onRetry: this.dispatchRetry,
             emptyHeadline: this.emptyHeadline,
             emptyDescription: this.emptyDescription,
             tooltip: this.#renderTooltip(),

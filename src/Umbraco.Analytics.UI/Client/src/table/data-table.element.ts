@@ -12,7 +12,7 @@ import {
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import "../empty-state/empty-state.element.js";
 import "../error-state/error-state.element.js";
-import { getLoadingMode, isBusy } from "../internal/loading/loading-mode.js";
+import { UauiLoadStateMixin, type UauiLoadingMode } from "../load-state/load-state.mixin.js";
 import "../internal/loading/loading-bar.element.js";
 import "../internal/loading/skeleton.element.js";
 import { UauiPaletteStyles } from "../theme/index.js";
@@ -81,6 +81,12 @@ const START_SLOT = `${SLOT_PREFIX}start`;
 const SKELETON_ROWS = 5;
 /** Widths of the skeleton blocks, varied by row so the placeholder doesn't look like a grid of equal bars. */
 const SKELETON_WIDTHS = [72, 54, 83, 47, 65];
+
+/**
+ * `UmbLitElement` with the shared load states (`UauiLoadStateMixin`): the base of `uaui-data-table`. Exported so its
+ * type has a name in the public API; extend the element, not this.
+ */
+export const UauiDataTableElementBase = UauiLoadStateMixin(UmbLitElement);
 
 /**
  * A table of rows. Each column names the cell element that shows its values in `elementName`: the built-in
@@ -165,7 +171,7 @@ const SKELETON_WIDTHS = [72, 54, 83, 47, 65];
  * @cssprop --uaui-tint-neutral - Colour of the track behind a share bar.
  */
 @customElement("uaui-data-table")
-export class UauiDataTableElement extends UmbLitElement {
+export class UauiDataTableElement extends UauiDataTableElementBase {
     /**
      * The table's accessible name, e.g. "Top pages", as `label` is across UUI. It names the table for screen readers, and
      * names the pager "Top pages, pagination" and the sideways scroll area "Top pages, scroll sideways to see more columns", so
@@ -196,34 +202,6 @@ export class UauiDataTableElement extends UmbLitElement {
      */
     @property({ type: String, attribute: "row-key" })
     rowKey?: string | string[];
-
-    /** Shows skeleton rows on first load, or a loading bar over the old rows when reloading. */
-    @property({ type: Boolean, reflect: true })
-    loading = false;
-
-    /** The load failed. Shows `uaui-error-state` under the header in place of the rows and pager, and wins over `loading` and the empty state. */
-    @property({ type: Boolean, reflect: true })
-    error = false;
-
-    /** Headline of the error state. Defaults to the translation of "Something went wrong". */
-    @property({ type: String, attribute: "error-headline" })
-    errorHeadline?: string;
-
-    /** Description of the error state. Defaults to the translation of "The data could not be loaded.". */
-    @property({ type: String, attribute: "error-description" })
-    errorDescription?: string;
-
-    /** Shows a Retry button in the error state. Pressing it raises `retry` on the table. */
-    @property({ type: Boolean })
-    retryable = false;
-
-    /** Headline of the empty state. Defaults to the translation of "No data yet". */
-    @property({ type: String, attribute: "empty-headline" })
-    emptyHeadline?: string;
-
-    /** Description of the empty state. Defaults to the translation of "Try a wider date range.". */
-    @property({ type: String, attribute: "empty-description" })
-    emptyDescription?: string;
 
     /** The column the rows are sorted by. Set by the product, and by the table itself when a header is clicked. */
     @property({ attribute: false })
@@ -583,15 +561,10 @@ export class UauiDataTableElement extends UmbLitElement {
             : this.localize.term("uauiAnalytics_tableScrollRegion");
     }
 
-    // The error state's `retry` stops at its shadow root, so the table raises its own.
-    #onRetry() {
-        this.dispatchEvent(new Event("retry", { bubbles: true }));
-    }
-
     override render(): TemplateResult {
         const hasData = this.rows.length > 0;
-        const mode = getLoadingMode(this.loading, hasData, this.error);
-        const busy = isBusy(this.loading, this.error);
+        const mode = this.loadingMode(hasData);
+        const busy = this.isBusy();
         const showColumnToolbar = this.#hasColumnToolbar && !this.error;
         const scrollFocusable = this.#overflow.focusable;
         return html`<div class="region ${this.#hasToolbar ? "has-toolbar" : ""} ${showColumnToolbar ? "has-column-toolbar" : ""}">
@@ -644,11 +617,11 @@ export class UauiDataTableElement extends UmbLitElement {
             .headline=${this.errorHeadline}
             .description=${this.errorDescription}
             .retryable=${this.retryable}
-            @retry=${this.#onRetry}></uaui-error-state>`;
+            @retry=${this.dispatchRetry}></uaui-error-state>`;
     }
 
     /** "No results" when a query leaves no rows on screen (either mode), else the product's empty state when there are no rows. */
-    #renderEmptyState(mode: ReturnType<typeof getLoadingMode>, hasData: boolean): TemplateResult | typeof nothing {
+    #renderEmptyState(mode: UauiLoadingMode, hasData: boolean): TemplateResult | typeof nothing {
         const searching = typeof this.query === "string" && this.query.trim() !== "";
         if (mode !== "skeleton" && searching && this.#visibleRows.length === 0) {
             return html`<uaui-empty-state .headline=${this.localize.term("general_searchNoResult")} description=""></uaui-empty-state>`;

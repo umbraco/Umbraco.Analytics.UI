@@ -1,14 +1,16 @@
 import { property } from "@umbraco-cms/backoffice/external/lit";
 import type { HTMLElementConstructor } from "@umbraco-cms/backoffice/extension-api";
 import type { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
+import { UauiLoadStateMixin, type UauiLoadStateMixinInterface } from "../load-state/load-state.mixin.js";
 import type { UauiChartScale } from "./types.js";
 
 /**
- * The settings every chart element shares, whatever its x-axis: the series, the y-axis, the value format, the compare
- * label, and the loading, error and empty states. `TSeries` is the chart's series type (`UauiSeries` for
- * `uaui-time-series-chart`, `UauiCategorySeries` for `uaui-category-chart`).
+ * The settings every chart element shares, whatever its x-axis: the series, the y-axis, the value format and the compare
+ * label, on top of the load states every data element shares (`UauiLoadStateMixinInterface`). `TSeries` is the series
+ * type: `unknown` from the mixin, which each chart narrows to its own (`UauiSeries` on `uaui-time-series-chart`,
+ * `UauiCategorySeries` on `uaui-category-chart`).
  */
-export interface UauiChartMixinInterface<TSeries> {
+export interface UauiChartMixinInterface<TSeries = unknown> extends UauiLoadStateMixinInterface {
     /**
      * How the y-axis spaces its values. `"log"` spaces it by powers of ten, for values that span widely. It still starts
      * at 0: 0 sits on the axis line and the axis bends toward it near the bottom, so a 0 needs no gap and the smallest
@@ -50,58 +52,20 @@ export interface UauiChartMixinInterface<TSeries> {
      * How numbers are formatted, e.g. `{ style: "currency", currency: "EUR" }`.
      */
     valueFormat?: Intl.NumberFormatOptions;
-
-    /**
-     * Shows a skeleton on first load, or a loading bar over the old data when reloading.
-     */
-    loading: boolean;
-
-    /**
-     * The load failed. Shows `uaui-error-state` in place of the plot, legend and data table, and wins over `loading` and
-     * the empty state.
-     */
-    error: boolean;
-
-    /**
-     * Headline of the error state. Defaults to the translation of "Something went wrong".
-     */
-    errorHeadline?: string;
-
-    /**
-     * Description of the error state. Defaults to the translation of "The data could not be loaded.".
-     */
-    errorDescription?: string;
-
-    /**
-     * Shows a Retry button in the error state. Pressing it raises `retry` on the chart.
-     */
-    retryable: boolean;
-
-    /**
-     * Headline of the empty state. Defaults to the translation of "No data yet".
-     */
-    emptyHeadline?: string;
-
-    /**
-     * Description of the empty state. Defaults to the translation of "Try a wider date range.".
-     */
-    emptyDescription?: string;
 }
 
 /**
- * Adds the settings every chart element shares (`UauiChartMixinInterface`) to a class, with the same attribute names
- * and defaults on every chart. Called in two steps, first with the chart's series type, then with the class to extend:
- * `UauiChartMixin<UauiSeries>()(UmbLitElement)`. The two steps let the class's own type be inferred while the series
- * type is given: TypeScript can't infer one type argument and take another explicitly in a single call, so a one-step
- * `UauiChartMixin<UauiSeries>(MyBase)` would drop `MyBase`'s own members from the result.
+ * Adds the settings every chart element shares (`UauiChartMixinInterface`, built on `UauiLoadStateMixin`) to a class,
+ * with the same attribute names and defaults on every chart: `UauiChartMixin(UmbLitElement)`. One call, the class's own
+ * type inferred, so a subclass of `UmbLitElement` keeps its members. The mixin types `series` and `compareSeries` as
+ * `unknown[]`; each chart narrows them to its own series type with a `declare` (`declare series: UauiSeries[]`), with
+ * its own docs.
  *
- * @returns A function that takes the class to extend (`UmbLitElement` or a subclass of it) and returns it with the
- * shared chart settings.
+ * @param superClass - The class to extend, `UmbLitElement` or a subclass of it.
+ * @returns The class with the shared chart settings.
  */
-export const UauiChartMixin =
-    <TSeries>() =>
-    <T extends HTMLElementConstructor<UmbLitElement>>(superClass: T): HTMLElementConstructor<UauiChartMixinInterface<TSeries>> & T => {
-    class UauiChartMixinClass extends superClass {
+export const UauiChartMixin = <T extends HTMLElementConstructor<UmbLitElement>>(superClass: T): HTMLElementConstructor<UauiChartMixinInterface> & T => {
+    class UauiChartMixinClass extends UauiLoadStateMixin(superClass) {
         /**
          * How the y-axis spaces its values. `"log"` spaces it by powers of ten, for values that span widely. It still starts
          * at 0: 0 sits on the axis line and the axis bends toward it near the bottom, so a 0 needs no gap and the smallest
@@ -117,7 +81,7 @@ export const UauiChartMixin =
 
         /** The series to draw: one line or set of bars each. Their shape is the chart's own (see the chart's series type). */
         @property({ attribute: false })
-        series: TSeries[] = [];
+        series: unknown[] = [];
 
         /**
          * The same metrics for another period, drawn as a compare bar behind the bars, or as a dashed line beside a line.
@@ -127,7 +91,7 @@ export const UauiChartMixin =
          * matched by category id.
          */
         @property({ attribute: false })
-        compareSeries: TSeries[] = [];
+        compareSeries: unknown[] = [];
 
         /**
          * Names the compared period in the legend and tooltip, e.g. "Apr 25, 2026 – May 24, 2026". Defaults to the
@@ -149,49 +113,6 @@ export const UauiChartMixin =
          */
         @property({ type: Object, attribute: "value-format" })
         valueFormat?: Intl.NumberFormatOptions;
-
-        /**
-         * Shows a skeleton on first load, or a loading bar over the old data when reloading.
-         */
-        @property({ type: Boolean, reflect: true })
-        loading = false;
-
-        /**
-         * The load failed. Shows `uaui-error-state` in place of the plot, legend and data table, and wins over `loading` and
-         * the empty state.
-         */
-        @property({ type: Boolean, reflect: true })
-        error = false;
-
-        /**
-         * Headline of the error state. Defaults to the translation of "Something went wrong".
-         */
-        @property({ type: String, attribute: "error-headline" })
-        errorHeadline?: string;
-
-        /**
-         * Description of the error state. Defaults to the translation of "The data could not be loaded.".
-         */
-        @property({ type: String, attribute: "error-description" })
-        errorDescription?: string;
-
-        /**
-         * Shows a Retry button in the error state. Pressing it raises `retry` on the chart.
-         */
-        @property({ type: Boolean })
-        retryable = false;
-
-        /**
-         * Headline of the empty state. Defaults to the translation of "No data yet".
-         */
-        @property({ type: String, attribute: "empty-headline" })
-        emptyHeadline?: string;
-
-        /**
-         * Description of the empty state. Defaults to the translation of "Try a wider date range.".
-         */
-        @property({ type: String, attribute: "empty-description" })
-        emptyDescription?: string;
     }
-    return UauiChartMixinClass as HTMLElementConstructor<UauiChartMixinInterface<TSeries>> & T;
+    return UauiChartMixinClass as unknown as HTMLElementConstructor<UauiChartMixinInterface> & T;
 };

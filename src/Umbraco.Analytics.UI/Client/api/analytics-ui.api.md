@@ -43,9 +43,12 @@ export type UauiCategory = {
 export class UauiCategoryChartElement extends UauiCategoryChartElementBase {
     categories: UauiCategory[];
     categoryLabel?: string;
+    compareSeries: UauiCategorySeries[];
+    emptyDescription?: string;
     kind: UauiCategoryChartKind;
     // (undocumented)
     render(): TemplateResult;
+    series: UauiCategorySeries[];
     // (undocumented)
     static styles: CSSResultGroup;
     // (undocumented)
@@ -53,7 +56,7 @@ export class UauiCategoryChartElement extends UauiCategoryChartElementBase {
 }
 
 // @public
-export const UauiCategoryChartElementBase: HTMLElementConstructor<UauiChartMixinInterface<UauiCategorySeries>> & typeof UmbLitElement;
+export const UauiCategoryChartElementBase: HTMLElementConstructor<UauiChartMixinInterface<unknown>> & typeof UmbLitElement;
 
 // @public
 export type UauiCategoryChartKind = "bar" | "stacked-bar";
@@ -76,20 +79,13 @@ export type UauiCategorySeries = {
 export type UauiChartKind = "line" | "area" | "bar" | "stacked-bar";
 
 // @public
-export const UauiChartMixin: <TSeries>() => <T extends HTMLElementConstructor<UmbLitElement>>(superClass: T) => HTMLElementConstructor<UauiChartMixinInterface<TSeries>> & T;
+export const UauiChartMixin: <T extends HTMLElementConstructor<UmbLitElement>>(superClass: T) => HTMLElementConstructor<UauiChartMixinInterface> & T;
 
 // @public
-export interface UauiChartMixinInterface<TSeries> {
+export interface UauiChartMixinInterface<TSeries = unknown> extends UauiLoadStateMixinInterface {
     compareLabel?: string;
     compareSeries: TSeries[];
-    emptyDescription?: string;
-    emptyHeadline?: string;
-    error: boolean;
-    errorDescription?: string;
-    errorHeadline?: string;
-    loading: boolean;
     lowerIsBetter: boolean;
-    retryable: boolean;
     series: TSeries[];
     valueFormat?: Intl.NumberFormatOptions;
     yScale: UauiChartScale;
@@ -112,17 +108,11 @@ export type UauiCompare = {
 export function uauiCompareFor(mode: UauiCompare["mode"], range: UauiDateSpan): UauiCompare | undefined;
 
 // @public
-export class UauiDataTableElement extends UmbLitElement {
+export class UauiDataTableElement extends UauiDataTableElementBase {
     clickableRows: boolean;
     columns: UauiTableColumn[];
     compareRows: Record<string, unknown>[];
-    emptyDescription?: string;
-    emptyHeadline?: string;
-    error: boolean;
-    errorDescription?: string;
-    errorHeadline?: string;
     label: string;
-    loading: boolean;
     mode: UauiTableMode;
     page: number;
     pageSize: number;
@@ -130,7 +120,6 @@ export class UauiDataTableElement extends UmbLitElement {
     // (undocumented)
     render(): TemplateResult;
     resetPageOnRows: boolean;
-    retryable: boolean;
     rowKey?: string | string[];
     rows: Record<string, unknown>[];
     sort?: UauiTableSort;
@@ -141,6 +130,9 @@ export class UauiDataTableElement extends UmbLitElement {
     // (undocumented)
     protected willUpdate(changed: PropertyValues<this>): void;
 }
+
+// @public
+export const UauiDataTableElementBase: HTMLElementConstructor<UauiLoadStateMixinInterface> & typeof UmbLitElement;
 
 // @public
 export type UauiDateBucket = {
@@ -270,7 +262,7 @@ export type UauiFormatDateRangeOptions = {
 };
 
 // @public
-export class UauiFunnelElement extends UmbLitElement {
+export class UauiFunnelElement extends UauiFunnelElementBase {
     compareLabel?: string;
     compareSteps: UauiFunnelStep[];
     // (undocumented)
@@ -278,15 +270,8 @@ export class UauiFunnelElement extends UmbLitElement {
     currentLabel?: string;
     // (undocumented)
     disconnectedCallback(): void;
-    emptyDescription?: string;
-    emptyHeadline?: string;
-    error: boolean;
-    errorDescription?: string;
-    errorHeadline?: string;
-    loading: boolean;
     // (undocumented)
     render(): TemplateResult;
-    retryable: boolean;
     steps: UauiFunnelStep[];
     // (undocumented)
     static styles: CSSResultGroup;
@@ -296,6 +281,9 @@ export class UauiFunnelElement extends UmbLitElement {
     // (undocumented)
     protected willUpdate(changed: PropertyValues<this>): void;
 }
+
+// @public
+export const UauiFunnelElementBase: HTMLElementConstructor<UauiLoadStateMixinInterface> & typeof UmbLitElement;
 
 // @public
 export type UauiFunnelStep = {
@@ -359,6 +347,26 @@ export class UauiLinkCellElement extends UmbLitElement implements UauiTableCellE
     // (undocumented)
     static styles: CSSResultGroup;
     value: unknown;
+}
+
+// @public
+export type UauiLoadingMode = "skeleton" | "reload" | "idle";
+
+// @public
+export const UauiLoadStateMixin: <T extends HTMLElementConstructor<UmbLitElement>>(superClass: T) => HTMLElementConstructor<UauiLoadStateMixinInterface> & T;
+
+// @public
+export class UauiLoadStateMixinInterface {
+    protected dispatchRetry(): void;
+    emptyDescription?: string;
+    emptyHeadline?: string;
+    error: boolean;
+    errorDescription?: string;
+    errorHeadline?: string;
+    protected isBusy(): boolean;
+    loading: boolean;
+    protected loadingMode(hasData: boolean): UauiLoadingMode;
+    retryable: boolean;
 }
 
 // @public
@@ -692,7 +700,7 @@ export class UauiTimeSeriesChartElement extends UauiTimeSeriesChartElementBase {
 }
 
 // @public
-export const UauiTimeSeriesChartElementBase: HTMLElementConstructor<UauiChartMixinInterface<UauiSeries>> & typeof UmbLitElement;
+export const UauiTimeSeriesChartElementBase: HTMLElementConstructor<UauiChartMixinInterface<unknown>> & typeof UmbLitElement;
 
 // @public
 export type UauiToggleGroupChangeDetail = {

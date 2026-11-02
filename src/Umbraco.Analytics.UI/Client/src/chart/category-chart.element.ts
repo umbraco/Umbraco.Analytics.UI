@@ -43,7 +43,7 @@ const emptyDerived: Derived = { data: { labels: [], series: [] }, labels: [], to
  * `UmbLitElement` with the settings every chart shares (`UauiChartMixin`), for category series: the base of
  * `uaui-category-chart`. Exported so its type has a name in the public API; extend the element, not this.
  */
-export const UauiCategoryChartElementBase = UauiChartMixin<UauiCategorySeries>()(UmbLitElement);
+export const UauiCategoryChartElementBase = UauiChartMixin(UmbLitElement);
 
 /**
  * Shows a metric per category, such as submissions by hour of the day, as bars or stacked bars, with a legend, a hover
@@ -86,6 +86,22 @@ export class UauiCategoryChartElement extends UauiCategoryChartElementBase {
     /** Names the categories as the hidden table's column heading, e.g. "Hour of day". Defaults to the translation of "Category". */
     @property({ type: String, attribute: "category-label" })
     categoryLabel?: string;
+
+    /**
+     * The sets of bars, from `UauiChartMixin`. Each point names its category by `id`; points in the same category add
+     * up (aggregate rates and averages first), a category with no point has no bar, and a point in a category that isn't
+     * in `categories` is not drawn.
+     */
+    declare series: UauiCategorySeries[];
+
+    /**
+     * Last period's values, from `UauiChartMixin`. Matched by series `id` and category `id`: only compare series with the
+     * `id` of a series count, added up per category into one compare bar behind the current bar or bars.
+     */
+    declare compareSeries: UauiCategorySeries[];
+
+    /** Description of the empty state, from `UauiLoadStateMixin`. Defaults to the translation of "There is nothing to show yet.". */
+    declare emptyDescription?: string;
 
     /** Draws the chart (Chart.js through the renderer), and holds the hover. */
     #chart = new UauiChartController(this, {
@@ -230,11 +246,13 @@ export class UauiCategoryChartElement extends UauiCategoryChartElementBase {
         return renderChartFrame({
             label: this.localize.term("uauiAnalytics_chartAriaLabel"),
             hasData: this.#hasData,
-            loading: this.loading,
+            mode: this.loadingMode(this.#hasData),
+            busy: this.isBusy(),
             error: this.error,
             errorHeadline: this.errorHeadline,
             errorDescription: this.errorDescription,
             retryable: this.retryable,
+            onRetry: this.dispatchRetry,
             emptyHeadline: this.emptyHeadline,
             emptyDescription: this.emptyDescription ?? this.localize.term("uauiAnalytics_chartCategoryEmptyDescription"),
             tooltip: this.#renderTooltip(),

@@ -82,7 +82,8 @@ Each links to its page in Storybook.
 
 Also public:
 
-- `UauiChartMixin` and `UauiChartMixinInterface`: the settings both charts share (`series`, `compare-series`, `y-scale`, `value-format`, `lower-is-better`, `compare-label` and the loading, error and empty states), with the same attribute names and defaults on each.
+- `UauiLoadStateMixin` and `UauiLoadStateMixinInterface`: the load states every data element shares (`loading`, `error`, `error-headline`, `error-description`, `retryable`, `empty-headline`, `empty-description`), the error > loading > empty rule and the `retry` event, for your own elements too.
+- `UauiChartMixin` and `UauiChartMixinInterface`: built on the load states, the settings both charts share (`series`, `compare-series`, `y-scale`, `value-format`, `lower-is-better`, `compare-label`), with the same attribute names and defaults on each.
 - `UAUI_TABLE_CELL` and `UAUI_TABLE_CONTEXT`: the cell element names, and what a custom cell reads from its table. See the [custom cell example](https://umbraco.github.io/Umbraco.Analytics.UI/?path=/docs/examples-custom-cell-with-table-context--docs).
 - `UauiPaletteStyles`: the colour palette for your own elements. See [Theming and palette](https://umbraco.github.io/Umbraco.Analytics.UI/?path=/docs/guides-theming-and-palette--docs).
 - `UauiTableServerController`: runs a table in `server` mode. See [Events, loading and errors](https://umbraco.github.io/Umbraco.Analytics.UI/?path=/docs/guides-events-loading-and-errors--docs).

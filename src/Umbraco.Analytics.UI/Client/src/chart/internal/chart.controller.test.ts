@@ -43,8 +43,10 @@ class TestChartElement extends UmbLitElement {
         return renderChartFrame({
             label: "Chart",
             hasData: true,
-            loading: false,
+            mode: "idle",
+            busy: false,
             error: false,
+            onRetry: () => {},
             retryable: false,
             tooltip: hover ? html`<uaui-chart-tooltip style="visibility:hidden" heading=${String(hover.index)}></uaui-chart-tooltip>` : nothing,
             legend: () => nothing,

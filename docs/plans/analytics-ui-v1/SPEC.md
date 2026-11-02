@@ -113,7 +113,7 @@ Storybook gets a "Pane" story showing this recipe, a chart and a table in one `u
 ![Stacked bar chart with comparison](../../design/phase-1/screenshots/vis-cmp.png)
 ![Marker tooltip](../../design/phase-1/screenshots/an-pin-tip.png)
 
-- Properties (the ones marked * come from `UauiChartMixin`, shared with `uaui-category-chart`, §11):
+- Properties (the ones marked * come from `UauiChartMixin`, shared with `uaui-category-chart`, §11; `loading`, `error` and its texts, `retryable` and the empty texts from `UauiLoadStateMixin`, §8, which the chart mixin builds on):
   - `kind` (`UauiChartKind`); a series' own `kind` overrides it for that series (see Bars and a line)
   - `y-scale`* (`UauiChartScale`, reflected, default `"linear"`): see Log scale
   - `today` (ISO date): see Today
@@ -250,6 +250,7 @@ Storybook gets a "Pane" story showing this recipe, a chart and a table in one `u
   - `retryable` shows a Retry button that raises `retry` (a plain `Event`, bubbling, not composed, no detail). Without it there is no button.
   - The text is announced when it appears (`role="alert"`).
   - The chart and table show it when `error` is set. The KPI tile shows a dash instead.
+- **Shared load states (`UauiLoadStateMixin`, T60):** the charts, the funnel and the table take `loading`, `error`, `error-headline`, `error-description`, `retryable`, `empty-headline` and `empty-description` from one public mixin (same attribute names, reflection and defaults on each), with its protected `loadingMode(hasData)` (error wins over loading, and loading over empty; `skeleton`, `reload` or `idle`), `isBusy()` (`aria-busy`) and `dispatchRetry()` (the one `retry`: a plain `Event`, bubbling, not composed, not cancelable). Each element still draws its states where it needs them (the table under its header, with its own "no results" empty state), and keeps its own default texts (the category chart's empty description is neutral). The KPI tile keeps its own `loading` and `error` (no Retry, no empty texts).
 - **Loading:** each data element (chart, table, KPI tile) has a `loading` property.
   - On first load it shows a skeleton the same size as the loaded element, so the page doesn't jump.
   - While reloading with data already shown, the old data stays visible under a thin loading bar at the top.
@@ -302,7 +303,7 @@ For an x-axis that isn't dates: Forms' submissions by hour of day first (24 cate
   - `kind` (`UauiCategoryChartKind`, reflected, default `"bar"`): `"bar"` draws the series side by side, `"stacked-bar"` stacks them in one bar per category. Any other value draws `"bar"`. No line kind yet; one can be added later without breaking anything.
   - `categories` (`UauiCategory[]`): the x-axis, in order. The product passes each label already localized ("2 PM" or "14" for an hour, in the editor's culture) and names the category by `id` in its points. A repeated id counts once, at its first place.
   - `category-label` (string): the hidden table's heading for the categories ("Hour of day"). Defaults to the translation of "Category" (`uauiAnalytics_chartTableCategoryHeader`).
-  - From `UauiChartMixin`, with the same attribute names, defaults and behaviour as on the time-series chart: `series` and `compare-series` (`UauiCategorySeries[]`), `y-scale`, `compare-label`, `lower-is-better`, `value-format`, `loading`, `error`, `error-headline`, `error-description`, `retryable`, `empty-headline`, `empty-description`.
+  - From `UauiChartMixin` (and the `UauiLoadStateMixin` it builds on), with the same attribute names, defaults and behaviour as on the time-series chart: `series` and `compare-series` (narrowed to `UauiCategorySeries[]`), `y-scale`, `compare-label`, `lower-is-better`, `value-format`, `loading`, `error`, `error-headline`, `error-description`, `retryable`, `empty-headline`, `empty-description` (default "There is nothing to show yet.", `uauiAnalytics_chartCategoryEmptyDescription`).
 - **Data:** a series' points name their category by id; points in the same category add up (aggregate rates first), a category with no point has no bar (an empty cell in the hidden table), and a point in a category that isn't in `categories` is not drawn. No points in any given category shows the empty state.
 - **Comparison:** a compare value is matched by series `id` and category `id`. The compare series that a series has the `id` of are added up per category into one compare bar behind the current bar or bars (`--uaui-compare` at 45%), as the time-series chart's bar kinds do; a compare series with no matching series is left out, so the compare bar covers the same series as the bars. Tooltip: the compare value under the current total (or the single value), the `compare-label` (or "Comparison") as its sub line, and a change badge (`lower-is-better` flips it). Legend: a square for each series plus the compare entry. Hidden table: a "Total (compare)" column.
 - **Total:** with two or more series, stacked or compared, the tooltip and hidden table add "Total".

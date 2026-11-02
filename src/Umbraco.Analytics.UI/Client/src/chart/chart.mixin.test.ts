@@ -1,8 +1,10 @@
-// T60 — UauiChartMixin: the series type is given, the base class's type is inferred, so a subclass base keeps its own
-// members. The type checks run in `tsc -p tsconfig.app.json` (part of `npm run build`); the runtime checks here.
+// T60 — UauiChartMixin: one call, the base class's type inferred, so a subclass base keeps its own members; each chart
+// narrows `series` to its own type. The type checks run in `tsc -p tsconfig.app.json` (part of `npm run build`).
 import { describe, expect, expectTypeOf, it } from "vitest";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UauiChartMixin } from "./chart.mixin.js";
+import type { UauiCategoryChartElement } from "./category-chart.element.js";
+import type { UauiTimeSeriesChartElement } from "./time-series-chart.element.js";
 import type { UauiCategorySeries, UauiChartScale, UauiSeries } from "./types.js";
 
 class ProductBase extends UmbLitElement {
@@ -10,8 +12,10 @@ class ProductBase extends UmbLitElement {
     static productStatic = 42;
 }
 
-const Mixed = UauiChartMixin<UauiSeries>()(ProductBase);
-class TestMixedChartElement extends Mixed {}
+const Mixed = UauiChartMixin(ProductBase);
+class TestMixedChartElement extends Mixed {
+    declare series: UauiSeries[];
+}
 customElements.define("uaui-test-mixed-chart", TestMixedChartElement);
 
 describe("Feature: the chart mixin", () => {
@@ -24,34 +28,37 @@ describe("Feature: the chart mixin", () => {
             expect(Mixed.productStatic).toBe(42);
         });
 
-        it("adds the shared settings, with the given series type", () => {
+        it("adds the shared settings and load states", () => {
             const el = new TestMixedChartElement();
             expectTypeOf(el.series).toEqualTypeOf<UauiSeries[]>();
-            expectTypeOf(el.compareSeries).toEqualTypeOf<UauiSeries[]>();
             expectTypeOf(el.yScale).toEqualTypeOf<UauiChartScale>();
+            expectTypeOf(el.loading).toEqualTypeOf<boolean>();
             expectTypeOf(el).toExtend<UmbLitElement>();
             expect(el.series).toEqual([]);
+            expect(el.compareSeries).toEqual([]);
             expect(el.yScale).toBe("linear");
             expect(el.loading).toBe(false);
-        });
-
-        it("keeps the series type per chart: another chart's series don't fit", () => {
-            const el = new TestMixedChartElement();
-            const categorySeries: UauiCategorySeries[] = [{ id: "a", label: "A", points: [{ category: "x", value: 1 }] }];
-            // @ts-expect-error A category series has no dated points.
-            el.series = categorySeries;
-            expect(el.series).toBe(categorySeries);
         });
 
         it("reads its attributes with the shared names", async () => {
             const el = new TestMixedChartElement();
             el.setAttribute("y-scale", "log");
             el.setAttribute("lower-is-better", "");
+            el.setAttribute("empty-headline", "None");
             document.body.append(el);
             await el.updateComplete;
-            expect(el.yScale).toBe("log");
-            expect(el.lowerIsBetter).toBe(true);
+            expect([el.yScale, el.lowerIsBetter, el.emptyHeadline]).toEqual(["log", true, "None"]);
             el.remove();
+        });
+    });
+
+    describe("Scenario: each chart's series type", () => {
+        it("types series per chart, so another chart's series don't fit", () => {
+            expectTypeOf<UauiTimeSeriesChartElement["series"]>().toEqualTypeOf<UauiSeries[]>();
+            expectTypeOf<UauiTimeSeriesChartElement["compareSeries"]>().toEqualTypeOf<UauiSeries[]>();
+            expectTypeOf<UauiCategoryChartElement["series"]>().toEqualTypeOf<UauiCategorySeries[]>();
+            expectTypeOf<UauiCategoryChartElement["compareSeries"]>().toEqualTypeOf<UauiCategorySeries[]>();
+            expectTypeOf<UauiCategorySeries[]>().not.toExtend<UauiTimeSeriesChartElement["series"]>();
         });
     });
 });
