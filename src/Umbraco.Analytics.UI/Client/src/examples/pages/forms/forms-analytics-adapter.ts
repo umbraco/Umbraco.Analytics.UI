@@ -1,4 +1,6 @@
 import type { UauiSeries } from "../../../chart/types.js";
+import { uauiDateBuckets, type UauiDateSpan } from "../../../date-helpers/index.js";
+import type { UauiGroupBy } from "../../../group-by/group-by.element.js";
 import type { UauiFunnelStep } from "../../../funnel/types.js";
 import type { UauiColorSlot, UauiStatusColor } from "../../../theme/types.js";
 import type { FormsAnalyticsResult, FormsColumn } from "./forms-fake-data.js";
@@ -75,10 +77,43 @@ export function formsTotal(result: FormsAnalyticsResult | undefined, column: For
     return i < 0 ? 0 : result!.rows.reduce((sum, row) => sum + (Number(row[i]) || 0), 0);
 }
 
-/** Funnel steps from `[state, entries]` rows, in the order of `labels`. A state missing from the answer counts 0. */
+/**
+ * Funnel steps from `[state, entries]` rows, in the order of `labels`. A state missing from the answer is not a step:
+ * a single-page form has no "partially submitted".
+ */
 export function formsSteps(result: FormsAnalyticsResult | undefined, labels: { state: string; label: string }[]): UauiFunnelStep[] {
     if (!result) return [];
     const rows = formsRows(result);
-    return labels.map(({ state, label }) => ({ id: state, label, value: Number(rows.find((r) => r.state === state)?.entries) || 0 }));
+    return labels.flatMap(({ state, label }) => {
+        const row = rows.find((r) => r.state === state);
+        return row ? [{ id: state, label, value: Number(row.entries) || 0 }] : [];
+    });
+}
+
+/**
+ * Adds a daily answer's rows up into the group-by's buckets, each dated at its first day, as Forms' own chart does on
+ * the client: Forms' API answers days only. Rows that share a bucket and their other (text) columns, such as a page
+ * name, are added together. Only for counts: a rate or a distinct count (unique members) doesn't add up, so ask the
+ * server for those per bucket. The answer keeps its `date` column and its shape.
+ */
+export function formsBucketed(result: FormsAnalyticsResult, range: UauiDateSpan, groupBy: UauiGroupBy): FormsAnalyticsResult {
+    const at = result.columns.indexOf("date");
+    if (at < 0 || groupBy === "day") return result;
+    const bucketOf = new Map<string, string>();
+    for (const bucket of uauiDateBuckets(range, groupBy)) for (const day of bucket.days) bucketOf.set(day, bucket.start);
+    const buckets = new Map<string, FormsAnalyticsResult["rows"][number]>();
+    for (const row of result.rows) {
+        const start = bucketOf.get(dayOf(row[at]));
+        if (!start) continue;
+        const key = [start, ...row.filter((value, i) => i !== at && typeof value !== "number")].join("\u0000");
+        const bucket = buckets.get(key);
+        if (bucket) {
+            row.forEach((value, i) => {
+                if (typeof value === "number") bucket[i] = Number(bucket[i]) + value;
+            });
+        } else buckets.set(key, row.map((value, i) => (i === at ? start : value)));
+    }
+    const rows = [...buckets.values()];
+    return { ...result, rows, totalRows: rows.length, toRow: rows.length };
 }
 // #endregion

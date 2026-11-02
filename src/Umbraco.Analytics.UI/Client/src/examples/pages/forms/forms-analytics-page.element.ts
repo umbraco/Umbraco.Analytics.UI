@@ -14,7 +14,7 @@ import { uauiCompareFor, uauiFormatDateRange } from "../../../date-helpers/index
 import type { UauiCompare, UauiDateRange } from "../../../date-range/types.js";
 import type { UauiGroupBy } from "../../../group-by/group-by.element.js";
 import type { UauiTableColumn } from "../../../table/index.js";
-import { formsRateSeries, formsRows, formsSeries, formsSeriesBy, formsSteps, formsTotal } from "./forms-analytics-adapter.js";
+import { formsBucketed, formsRateSeries, formsRows, formsSeries, formsSeriesBy, formsSteps, formsTotal } from "./forms-analytics-adapter.js";
 import {
     FORMS,
     postOrigins,
@@ -42,16 +42,27 @@ const initialRange: UauiDateRange = { from: "2026-05-25", to: "2026-06-23" };
 /** Forms sends the editor's time zone with every query, so the server buckets days as the editor sees them. */
 const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
-/** The time dimension for a group-by. `week` and `month` are proposed (see `ProposedColumn`): Forms groups on the client today. */
-const timeDimension: Record<UauiGroupBy, FormsColumn> = { day: "date", week: "week", month: "month" };
+/**
+ * The time dimension for unique members by group-by. Forms' API has only `date`: it answers days, and its client adds
+ * days up into weeks and months, as this page does for entries and workflow errors (`formsBucketed`). Unique members
+ * can't be added up (one member who submits on two days of a week is one member that week), so for them the page asks
+ * the server for the bucket: `week` and `month` are proposed dimensions (see `ProposedColumn`).
+ */
+const membersDimension: Record<UauiGroupBy, FormsColumn> = { day: "date", week: "week", month: "month" };
 
-/** A Forms query for one range. */
+/**
+ * A Forms query for one range. Forms sends local wall-clock date-times (`yyyy-MM-ddTHH:mm:ss`) with the time zone,
+ * and the server takes the day of each, both days included.
+ */
 const queryFor = (range: UauiDateRange, rest: Omit<FormsAnalyticsQuery, "startDate" | "endDate" | "timeZone">): FormsAnalyticsQuery => ({
-    startDate: range.from,
-    endDate: range.to,
+    startDate: `${range.from}T00:00:00`,
+    endDate: `${range.to}T00:00:00`,
     timeZone,
     ...rest,
 });
+
+/** The overview chart's answers: entries, workflow errors and runs by day (bucketed here), and unique members bucketed by the server. */
+type Summary = { submissions: FormsAnalyticsResult; members: FormsAnalyticsResult };
 
 type MetricId = "entries" | "uniqueMembers" | "failureRate";
 type Metric = {
@@ -61,10 +72,12 @@ type Metric = {
     format: Intl.NumberFormatOptions;
     /** A rate compares in percentage points, and a rise in it is bad. */
     rate?: boolean;
-    /** The period's figure from a submissions answer, or undefined when it has none. */
+    /** Whether the tile's figure comes from the overview answer rather than the submissions answer. */
+    fromOverview?: boolean;
+    /** The period's figure from a submissions (or, with `fromOverview`, an overview) answer, or undefined when it has none. */
     total: (r: FormsAnalyticsResult) => number | undefined;
-    /** The chart's series from a submissions answer. */
-    series: (r: FormsAnalyticsResult) => UauiSeries[];
+    /** The chart's series. */
+    series: (s: Summary) => UauiSeries[];
 };
 
 // Tiles Forms doesn't show today, though its data has them. Each picks the overview chart's metric, so each needs a
@@ -77,8 +90,8 @@ const metrics: Metric[] = [
         icon: "icon-inbox",
         format: COUNT,
         total: (r) => formsTotal(r, "entries"),
-        series: (r) =>
-            formsSeries(r, [
+        series: (s) =>
+            formsSeries(s.submissions, [
                 { column: "entries", label: "Entries" },
                 { column: "workflowErrors", label: "Workflow errors", color: "danger" },
             ]),
@@ -88,9 +101,11 @@ const metrics: Metric[] = [
         label: "Unique members",
         icon: "icon-users",
         format: COUNT,
-        // Distinct members over the whole range: the answer's own figure, not the buckets added up.
+        // Distinct members over the whole range: the overview answer's own figure (Forms fills `uniqueMembers` there),
+        // not the buckets added up.
+        fromOverview: true,
         total: (r) => r.uniqueMembers,
-        series: (r) => formsSeries(r, [{ column: "uniqueMembers", label: "Unique members" }]),
+        series: (s) => formsSeries(s.members, [{ column: "uniqueMembers", label: "Unique members" }]),
     },
     {
         id: "failureRate",
@@ -99,12 +114,15 @@ const metrics: Metric[] = [
         format: PERCENT,
         rate: true,
         total: (r) => rateOf(formsTotal(r, "workflowErrors"), formsTotal(r, "triggered")),
-        series: (r) => formsRateSeries(r, "failureRate", "Workflow failure rate", "workflowErrors", "triggered"),
+        series: (s) => formsRateSeries(s.submissions, "failureRate", "Workflow failure rate", "workflowErrors", "triggered"),
     },
 ];
 
-/** What the overview's submissions query asks for. Forms' endpoint takes entries and workflow errors; triggered and unique members are proposed. */
-const SUMMARY_METRICS: FormsColumn[] = ["entries", "workflowErrors", "triggered", "uniqueMembers"];
+/**
+ * What the overview's submissions query asks for. Forms' endpoint answers its first two metrics, entries and workflow
+ * errors; `triggered` (workflow runs, for the failure rate) is a proposal for the Forms team (see PLAN.md, T62).
+ */
+const SUMMARY_METRICS: FormsColumn[] = ["entries", "workflowErrors", "triggered"];
 
 /** Where a form's analytics open in the backoffice, as Forms links its overview table. */
 const formUrl = (id: unknown) => `/umbraco/section/forms/workspace/forms-form/edit/${String(id)}/view/analytics`;
@@ -237,8 +255,8 @@ export class ExampleFormsAnalyticsPageElement extends UmbLitElement {
     /** On the form's Analytics tab the form comes from the workspace; the example picks one. */
     @state() private _formId = FORMS[0].id;
 
-    @state() private _summary?: FormsAnalyticsResult;
-    @state() private _compareSummary?: FormsAnalyticsResult;
+    @state() private _summary?: Summary;
+    @state() private _compareSummary?: Summary;
     @state() private _summaryLoading = true;
     @state() private _summaryError = false;
 
@@ -272,8 +290,16 @@ export class ExampleFormsAnalyticsPageElement extends UmbLitElement {
     #formSeriesRequest = 0;
     #formRequest = 0;
 
+    /** The date range to open with, instead of the example's last 30 days. Compare starts as the previous period. */
+    @property({ attribute: false })
+    startRange?: UauiDateRange;
+
     override connectedCallback() {
         super.connectedCallback();
+        if (this.startRange) {
+            this._range = this.startRange;
+            this._compare = uauiCompareFor("previous-period", this.startRange);
+        }
         void this.#loadSummary();
         void this.#loadOverview();
         void this.#loadFormSeries();
@@ -297,8 +323,15 @@ export class ExampleFormsAnalyticsPageElement extends UmbLitElement {
         this._summaryLoading = true;
         this._summaryError = false;
         try {
-            const dimensions = [timeDimension[this._groupBy]];
-            const [summary, compare] = await this.#both((range) => postSubmissions(queryFor(range, { metrics: SUMMARY_METRICS, dimensions }), this.#api));
+            const groupBy = this._groupBy;
+            const [summary, compare] = await this.#both(async (range): Promise<Summary> => {
+                const [submissions, members] = await Promise.all([
+                    postSubmissions(queryFor(range, { metrics: SUMMARY_METRICS, dimensions: ["date"] }), this.#api),
+                    postSubmissions(queryFor(range, { metrics: ["uniqueMembers"], dimensions: [membersDimension[groupBy]] }), this.#api),
+                ]);
+                // Days to the group-by's buckets, as Forms' own chart does on the client. Only counts, which add up.
+                return { submissions: formsBucketed(submissions, range, groupBy), members };
+            });
             if (request !== this.#summaryRequest) return;
             this._summary = summary;
             this._compareSummary = compare;
@@ -341,14 +374,14 @@ export class ExampleFormsAnalyticsPageElement extends UmbLitElement {
         this._formSeriesLoading = true;
         this._formSeriesError = false;
         const formId = this._formId;
-        const dimensions = [timeDimension[this._groupBy]];
+        const groupBy = this._groupBy;
         try {
             const [current, compare] = await this.#both(async (range): Promise<FormSeriesAnswers> => {
                 const [submissions, origins] = await Promise.all([
-                    postSubmissions(queryFor(range, { formId, metrics: ["entries", "workflowErrors"], dimensions }), this.#api),
-                    postOrigins(queryFor(range, { formId, metrics: ["entries"], dimensions: [...dimensions, "pageName"] }), this.#api),
+                    postSubmissions(queryFor(range, { formId, metrics: ["entries", "workflowErrors"], dimensions: ["date"] }), this.#api),
+                    postOrigins(queryFor(range, { formId, metrics: ["entries"], dimensions: ["date", "pageName"] }), this.#api),
                 ]);
-                return { submissions, origins };
+                return { submissions: formsBucketed(submissions, range, groupBy), origins: formsBucketed(origins, range, groupBy) };
             });
             if (request !== this.#formSeriesRequest) return;
             this._formSeries = current;
@@ -448,9 +481,12 @@ export class ExampleFormsAnalyticsPageElement extends UmbLitElement {
     }
 
     #renderTile(metric: Metric) {
-        const summary = this._summary;
+        // Unique members come from the overview answer, so that tile loads and fails with the forms table.
+        const [summary, compare, loading, error] = metric.fromOverview
+            ? [this._overview, this._compareOverview, this._overviewLoading, this._overviewError]
+            : [this._summary?.submissions, this._compareSummary?.submissions, this._summaryLoading, this._summaryError];
         const value = summary ? metric.total(summary) : undefined;
-        const previous = this._compareSummary && !this.#noEntries(this._compareSummary) ? metric.total(this._compareSummary) : undefined;
+        const previous = compare && !this.#noEntries(compare) ? metric.total(compare) : undefined;
         return html`<uaui-kpi-tile
             label=${metric.label}
             icon=${metric.icon}
@@ -460,16 +496,16 @@ export class ExampleFormsAnalyticsPageElement extends UmbLitElement {
             .previous=${previous}
             delta-unit=${metric.rate ? "points" : "percent"}
             ?lower-is-better=${metric.rate}
-            ?loading=${this._summaryLoading}
-            ?error=${this._summaryError}
+            ?loading=${loading}
+            ?error=${error}
             selectable
             .deselectable=${false}
             .selected=${this._metric === metric.id}
             @selected=${() => this.#selectMetric(metric.id)}></uaui-kpi-tile>`;
     }
 
-    #chartSeries(metric: Metric, r: FormsAnalyticsResult | undefined) {
-        return r && !this.#noEntries(r) ? metric.series(r) : [];
+    #chartSeries(metric: Metric, s: Summary | undefined) {
+        return s && !this.#noEntries(s.submissions) ? metric.series(s) : [];
     }
 
     #compareLabel() {
@@ -521,7 +557,8 @@ export class ExampleFormsAnalyticsPageElement extends UmbLitElement {
     #renderFunnel() {
         const steps = formsSteps(this._form?.states, funnelStates);
         const compareSteps = formsSteps(this._compareForm?.states, funnelStates);
-        const completion = steps.length ? rateOf(steps[2].value, steps[0].value) : undefined;
+        // A single-page form has no "partially submitted" step, so the last step is submitted either way.
+        const completion = steps.length ? rateOf(steps[steps.length - 1].value, steps[0].value) : undefined;
         const compare = this._compare;
         return html`<uui-box headline="Completion" headline-variant="h3" style="--uui-box-default-padding: 0">
             ${completion === undefined || this._formError
@@ -532,7 +569,7 @@ export class ExampleFormsAnalyticsPageElement extends UmbLitElement {
                       label="Submitted"
                       value=${this.localize.number(completion, PERCENT)}
                       .current=${completion}
-                      .previous=${compareSteps.length ? rateOf(compareSteps[2].value, compareSteps[0].value) : undefined}
+                      .previous=${compareSteps.length ? rateOf(compareSteps[compareSteps.length - 1].value, compareSteps[0].value) : undefined}
                       delta-unit="points"></uaui-stat>`}
             <uaui-funnel
                 .steps=${steps}

@@ -5,6 +5,7 @@ import raw from "./forms-analytics-page.element.ts?raw";
 import adapterRaw from "./forms-analytics-adapter.ts?raw";
 import "../../../internal/test/modal-host.element.js";
 import "./forms-analytics-page.element.js";
+import type { UauiDateRange } from "../../../date-range/types.js";
 
 const imports = `import { css, customElement, html, nothing, property, state, type PropertyValues } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
@@ -19,7 +20,7 @@ import {
     type UauiTableColumn,
 } from "@umbraco/analytics-ui";
 // The adapter below: Forms' { columns, rows } answers to the package's rows, series and funnel steps.
-import { formsRateSeries, formsRows, formsSeries, formsSeriesBy, formsSteps, formsTotal } from "./forms-analytics-adapter.js";
+import { formsBucketed, formsRateSeries, formsRows, formsSeries, formsSeriesBy, formsSteps, formsTotal } from "./forms-analytics-adapter.js";
 // Your API client: Forms' analytics endpoints and their types. In this story they are a fake, generated from the dates.
 import {
     FORMS,
@@ -35,7 +36,7 @@ import {
 } from "./forms-api.js";`;
 
 const adapterImports = `// forms-analytics-adapter.ts
-import type { UauiColorSlot, UauiFunnelStep, UauiSeries, UauiStatusColor } from "@umbraco/analytics-ui";
+import { uauiDateBuckets, type UauiColorSlot, type UauiDateSpan, type UauiFunnelStep, type UauiGroupBy, type UauiSeries, type UauiStatusColor } from "@umbraco/analytics-ui";
 import type { FormsAnalyticsResult, FormsColumn } from "./forms-api.js";`;
 
 const code = `${regionSource(raw, "page", imports)}\n${regionSource(adapterRaw, "adapter", adapterImports)}`;
@@ -48,9 +49,9 @@ const meta: Meta = {
 export default meta;
 
 // The host stands in for the backoffice's modal manager, which the date range dialog opens through.
-const render = (latency?: number, failing = false) => html`
+const render = (latency?: number, failing = false, startRange?: UauiDateRange) => html`
     <uaui-test-modal-host>
-        <example-forms-analytics-page latency=${ifDefined(latency)} ?failing=${failing}></example-forms-analytics-page>
+        <example-forms-analytics-page latency=${ifDefined(latency)} ?failing=${failing} .startRange=${startRange}></example-forms-analytics-page>
     </uaui-test-modal-host>
 `;
 
@@ -58,6 +59,7 @@ const render = (latency?: number, failing = false) => html`
  * Umbraco Forms' analytics handled by this package, with sample data shaped like Forms' analytics API: every endpoint
  * answers a table of `columns` and `rows`, and a small adapter (shown under the page's code) turns those into the
  * package's rows, series and funnel steps. Compare is a second query for the comparison range, as Forms sends it.
+ * Forms answers days; like Forms' own chart, the page adds them up into weeks and months on the client.
  *
  * The overview: group-by and date range (with compare) in an actions row; KPI tiles Forms doesn't show today though its
  * data has them (entries, unique members, workflow failure rate), each picking the chart's metric; the Submissions
@@ -72,8 +74,9 @@ const render = (latency?: number, failing = false) => html`
  *
  * Not here yet: Forms' "submissions by hour of day" bar chart (its x-axis is the 24 hours, not dates, which needs a
  * categorical bar chart, T60), and the origins chart's switch between absolute numbers and each page's share (T59).
- * Some queries ask for columns Forms' API doesn't have yet (week and month buckets, triggered and unique members on
- * submissions, record states); the fake API's types mark them as proposed.
+ * Some queries ask for what Forms' API doesn't answer yet, proposals for the Forms team: workflow runs (`triggered`)
+ * and unique members on the submissions endpoint, week and month buckets for unique members (which can't be added up
+ * from days), and record states for the funnel. The fake API's types mark them as proposed.
  *
  * The boxes use one example arrangement (layout is up to each product): at most two columns, where each box spans one
  * or both, as Forms' widget manifests say "small" or "large". The data is made up. The docs panel shows the page
@@ -95,5 +98,12 @@ export const SlowApi: StoryObj = {
 export const FailingApi: StoryObj = {
     name: "Failing API",
     render: () => render(undefined, true),
+    parameters: { docs: sourceDocs(code) },
+};
+
+/** The same page for a range before Forms collected analytics: the tiles say there is no data and the charts, funnel and tables show their empty states. */
+export const NoData: StoryObj = {
+    name: "Before analytics started",
+    render: () => render(undefined, false, { from: "2025-11-01", to: "2025-11-30" }),
     parameters: { docs: sourceDocs(code) },
 };

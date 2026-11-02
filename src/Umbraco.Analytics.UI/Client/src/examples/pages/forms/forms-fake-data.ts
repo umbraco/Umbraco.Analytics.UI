@@ -38,13 +38,14 @@ export type FormsColumn =
 
 /**
  * Columns this example asks for that Forms' API doesn't have yet. Its data has them: they would be new enum values.
- * - `week` and `month`: date dimensions. Forms groups days into weeks and months on the client, which is right for
- *   entries but not for unique members: one member who submits on two days of a week is one unique member that week.
+ * - `week` and `month`: date dimensions, for unique members only. Forms answers days and its client adds them up into
+ *   weeks and months, which is right for entries but not for unique members: one member who submits on two days of a
+ *   week is one unique member that week. Only the submissions endpoint answers them here.
  * - `state`: a record state dimension (Forms' `FormState`: opened, partially submitted, submitted), for the funnel.
  */
 export type ProposedColumn = "week" | "month" | "state";
 
-/** Forms' `AnalyticsQueryGet`: what every analytics endpoint takes. Dates are local wall-clock dates, sent with the time zone. */
+/** Forms' `AnalyticsQueryGet`: what every analytics endpoint takes. Dates are local wall-clock date-times (`yyyy-MM-ddTHH:mm:ss`), sent with the time zone. */
 export type FormsAnalyticsQuery = {
     startDate: string;
     endDate: string;
@@ -277,9 +278,9 @@ async function respond({ latencyMs = 0, fail = false }: FakeApiOptions, what: st
 }
 
 /**
- * POST /analytics/submissions: one row per date bucket, `[date, ...metrics]`. Forms takes exactly `entries` and
- * `workflowErrors`; the example also answers `triggered` and `uniqueMembers` (columns Forms has, not yet on this
- * endpoint) for the workflow failure rate and unique members tiles.
+ * POST /analytics/submissions: one row per day, `[date, ...metrics]`. Forms answers its first two metrics, `entries`
+ * and `workflowErrors`; the example also answers `triggered` and `uniqueMembers` (columns Forms has, proposed for this
+ * endpoint), and a proposed `week` or `month` dimension for unique members, which can't be added up from days.
  */
 export async function postSubmissions(query: FormsAnalyticsQuery, options: FakeApiOptions = {}): Promise<FormsAnalyticsResult> {
     await respond(options, "submissions");
@@ -350,10 +351,9 @@ export async function postOrigins(query: FormsAnalyticsQuery, options: FakeApiOp
     await respond(options, "origins");
     const form = FORMS.find((f) => f.id === query.formId);
     if (!form) throw new Error("A form identifier is required for the origins.");
-    const rows = bucketsOf(query).flatMap(({ start, days }) =>
-        form.pages.map((p) => [dateTime(start), p.name, days.reduce((sum, d) => sum + pageEntriesOn(form, p, d, entriesOn(form, d)), 0)]),
-    );
-    return result([query.dimensions[0], "pageName", query.metrics[0]], rows, { ...query, page: 1, pageSize: 9999 }, 0);
+    const days = uauiDateBuckets(rangeOf(query), "day").map((b) => b.start);
+    const rows = days.flatMap((d) => form.pages.map((p) => [dateTime(d), p.name, pageEntriesOn(form, p, d, entriesOn(form, d))]));
+    return result(["date", "pageName", query.metrics[0]], rows, { ...query, page: 1, pageSize: 9999 }, 0);
 }
 
 /** POST /analytics/origins-overview: one row per source page of `formId`. */
@@ -381,7 +381,7 @@ export async function postOriginsOverview(query: FormsAnalyticsQuery, options: F
 /**
  * POST /analytics/record-states (proposed, not in Forms): how many records of `formId` reached each state in the
  * range, `[state, entries]`. Forms stores a record per opened form and moves it through its `FormState`s, so the data
- * is there. States: "opened", "partiallySubmitted" (stopped on a later page of a multi-page form), "submitted".
+ * is there. States: "opened", "partiallySubmitted" (stopped on a later page of a multi-page form), "submitted". A single-page form has no partially submitted state.
  */
 export async function postRecordStates(query: FormsAnalyticsQuery, options: FakeApiOptions = {}): Promise<FormsAnalyticsResult> {
     await respond(options, "record states");
@@ -390,11 +390,8 @@ export async function postRecordStates(query: FormsAnalyticsQuery, options: Fake
     const days = uauiDateBuckets(rangeOf(query), "day").map((b) => b.start);
     const submitted = days.reduce((sum, d) => sum + entriesOn(form, d), 0);
     const opened = Math.round(submitted / form.completion);
-    const partial = form.isMultiPage ? Math.round(submitted + (opened - submitted) * 0.45) : submitted;
-    const rows = [
-        ["opened", opened],
-        ["partiallySubmitted", partial],
-        ["submitted", submitted],
-    ];
+    const partial = Math.round(submitted + (opened - submitted) * 0.45);
+    // A single-page form is submitted in one go, so it has no partially submitted records.
+    const rows = [["opened", opened], ...(form.isMultiPage ? [["partiallySubmitted", partial]] : []), ["submitted", submitted]];
     return result(["state", "entries"], rows, query, 0);
 }

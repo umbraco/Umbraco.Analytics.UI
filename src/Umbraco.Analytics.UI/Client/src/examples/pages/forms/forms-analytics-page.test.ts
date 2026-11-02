@@ -8,8 +8,8 @@ import { axeRun } from "../../../internal/test/a11y.js";
 import { renderPageExample, saveDateRange, withTheme } from "../../../internal/test/page-example.js";
 import { deepQuery, deepQueryAll, deepText, settle, shadow, type UauiTestElement } from "../../../internal/test/dom.js";
 import "./forms-analytics-page.element.js";
-import { FORMS, postSubmissions, type FormsAnalyticsResult } from "./forms-fake-data.js";
-import { formsRateSeries, formsRows, formsSeries, formsSeriesBy, formsSteps, formsTotal } from "./forms-analytics-adapter.js";
+import { FORMS, postOverview, postRecordStates, postSubmissions, type FormsAnalyticsResult } from "./forms-fake-data.js";
+import { formsBucketed, formsRateSeries, formsRows, formsSeries, formsSeriesBy, formsSteps, formsTotal } from "./forms-analytics-adapter.js";
 import { uauiCompareFor } from "../../../date-helpers/index.js";
 import type { UauiCompare, UauiDateRange } from "../../../date-range/types.js";
 import type { UauiTimeSeriesChartElement } from "../../../chart/time-series-chart.element.js";
@@ -146,14 +146,38 @@ describe("Feature: the Forms analytics page", () => {
             expect(series[1].points).toEqual([{ date: "2026-06-01", value: 5 }, { date: "2026-06-02", value: 6 }]);
         });
 
-        it("turns [state, entries] rows into funnel steps in the given order, a missing state counting 0", () => {
+        it("turns [state, entries] rows into funnel steps in the given order, leaving out a state the answer doesn't have", () => {
             const r = answer(["state", "entries"], [["submitted", 4], ["opened", 10]]);
             const steps = formsSteps(r, [
                 { state: "opened", label: "Opened" },
                 { state: "partiallySubmitted", label: "Partially submitted" },
                 { state: "submitted", label: "Submitted" },
             ]);
-            expect(steps.map((s) => [s.id, s.value])).toEqual([["opened", 10], ["partiallySubmitted", 0], ["submitted", 4]]);
+            expect(steps.map((s) => [s.id, s.value])).toEqual([["opened", 10], ["submitted", 4]]);
+        });
+
+        it("adds days up into weeks, each at its first day, per page name", () => {
+            const r = answer(
+                ["date", "pageName", "entries"],
+                [
+                    ["2026-05-31T00:00:00", "Home", 1],
+                    ["2026-06-01T00:00:00", "Home", 2],
+                    ["2026-06-01T00:00:00", "Events", 5],
+                    ["2026-06-02T00:00:00", "Home", 3],
+                ],
+            );
+            const weeks = formsBucketed(r, { from: "2026-05-31", to: "2026-06-02" }, "week");
+            expect(weeks.columns).toEqual(r.columns);
+            expect(weeks.rows).toEqual([
+                ["2026-05-25", "Home", 1],
+                ["2026-06-01", "Home", 5],
+                ["2026-06-01", "Events", 5],
+            ]);
+        });
+
+        it("leaves a daily answer as it is when grouping by day", () => {
+            const r = answer(["date", "entries"], [["2026-06-01T00:00:00", 1]]);
+            expect(formsBucketed(r, { from: "2026-06-01", to: "2026-06-01" }, "day")).toBe(r);
         });
 
         it("sums a column over every row", () => {
@@ -249,10 +273,12 @@ describe("Feature: the Forms analytics page", () => {
             expect(tiles(page).filter((t) => t.selected).map((t) => t.label)).toEqual(["Entries"]);
         });
 
-        it("takes unique members from the answer's own figure, not the buckets added up", async () => {
-            const r = await postSubmissions({ startDate: FIRST_RANGE.from, endDate: FIRST_RANGE.to, metrics: ["entries", "uniqueMembers"], dimensions: ["date"] });
-            expect(tile(page, "Unique members").current).toBe(r.uniqueMembers);
-            expect(r.uniqueMembers).toBeLessThan(formsTotal(r, "uniqueMembers"));
+        it("takes unique members from the overview answer's own figure, where Forms fills it, not days added up", async () => {
+            const query = { startDate: `${FIRST_RANGE.from}T00:00:00`, endDate: `${FIRST_RANGE.to}T00:00:00`, metrics: ["entries" as const], dimensions: ["formId" as const] };
+            const overview = await postOverview(query);
+            expect(tile(page, "Unique members").current).toBe(overview.uniqueMembers);
+            const days = await postSubmissions({ ...query, metrics: ["uniqueMembers"], dimensions: ["date"] });
+            expect(overview.uniqueMembers).toBeLessThan(formsTotal(days, "uniqueMembers"));
         });
 
         it("compares the failure rate in points, where a fall is good", () => {
@@ -318,6 +344,12 @@ describe("Feature: the Forms analytics page", () => {
                 expect(chart.groupBy).toBe("week");
                 expect(chart.series[0].points.map((p) => p.date)).toEqual(["2026-05-25", "2026-06-01", "2026-06-08", "2026-06-15", "2026-06-22"]);
             }
+        });
+
+        it("adds the days up on the client, so the weeks hold the same entries as the days", async () => {
+            const days = await postSubmissions({ startDate: FIRST_RANGE.from, endDate: FIRST_RANGE.to, metrics: ["entries"], dimensions: ["date"] });
+            const weeks = chartIn(page, "submissions").series.find((s) => s.id === "entries")!.points;
+            expect(weeks.reduce((sum, p) => sum + p.value, 0)).toBe(formsTotal(days, "entries"));
         });
 
         it("keeps the tables as they were", () => {
@@ -438,6 +470,15 @@ describe("Feature: the Forms analytics page", () => {
             expect(stat.current).toBeCloseTo((submitted / opened) * 100);
             expect(stat.deltaUnit).toBe("points");
             expect(Number.isFinite(stat.previous)).toBe(true);
+        });
+
+        it("has no partially submitted step for a single-page form", async () => {
+            const single = FORMS.find((f) => !f.isMultiPage)!;
+            await pickForm(page, single.id);
+            expect(funnel(page).steps.map((s) => s.label)).toEqual(["Opened", "Submitted"]);
+            const states = await postRecordStates({ startDate: FIRST_RANGE.from, endDate: FIRST_RANGE.to, metrics: ["entries"], dimensions: ["state"], formId: single.id });
+            expect(states.rows.map((r) => r[0])).toEqual(["opened", "submitted"]);
+            expect(headerStat(page)!.current).toBeCloseTo((funnel(page).steps[1].value / funnel(page).steps[0].value) * 100);
         });
 
         it("submitted matches the form's entries", () => {
