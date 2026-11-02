@@ -6,3 +6,4 @@ export * from "./percent-cell.element.js";
 export * from "./share-cell.element.js";
 export * from "./status-cell.element.js";
 export * from "./date-cell.element.js";
+export * from "./progress-cell.element.js";

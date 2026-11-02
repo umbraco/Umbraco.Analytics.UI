@@ -124,7 +124,7 @@ describe("Feature: table cells are elements", () => {
         });
 
         it("fills the bar to the value over the max", () => {
-            expect(deepQuery<HTMLElement>(cell.shadowRoot!, ".share-bar")!.style.width).toBe("50%");
+            expect(deepQuery<HTMLElement>(cell.shadowRoot!, ".meter-bar")!.style.width).toBe("50%");
         });
 
         it("shows a change badge when it has a compare value", async () => {

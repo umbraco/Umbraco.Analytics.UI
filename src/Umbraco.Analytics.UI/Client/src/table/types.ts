@@ -17,7 +17,12 @@ export interface UauiTableColumnMeta {
     colorKey?: string;
     /** `uaui-status-cell`: the key in each row that holds the text to show, e.g. "Out of stock". Without it the cell shows the value, formatted. */
     textKey?: string;
-    /** `uaui-share-cell`: the palette slot of the bar (the same slot values (1–4) as `UauiSeries.color`). Defaults to the share column's position. */
+    /** `uaui-progress-cell`: the key in each row that holds the total the value (the completed count) is out of. Without it the cell shows the value alone. */
+    totalKey?: string;
+    /**
+     * `uaui-share-cell` and `uaui-progress-cell`: the palette slot of the bar (the same slot values (1–4) as
+     * `UauiSeries.color`). Defaults to the share column's position, or 1 for a progress cell.
+     */
     color?: UauiColorSlot;
     /** Whether a fall in this column is good, e.g. refund rate or duration. A compare badge then shows a fall as an improvement. */
     lowerIsBetter?: boolean;
@@ -43,9 +48,9 @@ export type UauiTableColumn = {
      * See `UauiTableCellElement`. Cells that need more than that read the table's `UAUI_TABLE_CONTEXT`.
      */
     elementName?: string;
-    /** Settings the cells read: `hrefKey`, `colorKey`, `textKey`, `color`, `lowerIsBetter`, `deltaUnit`. See `UauiTableColumnMeta`. */
+    /** Settings the cells read: `hrefKey`, `colorKey`, `textKey`, `totalKey`, `color`, `lowerIsBetter`, `deltaUnit`. See `UauiTableColumnMeta`. */
     meta?: UauiTableColumnMeta;
-    /** Formats the numbers of the number, percent, share and status cells, e.g. `{ style: "currency", currency: "EUR" }`. */
+    /** Formats the numbers of the number, percent, share, status and progress cells, e.g. `{ style: "currency", currency: "EUR" }`. */
     valueFormat?: Intl.NumberFormatOptions;
     /**
      * Formats the dates of the date cell, e.g. `{ day: "numeric", month: "short" }`. Defaults to `{ dateStyle: "medium" }`.
