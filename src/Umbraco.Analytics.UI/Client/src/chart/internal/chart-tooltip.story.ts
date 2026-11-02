@@ -11,10 +11,10 @@ const meta: Meta<UauiChartTooltipElement> = {
     component: "uaui-chart-tooltip",
     tags: ["internal"],
     parameters: {
-        docs: { description: { component: notPublicApi("`uaui-chart-tooltip` is the tooltip over a hovered date of `uaui-time-series-chart`. The chart positions it; here it sits in the flow.") } },
+        docs: { description: { component: notPublicApi("`uaui-chart-tooltip` is the tooltip over the hovered x value of a chart (a date on `uaui-time-series-chart`). The chart positions it; here it sits in the flow.") } },
     },
     args: {
-        date: "Jun 11, 2026",
+        heading: "Jun 11, 2026",
         bars: false,
         rows: [{ color: 1, value: 1280 }],
         total: undefined,
@@ -24,7 +24,7 @@ const meta: Meta<UauiChartTooltipElement> = {
     render: (args) => html`<div style="width: 240px">
         <uaui-chart-tooltip
             style="position: static"
-            .date=${args.date}
+            .heading=${args.heading}
             .rows=${args.rows}
             .bars=${args.bars}
             .total=${args.total}
@@ -73,7 +73,7 @@ export const Bars: Story = {
 export const BarsAndLine: Story = {
     name: "Bars and a line",
     args: {
-        date: "Jun 22, 2026 (today)",
+        heading: "Jun 22, 2026 (today)",
         bars: true,
         rows: [
             { color: "positive", value: 6, label: "Approved" },

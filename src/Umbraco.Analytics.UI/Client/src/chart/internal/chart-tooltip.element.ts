@@ -16,7 +16,7 @@ export interface UauiChartTooltipCompare {
     current: number | null;
 }
 
-/** One series' point at the hovered date. */
+/** One series' point at the hovered x value. */
 export interface UauiChartTooltipRow {
     /** What the series is coloured by: a palette slot (1 to 4) or a status colour. */
     color: UauiSeriesColorKey;
@@ -30,19 +30,19 @@ export interface UauiChartTooltipRow {
 }
 
 /**
- * The tooltip over a hovered date of `uaui-time-series-chart`: the date, one row per series with its compare point
- * and change, and for the bar kinds the total and the compare total. It draws what it is given and has no
+ * The tooltip over the hovered x value (a date, a category) of a chart: its heading, one row per series with its
+ * compare point and change, and for the bar kinds the total and the compare total. It draws what it is given and has no
  * position of its own: the chart places it. Internal: not exported.
  *
  * @element uaui-chart-tooltip
  */
 @customElement("uaui-chart-tooltip")
 export class UauiChartTooltipElement extends UmbLitElement {
-    /** The hovered date, formatted. */
+    /** The hovered x value, formatted: a date on the time-series chart. */
     @property({ type: String })
-    date = "";
+    heading = "";
 
-    /** The rows to list: only series with a point at the date. */
+    /** The rows to list: only series with a point at the hovered x value. */
     @property({ attribute: false })
     rows: UauiChartTooltipRow[] = [];
 
@@ -85,7 +85,7 @@ export class UauiChartTooltipElement extends UmbLitElement {
     }
 
     override render(): TemplateResult {
-        return html`<div class="tooltip-date">${this.date}</div>
+        return html`<div class="tooltip-date">${this.heading}</div>
             ${this.rows.map((row) => {
                 const bar = row.bar ?? this.bars;
                 return html`<div class="tooltip-row tooltip-series">

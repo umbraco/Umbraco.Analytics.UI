@@ -2,10 +2,10 @@ import { css, customElement, html, nothing, property, type CSSResultGroup, type 
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UauiVisuallyHiddenStyles } from "../../internal/a11y/visually-hidden.css.js";
 import { getNumberFormat } from "../../internal/format/number-format.js";
-import type { UauiChartData } from "./chart-data.js";
+import type { UauiChartData } from "./chart-values.js";
 
 /**
- * The visually hidden table of `uaui-time-series-chart`'s data, for screen readers: a row per date, a column per
+ * The visually hidden table of a chart's data, for screen readers: a row per x value (a date, a category), a column per
  * series (and its compare points for a compared line), and for bars the total and the compare total.
  * Internal: not exported.
  *
@@ -13,11 +13,11 @@ import type { UauiChartData } from "./chart-data.js";
  */
 @customElement("uaui-chart-data-table")
 export class UauiChartDataTableElement extends UmbLitElement {
-    /** The formatted date of each row. */
+    /** The formatted x value (a date on the time-series chart) of each row. */
     @property({ attribute: false })
-    dates: string[] = [];
+    labels: string[] = [];
 
-    /** The series to list, with their values on the rows' dates. */
+    /** The series to list, with their values on the rows' x values. */
     @property({ attribute: false })
     series: UauiChartData["series"] = [];
 
@@ -71,9 +71,9 @@ export class UauiChartDataTableElement extends UmbLitElement {
                 </tr>
             </thead>
             <tbody>
-                ${this.dates.map(
-                    (date, row) => html`<tr>
-                        <th scope="row">${date}</th>
+                ${this.labels.map(
+                    (label, row) => html`<tr>
+                        <th scope="row">${label}</th>
                         ${series.map((s) => html`${this.#cell(s.values[row])}${s.compare ? this.#cell(s.compare[row]) : nothing}`)}
                         ${totals ? this.#cell(totals[row]) : nothing} ${compareTotal ? this.#cell(compareTotal[row]) : nothing}
                     </tr>`,

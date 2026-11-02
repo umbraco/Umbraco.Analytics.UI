@@ -1,5 +1,4 @@
 import {
-    css,
     customElement,
     html,
     nothing,
@@ -10,34 +9,31 @@ import {
     type TemplateResult,
 } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
-import "../empty-state/empty-state.element.js";
-import "../error-state/error-state.element.js";
 import type { UauiGroupBy } from "../group-by/group-by.element.js";
 import type { UauiWeekStart } from "../date-helpers/date-helpers.js";
 import { resolveWeekStart } from "../internal/date/date-math.js";
 import { formatIsoDate } from "../internal/date/format-date.js";
 import { getNumberFormat } from "../internal/format/number-format.js";
-import { getLoadingMode, isBusy } from "../internal/loading/loading-mode.js";
-import "../internal/loading/loading-bar.element.js";
-import "../internal/loading/skeleton.element.js";
-import { UauiPaletteStyles } from "../theme/index.js";
 import { bucketMarkers, type MarkerBucket } from "./internal/marker-buckets.js";
 import type { UauiMarkerPlacement } from "./internal/markers-plugin.js";
-import { allWhole, buildChartData, maxValue, minPositive, seriesTotals, type UauiChartData } from "./internal/chart-data.js";
-import { logScale } from "./internal/log-scale.js";
+import { buildChartData } from "./internal/chart-data.js";
+import { maxValue, seriesTotals, type UauiChartData } from "./internal/chart-values.js";
 import "./internal/chart-data-table.element.js";
 import "./internal/chart-legend.element.js";
 import "./internal/chart-markers.element.js";
 import "./internal/chart-tooltip.element.js";
 import type { UauiChartMarkersActiveDetail } from "./internal/chart-markers.element.js";
-import type { UauiChartTooltipCompare, UauiChartTooltipElement, UauiChartTooltipRow } from "./internal/chart-tooltip.element.js";
-import { clashingColors, colorsDiffer, resolveChartColors, type UauiChartDrawColors, type UauiSeriesColorKey } from "./internal/chart-colors.js";
-import { UauiChartRenderer, type UauiChartHover } from "./internal/chart-renderer.js";
-import { niceScale } from "./internal/nice-scale.js";
-import { clampInside, placeTooltip } from "./internal/place-tooltip.js";
+import type { UauiChartTooltipCompare, UauiChartTooltipRow } from "./internal/chart-tooltip.element.js";
+import type { UauiChartDrawColors } from "./internal/chart-colors.js";
+import { UauiChartController } from "./internal/chart.controller.js";
+import { renderChartFrame, UauiChartFrameStyles } from "./internal/chart-frame.js";
+import type { UauiChartRenderer } from "./internal/chart-renderer.js";
+import { colorKeyOf, seriesKindOf } from "./internal/chart-series.js";
+import { chartYAxis, usesLogScale } from "./internal/chart-y-axis.js";
+import { UauiTimeSeriesOverlays } from "./internal/time-series-overlays.js";
+import { TODAY_LABEL_ROOM } from "./internal/today-plugin.js";
 import type { UauiCompare, UauiDateRange } from "../date-range/types.js";
 import type { UauiChartKind, UauiChartScale, UauiMarker, UauiMarkerClickDetail, UauiSeries, UauiSeriesKind } from "./types.js";
-import type { UauiColorSlot } from "../theme/types.js";
 
 const axisDateFormat: Record<UauiGroupBy, Intl.DateTimeFormatOptions> = {
     day: { day: "numeric", month: "short" },
@@ -99,34 +95,6 @@ const emptyDerived: Derived = {
     markerDate: new Intl.DateTimeFormat("en", tooltipDateFormat.day),
     lang: "en",
 };
-
-const COLOR_KEYS: ReadonlySet<unknown> = new Set<UauiSeriesColorKey>([1, 2, 3, 4, "default", "positive", "warning", "danger"]);
-
-/**
- * What a series is coloured by: its `color` when valid (a palette slot 1 to 4 or a status colour), else the slot of its
- * position, cycling through the four.
- */
-function colorKeyOf(series: UauiSeries | undefined, position: number): UauiSeriesColorKey {
-    const color = series?.color;
-    return COLOR_KEYS.has(color) ? (color as UauiSeriesColorKey) : (((position % 4) + 1) as UauiColorSlot);
-}
-
-/** How a series is drawn: its own `kind` when valid, else bars in the bar kinds and a line in the others. */
-function seriesKindOf(series: UauiSeries, kind: UauiChartKind): UauiSeriesKind {
-    if (series.kind === "line" || series.kind === "bar") return series.kind;
-    return kind === "bar" || kind === "stacked-bar" ? "bar" : "line";
-}
-
-/** Whole numbers on the axis unless the step is fractional; compact once the numbers get long. */
-function tickFormat(valueFormat: Intl.NumberFormatOptions | undefined, max: number, step: number): Intl.NumberFormatOptions {
-    const fractional = !Number.isInteger(step);
-    return {
-        notation: max >= 10_000 ? "compact" : "standard",
-        ...valueFormat,
-        minimumFractionDigits: fractional ? undefined : 0,
-        maximumFractionDigits: fractional ? Math.min(Math.max(2 - Math.floor(Math.log10(step)), 1), 6) : 0,
-    };
-}
 
 /**
  * Shows a metric over time as lines, filled areas, bars or stacked bars, with a legend, a hover tooltip and a visually
@@ -294,13 +262,6 @@ export class UauiTimeSeriesChartElement extends UmbLitElement {
     @property({ type: String, attribute: "empty-description" })
     emptyDescription?: string;
 
-    @state()
-    private _hover?: UauiChartHover;
-
-    /** Escape hides the date tooltip until the pointer moves to another date or leaves. */
-    @state()
-    private _hoverDismissed = false;
-
     /** Where the renderer drew the marker dots, to put a button over each. */
     @state()
     private _markerPlacements: UauiMarkerPlacement[] = [];
@@ -309,8 +270,16 @@ export class UauiTimeSeriesChartElement extends UmbLitElement {
     @state()
     private _activeMarker?: number;
 
-    #renderer?: UauiChartRenderer;
-    #colors?: UauiChartDrawColors;
+    /** Draws the chart (Chart.js through the renderer), and holds the hover. */
+    #chart = new UauiChartController(this, {
+        colorKeys: () => this.#colorKeys,
+        draw: (renderer, colors) => this.#draw(renderer, colors),
+        plugins: () => this.#overlays.plugins(),
+    });
+    /** The marker dots and the today line: what only a date x-axis draws. */
+    #overlays = new UauiTimeSeriesOverlays((placements) => {
+        this._markerPlacements = placements;
+    });
     /** Everything derived from the inputs below: shared dates, formatted labels and formatters. */
     #derived: Derived = emptyDerived;
     /** What `#derived` was built from. Hovering re-renders the element but changes none of these. */
@@ -322,32 +291,20 @@ export class UauiTimeSeriesChartElement extends UmbLitElement {
     /** The dates of the hidden table and the tooltip, with today's named, and the `#derived` they were made from. */
     #tableDates: string[] = [];
     #tableDatesFrom?: Derived;
-    /** The chart needs drawing: the derived data or the kind changed. */
-    #dirty = true;
 
+    // `connectedCallback`, `disconnectedCallback` and `updated` stay overridden so the public API report is unchanged:
+    // the chart controller does the connect, disconnect and draw work.
     override connectedCallback() {
         super.connectedCallback();
-        document.addEventListener("keydown", this.#onDocumentKeydown);
-        // On reconnect the first render has already happened, so rebuild the chart in `updated`.
-        if (this.hasUpdated) this.requestUpdate();
     }
 
     override disconnectedCallback() {
         super.disconnectedCallback();
-        this.#renderer?.destroy();
-        this.#renderer = undefined;
-        this.#colors = undefined;
-        this._hover = undefined;
+        // The controller destroys the chart; a new one starts with no marker active.
+        this.#overlays.setActiveMarker(undefined);
         this._markerPlacements = [];
         this._activeMarker = undefined;
-        this._hoverDismissed = false;
-        document.removeEventListener("keydown", this.#onDocumentKeydown);
     }
-
-    /** WCAG 1.4.13: Escape hides the date tooltip without moving the pointer; `uaui-chart-markers` does the same for its own. */
-    #onDocumentKeydown = (e: KeyboardEvent) => {
-        if (e.key === "Escape" && this._hover) this._hoverDismissed = true;
-    };
 
     protected override willUpdate(changed: PropertyValues<this>) {
         super.willUpdate(changed);
@@ -356,9 +313,9 @@ export class UauiTimeSeriesChartElement extends UmbLitElement {
         if (!prev || (Object.keys(next) as (keyof typeof next)[]).some((key) => prev[key] !== next[key])) {
             this.#derivedFrom = next;
             this.#derived = this.#derive(next);
-            this.#dirty = true;
+            this.#chart.invalidate();
         }
-        if (changed.has("kind") || changed.has("lowerIsBetter") || changed.has("yScale") || changed.has("today")) this.#dirty = true;
+        if (changed.has("kind") || changed.has("lowerIsBetter") || changed.has("yScale") || changed.has("today")) this.#chart.invalidate();
 
         const todayIndex = this.today ? bucketMarkers([{ id: "today", date: this.today, title: "" }], this.#derived.data.dates, this.groupBy)[0]?.index : undefined;
         if (todayIndex !== this.#todayIndex || this.#tableDatesFrom !== this.#derived) {
@@ -366,7 +323,7 @@ export class UauiTimeSeriesChartElement extends UmbLitElement {
             this.#tableDatesFrom = this.#derived;
             const { dateLabels } = this.#derived;
             this.#tableDates = todayIndex === undefined ? dateLabels : dateLabels.map((label, i) => (i === todayIndex ? this.#todayDate(label) : label));
-            this.#dirty = true;
+            this.#chart.invalidate();
         }
 
         const markersNext = { markers: this.markers, dates: this.#derived.data.dates, groupBy: this.groupBy };
@@ -374,26 +331,16 @@ export class UauiTimeSeriesChartElement extends UmbLitElement {
         if (!markersPrev || (Object.keys(markersNext) as (keyof MarkersFrom)[]).some((key) => markersPrev[key] !== markersNext[key])) {
             this.#markersFrom = markersNext;
             this.#markerBuckets = bucketMarkers(markersNext.markers, markersNext.dates, markersNext.groupBy);
-            this.#dirty = true;
+            this.#chart.invalidate();
         }
     }
 
     protected override updated(changed: PropertyValues<this>) {
         super.updated(changed);
-        this.#syncChart();
-        if (this._hover) void this.#placeTooltip();
     }
 
     get #hasData() {
         return this.series.some((s) => s.points.length > 0);
-    }
-
-    get #canvas() {
-        return this.shadowRoot?.querySelector<HTMLCanvasElement>("canvas") ?? undefined;
-    }
-
-    get #probe() {
-        return this.shadowRoot?.querySelector<HTMLElement>(".probe") ?? undefined;
     }
 
     /**
@@ -455,9 +402,8 @@ export class UauiTimeSeriesChartElement extends UmbLitElement {
         return this.#barCount > 1 && (this.kind === "stacked-bar" || this.#comparesBars);
     }
 
-    /** Log, unless the bars stack: stacked segments on a log axis don't add up by height. */
     get #isLog() {
-        return this.yScale === "log" && !(this.kind === "stacked-bar" && this.#barCount > 0);
+        return usesLogScale(this.yScale, this.kind, this.#barCount);
     }
 
     /** A date as the tooltip and the hidden table name it when it is today's. */
@@ -476,138 +422,55 @@ export class UauiTimeSeriesChartElement extends UmbLitElement {
         return this.compareLabel || this.localize.term("uauiAnalytics_chartComparisonLabel");
     }
 
-    /** Creates the chart if it doesn't exist, and draws it when the data or kind changed. */
-    #syncChart() {
-        const canvas = this.#canvas;
-        const probe = this.#probe;
-        // An update already queued can run after disconnect: build nothing then, as nothing would destroy it.
-        // Reconnecting asks for an update, which draws.
-        if (!canvas || !probe || !this.isConnected) return;
-
-        if (!this.#renderer) {
-            this.#renderer = new UauiChartRenderer(
-                canvas,
-                this,
-                (hover) => {
-                    this._hoverDismissed = false;
-                    this._hover = hover;
-                },
-                (placements) => {
-                    this._markerPlacements = placements;
-                },
-                // The renderer watches the theme with `uauiWatchTheme`, as a product's chart does.
-                () => this.#syncColors(),
-            );
-            this.#dirty = true;
-            // Axis text is measured with the web font, so redraw once fonts have settled.
-            document.fonts?.ready.then(() => this.#renderer?.redraw());
-        }
-        if (!this.#dirty) return;
-        this.#dirty = false;
-        this.#colors = resolveChartColors(this, probe, this.#colorKeys);
-        this.#draw();
-    }
-
-    #draw() {
-        if (!this.#renderer || !this.#colors) return;
-        this.#warnColorClash(this.#colors);
+    /** Hands the renderer the chart's model. Called by the chart controller. */
+    #draw(renderer: UauiChartRenderer, colors: UauiChartDrawColors) {
         const { data, kinds, axisLabels, lang } = this.#derived;
         const max = maxValue(data, this.kind, kinds.map((k) => k === "bar"));
-        const common = {
+        this.#overlays.set(
+            colors,
+            this.#markerBuckets.map((b) => ({ index: b.index, count: b.markers.length })),
+            this.#todayIndex === undefined ? undefined : { index: this.#todayIndex, label: this.localize.term("uauiAnalytics_chartToday") },
+        );
+        this.#warnLogStacked();
+        const axis = chartYAxis(data, max, this.#isLog, lang, this.valueFormat);
+        const to = axis.toAxis ?? ((value: number | null) => value);
+        const compareTotal = this.#barCount > 0 ? data.compareTotal?.values : undefined;
+        renderer.update({
             kind: this.kind,
             labels: axisLabels,
-            markers: this.#markerBuckets.map((b) => ({ index: b.index, count: b.markers.length })),
-            today: this.#todayIndex === undefined ? undefined : { index: this.#todayIndex, label: this.localize.term("uauiAnalytics_chartToday") },
-            todayRoom: !!this.today,
-            colors: this.#colors,
+            // Room above the plot for the today label, whether or not today is among the dates, so the plot doesn't
+            // jump as the editor moves through date ranges.
+            roomAbove: this.today ? TODAY_LABEL_ROOM : 0,
+            colors,
             lowerIsBetter: this.lowerIsBetter,
-        };
-        const datasetsOf = (to: (value: number | null) => number | null) =>
-            data.series.map((s, i) => ({
+            datasets: data.series.map((s, i) => ({
                 label: s.label,
                 kind: kinds[i],
                 values: s.values.map(to),
                 compare: kinds[i] === "line" ? s.compare?.map(to) : undefined,
-            }));
-        const compareTotal = this.#barCount > 0 ? data.compareTotal?.values : undefined;
-        this.#warnLogStacked();
-        if (this.#isLog) {
-            // Drawn at their heights on the log curve, on a linear Chart.js axis with our own ticks (see `logScale`).
-            const log = logScale(max, minPositive(data));
-            const tick = getNumberFormat(lang, tickFormat(this.valueFormat, log.top, log.unit));
-            this.#renderer.update({
-                ...common,
-                datasets: datasetsOf(log.toAxis),
-                compareTotal: compareTotal?.map(log.toAxis),
-                yMax: log.toAxis(log.top)!,
-                yStep: 1,
-                formatTick: (value) => tick.format(value),
-                yTicks: log.ticks.map((value) => ({ value: log.toAxis(value)!, label: tick.format(value) })),
-            });
-            return;
-        }
-        const scale = niceScale(max, 5, allWhole(data));
-        const tick = getNumberFormat(lang, tickFormat(this.valueFormat, scale.max, scale.step));
-        this.#renderer.update({
-            ...common,
-            datasets: datasetsOf((value) => value),
-            compareTotal,
-            yMax: scale.max,
-            yStep: scale.step,
-            formatTick: (value) => tick.format(value),
+            })),
+            compareTotal: axis.toAxis ? compareTotal?.map(axis.toAxis) : compareTotal,
+            yMax: axis.yMax,
+            yStep: axis.yStep,
+            formatTick: axis.formatTick,
+            yTicks: axis.yTicks,
         });
     }
-
-    #warnedLogStacked = false;
 
     /** Warns once per chart that `y-scale="log"` is ignored while bars stack. */
     #warnLogStacked() {
-        if (this.#warnedLogStacked || this.yScale !== "log" || this.#isLog || !this.#barCount) return;
-        this.#warnedLogStacked = true;
-        console.warn('[uaui] uaui-time-series-chart: y-scale="log" is ignored with kind="stacked-bar", as stacked bars on a log axis don\'t add up by height. Use kind="bar".');
-    }
-
-    #warnedColorClash = false;
-
-    /** Warns once per chart when a status series draws like a slot series beside it (warning and slot 3, danger and slot 2). */
-    #warnColorClash(colors: UauiChartDrawColors) {
-        if (this.#warnedColorClash) return;
-        const clashes = clashingColors(this.#colorKeys, colors.series);
-        if (!clashes.length) return;
-        this.#warnedColorClash = true;
-        const pairs = clashes.map(([status, slot]) => `"${status}" and ${slot}`).join(", ");
-        console.warn(`[uaui] uaui-time-series-chart: series colours ${pairs} look the same in this theme. Use another slot or status.`);
-    }
-
-    /** Redraws with the theme's current colours, if they changed. Called by the renderer's theme watch. */
-    #syncColors() {
-        const probe = this.#probe;
-        if (!probe || !this.#renderer) return;
-        const colors = resolveChartColors(this, probe, this.#colorKeys);
-        if (!colorsDiffer(this.#colors, colors)) return;
-        this.#colors = colors;
-        this.#draw();
-    }
-
-    /** Puts the tooltip beside the hovered point, on the side with room, kept inside the plot. */
-    async #placeTooltip() {
-        const tip = this.shadowRoot?.querySelector<UauiChartTooltipElement>("uaui-chart-tooltip");
-        const plot = this.shadowRoot?.querySelector<HTMLElement>(".plot");
-        if (!tip || !plot) return;
-        await placeTooltip(tip, ({ width, height }) => {
-            const hover = this._hover;
-            if (!hover) return undefined;
-            const gap = 14;
-            const left = hover.x + gap + width > plot.clientWidth ? hover.x - gap - width : hover.x + gap;
-            return { left: Math.max(left, 0), top: clampInside(hover.y - height - 8, height, plot.clientHeight) };
-        });
+        if (this.yScale !== "log" || this.#isLog || !this.#barCount) return;
+        this.#chart.warnOnce(
+            "log-stacked",
+            'y-scale="log" is ignored with kind="stacked-bar", as stacked bars on a log axis don\'t add up by height. Use kind="bar".',
+        );
     }
 
     /** One row per series with a point at the hovered date, and for the bar kinds the total and the compare total. */
     #renderTooltip() {
-        const hover = this._hover;
+        const hover = this.#chart.hover;
         const { data, kinds, dateLabels, compareDateLabels, compareTotalDateLabels, totals, numberFormat } = this.#derived;
-        if (!hover || this._hoverDismissed || !dateLabels[hover.index] || this._activeMarker !== undefined) return nothing;
+        if (!hover || !dateLabels[hover.index] || this._activeMarker !== undefined) return nothing;
         const { index } = hover;
         const bars = this.#barCount > 0;
         const rows = data.series.flatMap((s, i): UauiChartTooltipRow[] => {
@@ -633,7 +496,7 @@ export class UauiTimeSeriesChartElement extends UmbLitElement {
         return html`<uaui-chart-tooltip
             style="visibility:hidden"
             aria-hidden="true"
-            .date=${this.#tableDates[index] ?? dateLabels[index]}
+            .heading=${this.#tableDates[index] ?? dateLabels[index]}
             .rows=${rows}
             .bars=${bars}
             .lowerIsBetter=${this.lowerIsBetter}
@@ -644,7 +507,7 @@ export class UauiTimeSeriesChartElement extends UmbLitElement {
 
     #onActiveMarker(e: CustomEvent<UauiChartMarkersActiveDetail>) {
         this._activeMarker = e.detail.index;
-        this.#renderer?.setActiveMarker(e.detail.index);
+        if (this.#chart.created && this.#overlays.setActiveMarker(e.detail.index)) this.#chart.draw();
     }
 
     // The markers' own `marker-click` doesn't bubble, so the chart raises the public one.
@@ -679,7 +542,7 @@ export class UauiTimeSeriesChartElement extends UmbLitElement {
     #renderTable() {
         const { data, totals, numberFormat } = this.#derived;
         return html`<uaui-chart-data-table
-            .dates=${this.#tableDates}
+            .labels=${this.#tableDates}
             .series=${data.series}
             .totals=${this.#showsTotal ? totals : undefined}
             .totalLabel=${this.#totalText}
@@ -688,86 +551,25 @@ export class UauiTimeSeriesChartElement extends UmbLitElement {
             .numberFormat=${numberFormat}></uaui-chart-data-table>`;
     }
 
-    // The error state's `retry` stops at its shadow root, so the chart raises its own.
-    #onRetry() {
-        this.dispatchEvent(new Event("retry", { bubbles: true }));
-    }
-
     override render(): TemplateResult {
-        const mode = getLoadingMode(this.loading, this.#hasData, this.error);
-        const busy = isBusy(this.loading, this.error);
-        const showPlot = this.#hasData && mode !== "skeleton" && !this.error;
-        return html`<div
-            class="region"
-            role="figure"
-            aria-label=${this.localize.term("uauiAnalytics_chartAriaLabel")}
-            aria-busy=${busy ? "true" : "false"}>
-            ${mode === "reload" ? html`<uaui-loading-bar></uaui-loading-bar>` : nothing}
-            <div class="content">
-            ${mode === "skeleton" ? html`<uaui-skeleton></uaui-skeleton>` : nothing}
-            ${this.error
-                ? html`<div class="empty">
-                      <uaui-error-state
-                          .headline=${this.errorHeadline}
-                          .description=${this.errorDescription}
-                          .retryable=${this.retryable}
-                          @retry=${this.#onRetry}></uaui-error-state>
-                  </div>`
-                : nothing}
-            ${mode === "idle" && !this.error && !this.#hasData
-                ? html`<div class="empty">
-                      <uaui-empty-state
-                          .headline=${this.emptyHeadline}
-                          .description=${this.emptyDescription}></uaui-empty-state>
-                  </div>`
-                : nothing}
-            <!-- The plot stays in the DOM while hidden, so the chart is never rebuilt by a loading toggle. -->
-            <div class="plot" ?hidden=${!showPlot}>
-                <canvas aria-hidden="true"></canvas>
-                ${this.#renderTooltip()}
-                ${showPlot ? this.#renderMarkers() : nothing}
-            </div>
-            ${showPlot ? this.#renderLegend() : nothing} ${showPlot ? this.#renderTable() : nothing}
-            </div>
-            <span class="probe" hidden></span>
-        </div>`;
+        return renderChartFrame({
+            label: this.localize.term("uauiAnalytics_chartAriaLabel"),
+            hasData: this.#hasData,
+            loading: this.loading,
+            error: this.error,
+            errorHeadline: this.errorHeadline,
+            errorDescription: this.errorDescription,
+            retryable: this.retryable,
+            emptyHeadline: this.emptyHeadline,
+            emptyDescription: this.emptyDescription,
+            tooltip: this.#renderTooltip(),
+            overlay: () => this.#renderMarkers(),
+            legend: () => this.#renderLegend(),
+            table: () => this.#renderTable(),
+        });
     }
 
-    static override styles: CSSResultGroup = [
-        UauiPaletteStyles,
-        css`
-            :host {
-                display: block;
-                --_uaui-skeleton-height: var(--uaui-chart-height, 260px);
-            }
-
-            .region {
-                position: relative;
-            }
-
-            /* The chart pads its own content, so the loading bar can span the full width at the top edge. */
-            .content {
-                padding: var(--uaui-chart-padding, var(--uui-size-space-4) var(--uui-size-space-6) 28px);
-            }
-
-            .plot {
-                position: relative;
-                height: var(--_uaui-skeleton-height);
-            }
-
-            .empty {
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                min-height: var(--_uaui-skeleton-height);
-            }
-
-            uaui-empty-state,
-            uaui-error-state {
-                width: 100%;
-            }
-        `,
-    ];
+    static override styles: CSSResultGroup = UauiChartFrameStyles;
 }
 
 declare global {

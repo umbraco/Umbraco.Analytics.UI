@@ -10,8 +10,6 @@ import {
 } from "@umbraco/analytics-ui/external/chart.js";
 import type { UauiChartKind, UauiSeriesKind } from "../types.js";
 import type { UauiChartDrawColors } from "./chart-colors.js";
-import { createMarkersPlugin, type UauiMarkerPin, type UauiMarkerPlacement, type UauiMarkersState } from "./markers-plugin.js";
-import { createTodayPlugin, TODAY_LABEL_ROOM, type UauiTodayPin, type UauiTodayState } from "./today-plugin.js";
 import "./register.js";
 
 /** What the renderer draws. Our own shape: Chart.js types stay inside `src/chart/internal`. */
@@ -29,18 +27,14 @@ export interface UauiChartModel {
     formatTick: (value: number) => string;
     /** Ticks at these heights (from 0 to `yMax`) with these labels, in place of `yStep` and `formatTick`: the log axis. */
     yTicks?: { value: number; label: string }[];
-    /** A line at this date, labelled above the plot. */
-    today?: UauiTodayPin;
-    /** Keep room above the plot for the today label (whenever the chart has a `today`, even out of range). */
-    todayRoom?: boolean;
+    /** Extra room above the plot, in pixels, for what the chart's own plugins draw there (the time-series chart's today label). */
+    roomAbove?: number;
     colors: UauiChartDrawColors;
     /** Line kinds: a series below its compare line is doing better, so the gap shading flips. */
     lowerIsBetter?: boolean;
-    /** One dot on the x-axis per entry. */
-    markers?: UauiMarkerPin[];
 }
 
-/** The date the pointer is on, and where to anchor a tooltip (canvas pixels). */
+/** The x value (date or category) the pointer is on, and where to anchor a tooltip (canvas pixels). */
 export interface UauiChartHover {
     index: number;
     x: number;
@@ -54,9 +48,9 @@ const COMPARE_BAR_EXTRA_WIDTH = 12;
 /**
  * Chart.js is shared with the products (`@umbraco/analytics-ui/external/chart.js`), so its registry and `Chart.defaults`
  * are too. Our chart sets everything it relies on per chart, so a product's global registrations and defaults don't
- * change it: every registered plugin but these is off for our chart.
+ * change it: every registered plugin but these, and the chart's own plugins passed to the renderer, is off for our chart.
  */
-const OWN_PLUGINS = new Set(["filler", "tooltip", "uauiHoverLine", "uauiMarkers", "uauiToday"]);
+const OWN_PLUGINS = ["filler", "tooltip", "uauiHoverLine"];
 
 /** Whether `id` is a plugin in the shared registry. Chart.js doesn't type `items`, so read it with care. */
 const isRegisteredPlugin = (id: string): boolean =>
@@ -67,10 +61,10 @@ const isRegisteredPlugin = (id: string): boolean =>
  * each time it rebuilds a chart's plugin list (every update and resize), so a plugin a product registers globally,
  * even after our chart was drawn, never runs on our chart.
  */
-const onlyOwnPlugins = <T extends object>(plugins: T): T =>
+const onlyOwnPlugins = <T extends object>(plugins: T, own: ReadonlySet<string>): T =>
     new Proxy(plugins, {
         get: (target, key, receiver) =>
-            typeof key === "string" && !OWN_PLUGINS.has(key) && !Object.prototype.hasOwnProperty.call(target, key) && isRegisteredPlugin(key)
+            typeof key === "string" && !own.has(key) && !Object.prototype.hasOwnProperty.call(target, key) && isRegisteredPlugin(key)
                 ? false
                 : Reflect.get(target, key, receiver),
     });
@@ -111,7 +105,7 @@ export function thinTicks<T extends { value: number }>(ticks: T[], height: numbe
     return [ticks[0], ticks[last]];
 }
 
-/** Room around the plot, in pixels. A today line adds `TODAY_LABEL_ROOM` at the top for its label. */
+/** Room around the plot, in pixels. A model's `roomAbove` is added at the top (the today label). */
 const PADDING = { top: 8, right: 12, bottom: 0, left: 0 };
 
 const LINE_WIDTH = 2.25;
@@ -125,6 +119,8 @@ const MAX_POINTS_WITH_DOTS = 45;
  * The one place that talks to Chart.js. The element hands it a `UauiChartModel` and listens for hover;
  * the tooltip itself is HTML, drawn by the element. Create it once per canvas and call `update` for
  * every change, including loading toggles: it is only destroyed when the element disconnects.
+ * `UauiChartController` owns it. A chart's own drawing (the time-series chart's markers and today line) comes in as
+ * per-chart plugins, never registered globally.
  */
 export class UauiChartRenderer {
     #chart?: Chart;
@@ -137,32 +133,30 @@ export class UauiChartRenderer {
     #onThemeChange: () => void;
     #stopThemeWatch?: () => void;
     #inThemeChange = false;
-    #markers: UauiMarkersState;
-    #today: UauiTodayState = {};
+    #plugins: () => Plugin[];
 
     /**
-     * `host` is the element whose palette the chart draws in. `onMarkerLayout` is told where the marker dots are drawn,
-     * after every layout in which they moved. `onThemeChange` is called when the theme's chart colours change
-     * (`uauiWatchTheme`, as a product's chart uses), for the owner to resolve its colours again and call `update`.
+     * `host` is the element whose palette the chart draws in. `onThemeChange` is called when the theme's chart colours
+     * change (`uauiWatchTheme`, as a product's chart uses), for the owner to resolve its colours again and call
+     * `update`. `plugins` makes the chart's own plugins, drawn after the hover line, for each Chart.js chart created
+     * (a new one per change between the line and bar kinds); the owner keeps their state and changes it before `update`.
      */
     constructor(
         canvas: HTMLCanvasElement,
         host: HTMLElement,
         onHover: (hover: UauiChartHover | undefined) => void,
-        onMarkerLayout: (placements: UauiMarkerPlacement[]) => void = () => {},
         onThemeChange: () => void = () => {},
+        plugins: () => Plugin[] = () => [],
     ) {
         this.#canvas = canvas;
         this.#host = host;
         this.#onHover = onHover;
         this.#onThemeChange = onThemeChange;
-        this.#markers = { pins: [], onLayout: onMarkerLayout };
+        this.#plugins = plugins;
     }
 
-    /** Draws the dot at the `index`th date larger and stronger, or none. Cheap: redraws without relayout. */
-    setActiveMarker(index: number | undefined): void {
-        if (this.#markers.active === index) return;
-        this.#markers.active = index;
+    /** Draws again without relayout, after a plugin's state changed. Cheap. */
+    draw(): void {
         this.#chart?.draw();
     }
 
@@ -176,7 +170,7 @@ export class UauiChartRenderer {
                 const { ctx, chartArea } = chart;
                 ctx.save();
                 if (family === "bar") {
-                    // Bars are wide, so the hovered date is shown as a faint band behind them.
+                    // Bars are wide, so the hovered x value is shown as a faint band behind them.
                     const width = chartArea.width / Math.max(chart.data.labels?.length ?? 1, 1);
                     ctx.globalAlpha = 0.25;
                     ctx.fillStyle = this.#colors.hoverLine;
@@ -197,10 +191,11 @@ export class UauiChartRenderer {
         // The package look a product's chart gets too (`uauiChartOptions`): only the parts our chart uses, as its plugins
         // are its own (see `onlyOwnPlugins`). The scales are styled from it in `update`.
         const { responsive, maintainAspectRatio, animation, events } = uauiChartOptions(this.#host, family, colors);
+        const plugins = [hoverLine, ...this.#plugins()];
         const config: ChartConfiguration = {
             type: family,
             data: { labels: [], datasets: [] },
-            plugins: [hoverLine, createTodayPlugin(this.#today), createMarkersPlugin(this.#markers)],
+            plugins,
             // Everything we rely on is set here rather than left to `Chart.defaults`, which products share.
             options: {
                 responsive,
@@ -246,7 +241,7 @@ export class UauiChartRenderer {
                 },
             },
         };
-        config.options!.plugins = onlyOwnPlugins(config.options!.plugins!);
+        config.options!.plugins = onlyOwnPlugins(config.options!.plugins!, new Set([...OWN_PLUGINS, ...plugins.map((plugin) => plugin.id)]));
         const chart = new Chart(this.#canvas, config);
         this.#stopThemeWatch?.();
         this.#stopThemeWatch = uauiWatchTheme(this.#host, chart, () => {
@@ -263,10 +258,6 @@ export class UauiChartRenderer {
 
     update(model: UauiChartModel): void {
         this.#colors = model.colors;
-        this.#markers.colors = model.colors;
-        this.#markers.pins = model.markers ?? [];
-        this.#today.colors = model.colors;
-        this.#today.pin = model.today;
         // A chart with any bars is a bar chart (its x-axis leaves room for them); its lines are line datasets in it.
         const barKind = model.kind === "bar" || model.kind === "stacked-bar";
         const family = (model.datasets.length ? model.datasets.some((set) => set.kind === "bar") : barKind) ? "bar" : "line";
@@ -284,9 +275,8 @@ export class UauiChartRenderer {
         // Only bars stack: a `stacked-bar` chart whose series are all lines draws them unstacked. Lines also carry a
         // stack key of their own, so they never stack with bars or with each other.
         const stacked = model.kind === "stacked-bar" && family === "bar";
-        // Room above the plot for the today label, whether or not today is among the dates, so the plot doesn't jump
-        // as the editor moves through date ranges; the padding otherwise stays as it was.
-        chart.options.layout = { padding: { ...PADDING, top: PADDING.top + (model.todayRoom ? TODAY_LABEL_ROOM : 0) } };
+        // Room above the plot for what the chart's own plugins draw there (the today label).
+        chart.options.layout = { padding: { ...PADDING, top: PADDING.top + (model.roomAbove ?? 0) } };
         const scales = chart.options.scales!;
         // The package's axis look (`uauiChartOptions`, as a product's chart gets it): our font, colours and Chart.js's
         // own values for what we don't style, all set per chart so a product's `Chart.defaults.scale` can't move them.

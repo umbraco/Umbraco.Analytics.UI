@@ -14,7 +14,7 @@ export interface UauiChartLegendEntry {
 }
 
 /**
- * The legend under `uaui-time-series-chart`: a list with a line (or, for the bar kinds, a square) in each series'
+ * The legend under a chart: a list with a line (or, for the bar kinds, a square) in each series'
  * colour, and an entry for the compared period when `compareLabel` is set. Internal: not exported.
  *
  * @element uaui-chart-legend
