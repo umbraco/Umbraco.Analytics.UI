@@ -67,6 +67,7 @@ Each links to its page in Storybook.
 - [`uaui-kpi-tile`](https://umbraco.github.io/Umbraco.Analytics.UI/?path=/docs/components-kpi-tile--docs)
 - [`uaui-delta-badge`](https://umbraco.github.io/Umbraco.Analytics.UI/?path=/docs/components-delta-badge--docs)
 - [`uaui-time-series-chart`](https://umbraco.github.io/Umbraco.Analytics.UI/?path=/docs/components-time-series-chart--docs)
+- [`uaui-category-chart`](https://umbraco.github.io/Umbraco.Analytics.UI/?path=/docs/components-category-chart--docs)
 - [`uaui-funnel`](https://umbraco.github.io/Umbraco.Analytics.UI/?path=/docs/components-funnel--docs)
 - [`uaui-toggle-group`](https://umbraco.github.io/Umbraco.Analytics.UI/?path=/docs/components-toggle-group--docs)
 - [`uaui-group-by`](https://umbraco.github.io/Umbraco.Analytics.UI/?path=/docs/components-group-by--docs)
@@ -81,6 +82,7 @@ Each links to its page in Storybook.
 
 Also public:
 
+- `UauiChartMixin` and `UauiChartMixinInterface`: the settings both charts share (`series`, `compare-series`, `y-scale`, `value-format`, `lower-is-better`, `compare-label` and the loading, error and empty states), with the same attribute names and defaults on each.
 - `UAUI_TABLE_CELL` and `UAUI_TABLE_CONTEXT`: the cell element names, and what a custom cell reads from its table. See the [custom cell example](https://umbraco.github.io/Umbraco.Analytics.UI/?path=/docs/examples-custom-cell-with-table-context--docs).
 - `UauiPaletteStyles`: the colour palette for your own elements. See [Theming and palette](https://umbraco.github.io/Umbraco.Analytics.UI/?path=/docs/guides-theming-and-palette--docs).
 - `UauiTableServerController`: runs a table in `server` mode. See [Events, loading and errors](https://umbraco.github.io/Umbraco.Analytics.UI/?path=/docs/guides-events-loading-and-errors--docs).

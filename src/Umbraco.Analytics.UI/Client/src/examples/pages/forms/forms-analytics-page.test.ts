@@ -8,11 +8,22 @@ import { axeRun } from "../../../internal/test/a11y.js";
 import { renderPageExample, saveDateRange, withTheme } from "../../../internal/test/page-example.js";
 import { deepQuery, deepQueryAll, deepText, settle, shadow, type UauiTestElement } from "../../../internal/test/dom.js";
 import "./forms-analytics-page.element.js";
-import { FORMS, postOverview, postRecordStates, postSubmissions, type FormsAnalyticsResult } from "./forms-fake-data.js";
-import { formsBucketed, formsRateSeries, formsRows, formsSeries, formsSeriesBy, formsSteps, formsTotal } from "./forms-analytics-adapter.js";
+import { FORMS, postOverview, postRecordStates, postSubmissions, postSubmissionsByHour, type FormsAnalyticsResult } from "./forms-fake-data.js";
+import {
+    formsBucketed,
+    formsHourSeries,
+    formsHours,
+    formsRateSeries,
+    formsRows,
+    formsSeries,
+    formsSeriesBy,
+    formsSteps,
+    formsTotal,
+} from "./forms-analytics-adapter.js";
 import { uauiCompareFor } from "../../../date-helpers/index.js";
 import type { UauiCompare, UauiDateRange } from "../../../date-range/types.js";
 import type { UauiTimeSeriesChartElement } from "../../../chart/time-series-chart.element.js";
+import type { UauiCategoryChartElement } from "../../../chart/category-chart.element.js";
 import type { UauiKpiTileElement } from "../../../kpi-tile/kpi-tile.element.js";
 import type { UauiFunnelElement } from "../../../funnel/funnel.element.js";
 import type { UauiStatElement } from "../../../stat/stat.element.js";
@@ -36,6 +47,7 @@ const tiles = (page: Element) => [...shadow(page).querySelectorAll<UauiKpiTileEl
 const tile = (page: Element, label: string) => tiles(page).find((t) => t.label === label)!;
 const box = (page: Element, id: string) => shadow(page).querySelector(`[data-box='${id}'] > uui-box`) as HTMLElement & { headline: string };
 const chartIn = (page: Element, id: string) => box(page, id).querySelector("uaui-time-series-chart") as UauiTimeSeriesChartElement;
+const hourChart = (page: Element) => box(page, "byHour").querySelector("uaui-category-chart") as UauiCategoryChartElement;
 const tableIn = (page: Element, id: string) => box(page, id).querySelector("uaui-data-table") as unknown as TestTable;
 const funnel = (page: Element) => box(page, "funnel").querySelector("uaui-funnel") as UauiFunnelElement;
 const headerStat = (page: Element) => box(page, "funnel").querySelector("uaui-stat[slot='header-actions']") as UauiStatElement | null;
@@ -47,9 +59,11 @@ const changeRange = (page: Element, value: UauiDateRange, compare?: UauiCompare)
 const afterTimer = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 const tables = (page: Element) => ["forms", "workflows", "origins"].map((id) => tableIn(page, id));
 const charts = (page: Element) => ["submissions", "formSubmissions", "origins"].map((id) => chartIn(page, id));
+/** Every chart on the page: the time-series charts and the hour of day chart. */
+const allCharts = (page: Element): (UauiTimeSeriesChartElement | UauiCategoryChartElement)[] => [...charts(page), hourChart(page)];
 
 const ready = (page: Element) =>
-    tiles(page).every((t) => !t.loading) && charts(page).every((c) => !c.loading) && tables(page).every((t) => !t.loading) && !funnel(page).loading;
+    tiles(page).every((t) => !t.loading) && allCharts(page).every((c) => !c.loading) && tables(page).every((t) => !t.loading) && !funnel(page).loading;
 
 async function renderPage(): Promise<UauiTestElement> {
     const page = await renderPageExample(html`<example-forms-analytics-page .latency=${0}></example-forms-analytics-page>`, TAG);
@@ -180,6 +194,16 @@ describe("Feature: the Forms analytics page", () => {
             expect(formsBucketed(r, { from: "2026-06-01", to: "2026-06-01" }, "day")).toBe(r);
         });
 
+        it("makes a point for every hour from [hour, entries] rows, 0 for an hour the answer leaves out", () => {
+            const r = answer(["hour", "entries"], [[9, 4], [14, 7]]);
+            const [series] = formsHourSeries(r, "entries", "Entries");
+            expect(series.points).toHaveLength(24);
+            expect(series.points[9]).toEqual({ category: "9", value: 4 });
+            expect(series.points[14]).toEqual({ category: "14", value: 7 });
+            expect(series.points[0]).toEqual({ category: "0", value: 0 });
+            expect(formsHourSeries(answer(["hour", "entries"], []), "entries", "Entries")).toEqual([]);
+        });
+
         it("sums a column over every row", () => {
             expect(formsTotal(answer(["date", "entries"], [["a", 2], ["b", 3]]), "entries")).toBe(5);
             expect(formsTotal(undefined, "entries")).toBe(0);
@@ -196,6 +220,14 @@ describe("Feature: the Forms analytics page", () => {
             expect(r.uniqueMembers).toBeGreaterThan(0);
         });
 
+        it("answers entries by hour of day, leaving out an hour with none, adding up to the days", async () => {
+            const query = { startDate: FIRST_RANGE.from, endDate: FIRST_RANGE.to, metrics: ["entries" as const] };
+            const hours = await postSubmissionsByHour({ ...query, dimensions: ["hour"] });
+            expect(hours.columns).toEqual(["hour", "entries"]);
+            expect(hours.rows.every(([hour, entries]) => Number.isInteger(hour) && (hour as number) >= 0 && (hour as number) < 24 && (entries as number) > 0)).toBe(true);
+            expect(formsTotal(hours, "entries")).toBe(formsTotal(await postSubmissions({ ...query, dimensions: ["date"] }), "entries"));
+        });
+
         it("gives the same numbers for the same range", async () => {
             const query = { startDate: FIRST_RANGE.from, endDate: FIRST_RANGE.to, metrics: ["entries" as const], dimensions: ["date" as const] };
             expect(await postSubmissions(query)).toEqual(await postSubmissions(query));
@@ -208,11 +240,12 @@ describe("Feature: the Forms analytics page", () => {
             page = await renderPage();
         });
 
-        it("shows the overview's chart and forms table, then the form's submissions, workflows, completion funnel and origins", () => {
-            expect(["submissions", "forms", "formSubmissions", "workflows", "funnel", "origins"].map((id) => box(page, id)?.headline)).toEqual([
+        it("shows the overview's chart and forms table, then the form's submissions, submissions by hour, workflows, completion funnel and origins", () => {
+            expect(["submissions", "forms", "formSubmissions", "byHour", "workflows", "funnel", "origins"].map((id) => box(page, id)?.headline)).toEqual([
                 "Submissions",
                 "Forms",
                 "Submissions",
+                "Submissions by hour of day",
                 "Workflows",
                 "Completion",
                 "Origins by source page",
@@ -221,11 +254,6 @@ describe("Feature: the Forms analytics page", () => {
 
         it("labels every table", () => {
             expect(tables(page).map((t) => t.label)).toEqual(["Forms", "Workflows", "Source pages"]);
-        });
-
-        it("has no submissions by hour of day box yet (needs T60)", () => {
-            expect(deepText(shadow(page))).not.toContain("hour of day");
-            expect(shadow(page).querySelectorAll("uaui-time-series-chart")).toHaveLength(3);
         });
     });
 
@@ -237,7 +265,7 @@ describe("Feature: the Forms analytics page", () => {
         });
 
         it("lets the charts and the forms table span both columns", () => {
-            for (const id of ["submissions", "forms", "formSubmissions", "origins"]) {
+            for (const id of ["submissions", "forms", "formSubmissions", "byHour", "origins"]) {
                 const grid = rect(box(page, id).closest(".boxes")!);
                 expect(rect(box(page, id)).width, id).toBeCloseTo(grid.width, 0);
             }
@@ -487,6 +515,46 @@ describe("Feature: the Forms analytics page", () => {
         });
     });
 
+    describe("Scenario: submissions by hour of day", () => {
+        let page: UauiTestElement;
+        let chart: UauiCategoryChartElement;
+        const query = { startDate: `${FIRST_RANGE.from}T00:00:00`, endDate: `${FIRST_RANGE.to}T00:00:00`, formId: SAMPLE_FORM.id, metrics: ["entries" as const], dimensions: ["hour" as const] };
+        beforeEach(async () => {
+            page = await renderPage();
+            chart = hourChart(page);
+        });
+
+        it("draws a bar per hour of the day, labelled in the editor's culture", () => {
+            expect(chart.categories.map((c) => c.id)).toEqual(Array.from({ length: 24 }, (_, h) => String(h)));
+            expect(chart.categories).toEqual(formsHours((chart as UauiCategoryChartElement & { localize: { lang(): string } }).localize.lang()));
+            expect(chart.kind).toBe("bar");
+        });
+
+        it("plots the form's entries by hour, adding up to its entries in the range", async () => {
+            const days = await postSubmissions({ ...query, dimensions: ["date"] });
+            const points = chart.series[0].points;
+            expect(points).toHaveLength(24);
+            expect(points.reduce((sum, p) => sum + p.value, 0)).toBe(formsTotal(days, "entries"));
+        });
+
+        it("compares with last period's hours and names the period", () => {
+            expect(chart.compareSeries[0].points).toHaveLength(24);
+            expect(chart.compareLabel).toBeTruthy();
+            expect(deepText(shadow(chart))).toContain(chart.compareLabel!);
+        });
+
+        it("names the hours in the hidden table", () => {
+            expect(deepQuery(shadow(chart), "th")!.textContent!.trim()).toBe("Hour of day");
+        });
+
+        it("follows the picked form", async () => {
+            const other = FORMS[1];
+            await pickForm(page, other.id);
+            const r = await postSubmissionsByHour({ ...query, formId: other.id });
+            expect(hourChart(page).series[0].points.map((p) => p.value)).toEqual(formsHourSeries(r, "entries", "Entries")[0].points.map((p) => p.value));
+        });
+    });
+
     describe("Scenario: origins by source page", () => {
         let page: UauiTestElement;
         beforeEach(async () => {
@@ -560,7 +628,7 @@ describe("Feature: the Forms analytics page", () => {
 
         it("shows every part loading on first load, without the funnel's header figure", () => {
             expect(tiles(page).every((t) => t.loading)).toBe(true);
-            expect(charts(page).every((c) => c.loading)).toBe(true);
+            expect(allCharts(page).every((c) => c.loading)).toBe(true);
             expect(tables(page).every((t) => t.loading)).toBe(true);
             expect(funnel(page).loading).toBe(true);
             expect(headerStat(page)).toBe(null);
@@ -571,13 +639,13 @@ describe("Feature: the Forms analytics page", () => {
         let page: UauiTestElement;
         beforeEach(async () => {
             page = await renderPageExample(html`<example-forms-analytics-page .latency=${0} failing></example-forms-analytics-page>`, TAG);
-            await expect.poll(() => charts(page).every((c) => c.error) && tables(page).every((t) => t.error) && funnel(page).error).toBe(true);
+            await expect.poll(() => allCharts(page).every((c) => c.error) && tables(page).every((t) => t.error) && funnel(page).error).toBe(true);
             await settle(page);
         });
 
         it("shows the error state in the tiles, charts, funnel and every table", () => {
             expect(tiles(page).every((t) => t.error)).toBe(true);
-            for (const chart of charts(page)) expect(shadow(chart).querySelector("uaui-error-state")).not.toBe(null);
+            for (const chart of allCharts(page)) expect(shadow(chart).querySelector("uaui-error-state")).not.toBe(null);
             expect(deepQuery(shadow(funnel(page)), "uaui-error-state")).not.toBe(null);
             expect(headerStat(page)).toBe(null);
         });

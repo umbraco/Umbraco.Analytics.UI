@@ -3,18 +3,29 @@ import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
 import "../../../kpi-tile/kpi-tile.element.js";
 import "../../../chart/time-series-chart.element.js";
+import "../../../chart/category-chart.element.js";
 import "../../../date-range/date-range.element.js";
 import "../../../group-by/group-by.element.js";
 import "../../../funnel/funnel.element.js";
 import "../../../table/data-table.element.js";
 import "../../../stat/stat.element.js";
 import { UAUI_TABLE_CELL } from "../../../table/cells/cell-names.js";
-import type { UauiSeries } from "../../../chart/types.js";
+import type { UauiCategory, UauiSeries } from "../../../chart/types.js";
 import { uauiCompareFor, uauiFormatDateRange } from "../../../date-helpers/index.js";
 import type { UauiCompare, UauiDateRange } from "../../../date-range/types.js";
 import type { UauiGroupBy } from "../../../group-by/group-by.element.js";
 import type { UauiTableColumn } from "../../../table/index.js";
-import { formsBucketed, formsRateSeries, formsRows, formsSeries, formsSeriesBy, formsSteps, formsTotal } from "./forms-analytics-adapter.js";
+import {
+    formsBucketed,
+    formsHourSeries,
+    formsHours,
+    formsRateSeries,
+    formsRows,
+    formsSeries,
+    formsSeriesBy,
+    formsSteps,
+    formsTotal,
+} from "./forms-analytics-adapter.js";
 import {
     FORMS,
     postOrigins,
@@ -22,6 +33,7 @@ import {
     postOverview,
     postRecordStates,
     postSubmissions,
+    postSubmissionsByHour,
     postWorkflows,
     type FormsAnalyticsQuery,
     type FormsAnalyticsResult,
@@ -214,29 +226,30 @@ const workflowRows = (r: FormsAnalyticsResult | undefined) =>
 // one column, so every box takes the full width whatever its span.
 type BoxSpan = 1 | 2;
 type OverviewBoxId = "submissions" | "forms";
-type FormBoxId = "formSubmissions" | "workflows" | "funnel" | "origins";
+type FormBoxId = "formSubmissions" | "byHour" | "workflows" | "funnel" | "origins";
 const overviewBoxes: { id: OverviewBoxId; span: BoxSpan }[] = [
     { id: "submissions", span: 2 },
     { id: "forms", span: 2 },
 ];
 const formBoxes: { id: FormBoxId; span: BoxSpan }[] = [
     { id: "formSubmissions", span: 2 },
+    { id: "byHour", span: 2 },
     { id: "workflows", span: 1 },
     { id: "funnel", span: 1 },
     { id: "origins", span: 2 },
 ];
 
 /** The answers of the form section, for one range. */
-type FormAnswers = { workflows: FormsAnalyticsResult; pages: FormsAnalyticsResult; states: FormsAnalyticsResult };
+type FormAnswers = { workflows: FormsAnalyticsResult; pages: FormsAnalyticsResult; states: FormsAnalyticsResult; hours: FormsAnalyticsResult };
 type FormSeriesAnswers = { submissions: FormsAnalyticsResult; origins: FormsAnalyticsResult };
 
 /**
  * Forms > Analytics, handled by this package: an actions row with the group-by and date range (with compare), then
  * the overview (KPI tiles that pick the metric of the submissions chart, and the forms overview table), then one
- * form's analytics, as on the form's Analytics tab (its submissions, workflows, a funnel of record states, and the
- * source pages chart and table). Forms has these on two screens with a date range each; the example puts them on one
- * page under one date range. Not here yet: "submissions by hour of day" (a bar chart over the 24 hours, which needs a
- * categorical bar chart, T60) and the absolute or percent-share toggle of the origins chart (T59).
+ * form's analytics, as on the form's Analytics tab (its submissions, submissions by hour of day, workflows, a funnel
+ * of record states, and the source pages chart and table). Forms has these on two screens with a date range each; the
+ * example puts them on one page under one date range. Not here yet: the absolute or percent-share toggle of the
+ * origins chart (T59).
  */
 @customElement("example-forms-analytics-page")
 export class ExampleFormsAnalyticsPageElement extends UmbLitElement {
@@ -289,6 +302,9 @@ export class ExampleFormsAnalyticsPageElement extends UmbLitElement {
     #overviewRequest = 0;
     #formSeriesRequest = 0;
     #formRequest = 0;
+
+    /** The hours of the day in the editor's culture, made again only when the language changes. */
+    #hours?: { lang: string; categories: UauiCategory[] };
 
     /** The date range to open with, instead of the example's last 30 days. Compare starts as the previous period. */
     @property({ attribute: false })
@@ -393,7 +409,7 @@ export class ExampleFormsAnalyticsPageElement extends UmbLitElement {
         this._formSeriesLoading = false;
     }
 
-    // The form's workflows, record states and source pages. Group-by doesn't change them.
+    // The form's workflows, record states, source pages and submissions by hour of day. Group-by doesn't change them.
     async #loadForm() {
         const request = ++this.#formRequest;
         this._formLoading = true;
@@ -401,15 +417,16 @@ export class ExampleFormsAnalyticsPageElement extends UmbLitElement {
         const formId = this._formId;
         try {
             const [current, compare] = await this.#both(async (range): Promise<FormAnswers> => {
-                const [workflows, pages, states] = await Promise.all([
+                const [workflows, pages, states, hours] = await Promise.all([
                     postWorkflows(queryFor(range, { formId, dimensions: ["workflowId", "workflowName"], metrics: ["triggered", "success", "failures"] }), this.#api),
                     postOriginsOverview(
                         queryFor(range, { formId, dimensions: ["pageId", "pageName", "pageUrl"], metrics: ["entries", "uniqueMembers"], sort: "entries" }),
                         this.#api,
                     ),
                     postRecordStates(queryFor(range, { formId, dimensions: ["state"], metrics: ["entries"] }), this.#api),
+                    postSubmissionsByHour(queryFor(range, { formId, dimensions: ["hour"], metrics: ["entries"] }), this.#api),
                 ]);
-                return { workflows, pages, states };
+                return { workflows, pages, states, hours };
             });
             if (request !== this.#formRequest) return;
             this._form = current;
@@ -506,6 +523,12 @@ export class ExampleFormsAnalyticsPageElement extends UmbLitElement {
 
     #chartSeries(metric: Metric, s: Summary | undefined) {
         return s && !this.#noEntries(s.submissions) ? metric.series(s) : [];
+    }
+
+    get #hourCategories(): UauiCategory[] {
+        const lang = this.localize.lang();
+        if (this.#hours?.lang !== lang) this.#hours = { lang, categories: formsHours(lang) };
+        return this.#hours.categories;
     }
 
     #compareLabel() {
@@ -609,6 +632,21 @@ export class ExampleFormsAnalyticsPageElement extends UmbLitElement {
                     ?error=${this._formSeriesError}
                     retryable
                     @retry=${() => this.#loadFormSeries()}></uaui-time-series-chart>
+            </uui-box>`,
+            // The range's entries by the hour of day they came in: the 24 hours are the x-axis, labelled in the editor's
+            // culture. Compare puts last period's hours behind them.
+            byHour: html`<uui-box headline="Submissions by hour of day" headline-variant="h3" style="--uui-box-default-padding: 0">
+                <uaui-category-chart
+                    .categories=${this.#hourCategories}
+                    .series=${formsHourSeries(this._form?.hours, "entries", "Entries")}
+                    .compareSeries=${formsHourSeries(this._compareForm?.hours, "entries", "Entries")}
+                    .compareLabel=${this.#compareLabel()}
+                    category-label="Hour of day"
+                    .valueFormat=${COUNT}
+                    ?loading=${this._formLoading}
+                    ?error=${this._formError}
+                    retryable
+                    @retry=${() => this.#loadForm()}></uaui-category-chart>
             </uui-box>`,
             workflows: html`<uui-box headline="Workflows" headline-variant="h3" style="--uui-box-default-padding: 0">
                 <uaui-data-table

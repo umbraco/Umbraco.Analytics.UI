@@ -36,6 +36,8 @@ export default {
         chartLegendLabel: "Legend",
         chartTableCaption: "Chart data",
         chartTableDateHeader: "Date",
+        // The category chart's hidden table: the heading of its column of categories (hours of the day, devices).
+        chartTableCategoryHeader: "Category",
         chartTableCompareHeader: "{0} (compare)",
         chartTotalLabel: "Total",
         chartMarkerAriaLabel: "Marker: {0}",

@@ -67,13 +67,13 @@ const render = (latency?: number, failing = false, startRange?: UauiDateRange) =
  * members, workflows, workflow errors, whether it stores records and is multi-page in status cells, retention days,
  * sources, and the form name linking to the form).
  *
- * A form's analytics, as on the form's Analytics tab: its Submissions chart; the Workflows table (triggered, success,
+ * A form's analytics, as on the form's Analytics tab: its Submissions chart; Submissions by hour of day, a bar per hour
+ * (`uaui-category-chart`, the hours labelled in the editor's culture, last period's behind them); the Workflows table (triggered, success,
  * failures, and the failure rate in a status cell: none is positive, under 5% warning, 5% or more danger); a funnel
  * from record states (opened, partially submitted, submitted), an idea the data supports; and Origins by source page,
  * one line per page over a table of pages linking to the page and its URL.
  *
- * Not here yet: Forms' "submissions by hour of day" bar chart (its x-axis is the 24 hours, not dates, which needs a
- * categorical bar chart, T60), and the origins chart's switch between absolute numbers and each page's share (T59).
+ * Not here yet: the origins chart's switch between absolute numbers and each page's share (T59).
  * Some queries ask for what Forms' API doesn't answer yet, proposals for the Forms team: workflow runs (`triggered`)
  * and unique members on the submissions endpoint, week and month buckets for unique members (which can't be added up
  * from days), and record states for the funnel. The fake API's types mark them as proposed.

@@ -6,6 +6,7 @@
 
 import { CSSResult } from '@umbraco-cms/backoffice/external/lit';
 import { CSSResultGroup } from '@umbraco-cms/backoffice/external/lit';
+import { HTMLElementConstructor } from '@umbraco-cms/backoffice/extension-api';
 import { nothing } from '@umbraco-cms/backoffice/external/lit';
 import type { Observable } from '@umbraco-cms/backoffice/external/rxjs';
 import { PropertyValues } from '@umbraco-cms/backoffice/external/lit';
@@ -33,7 +34,66 @@ export const UAUI_TABLE_CELL: {
 export const UAUI_TABLE_CONTEXT: UmbContextToken<UauiTableContext, UauiTableContext>;
 
 // @public
+export type UauiCategory = {
+    id: string;
+    label: string;
+};
+
+// @public
+export class UauiCategoryChartElement extends UauiCategoryChartElementBase {
+    categories: UauiCategory[];
+    categoryLabel?: string;
+    kind: UauiCategoryChartKind;
+    // (undocumented)
+    render(): TemplateResult;
+    // (undocumented)
+    static styles: CSSResultGroup;
+    // (undocumented)
+    protected willUpdate(changed: PropertyValues<this>): void;
+}
+
+// @public
+export const UauiCategoryChartElementBase: HTMLElementConstructor<UauiChartMixinInterface<UauiCategorySeries>> & typeof UmbLitElement;
+
+// @public
+export type UauiCategoryChartKind = "bar" | "stacked-bar";
+
+// @public
+export type UauiCategoryPoint = {
+    category: string;
+    value: number;
+};
+
+// @public
+export type UauiCategorySeries = {
+    id: string;
+    label: string;
+    color?: UauiColorSlot | UauiStatusColor;
+    points: UauiCategoryPoint[];
+};
+
+// @public
 export type UauiChartKind = "line" | "area" | "bar" | "stacked-bar";
+
+// @public
+export const UauiChartMixin: <TSeries, T extends HTMLElementConstructor<UmbLitElement> = typeof UmbLitElement>(superClass: T) => HTMLElementConstructor<UauiChartMixinInterface<TSeries>> & T;
+
+// @public
+export interface UauiChartMixinInterface<TSeries> {
+    compareLabel?: string;
+    compareSeries: TSeries[];
+    emptyDescription?: string;
+    emptyHeadline?: string;
+    error: boolean;
+    errorDescription?: string;
+    errorHeadline?: string;
+    loading: boolean;
+    lowerIsBetter: boolean;
+    retryable: boolean;
+    series: TSeries[];
+    valueFormat?: Intl.NumberFormatOptions;
+    yScale: UauiChartScale;
+}
 
 // @public
 export type UauiChartScale = "linear" | "log";
@@ -607,40 +667,30 @@ export class UauiTextCellElement extends UmbLitElement implements UauiTableCellE
 }
 
 // @public
-export class UauiTimeSeriesChartElement extends UmbLitElement {
+export class UauiTimeSeriesChartElement extends UauiTimeSeriesChartElementBase {
     compare?: UauiCompare;
-    compareLabel?: string;
-    compareSeries: UauiSeries[];
     // (undocumented)
     connectedCallback(): void;
     // (undocumented)
     disconnectedCallback(): void;
-    emptyDescription?: string;
-    emptyHeadline?: string;
-    error: boolean;
-    errorDescription?: string;
-    errorHeadline?: string;
     groupBy: UauiGroupBy;
     kind: UauiChartKind;
-    loading: boolean;
-    lowerIsBetter: boolean;
     markers: UauiMarker[];
     range?: UauiDateRange;
     // (undocumented)
     render(): TemplateResult;
-    retryable: boolean;
-    series: UauiSeries[];
     // (undocumented)
     static styles: CSSResultGroup;
     today?: string;
     // (undocumented)
     protected updated(changed: PropertyValues<this>): void;
-    valueFormat?: Intl.NumberFormatOptions;
     weekStart: UauiWeekStart;
     // (undocumented)
     protected willUpdate(changed: PropertyValues<this>): void;
-    yScale: UauiChartScale;
 }
+
+// @public
+export const UauiTimeSeriesChartElementBase: HTMLElementConstructor<UauiChartMixinInterface<UauiSeries>> & typeof UmbLitElement;
 
 // @public
 export type UauiToggleGroupChangeDetail = {

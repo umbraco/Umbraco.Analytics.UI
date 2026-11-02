@@ -297,6 +297,46 @@ export async function postSubmissions(query: FormsAnalyticsQuery, options: FakeA
     return result(columns, rows, { ...query, page: 1, pageSize: 9999 }, distinctMembers(allDays));
 }
 
+/** How a form's entries spread over the hours of one day: quiet at night, busiest around lunch and mid-afternoon. */
+function hourWeights(form: Form, date: string): number[] {
+    return Array.from({ length: 24 }, (_, h) => {
+        const busy = 0.15 + Math.exp(-((h - 11) ** 2) / 10) + 0.8 * Math.exp(-((h - 15) ** 2) / 6);
+        return busy * (0.7 + noise(`${date}:${form.id}:${h}`) * 0.6);
+    });
+}
+
+/** A form's entries on one day, per hour (0 to 23), adding up to that day's entries. */
+function entriesByHourOn(form: Form, date: string): number[] {
+    const entries = entriesOn(form, date);
+    const weights = hourWeights(form, date);
+    const sum = weights.reduce((a, b) => a + b, 0);
+    // Rounded on the running total, so the hours add up to the day exactly.
+    let before = 0;
+    let running = 0;
+    return weights.map((w) => {
+        running += w;
+        const upTo = Math.round((running / sum) * entries);
+        const count = upTo - before;
+        before = upTo;
+        return count;
+    });
+}
+
+/**
+ * POST /analytics/submissions with the `hour` dimension: one row per hour of the day (0 to 23, in the query's time
+ * zone), `[hour, entries]`, the range's entries added up by the hour they came in. Like a SQL `GROUP BY`, an hour with
+ * no entries has no row.
+ */
+export async function postSubmissionsByHour(query: FormsAnalyticsQuery, options: FakeApiOptions = {}): Promise<FormsAnalyticsResult> {
+    await respond(options, "submissions by hour");
+    const forms = formsFor(query);
+    const days = uauiDateBuckets(rangeOf(query), "day").map((b) => b.start);
+    const totals = Array.from({ length: 24 }, () => 0);
+    for (const form of forms) for (const d of days) entriesByHourOn(form, d).forEach((count, h) => (totals[h] += count));
+    const rows = totals.flatMap((entries, hour) => (entries ? [[hour, entries]] : []));
+    return result(["hour", "entries"], rows, { ...query, page: 1, pageSize: 9999 }, 0);
+}
+
 /** POST /analytics/overview: one row per form, the columns asked for (dimensions, then metrics). */
 export async function postOverview(query: FormsAnalyticsQuery, options: FakeApiOptions = {}): Promise<FormsAnalyticsResult> {
     await respond(options, "forms overview");

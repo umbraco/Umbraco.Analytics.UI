@@ -17,6 +17,10 @@ export class UauiChartDataTableElement extends UmbLitElement {
     @property({ attribute: false })
     labels: string[] = [];
 
+    /** The heading of the column of x values: "Date" on the time-series chart, "Category" on the category chart. */
+    @property({ type: String, attribute: "labels-header" })
+    labelsHeader = "";
+
     /** The series to list, with their values on the rows' x values. */
     @property({ attribute: false })
     series: UauiChartData["series"] = [];
@@ -57,7 +61,7 @@ export class UauiChartDataTableElement extends UmbLitElement {
             </caption>
             <thead>
                 <tr>
-                    <th scope="col">${this.localize.term("uauiAnalytics_chartTableDateHeader")}</th>
+                    <th scope="col">${this.labelsHeader}</th>
                     ${series.map(
                         (s) => html`<th scope="col">${s.label}</th>
                             ${s.compare
