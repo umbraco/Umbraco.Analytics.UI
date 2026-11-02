@@ -20,6 +20,9 @@ export interface UauiChartColors {
     fontFamily: string;
 }
 
+/** UUI's own font stack (`--uui-font-family`), for when no family can be read from the page. */
+export const UAUI_FALLBACK_FONT_FAMILY = '"Lato", "Helvetica Neue", Helvetica, Arial, sans-serif';
+
 /**
  * Chart.js draws to a canvas, which can't read CSS custom properties. The series tokens are also
  * `light-dark(...)` strings, not colours. So each colour is applied to a probe element in the
@@ -55,7 +58,8 @@ export function resolveChartColors(probe: HTMLElement, slots: number[]): UauiCha
         markerHover: colorOf("var(--uaui-color-marker-hover)"),
         markerLine: colorOf("color-mix(in srgb, var(--uaui-color-marker) 26%, transparent)"),
         markerLineActive: colorOf("color-mix(in srgb, var(--uaui-color-marker-hover) 60%, transparent)"),
-        fontFamily: getComputedStyle(probe).fontFamily,
+        // Never empty: an empty family would let Chart.js fall back to the shared `Chart.defaults.font.family`.
+        fontFamily: getComputedStyle(probe).fontFamily || UAUI_FALLBACK_FONT_FAMILY,
     };
 }
 

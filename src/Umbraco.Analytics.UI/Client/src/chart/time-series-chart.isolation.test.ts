@@ -58,7 +58,8 @@ afterEach(() => {
 /** The Chart.js defaults a product is most likely to change for its own charts. */
 const changeCommonDefaults = () => {
     const d = Chart.defaults;
-    change(d, "font", { family: "serif", size: 20, style: "italic", weight: "bold", lineHeight: 2 });
+    // A family no browser uses by default: Firefox's default, "serif", would match ours on a page without a UUI font.
+    change(d, "font", { family: "ProductFont, fantasy", size: 20, style: "italic", weight: "bold", lineHeight: 2 });
     change(d, "color", "rgb(255, 0, 0)");
     change(d, "borderColor", "rgb(0, 255, 0)");
     change(d, "indexAxis", "y");
@@ -113,7 +114,11 @@ describe("Feature: the chart keeps its look when a product changes the shared Ch
             const el = await chart("line");
             const y = (chartOf(el).scales["y"].options as unknown as { ticks: { font: object; color: unknown } }).ticks;
             expect(y.font).toMatchObject({ size: 11, style: "normal", weight: "normal", lineHeight: 1.2 });
-            expect(y.font).not.toMatchObject({ family: "serif" });
+            // Our family is the one the element's text uses, never the product's.
+            const ownFamily = getComputedStyle(shadow(el).querySelector(".probe")!).fontFamily;
+            expect(ownFamily).not.toBe("");
+            expect(y.font).toMatchObject({ family: ownFamily });
+            expect(y.font).not.toMatchObject({ family: "ProductFont, fantasy" });
             expect(y.color).not.toBe("rgb(255, 0, 0)");
             expect(chartOf(el).options.animation).toBe(false);
             expect(chartOf(el).options.indexAxis).toBe("x");
