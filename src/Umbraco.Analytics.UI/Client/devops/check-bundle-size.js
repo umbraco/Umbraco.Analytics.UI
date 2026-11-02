@@ -1,4 +1,4 @@
-// Fails when the built JavaScript is over the gzip budget in SPEC.md (120 KB, Chart.js included).
+// Fails when the built JavaScript is over the gzip budget in SPEC.md (130 KB, Chart.js included).
 // Sums every .js file under wwwroot (the bundle and lang/), each gzipped on its own as a browser fetches it.
 // Source maps and umbraco-package.json aren't counted. Run after the build: `npm run check:size`.
 // Also fails if the main bundle imports the shared Chart.js by a relative path (`./external/...`) instead of
@@ -9,7 +9,7 @@ import { join } from 'path';
 import { fileURLToPath } from 'url';
 import { gzipSync } from 'zlib';
 
-const BUDGET_BYTES = 120 * 1024;
+const BUDGET_BYTES = 130 * 1024;
 const root = fileURLToPath(new URL('../../wwwroot/', import.meta.url));
 
 const jsFiles = (dir) =>

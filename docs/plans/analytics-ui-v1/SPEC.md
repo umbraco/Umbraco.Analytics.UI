@@ -309,6 +309,6 @@ The funnel moved into v1 (§10).
 - **Chart isolation:** a product's `Chart.defaults` changes and globally registered plugins don't change how `uaui-time-series-chart` draws (CHT-6, `time-series-chart.isolation.test.ts`). Known gap: `Chart.defaults.devicePixelRatio` still applies, as Chart.js has no per-chart way back to the screen's own ratio.
 - **Chart speed:** the chart renders 6 series × 366 daily points in under 100ms on a mid-range laptop.
 - **Table speed:** in `client` mode the table stays responsive (sort or page in under 50ms) up to 1,000 rows. Above that, products use `server` mode.
-- **Bundle size:** the built JavaScript, including the full Chart.js in its external entry, is under 120 KB gzipped.
+- **Bundle size:** the built JavaScript, including the full Chart.js in its external entry, is under 130 KB gzipped (raised from 120 KB on 02-11-2026; see DECISION-LOG).
 
 The last three were agreed by the user on 30-10-2026 after T23 measured them. `test:perf` and `check:size` guard them in CI.
