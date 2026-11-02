@@ -11,6 +11,7 @@ import { render } from "vitest-browser-lit";
 import { axeRun } from "../internal/test/a11y.js";
 import { screenshotIt } from "../internal/test/screenshot.js";
 import { deepQuery, deepQueryAll, deepText, renderElement, settle, shadow, type UauiTestElement } from "../internal/test/dom.js";
+import { logScale } from "./internal/log-scale.js";
 import type { UauiSeries } from "./types.js";
 import "./time-series-chart.element.js";
 
@@ -34,11 +35,11 @@ const previousApproved = seriesOf("approved", "Approved", [4, 4, 4, 4], {}, prev
 const previousErrored = seriesOf("errored", "Errored", [1, 1, 1, 1], {}, previousDates);
 const previousPending = seriesOf("pending", "Pending", [8, 9, 9, 12], {}, previousDates);
 
-type ChartOptions = { kind?: string; series?: UauiSeries[]; compare?: UauiSeries[]; today?: string; yScale?: string; groupBy?: string };
-const chart = ({ kind = "bar", series = activity, compare, today, yScale, groupBy = "day" }: ChartOptions = {}) =>
+type ChartOptions = { kind?: string; series?: UauiSeries[]; compare?: UauiSeries[]; today?: string; yScale?: string; groupBy?: string; height?: string };
+const chart = ({ kind = "bar", series = activity, compare, today, yScale, groupBy = "day", height }: ChartOptions = {}) =>
     renderElement(
         html`<uaui-time-series-chart kind=${kind} y-scale=${yScale ?? "linear"} group-by=${groupBy} .today=${today} .series=${series}
-            .compareSeries=${compare ?? []} style="width:400px"></uaui-time-series-chart>`,
+            .compareSeries=${compare ?? []} style="width:400px${height ? `; --uaui-chart-height: ${height}` : ""}"></uaui-time-series-chart>`,
         "uaui-time-series-chart",
     );
 
@@ -161,6 +162,30 @@ describe("Feature: bars and a line in one chart", () => {
         });
     });
 
+    describe("Scenario: a stacked bar chart whose series are all lines", () => {
+        it("draws each line at its own value, inside the axis", async () => {
+            const a = seriesOf("a", "A", [10, 10, 10, 10], { kind: "line" });
+            const b = seriesOf("b", "B", [10, 10, 10, 10], { kind: "line" });
+            const el = await chart({ kind: "stacked-bar", series: [a, b] });
+            const y = chartOf(el).scales["y"];
+            expect(y.max).toBe(10);
+            [0, 1].forEach((set) => dates.forEach((_, i) => expect(pointY(el, set, i)).toBeCloseTo(y.getPixelForValue(10), 0)));
+        });
+    });
+
+    describe("Scenario: a stacked bar chart with two line series", () => {
+        it("stacks the bars but neither line, with the bars or each other", async () => {
+            const a = seriesOf("a", "A", [3, 3, 3, 3], { kind: "line" });
+            const b = seriesOf("b", "B", [4, 4, 4, 4], { kind: "line" });
+            const el = await chart({ kind: "stacked-bar", series: [approved, cancelled, a, b] });
+            const y = chartOf(el).scales["y"];
+            dates.forEach((_, i) => {
+                expect(pointY(el, 2, i)).toBeCloseTo(y.getPixelForValue(3), 0);
+                expect(pointY(el, 3, i)).toBeCloseTo(y.getPixelForValue(4), 0);
+            });
+        });
+    });
+
     describe("Scenario: a mixed chart with compare series", () => {
         let el: UauiTestElement;
         beforeEach(async () => {
@@ -258,16 +283,30 @@ describe("Feature: today's line", () => {
     describe("Scenario: today isn't among the chart's dates", () => {
         it("draws no today line and names no date as today", async () => {
             const el = await chart({ kind: "bar", series: [reviews], today: "2026-12-24" });
-            expect(rowHeaders(el).some((r) => r.includes("(today)"))).toBe(false);
+            expect(rowHeaders(el).some((r) => r.includes("today"))).toBe(false);
+        });
+
+        it("keeps the label's room, so the plot doesn't move between date ranges", async () => {
+            const inRange = await chart({ kind: "bar", series: [reviews], today: "2026-11-02" });
+            const outOfRange = await chart({ kind: "bar", series: [reviews], today: "2026-12-24" });
+            expect(chartOf(outOfRange).chartArea.top).toBe(chartOf(inRange).chartArea.top);
+        });
+    });
+
+    describe("Scenario: no today", () => {
+        it("leaves the plot where it was, with no room for a label", async () => {
+            const el = await chart({ kind: "bar", series: [reviews] });
             expect(chartOf(el).chartArea.top).toBeLessThan(20);
         });
     });
 
     describe("Scenario: grouped by week", () => {
-        it("marks the week that contains today", async () => {
+        it("names the week that contains today as including it", async () => {
             const weekly = seriesOf("w", "Reviews due", [3, 5, 2], {}, ["2026-10-26", "2026-11-02", "2026-11-09"]);
             const el = await chart({ kind: "bar", series: [weekly], today: "2026-11-04", groupBy: "week" });
-            expect(rowHeaders(el).findIndex((r) => r.includes("(today)"))).toBe(1);
+            const rows = rowHeaders(el);
+            expect(rows.findIndex((r) => r.endsWith("(includes today)"))).toBe(1);
+            expect(rows.some((r) => r.endsWith("(today)"))).toBe(false);
         });
     });
 
@@ -320,6 +359,51 @@ describe("Feature: a log y-axis", () => {
 
         screenshotIt("draws on a log axis", async () => {
             await expect.element(page.elementLocator(el)).toMatchScreenshot("chart-log");
+        });
+    });
+
+    describe("Scenario: the hidden table of a log chart", () => {
+        it("says in its caption that the scale is logarithmic", async () => {
+            const el = await chart({ kind: "line", series: [wide], yScale: "log" });
+            expect(hiddenTable(el).caption!.textContent!.trim()).toBe("Chart data (logarithmic scale)");
+            const linear = await chart({ kind: "line", series: [wide] });
+            expect(hiddenTable(linear).caption!.textContent!.trim()).toBe("Chart data");
+        });
+    });
+
+    describe("Scenario: nine decades, 1 to 1e9", () => {
+        const huge = seriesOf("b", "Bytes", [1, 1e3, 1e6, 1e9]);
+        const tickPixels = (el: Element) => {
+            const y = chartOf(el).scales["y"];
+            return y.ticks.map((t) => y.getPixelForValue(t.value));
+        };
+        const powersShown = (el: Element) => {
+            const log = logScale(1e9, 1);
+            const values = chartOf(el).scales["y"].ticks.map((t) => t.value);
+            return log.ticks.flatMap((v, i) => (values.some((h) => Math.abs(h - log.toAxis(v)!) < 1e-9) ? [i] : []));
+        };
+
+        it.each([
+            ["the default height", undefined],
+            ["a short axis", "120px"],
+            ["a very short axis", "70px"],
+        ])("keeps labels apart at %s, with 0, the top and a regular step of powers", async (_name, height) => {
+            const el = await chart({ kind: "line", series: [huge], yScale: "log", height });
+            const pixels = tickPixels(el);
+            pixels.slice(1).forEach((p, i) => expect(pixels[i] - p).toBeGreaterThanOrEqual(18 - 0.5));
+            const shown = powersShown(el);
+            expect(shown[0]).toBe(0);
+            expect(shown[shown.length - 1]).toBe(10);
+            const powers = shown.slice(1);
+            const steps = new Set(powers.slice(1).map((p, i) => p - powers[i]));
+            expect(steps.size).toBeLessThanOrEqual(1);
+            expect(chartOf(el).scales["y"].ticks.every((t) => String(t.label) !== "")).toBe(true);
+        });
+
+        it("shows more powers on a taller axis than on a short one", async () => {
+            const tall = await chart({ kind: "line", series: [huge], yScale: "log" });
+            const short = await chart({ kind: "line", series: [huge], yScale: "log", height: "120px" });
+            expect(powersShown(tall).length).toBeGreaterThan(powersShown(short).length);
         });
     });
 

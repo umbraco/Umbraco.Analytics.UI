@@ -2,10 +2,12 @@
  * A log y-axis that still has 0 at its foot, for `y-scale="log"`.
  *
  * A pure log axis can't show 0, and the counts it is for (errors per day) are often 0. So values are drawn at
- * `log10(1 + value / unit)`: 0 sits on the axis line, `unit` (the power of ten at or below the smallest value above
- * 0) a third of a decade up, and from there each power of ten has the same height, as on a log axis. The ticks are
- * placed at their true heights on that curve, so the axis reads honestly, and a bar of the smallest value still has
- * height. Values below 0 are drawn at 0, as the linear axis starts at 0 too.
+ * `log10(1 + value / unit)`: 0 sits on the axis line and `unit` (the power of ten at or below the smallest value above
+ * 0) a third of a decade up. Higher up the powers of ten get closer and closer to equal heights, as on a log axis, but
+ * near the bottom the axis bends toward 0: the decade from `unit` to 10 x `unit` is about three quarters of a full one.
+ * Its shape depends on `unit`, so it can change when the data's smallest value moves to another power of ten. The
+ * ticks are placed at their true heights on that curve, so the axis reads honestly, and a bar of the smallest value
+ * still has height. Values below 0 are drawn at 0, as the linear axis starts at 0 too.
  */
 export interface UauiLogScale {
     /** The power of ten the bottom stretch runs up to: the first tick above 0. */

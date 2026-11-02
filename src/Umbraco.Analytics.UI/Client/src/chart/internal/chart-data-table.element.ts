@@ -6,7 +6,7 @@ import type { UauiChartData } from "./chart-data.js";
 
 /**
  * The visually hidden table of `uaui-time-series-chart`'s data, for screen readers: a row per date, a column per
- * series (and its compare points for the line kinds), and for the bar kinds the total and the compare total.
+ * series (and its compare points for a compared line), and for bars the total and the compare total.
  * Internal: not exported.
  *
  * @element uaui-chart-data-table
@@ -21,9 +21,9 @@ export class UauiChartDataTableElement extends UmbLitElement {
     @property({ attribute: false })
     series: UauiChartData["series"] = [];
 
-    /** The bar kinds: compare points are listed as one total, not per series. */
-    @property({ type: Boolean })
-    bars = false;
+    /** The chart's y-axis is logarithmic: the caption says so, as the table is all a screen reader gets of the chart. */
+    @property({ type: Boolean, attribute: "log-scale" })
+    logScale = false;
 
     /** The sum of the series per row. Set to add a total column. */
     @property({ attribute: false })
@@ -50,17 +50,17 @@ export class UauiChartDataTableElement extends UmbLitElement {
     }
 
     override render(): TemplateResult {
-        const { series, bars, totals, compareTotal } = this;
+        const { series, totals, compareTotal } = this;
         return html`<table class="visually-hidden">
             <caption>
-                ${this.localize.term("uauiAnalytics_chartTableCaption")}
+                ${this.logScale ? this.localize.term("uauiAnalytics_chartTableCaptionLog") : this.localize.term("uauiAnalytics_chartTableCaption")}
             </caption>
             <thead>
                 <tr>
                     <th scope="col">${this.localize.term("uauiAnalytics_chartTableDateHeader")}</th>
                     ${series.map(
                         (s) => html`<th scope="col">${s.label}</th>
-                            ${s.compare && !bars
+                            ${s.compare
                                 ? html`<th scope="col">${this.localize.term("uauiAnalytics_chartTableCompareHeader", s.label)}</th>`
                                 : nothing}`,
                     )}
@@ -74,7 +74,7 @@ export class UauiChartDataTableElement extends UmbLitElement {
                 ${this.dates.map(
                     (date, row) => html`<tr>
                         <th scope="row">${date}</th>
-                        ${series.map((s) => html`${this.#cell(s.values[row])}${s.compare && !bars ? this.#cell(s.compare[row]) : nothing}`)}
+                        ${series.map((s) => html`${this.#cell(s.values[row])}${s.compare ? this.#cell(s.compare[row]) : nothing}`)}
                         ${totals ? this.#cell(totals[row]) : nothing} ${compareTotal ? this.#cell(compareTotal[row]) : nothing}
                     </tr>`,
                 )}

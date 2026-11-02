@@ -31,6 +31,8 @@ export interface UauiChartModel {
     yTicks?: { value: number; label: string }[];
     /** A line at this date, labelled above the plot. */
     today?: UauiTodayPin;
+    /** Keep room above the plot for the today label (whenever the chart has a `today`, even out of range). */
+    todayRoom?: boolean;
     colors: UauiChartDrawColors;
     /** Line kinds: a series below its compare line is doing better, so the gap shading flips. */
     lowerIsBetter?: boolean;
@@ -84,6 +86,30 @@ const lineClip = (borderWidth: number, pointRadius: number, pointHoverRadius: nu
     const side = Math.max(borderWidth, dot) / 2;
     return { top: 0, bottom: 0, left: side, right: side };
 };
+
+/** The least room a y tick label gets, in pixels: the 11px tick font and a little air. */
+const MIN_TICK_SPACING = 18;
+
+/**
+ * Our own y ticks (the log axis: ascending, the first at 0 and the last at the top, `max`), thinned so no two labels
+ * on an axis `height` pixels tall are nearer than `MIN_TICK_SPACING`. It keeps the top and every `step`th tick below
+ * it, with the smallest `step` that fits, so a crowded axis shows every other (or every third...) power of ten rather
+ * than whichever Chart.js's auto-skip happens to drop. 0 always stays; a kept tick too near it is dropped.
+ */
+export function thinTicks<T extends { value: number }>(ticks: T[], height: number): T[] {
+    const max = ticks[ticks.length - 1]?.value ?? 0;
+    if (ticks.length < 3 || !(height > 0) || !(max > 0)) return ticks;
+    const pixel = (tick: T) => (tick.value / max) * height;
+    const last = ticks.length - 1;
+    for (let step = 1; step <= last; step++) {
+        const kept = ticks.filter((_, i) => i > 0 && (last - i) % step === 0);
+        const fits = kept.every((tick, i) => i === 0 || pixel(tick) - pixel(kept[i - 1]) >= MIN_TICK_SPACING);
+        if (!fits) continue;
+        while (kept.length > 1 && pixel(kept[0]) - pixel(ticks[0]) < MIN_TICK_SPACING) kept.shift();
+        return [ticks[0], ...kept];
+    }
+    return [ticks[0], ticks[last]];
+}
 
 /** Room around the plot, in pixels. A today line adds `TODAY_LABEL_ROOM` at the top for its label. */
 const PADDING = { top: 8, right: 12, bottom: 0, left: 0 };
@@ -255,15 +281,19 @@ export class UauiChartRenderer {
         chart.data.labels = model.labels;
         chart.data.datasets = this.#datasets(model, family === "bar" && model.datasets.some((set) => set.kind === "line"));
 
-        const stacked = model.kind === "stacked-bar";
-        // Room above the plot for the today label; the padding otherwise stays as it was.
-        chart.options.layout = { padding: { ...PADDING, top: PADDING.top + (model.today ? TODAY_LABEL_ROOM : 0) } };
+        // Only bars stack: a `stacked-bar` chart whose series are all lines draws them unstacked. Lines also carry a
+        // stack key of their own, so they never stack with bars or with each other.
+        const stacked = model.kind === "stacked-bar" && family === "bar";
+        // Room above the plot for the today label, whether or not today is among the dates, so the plot doesn't jump
+        // as the editor moves through date ranges; the padding otherwise stays as it was.
+        chart.options.layout = { padding: { ...PADDING, top: PADDING.top + (model.todayRoom ? TODAY_LABEL_ROOM : 0) } };
         const scales = chart.options.scales!;
         // The package's axis look (`uauiChartOptions`, as a product's chart gets it): our font, colours and Chart.js's
         // own values for what we don't style, all set per chart so a product's `Chart.defaults.scale` can't move them.
         const look = uauiChartOptions(this.#host, family, model.colors).scales as { x: CartesianScaleOptions; y: CartesianScaleOptions };
         scales["x"] = { ...look.x, stacked };
         const yTicks = model.yTicks;
+        const labelOf = new Map(yTicks?.map((tick) => [tick.value, tick.label]));
         scales["y"] = {
             ...look.y,
             stacked,
@@ -272,12 +302,15 @@ export class UauiChartRenderer {
             ticks: {
                 ...look.y.ticks,
                 stepSize: model.yStep,
-                callback: yTicks ? (_value: unknown, index: number) => yTicks[index]?.label ?? "" : (value: unknown) => model.formatTick(Number(value)),
+                // Our ticks are thinned below, by a rule we choose, so Chart.js mustn't drop any of them itself.
+                ...(yTicks ? { autoSkip: false } : {}),
+                callback: yTicks ? (value: unknown) => labelOf.get(Number(value)) ?? "" : (value: unknown) => model.formatTick(Number(value)),
             },
-            // Set per chart, so only this chart's ticks change. Chart.js calls it before it makes the tick labels.
+            // Set per chart, so only this chart's ticks change. Chart.js calls it before it makes the tick labels, once
+            // it knows the axis height (`maxHeight`).
             afterBuildTicks: yTicks
-                ? (axis: { ticks: { value: number }[] }) => {
-                      axis.ticks = yTicks.map((tick) => ({ value: tick.value }));
+                ? (axis: { ticks: { value: number }[]; maxHeight: number }) => {
+                      axis.ticks = thinTicks(yTicks, axis.maxHeight).map((tick) => ({ value: tick.value }));
                   }
                 : undefined,
         } as typeof look.y;
@@ -311,7 +344,8 @@ export class UauiChartRenderer {
         return {
             type: "line" as const,
             // In a chart with bars: drawn over them, and never stacked with them or another line.
-            ...(mixed ? { order: -1, stack: `line-${i}` } : {}),
+            stack: `line-${i}`,
+            ...(mixed ? { order: -1 } : {}),
             label: set.label,
             data: set.values,
             borderColor: color.line,
@@ -346,7 +380,8 @@ export class UauiChartRenderer {
         const { colors } = model;
         return {
             type: "line" as const,
-            ...(mixed ? { order: -1, stack: `compare-line-${i}` } : {}),
+            stack: `compare-line-${i}`,
+            ...(mixed ? { order: -1 } : {}),
             label: model.datasets[i].label,
             data: model.datasets[i].compare!,
             borderColor: colors.compare,

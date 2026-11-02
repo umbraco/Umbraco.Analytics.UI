@@ -199,12 +199,23 @@ export const DaysAfterToday: Story = {
 };
 
 /**
- * `y-scale="log"` for values that span widely: hundreds of pageviews beside a few errors. Each power of ten has the
- * same height; 0 sits on the axis line, so days with no errors still draw.
+ * `y-scale="log"` for values that span widely: hundreds of pageviews beside a few errors. The axis is spaced by
+ * powers of ten and bends toward 0 at the bottom, so 0 sits on the axis line and days with no errors still draw.
  */
 export const LogScale: Story = {
     name: "Log scale",
     args: { kind: "line", series: wideRange, yScale: "log" },
+};
+
+/** Nine decades on a short axis: the ticks thin to every other (or third) power of ten, so labels never overlap. */
+export const LogScaleManyDecades: Story = {
+    name: "Log scale, many decades",
+    args: {
+        kind: "line",
+        yScale: "log",
+        series: [{ id: "bytes", label: "Bytes", points: ["2026-06-01", "2026-06-02", "2026-06-03", "2026-06-04"].map((date, i) => ({ date, value: [1, 1e3, 1e6, 1e9][i] })) }],
+    },
+    render: (args, context) => html`<div style="--uaui-chart-height: 140px">${meta.render!(args, context)}</div>`,
 };
 
 /** The Workflow activity chart on a log axis: the few errors stay readable beside the pending total. */

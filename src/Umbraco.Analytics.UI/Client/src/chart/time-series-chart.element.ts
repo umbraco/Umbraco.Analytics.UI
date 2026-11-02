@@ -143,7 +143,7 @@ function tickFormat(valueFormat: Intl.NumberFormatOptions | undefined, max: numb
  * and never stack; a compare series matched to a line by `id` is its dashed line, and the rest add up into the compare
  * bar. The total counts the bars only.
  * `today` draws a thin labelled line at today's date, for dates that run past it. `y-scale="log"` spaces the y-axis by
- * powers of ten, keeping 0 on the axis line.
+ * powers of ten, bending toward 0 at the bottom so 0 stays on the axis line.
  * `markers` draw a dashed line and a dot on the x-axis at their date (in the bucket that contains it when grouped by
  * week or month; none when it is outside the chart). Each dot is a button: hover or focus shows the markers' dates,
  * titles and descriptions, and click or Enter raises `marker-click`. Markers in one bucket share a dot.
@@ -183,11 +183,14 @@ export class UauiTimeSeriesChartElement extends UmbLitElement {
     kind: UauiChartKind = "line";
 
     /**
-     * How the y-axis spaces its values. `"log"` gives each power of ten the same height, for values that span widely.
-     * It still starts at 0: 0 sits on the axis line, and the stretch up to the first tick (the power of ten at or below
-     * the smallest value above 0) is drawn on the same curve, so a 0 needs no gap and the smallest bar still shows.
-     * Ticks are at 0 and each power of ten (with the 2s and 5s when there are only one or two). `stacked-bar` keeps a
-     * linear axis, as stacked segments on a log axis don't add up by height. Any other value is linear.
+     * How the y-axis spaces its values. `"log"` spaces it by powers of ten, for values that span widely. It still starts
+     * at 0: 0 sits on the axis line and the axis bends toward it near the bottom, so a 0 needs no gap and the smallest
+     * bar still shows. Higher up, each power of ten gets close to the same height; the lowest decade is about three
+     * quarters of one. The shape depends on the smallest value above 0 (the first tick is the power of ten at or below
+     * it), so it can change when the date range does. Ticks are at 0 and each power of ten (with the 2s and 5s when there
+     * are only one or two), every other or third one when the axis is too short for all. The hidden table's caption
+     * says the scale is logarithmic. `stacked-bar` keeps a linear axis, as stacked segments on a log axis don't add up
+     * by height. Any other value is linear.
      */
     @property({ type: String, attribute: "y-scale", reflect: true })
     yScale: UauiChartScale = "linear";
@@ -355,7 +358,7 @@ export class UauiTimeSeriesChartElement extends UmbLitElement {
             this.#derived = this.#derive(next);
             this.#dirty = true;
         }
-        if (changed.has("kind") || changed.has("lowerIsBetter") || changed.has("yScale")) this.#dirty = true;
+        if (changed.has("kind") || changed.has("lowerIsBetter") || changed.has("yScale") || changed.has("today")) this.#dirty = true;
 
         const todayIndex = this.today ? bucketMarkers([{ id: "today", date: this.today, title: "" }], this.#derived.data.dates, this.groupBy)[0]?.index : undefined;
         if (todayIndex !== this.#todayIndex || this.#tableDatesFrom !== this.#derived) {
@@ -459,7 +462,10 @@ export class UauiTimeSeriesChartElement extends UmbLitElement {
 
     /** A date as the tooltip and the hidden table name it when it is today's. */
     #todayDate(label: string) {
-        return this.localize.term("uauiAnalytics_chartTodayDate", label);
+        // A week or month isn't today: it contains it.
+        return this.groupBy === "week" || this.groupBy === "month"
+            ? this.localize.term("uauiAnalytics_chartTodayInBucket", label)
+            : this.localize.term("uauiAnalytics_chartTodayDate", label);
     }
 
     get #totalText() {
@@ -512,6 +518,7 @@ export class UauiTimeSeriesChartElement extends UmbLitElement {
             labels: axisLabels,
             markers: this.#markerBuckets.map((b) => ({ index: b.index, count: b.markers.length })),
             today: this.#todayIndex === undefined ? undefined : { index: this.#todayIndex, label: this.localize.term("uauiAnalytics_chartToday") },
+            todayRoom: !!this.today,
             colors: this.#colors,
             lowerIsBetter: this.lowerIsBetter,
         };
@@ -677,6 +684,7 @@ export class UauiTimeSeriesChartElement extends UmbLitElement {
             .totals=${this.#showsTotal ? totals : undefined}
             .totalLabel=${this.#totalText}
             .compareTotal=${this.#comparesBars ? data.compareTotal?.values : undefined}
+            .logScale=${this.#isLog}
             .numberFormat=${numberFormat}></uaui-chart-data-table>`;
     }
 
