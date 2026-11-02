@@ -105,7 +105,7 @@ describe("buildChartData", () => {
     const b = { id: "b", label: "B", points: [{ date: "2026-06-03", value: 30 }] };
 
     it("shares one ascending list of dates", () => {
-        expect(buildChartData([a, b]).dates).toEqual(["2026-06-01", "2026-06-02", "2026-06-03"]);
+        expect(buildChartData([a, b]).labels).toEqual(["2026-06-01", "2026-06-02", "2026-06-03"]);
     });
 
     it("leaves a null where a series has no point", () => {
@@ -158,7 +158,7 @@ describe("buildChartData compare alignment", () => {
 
     it("gives each compare point the date it really has", () => {
         const data = buildChartData([main(["2026-06-01", 1], ["2026-06-08", 2])], compare(["2026-05-04", 10], ["2026-05-11", 20]), "week");
-        expect(data.series[0].compareDates).toEqual(["2026-05-04", "2026-05-11"]);
+        expect(data.series[0].compareLabels).toEqual(["2026-05-04", "2026-05-11"]);
     });
 
     it("adds up points on the same date in a series", () => {

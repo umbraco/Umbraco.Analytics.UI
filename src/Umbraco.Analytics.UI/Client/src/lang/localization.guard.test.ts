@@ -256,10 +256,10 @@ describe("Feature: built-in text is translated, with nothing hard-coded", () => 
 
     describe("Scenario: chart tooltips", () => {
         it("has no hard-coded words in the hover tooltip with totals and comparisons", async () => {
-            const compareRow = { value: 100, date: "DATA", current: 120 };
+            const compareRow = { value: 100, label: "DATA", current: 120 };
             const el = await renderElement(
                 html`<uaui-chart-tooltip
-                    date="DATA"
+                    heading="DATA"
                     bars
                     .rows=${[{ color: 1, value: 120, label: "DATA", compare: compareRow }]}
                     .total=${{ value: 120, label: markerFor("uauiAnalytics_chartTotalLabel") }}

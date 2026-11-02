@@ -18,7 +18,7 @@ const meta: Meta<UauiChartDataTableElement> = {
         },
     },
     args: {
-        dates: ["Jun 9, 2026", "Jun 10, 2026", "Jun 11, 2026"],
+        labels: ["Jun 9, 2026", "Jun 10, 2026", "Jun 11, 2026"],
         series: [
             { id: "pageviews", label: "Pageviews", values: [120, 150, null], compare: [100, 90, 80] },
             { id: "sessions", label: "Sessions", values: [60, 70, 80] },
@@ -31,7 +31,7 @@ const meta: Meta<UauiChartDataTableElement> = {
     // The table is clipped to 1px; the story puts it back in the flow.
     render: (args) => html`<uaui-chart-data-table
         style="position: static; width: auto; height: auto; margin: 0; overflow: visible; clip-path: none"
-        .dates=${args.dates}
+        .labels=${args.labels}
         .series=${args.series}
         .logScale=${args.logScale}
         .totals=${args.totals}

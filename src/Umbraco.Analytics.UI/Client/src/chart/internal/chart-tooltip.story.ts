@@ -11,10 +11,10 @@ const meta: Meta<UauiChartTooltipElement> = {
     component: "uaui-chart-tooltip",
     tags: ["internal"],
     parameters: {
-        docs: { description: { component: notPublicApi("`uaui-chart-tooltip` is the tooltip over a hovered date of `uaui-time-series-chart`. The chart positions it; here it sits in the flow.") } },
+        docs: { description: { component: notPublicApi("`uaui-chart-tooltip` is the tooltip over the hovered x value of a chart (a date on `uaui-time-series-chart`). The chart positions it; here it sits in the flow.") } },
     },
     args: {
-        date: "Jun 11, 2026",
+        heading: "Jun 11, 2026",
         bars: false,
         rows: [{ color: 1, value: 1280 }],
         total: undefined,
@@ -24,7 +24,7 @@ const meta: Meta<UauiChartTooltipElement> = {
     render: (args) => html`<div style="width: 240px">
         <uaui-chart-tooltip
             style="position: static"
-            .date=${args.date}
+            .heading=${args.heading}
             .rows=${args.rows}
             .bars=${args.bars}
             .total=${args.total}
@@ -50,10 +50,10 @@ export const SeveralSeries: Story = {
     },
 };
 
-/** Lines with a compare point: the compare value, its date and the change, in a badge. */
+/** Lines with a compare point: the compare value, its x value (a date here) and the change, in a badge. */
 export const WithCompare: Story = {
     name: "With compare",
-    args: { rows: [{ color: 1, value: 1280, compare: { value: 1000, date: "Apr 27, 2026", current: 1280 } }] },
+    args: { rows: [{ color: 1, value: 1280, compare: { value: 1000, label: "Apr 27, 2026", current: 1280 } }] },
 };
 
 /** Bars: square swatches, the total of the stack and the compare total. */
@@ -65,7 +65,7 @@ export const Bars: Story = {
             { color: 2, value: 640, label: "Sessions" },
         ],
         total: { value: 1920, label: "Total" },
-        compareTotal: { value: 2400, date: "Apr 27, 2026", current: 1920 },
+        compareTotal: { value: 2400, label: "Apr 27, 2026", current: 1920 },
     },
 };
 
@@ -73,12 +73,12 @@ export const Bars: Story = {
 export const BarsAndLine: Story = {
     name: "Bars and a line",
     args: {
-        date: "Jun 22, 2026 (today)",
+        heading: "Jun 22, 2026 (today)",
         bars: true,
         rows: [
             { color: "positive", value: 6, label: "Approved" },
             { color: "danger", value: 1, label: "Errored" },
-            { color: "warning", value: 14, label: "Pending", bar: false, compare: { value: 11, date: "May 23, 2026", current: 14 } },
+            { color: "warning", value: 14, label: "Pending", bar: false, compare: { value: 11, label: "May 23, 2026", current: 14 } },
         ],
     },
 };
