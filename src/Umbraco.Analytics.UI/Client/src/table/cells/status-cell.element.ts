@@ -5,9 +5,10 @@ import { asNumber, asText } from "../internal/cell-values.js";
 import { getNumberFormat } from "../../internal/format/number-format.js";
 import "../internal/table-skeleton-cell.element.js";
 import type { UauiTableCellElement, UauiTableColumn } from "../types.js";
+import type { UauiStatusColor } from "../../theme/types.js";
 
-/** The color of a `uaui-status-cell`, by the names of `uui-tag`'s `color`. */
-export type UauiStatusColor = "default" | "positive" | "warning" | "danger";
+// Declared with the palette types, as a chart series' `color` takes it too (T57).
+export type { UauiStatusColor } from "../../theme/types.js";
 
 const COLORS: ReadonlySet<string> = new Set<UauiStatusColor>(["default", "positive", "warning", "danger"]);
 

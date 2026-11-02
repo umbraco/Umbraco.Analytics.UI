@@ -41,6 +41,9 @@ The colour is the one our share bars use, in the light, dark and high contrast t
 | `--uaui-color-series-1` to `--uaui-color-series-4` | lines and bars | `--uaui-series-1` to `--uaui-series-4` |
 | `--uaui-color-fill-1` to `--uaui-color-fill-4` | area fills (use at low opacity) | `--uaui-series-N` |
 | `--uaui-color-bar-1` to `--uaui-color-bar-4` | livelier bars | `--uaui-bar-N`, then `--uaui-series-N` |
+| `--uaui-color-series-default`, `-positive`, `-warning`, `-danger` | lines of a series coloured by a status (`color: "danger"`) | `--uaui-series-default` and so on |
+| `--uaui-color-fill-default`, `-positive`, `-warning`, `-danger` | area fills of a status series (use at low opacity) | `--uaui-series-<status>` |
+| `--uaui-color-bar-default`, `-positive`, `-warning`, `-danger` | bars of a status series | `--uaui-bar-<status>`, then `--uaui-series-<status>` |
 | `--uaui-color-compare` | the compare period | `--uaui-compare` |
 | `--uaui-color-compare-bar` | the compare bar (45% of compare) | `--uaui-compare` |
 | `--uaui-color-marker`, `--uaui-color-marker-hover` | chart markers | `--uaui-marker` |
@@ -52,6 +55,25 @@ The colour is the one our share bars use, in the light, dark and high contrast t
 - To override, set `--uaui-*` (for example `--uaui-series-1: #0a7`) on an ancestor, so it reaches both your elements and ours. Setting it on your own `:host` only changes your element.
 - The block sets `color-scheme` on the element's `:host`. Its subtree inherits it, slotted children included, which aligns native controls and scrollbars with the UUI theme. With no UUI theme it resets to `normal`.
 - The palette is tested to 3:1 for lines and bars in all three themes. If you override a colour, you own its contrast.
+
+## Colour a series by its meaning
+
+A chart series' `color` takes a palette slot (`1` to `4`) or a status colour: `"default"`, `"positive"`, `"warning"` or `"danger"`, the same names (`UauiStatusColor`) as the status cell and `uui-tag`. Use a status when the colour means something, such as failed workflows in `"danger"`:
+
+```ts
+chart.series = [
+  { id: "approved", label: "Approved", color: "positive", points },
+  { id: "pending", label: "Pending", color: "warning", points },
+  { id: "errored", label: "Errored", color: "danger", points },
+  { id: "cancelled", label: "Cancelled", color: "default", points },
+];
+```
+
+- It works in every kind (line, area, bar, stacked bar), and in the legend and tooltip. A compare line or bar keeps the compare colour.
+- `"default"` is a neutral grey, as in the status cell. `"warning"` looks like slot 3 and `"danger"` like slot 2 in every theme, so don't mix those slots with those statuses in one chart: the chart warns once in the console if you do. `"positive"` and `"default"` differ from every slot.
+- Any other value draws the series in the slot of its position.
+- Say the meaning in the label too. The colour only repeats it.
+- For your own Chart.js chart, `uauiChartColors(host).status.danger` gives the same `{ line, fill, bar }`.
 
 ## Everything else is a UUI token
 

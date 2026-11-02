@@ -1,5 +1,6 @@
 import { css, customElement, html, nothing, property, type CSSResultGroup, type TemplateResult } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
+import type { UauiSeriesColorKey } from "./chart-colors.js";
 import { getNumberFormat } from "../../internal/format/number-format.js";
 import "../../delta-badge/delta-badge.element.js";
 import { deltaChange } from "../../internal/delta/delta-change.js";
@@ -17,8 +18,8 @@ export interface UauiChartTooltipCompare {
 
 /** One series' point at the hovered date. */
 export interface UauiChartTooltipRow {
-    /** The series' palette slot, 1 to 4. */
-    slot: number;
+    /** What the series is coloured by: a palette slot (1 to 4) or a status colour. */
+    color: UauiSeriesColorKey;
     value: number;
     /** The series' label. Left out when there is only one series. */
     label?: string;
@@ -87,7 +88,7 @@ export class UauiChartTooltipElement extends UmbLitElement {
         return html`<div class="tooltip-date">${this.date}</div>
             ${this.rows.map(
                 (row) => html`<div class="tooltip-row tooltip-series">
-                        <span class=${swatch} style="--swatch: var(--uaui-color-${token}-${row.slot})"></span>
+                        <span class=${swatch} style="--swatch: var(--uaui-color-${token}-${row.color})"></span>
                         <span class="tooltip-value">${this.#format(row.value)}</span>
                         ${row.label === undefined ? nothing : html`<span class="tooltip-label">${row.label}</span>`}
                     </div>

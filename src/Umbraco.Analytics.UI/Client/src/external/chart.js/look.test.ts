@@ -109,6 +109,15 @@ describe("Feature: the package's look for a product's own chart", () => {
                 });
             });
 
+            it("gives the four status colours, as the palette resolves them (T57)", () => {
+                expect(Object.keys(colors.status)).toEqual(["default", "positive", "warning", "danger"]);
+                for (const [status, shades] of Object.entries(colors.status)) {
+                    expect(shades.line).toBe(resolved(host, `var(--uaui-color-series-${status})`));
+                    expect(shades.bar).toBe(resolved(host, `var(--uaui-color-bar-${status})`));
+                    expect(shades.fill).toBe(resolved(host, `color-mix(in srgb, var(--uaui-color-fill-${status}) 12%, transparent)`));
+                }
+            });
+
             it("gives the compare, grid, text and surface colours", () => {
                 expect(colors.compare).toBe(resolved(host, "var(--uaui-color-compare)"));
                 expect(colors.compareBar).toBe(resolved(host, "var(--uaui-color-compare-bar)"));
@@ -149,6 +158,13 @@ describe("Feature: the package's look for a product's own chart", () => {
         it("gives the override for slot 1", async () => {
             const host = await renderHost("--uaui-series-1: rgb(1, 2, 3)");
             expect(uauiChartColors(host).series[0].line).toBe("rgb(1, 2, 3)");
+        });
+    });
+
+    describe("Scenario: a product overrides --uaui-series-danger on an ancestor", () => {
+        it("gives the override for the danger status", async () => {
+            const host = await renderHost("--uaui-series-danger: rgb(1, 2, 3)");
+            expect(uauiChartColors(host).status.danger.line).toBe("rgb(1, 2, 3)");
         });
     });
 

@@ -19,6 +19,11 @@ export interface UauiChartColors {
         fill: string;
         bar: string;
     }[];
+    status: Record<"default" | "positive" | "warning" | "danger", {
+        line: string;
+        fill: string;
+        bar: string;
+    }>;
     surface: string;
     text: string;
 }

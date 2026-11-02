@@ -1,13 +1,14 @@
 import { css, customElement, html, nothing, property, repeat, type CSSResultGroup, type TemplateResult } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
+import type { UauiSeriesColorKey } from "./chart-colors.js";
 import { UauiPaletteStyles } from "../../theme/index.js";
 
 /** One series as the legend lists it. */
 export interface UauiChartLegendEntry {
     id: string;
     label: string;
-    /** The series' palette slot, 1 to 4. */
-    slot: number;
+    /** What the series is coloured by: a palette slot (1 to 4) or a status colour. */
+    color: UauiSeriesColorKey;
 }
 
 /**
@@ -39,7 +40,7 @@ export class UauiChartLegendElement extends UmbLitElement {
                 (entry) => html`<li>
                     <span
                         class=${this.bars ? "legend-swatch" : "legend-line"}
-                        style="--swatch: var(--uaui-color-${token}-${entry.slot})"
+                        style="--swatch: var(--uaui-color-${token}-${entry.color})"
                         aria-hidden="true"></span>
                     ${entry.label}
                 </li>`,

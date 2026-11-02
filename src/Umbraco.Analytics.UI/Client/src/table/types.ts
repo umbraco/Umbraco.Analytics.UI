@@ -17,7 +17,7 @@ export interface UauiTableColumnMeta {
     colorKey?: string;
     /** `uaui-status-cell`: the key in each row that holds the text to show, e.g. "Out of stock". Without it the cell shows the value, formatted. */
     textKey?: string;
-    /** `uaui-share-cell`: the palette slot of the bar (the same slots as `UauiSeries.color`). Defaults to the share column's position. */
+    /** `uaui-share-cell`: the palette slot of the bar (the same slot values (1–4) as `UauiSeries.color`). Defaults to the share column's position. */
     color?: UauiColorSlot;
     /** Whether a fall in this column is good, e.g. refund rate or duration. A compare badge then shows a fall as an improvement. */
     lowerIsBetter?: boolean;
