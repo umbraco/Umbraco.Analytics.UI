@@ -261,7 +261,7 @@ describe("Feature: built-in text is translated, with nothing hard-coded", () => 
                 html`<uaui-chart-tooltip
                     date="DATA"
                     bars
-                    .rows=${[{ slot: 1, value: 120, label: "DATA", compare: compareRow }]}
+                    .rows=${[{ color: 1, value: 120, label: "DATA", compare: compareRow }]}
                     .total=${{ value: 120, label: markerFor("uauiAnalytics_chartTotalLabel") }}
                     .compareTotal=${compareRow}></uaui-chart-tooltip>`,
                 "uaui-chart-tooltip",

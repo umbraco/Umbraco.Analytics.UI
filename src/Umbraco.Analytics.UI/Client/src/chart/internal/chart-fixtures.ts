@@ -80,6 +80,15 @@ export const newVisitors: UauiSeries = { ...toSeries("new", "New visitor", newVi
 /** Visitors for 25 Apr to 24 May 2026: the compare series of the stacked bars. */
 export const previousVisitors = toSeries("visitors", "Visitors", previousVisitorValues, dayAfter25Apr);
 
+/** Workflow-like approval activity (25 May to 23 Jun 2026), each status in its status colour (T57). */
+const approvedValues = [4, 6, 5, 7, 3, 1, 0, 5, 6, 8, 7, 5, 1, 0, 6, 7, 9, 12, 8, 6, 1, 0, 5, 6, 7, 6, 4, 1, 0, 6];
+export const approved: UauiSeries = { ...toSeries("approved", "Approved", approvedValues), color: "positive" };
+export const pending: UauiSeries = { ...toSeries("pending", "Pending", approvedValues.map((v) => Math.round(v * 0.4))), color: "warning" };
+export const errored: UauiSeries = { ...toSeries("errored", "Errored", approvedValues.map((v, i) => (i % 6 === 2 ? Math.ceil(v / 3) : 0))), color: "danger" };
+export const cancelled: UauiSeries = { ...toSeries("cancelled", "Cancelled", approvedValues.map((v, i) => (i % 4 === 1 ? 1 : 0))), color: "default" };
+/** Errors for 25 Apr to 24 May 2026: the compare series of `errored`. */
+export const erroredPrevious = toSeries("errored", "Errored", approvedValues.map((v, i) => (i % 5 === 1 ? Math.ceil(v / 2) : 0)), dayAfter25Apr);
+
 /** Events inside the 25 May to 23 Jun range of the series above. Two share 18 Jun, so that dot carries a count. */
 export const markers: UauiMarker[] = [
     { id: "m1", date: "2026-05-29", title: "Newsletter sent", description: "May issue to 12,400 subscribers." },

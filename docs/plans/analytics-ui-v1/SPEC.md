@@ -20,9 +20,10 @@ Screenshots are from the Phase 1 design ([`docs/design/phase-1`](../../design/ph
 
 ```ts
 type UauiPoint = { date: string; value: number };              // date: ISO "2026-06-11"
-type UauiSeries = { id: string; label: string; points: UauiPoint[]; color?: UauiColorSlot }; // color: palette slot, defaults to the series' position
+type UauiSeries = { id: string; label: string; points: UauiPoint[]; color?: UauiColorSlot | UauiStatusColor }; // color: palette slot or status colour, defaults to the series' position
 type UauiMarker = { id: string; date: string; title: string; description?: string };
 type UauiColorSlot = 1 | 2 | 3 | 4;                           // --uaui-series-1 to --uaui-series-4
+type UauiStatusColor = "default" | "positive" | "warning" | "danger"; // uui-tag's names; status cell and series colour
 type UauiGroupBy = "day" | "week" | "month";
 type UauiChartKind = "line" | "area" | "bar" | "stacked-bar";
 type UauiDateRange = { from: string; to: string; preset?: string };
@@ -123,6 +124,7 @@ Storybook gets a "Pane" story showing this recipe, a chart and a table in one `u
   - Hovering or focusing a dot shows its title and description.
   - Clicking or pressing Enter raises `marker-click` with `{ id }` (`UauiMarkerClickDetail`).
   - Dots are keyboard-focusable, in date order.
+- **Series colour:** a series' `color` is a palette slot (1 to 4) or a status colour (`UauiStatusColor`: `"default"`, `"positive"`, `"warning"`, `"danger"`), for a series that carries a meaning (Forms' workflow errors in danger, Workflow's approved, pending, errored and cancelled). A status draws the line, fill and bar from `--uaui-color-series-<status>`, `-fill-<status>` and `-bar-<status>` (overridable with `--uaui-series-<status>` and `--uaui-bar-<status>`) in every kind, and in the legend and tooltip swatches; the hidden table has no colour. Status lines reach 3:1 on the surface in light, dark and high contrast. A compare line or bar keeps the compare colour. Any other value (and no value) takes the slot of the series' position.
 - **Legend:** one entry per series, plus the comparison range when comparing. A single series with no comparison has no legend, as in the design.
 - **Height:** the plot height comes from the public CSS property `--uaui-chart-height` (default 260px). The loading skeleton uses the same value.
 - **Padding:** the chart pads its own content with the public CSS property `--uaui-chart-padding` (default the design's 12px 24px 28px). The reload loading bar sits outside that padding, at the element's top edge and full width.

@@ -16,7 +16,7 @@ const meta: Meta<UauiChartTooltipElement> = {
     args: {
         date: "Jun 11, 2026",
         bars: false,
-        rows: [{ slot: 1, value: 1280 }],
+        rows: [{ color: 1, value: 1280 }],
         total: undefined,
         compareTotal: undefined,
         numberFormat,
@@ -44,8 +44,8 @@ export const SeveralSeries: Story = {
     name: "Several series",
     args: {
         rows: [
-            { slot: 1, value: 1280, label: "Pageviews" },
-            { slot: 2, value: 640, label: "Sessions" },
+            { color: 1, value: 1280, label: "Pageviews" },
+            { color: 2, value: 640, label: "Sessions" },
         ],
     },
 };
@@ -53,7 +53,7 @@ export const SeveralSeries: Story = {
 /** Lines with a compare point: the compare value, its date and the change, in a badge. */
 export const WithCompare: Story = {
     name: "With compare",
-    args: { rows: [{ slot: 1, value: 1280, compare: { value: 1000, date: "Apr 27, 2026", current: 1280 } }] },
+    args: { rows: [{ color: 1, value: 1280, compare: { value: 1000, date: "Apr 27, 2026", current: 1280 } }] },
 };
 
 /** Bars: square swatches, the total of the stack and the compare total. */
@@ -61,8 +61,8 @@ export const Bars: Story = {
     args: {
         bars: true,
         rows: [
-            { slot: 1, value: 1280, label: "Pageviews" },
-            { slot: 2, value: 640, label: "Sessions" },
+            { color: 1, value: 1280, label: "Pageviews" },
+            { color: 2, value: 640, label: "Sessions" },
         ],
         total: { value: 1920, label: "Total" },
         compareTotal: { value: 2400, date: "Apr 27, 2026", current: 1920 },

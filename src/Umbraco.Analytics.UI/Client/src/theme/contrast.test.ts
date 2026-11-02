@@ -80,6 +80,12 @@ const TEXT: Pair[] = [
 /** The palette's own tokens against the surface: lines and dots that carry meaning, WCAG AA graphical objects, 3:1. */
 const GRAPHICS: Pair[] = [
     ...[1, 2, 3, 4].map((n) => ({ name: `series-${n} line on surface`, fg: `var(--uaui-color-series-${n})`, bg: "var(--uui-color-surface)" })),
+    // T57: a series coloured by a status (`color: "danger"`) draws its line in these.
+    ...["default", "positive", "warning", "danger"].map((status) => ({
+        name: `series-${status} line on surface`,
+        fg: `var(--uaui-color-series-${status})`,
+        bg: "var(--uui-color-surface)",
+    })),
     { name: "compare line on surface", fg: "var(--uaui-color-compare)", bg: "var(--uui-color-surface)" },
     { name: "marker dot on surface", fg: "var(--uaui-color-marker)", bg: "var(--uui-color-surface)" },
     { name: "marker hover dot on surface", fg: "var(--uaui-color-marker-hover)", bg: "var(--uui-color-surface)" },

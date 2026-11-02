@@ -13,6 +13,12 @@ export interface UauiChartColors {
      * at 12% alpha); `bar` an opaque bar or slice.
      */
     series: { line: string; fill: string; bar: string }[];
+    /**
+     * The status colours, by the status cell's names (`UauiStatusColor`), for a series that carries a meaning: errors in
+     * `danger`, approvals in `positive`. Each has the same `line`, `fill` and `bar` as a slot (`--uaui-color-series-danger`
+     * and so on). `default` is a neutral grey.
+     */
+    status: Record<"default" | "positive" | "warning" | "danger", { line: string; fill: string; bar: string }>;
     /** The compare (previous period) line. */
     compare: string;
     /** A compare bar: the compare colour at reduced opacity, drawn behind the current bars. */
@@ -34,6 +40,8 @@ const FALLBACK_FONT_FAMILY = '"Lato", "Helvetica Neue", Helvetica, Arial, sans-s
 const EVENTS = ["mousemove", "mouseout", "click", "touchstart", "touchmove"] as const;
 
 const SLOTS = [1, 2, 3, 4];
+
+const STATUSES = ["default", "positive", "warning", "danger"] as const;
 
 const warned = new WeakSet<HTMLElement>();
 
@@ -74,12 +82,14 @@ function resolve(host: HTMLElement, warn: boolean): { colors: UauiChartColors; f
             probe.style.color = expression;
             return style.color;
         };
-        const colors = {
-            series: SLOTS.map((n) => ({
-                line: colorOf(`var(--uaui-color-series-${n})`),
-                fill: colorOf(`color-mix(in srgb, var(--uaui-color-fill-${n}) 12%, transparent)`),
-                bar: colorOf(`var(--uaui-color-bar-${n})`),
-            })),
+        const shadesOf = (key: number | string) => ({
+            line: colorOf(`var(--uaui-color-series-${key})`),
+            fill: colorOf(`color-mix(in srgb, var(--uaui-color-fill-${key}) 12%, transparent)`),
+            bar: colorOf(`var(--uaui-color-bar-${key})`),
+        });
+        const colors: UauiChartColors = {
+            series: SLOTS.map(shadesOf),
+            status: Object.fromEntries(STATUSES.map((status) => [status, shadesOf(status)])) as UauiChartColors["status"],
             compare: colorOf("var(--uaui-color-compare)"),
             compareBar: colorOf("var(--uaui-color-compare-bar)"),
             grid: colorOf("var(--uui-color-divider-standalone)"),

@@ -370,7 +370,7 @@ export class UauiSearchFieldElement extends UmbLitElement {
 export type UauiSeries = {
     id: string;
     label: string;
-    color?: UauiColorSlot;
+    color?: UauiColorSlot | UauiStatusColor;
     points: UauiPoint[];
 };
 

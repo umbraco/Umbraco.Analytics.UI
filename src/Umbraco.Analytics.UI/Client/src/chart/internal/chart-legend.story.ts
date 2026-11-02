@@ -13,8 +13,8 @@ const meta: Meta<UauiChartLegendElement> = {
     },
     args: {
         entries: [
-            { id: "pageviews", label: "Pageviews", slot: 1 },
-            { id: "sessions", label: "Sessions", slot: 2 },
+            { id: "pageviews", label: "Pageviews", color: 1 },
+            { id: "sessions", label: "Sessions", color: 2 },
         ],
         bars: false,
         compareLabel: undefined,

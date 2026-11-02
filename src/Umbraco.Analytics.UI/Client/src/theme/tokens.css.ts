@@ -50,6 +50,28 @@ import { css, type CSSResult } from "@umbraco-cms/backoffice/external/lit";
  * | bar-3      | sunglow 1.43               | sunglow 8.94                  |
  * | bar-4      | malibu 3.93                | jungle-green 5.58             |
  *
+ * Status series (a series' `color` of `"default"`, `"positive"`, `"warning"` or `"danger"`, the status cell's names) use
+ * `--uaui-color-series-<status>` for lines, `--uaui-color-fill-<status>` for areas and `--uaui-color-bar-<status>` for
+ * bars, so a series can carry a meaning (errors in red). A product overrides them with `--uaui-series-<status>` and
+ * `--uaui-bar-<status>`, as for the slots. Each is `light-dark()` of two palette shades; high contrast doesn't set
+ * `--uui-color-scheme`, so it takes the light value. The lines are UUI's positive and danger colours in light. Warning
+ * matches series 3 and danger series 2 (lines and bars, in every theme): the palette has no other yellow or red that
+ * clears 3:1, so don't mix those slots with those statuses (the chart warns once if you do). Positive is forest green in
+ * dark too, not jungle green, which is series 4 there (1.56:1 between the two). Default is a neutral grey, as the
+ * status cell's default is.
+ * Fills are the line colour, but warning's is sunglow (as fill 3). Bars follow the slot bars' rule (no 3:1 target).
+ *
+ * | token             | light (on #fff)            | dark (on #2d333b)             |
+ * | ----------------- | -------------------------- | ----------------------------- |
+ * | series-default    | dusty-grey-dark 3.32       | dusty-grey 4.58               |
+ * | series-positive   | forest-green 4.91          | forest-green-light 3.57       |
+ * | series-warning    | sunglow-dark 4.07          | sunglow 8.94                  |
+ * | series-danger     | maroon-flush 4.54          | maroon-flush-light 3.05       |
+ * | bar-default       | dusty-grey-dark 3.32       | dusty-grey 4.58               |
+ * | bar-positive      | forest-green-light 3.57    | forest-green-light 3.57       |
+ * | bar-warning       | sunglow 1.43               | sunglow 8.94                  |
+ * | bar-danger        | maroon-flush-light 4.18    | maroon-flush-light 3.05       |
+ *
  * The compare bar sits behind the current bars: `--uaui-color-compare` at 45% over the surface (chamoisee
  * 1.68:1 light, deep-saffron 2.34:1 dark). It is decoration too: the legend, tooltip and table carry it.
  *
@@ -141,6 +163,33 @@ export const UauiPaletteStyles: CSSResult = css`
             --uaui-bar-4,
             var(--uaui-series-4, light-dark(var(--uui-palette-malibu), var(--uui-palette-jungle-green)))
         );
+        --uaui-color-series-default: var(
+            --uaui-series-default,
+            light-dark(var(--uui-palette-dusty-grey-dark), var(--uui-palette-dusty-grey))
+        );
+        --uaui-color-series-positive: var(
+            --uaui-series-positive,
+            light-dark(var(--uui-palette-forest-green), var(--uui-palette-forest-green-light))
+        );
+        --uaui-color-series-warning: var(
+            --uaui-series-warning,
+            light-dark(var(--uui-palette-sunglow-dark), var(--uui-palette-sunglow))
+        );
+        --uaui-color-series-danger: var(
+            --uaui-series-danger,
+            light-dark(var(--uui-palette-maroon-flush), var(--uui-palette-maroon-flush-light))
+        );
+        --uaui-color-fill-default: var(--uaui-color-series-default);
+        --uaui-color-fill-positive: var(--uaui-color-series-positive);
+        --uaui-color-fill-warning: var(--uaui-series-warning, var(--uui-palette-sunglow));
+        --uaui-color-fill-danger: var(--uaui-color-series-danger);
+        --uaui-color-bar-default: var(--uaui-bar-default, var(--uaui-color-series-default));
+        --uaui-color-bar-positive: var(
+            --uaui-bar-positive,
+            var(--uaui-series-positive, var(--uui-palette-forest-green-light))
+        );
+        --uaui-color-bar-warning: var(--uaui-bar-warning, var(--uaui-series-warning, var(--uui-palette-sunglow)));
+        --uaui-color-bar-danger: var(--uaui-bar-danger, var(--uaui-series-danger, var(--uui-palette-maroon-flush-light)));
         --uaui-color-compare: var(
             --uaui-compare,
             light-dark(var(--uui-palette-chamoisee), var(--uui-palette-deep-saffron))

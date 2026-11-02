@@ -1,4 +1,4 @@
-import type { UauiColorSlot } from "../theme/types.js";
+import type { UauiColorSlot, UauiStatusColor } from "../theme/types.js";
 
 /** One value on one day. Two points of a series on the same date are added, so aggregate rates and averages before passing them. */
 export type UauiPoint = {
@@ -13,8 +13,13 @@ export type UauiSeries = {
     id: string;
     /** Shown in the legend, the tooltip and the screen reader table. */
     label: string;
-    /** Palette slot (series/bar/fill colour). Defaults to the series' position. */
-    color?: UauiColorSlot;
+    /**
+     * The series' colour (line, fill and bar): a palette slot (1 to 4), or a status colour (`"default"`, `"positive"`,
+     * `"warning"` or `"danger"`, as the status cell's) for a series that carries a meaning, such as errors in `"danger"`.
+     * Defaults to the slot of the series' position, as does any other value. Say the meaning in the label too: the
+     * colour only repeats it.
+     */
+    color?: UauiColorSlot | UauiStatusColor;
     /**
      * The chart does not aggregate: points on the same date are added, which is wrong for rates and averages, so
      * aggregate those first. With `group-by` week or month pass one point per bucket, not daily data.

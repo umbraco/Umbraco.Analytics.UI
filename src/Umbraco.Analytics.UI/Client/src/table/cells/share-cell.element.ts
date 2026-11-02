@@ -45,7 +45,7 @@ export class UauiShareCellElement extends UmbLitElement implements UauiTableCell
     @property({ type: Number })
     max?: number;
 
-    /** The palette slot of the bar, as `UauiSeries.color`. Defaults to `column.meta.color`, then the cell's position among the table's share columns, then 1. */
+    /** The palette slot of the bar: the same slot values (1–4) as `UauiSeries.color`. Defaults to `column.meta.color`, then the cell's position among the table's share columns, then 1. */
     @property({ type: Number })
     color?: UauiColorSlot;
 

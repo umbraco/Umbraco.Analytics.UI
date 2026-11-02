@@ -3,11 +3,16 @@ import { html } from "@umbraco-cms/backoffice/external/lit";
 import type { UauiTimeSeriesChartElement } from "./time-series-chart.element.js";
 import "./time-series-chart.element.js";
 import {
+    approved,
+    cancelled,
     compareRangeLabel,
+    errored,
+    erroredPrevious,
     markers,
     newVisitors,
     pageviews,
     pageviewsPrevious,
+    pending,
     previousVisitors,
     returningVisitors,
     revenue,
@@ -151,4 +156,20 @@ export const Markers: Story = { args: { kind: "area", markers } };
 export const MarkersOnStackedBar: Story = {
     name: "Markers on stacked bar",
     args: { kind: "stacked-bar", series: [returningVisitors, newVisitors], markers },
+};
+
+/**
+ * A series' `color` takes a status colour (`"default"`, `"positive"`, `"warning"` or `"danger"`, the status cell's names)
+ * as well as a palette slot, for a series that carries a meaning: here Workflow's approved, pending, errored and
+ * cancelled. The colour only repeats the label, which says the meaning. Use the kind control for line, area and bar.
+ */
+export const StatusColors: Story = {
+    name: "Status colours",
+    args: { kind: "stacked-bar", series: [approved, pending, errored, cancelled] },
+};
+
+/** A status series against the previous period: the series keeps its status colour, the compare line keeps the compare colour. */
+export const StatusColorCompare: Story = {
+    name: "Status colour, compare",
+    args: { series: [errored], compareSeries: [erroredPrevious], compareLabel: compareRangeLabel },
 };

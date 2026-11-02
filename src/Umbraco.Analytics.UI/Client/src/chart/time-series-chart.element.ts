@@ -30,12 +30,13 @@ import "./internal/chart-markers.element.js";
 import "./internal/chart-tooltip.element.js";
 import type { UauiChartMarkersActiveDetail } from "./internal/chart-markers.element.js";
 import type { UauiChartTooltipCompare, UauiChartTooltipElement, UauiChartTooltipRow } from "./internal/chart-tooltip.element.js";
-import { colorsDiffer, resolveChartColors, type UauiChartDrawColors } from "./internal/chart-colors.js";
+import { clashingColors, colorsDiffer, resolveChartColors, type UauiChartDrawColors, type UauiSeriesColorKey } from "./internal/chart-colors.js";
 import { UauiChartRenderer, type UauiChartHover } from "./internal/chart-renderer.js";
 import { niceScale } from "./internal/nice-scale.js";
 import { clampInside, placeTooltip } from "./internal/place-tooltip.js";
 import type { UauiCompare, UauiDateRange } from "../date-range/types.js";
 import type { UauiChartKind, UauiMarker, UauiMarkerClickDetail, UauiSeries } from "./types.js";
+import type { UauiColorSlot } from "../theme/types.js";
 
 const axisDateFormat: Record<UauiGroupBy, Intl.DateTimeFormatOptions> = {
     day: { day: "numeric", month: "short" },
@@ -94,10 +95,15 @@ const emptyDerived: Derived = {
     lang: "en",
 };
 
-/** The palette slot (1 to 4) of a series: its `color` when valid, else its position, cycling through the four. */
-function slotOf(series: UauiSeries | undefined, position: number): number {
+const COLOR_KEYS: ReadonlySet<unknown> = new Set<UauiSeriesColorKey>([1, 2, 3, 4, "default", "positive", "warning", "danger"]);
+
+/**
+ * What a series is coloured by: its `color` when valid (a palette slot 1 to 4 or a status colour), else the slot of its
+ * position, cycling through the four.
+ */
+function colorKeyOf(series: UauiSeries | undefined, position: number): UauiSeriesColorKey {
     const color = series?.color;
-    return color === 1 || color === 2 || color === 3 || color === 4 ? color : (position % 4) + 1;
+    return COLOR_KEYS.has(color) ? (color as UauiSeriesColorKey) : (((position % 4) + 1) as UauiColorSlot);
 }
 
 /** Whole numbers on the axis unless the step is fractional; compact once the numbers get long. */
@@ -144,6 +150,11 @@ function tickFormat(valueFormat: Intl.NumberFormatOptions | undefined, max: numb
  * @cssprop --uaui-bar-2 - Colour of the second series' bars.
  * @cssprop --uaui-bar-3 - Colour of the third series' bars.
  * @cssprop --uaui-bar-4 - Colour of the fourth series' bars.
+ * @cssprop --uaui-series-default - Colour of a series with `color: "default"`. Defaults to a neutral grey.
+ * @cssprop --uaui-series-positive - Colour of a series with `color: "positive"`. Defaults to UUI's positive green.
+ * @cssprop --uaui-series-warning - Colour of a series with `color: "warning"`. Defaults to UUI's warning yellow (dark sunglow in light).
+ * @cssprop --uaui-series-danger - Colour of a series with `color: "danger"`. Defaults to UUI's danger red.
+ * @cssprop --uaui-bar-default - Colour of a `color: "default"` series' bars. The other statuses follow (`--uaui-bar-positive`, `--uaui-bar-warning`, `--uaui-bar-danger`). Each falls back to `--uaui-series-<status>`.
  * @cssprop --uaui-compare - Colour of the compare line, and of the compare bar (at 45% opacity).
  * @cssprop --uaui-marker - Colour of the marker dots and their dashed lines (the lines at 26% opacity). Defaults to space cadet in light and white in dark.
  * @cssprop --uaui-gap-positive - Shading between a series and its compare line where the series is doing better than it (above it, or below it with `lower-is-better`).
@@ -356,8 +367,8 @@ export class UauiTimeSeriesChartElement extends UmbLitElement {
         };
     }
 
-    get #slots() {
-        return this.#derived.data.series.map((_, i) => slotOf(this.series[i], i));
+    get #colorKeys() {
+        return this.#derived.data.series.map((_, i) => colorKeyOf(this.series[i], i));
     }
 
     get #isBars() {
@@ -414,12 +425,13 @@ export class UauiTimeSeriesChartElement extends UmbLitElement {
         }
         if (!this.#dirty) return;
         this.#dirty = false;
-        this.#colors = resolveChartColors(this, probe, this.#slots);
+        this.#colors = resolveChartColors(this, probe, this.#colorKeys);
         this.#draw();
     }
 
     #draw() {
         if (!this.#renderer || !this.#colors) return;
+        this.#warnColorClash(this.#colors);
         const { data, axisLabels, lang } = this.#derived;
         const scale = niceScale(maxValue(data, this.kind), 5, allWhole(data));
         const tick = getNumberFormat(lang, tickFormat(this.valueFormat, scale.max, scale.step));
@@ -437,11 +449,23 @@ export class UauiTimeSeriesChartElement extends UmbLitElement {
         });
     }
 
+    #warnedColorClash = false;
+
+    /** Warns once per chart when a status series draws like a slot series beside it (warning and slot 3, danger and slot 2). */
+    #warnColorClash(colors: UauiChartDrawColors) {
+        if (this.#warnedColorClash) return;
+        const clashes = clashingColors(this.#colorKeys, colors.series);
+        if (!clashes.length) return;
+        this.#warnedColorClash = true;
+        const pairs = clashes.map(([status, slot]) => `"${status}" and ${slot}`).join(", ");
+        console.warn(`[uaui] uaui-time-series-chart: series colours ${pairs} look the same in this theme. Use another slot or status.`);
+    }
+
     /** Redraws with the theme's current colours, if they changed. Called by the renderer's theme watch. */
     #syncColors() {
         const probe = this.#probe;
         if (!probe || !this.#renderer) return;
-        const colors = resolveChartColors(this, probe, this.#slots);
+        const colors = resolveChartColors(this, probe, this.#colorKeys);
         if (!colorsDiffer(this.#colors, colors)) return;
         this.#colors = colors;
         this.#draw();
@@ -474,7 +498,7 @@ export class UauiTimeSeriesChartElement extends UmbLitElement {
             const compare = bars ? null : s.compare?.[index];
             return [
                 {
-                    slot: slotOf(this.series[i], i),
+                    color: colorKeyOf(this.series[i], i),
                     value,
                     label: data.series.length > 1 ? s.label : undefined,
                     compare: compare === null || compare === undefined ? undefined : { value: compare, date: compareDateLabels[i][index], current: value },
@@ -521,7 +545,7 @@ export class UauiTimeSeriesChartElement extends UmbLitElement {
 
     #renderLegend() {
         if (this.series.length < 2 && !this.#isComparing) return nothing;
-        const entries = this.series.map((s, i) => ({ id: s.id, label: s.label, slot: slotOf(s, i) }));
+        const entries = this.series.map((s, i) => ({ id: s.id, label: s.label, color: colorKeyOf(s, i) }));
         return html`<uaui-chart-legend
             .entries=${entries}
             .bars=${this.#isBars}
