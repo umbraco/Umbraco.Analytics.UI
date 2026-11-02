@@ -30,12 +30,19 @@ const chart = (kind: string, series: unknown[] = [pageviews, sessions]) =>
 const canvasOf = (el: Element) => shadow(el).querySelector("canvas")!;
 const chartOf = (el: Element) => Chart.getChart(canvasOf(el))!;
 const nextFrame = () => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
-// A short fingerprint of the drawn canvas, so a failure prints two hashes rather than two images.
+/**
+ * A short fingerprint of the drawn canvas, so a failure prints two hashes rather than two images. A browser may move a
+ * canvas to another drawing path once it is read back (e.g. from GPU to CPU), and the two paths can anti-alias an edge
+ * differently. So the chart is read once, then drawn again and read: every canvas compared is drawn the same way.
+ */
 const pixels = async (el: UauiTestElement) => {
     await settle(el);
     await nextFrame();
     const canvas = canvasOf(el);
-    const { data } = canvas.getContext("2d")!.getImageData(0, 0, canvas.width, canvas.height);
+    const context = canvas.getContext("2d")!;
+    context.getImageData(0, 0, 1, 1);
+    chartOf(el).draw();
+    const { data } = context.getImageData(0, 0, canvas.width, canvas.height);
     let hash = 2166136261;
     for (let i = 0; i < data.length; i++) hash = Math.imul(hash ^ data[i], 16777619);
     return `${canvas.width}x${canvas.height}:${(hash >>> 0).toString(16)}`;
@@ -69,15 +76,22 @@ const baseline = async (el: UauiTestElement) => ({
 });
 
 /** Same pixels as the baseline. On a mismatch, writes both canvases and what each chart resolved (see chart-diagnostics.ts). */
-const expectSamePixels = async (before: Awaited<ReturnType<typeof baseline>>, after: UauiTestElement) => {
+const expectSamePixels = async (before: Awaited<ReturnType<typeof baseline>>, after: UauiTestElement, kind: string) => {
     try {
         await expect.poll(() => pixels(after)).toBe(before.hash);
     } catch (error) {
+        const afterHash = await pixels(after);
         await writeChartDiagnostics(expect.getState().currentTestName ?? "isolation", before, {
             png: canvasOf(after).toDataURL(),
             snapshot: chartSnapshot(chartOf(after)),
             environment: environmentSnapshot(after),
         });
+        // A third chart with the product's changes undone tells a leak (it matches the first) from the browser
+        // drawing the same chart differently (it doesn't).
+        while (undo.length) undo.pop()!();
+        const control = await chart(kind);
+        const controlHash = await pixels(control);
+        console.warn(`[chart-diagnostics] before ${before.hash}, after ${afterHash}, control without the changes ${controlHash}`);
         throw error;
     }
 };
@@ -141,14 +155,14 @@ describe("Feature: the chart keeps its look when a product changes the shared Ch
             const before = await baseline(await chart(kind));
             changeCommonDefaults();
             const after = await chart(kind);
-            await expectSamePixels(before, after);
+            await expectSamePixels(before, after, kind);
         });
 
         it.each(KINDS)("draws a %s chart with the same pixels with data defaults and Chart.overrides changed", async (kind) => {
             const before = await baseline(await chart(kind));
             changeDataDefaultsAndOverrides();
             const after = await chart(kind);
-            await expectSamePixels(before, after);
+            await expectSamePixels(before, after, kind);
         });
 
         it("keeps its own tick font and colour, its clip, and no animation", async () => {
@@ -197,7 +211,7 @@ describe("Feature: the chart keeps its look when a product changes the shared Ch
             change(Chart.defaults.plugins.title, "text", "A product's title");
             change(Chart.defaults.plugins.colors, "forceOverride", true);
             const after = await chart(kind);
-            await expectSamePixels(before, after);
+            await expectSamePixels(before, after, kind);
         });
 
         it("doesn't run a plugin registered after it was drawn, on a resize or an update", async () => {
