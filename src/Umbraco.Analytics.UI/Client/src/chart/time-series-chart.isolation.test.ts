@@ -40,6 +40,25 @@ const pixels = async (el: UauiTestElement) => {
     return `${canvas.width}x${canvas.height}:${(hash >>> 0).toString(16)}`;
 };
 
+/**
+ * The baseline, read once the chart has stopped changing. A chart redraws after its first paint (once
+ * `document.fonts` settles, after a resize, on a theme stylesheet change), and the baseline is read only once, so a
+ * read between the first paint and that redraw would be a picture the chart never ends on. The chart drawn after the
+ * product's changes is polled, so it may settle in its own time. Same pixels are still required.
+ */
+const settledPixels = async (el: UauiTestElement) => {
+    await document.fonts.ready;
+    let last = await pixels(el);
+    let same = 0;
+    for (let i = 0; i < 50 && same < 3; i++) {
+        await new Promise((resolve) => setTimeout(resolve, 100));
+        const next = await pixels(el);
+        same = next === last ? same + 1 : 0;
+        last = next;
+    }
+    return last;
+};
+
 // Every change is undone after each spec, as Chart.defaults and the registry are shared by the whole test run.
 const undo: (() => void)[] = [];
 const change = <T extends object, K extends keyof T>(target: T, key: K, value: T[K]) => {
@@ -96,14 +115,14 @@ const changeDataDefaultsAndOverrides = () => {
 describe("Feature: the chart keeps its look when a product changes the shared Chart.js", () => {
     describe("Scenario: a product changes common Chart.defaults", () => {
         it.each(KINDS)("draws a %s chart with the same pixels", async (kind) => {
-            const before = await pixels(await chart(kind));
+            const before = await settledPixels(await chart(kind));
             changeCommonDefaults();
             const after = await chart(kind);
             await expect.poll(() => pixels(after)).toBe(before);
         });
 
         it.each(KINDS)("draws a %s chart with the same pixels with data defaults and Chart.overrides changed", async (kind) => {
-            const before = await pixels(await chart(kind));
+            const before = await settledPixels(await chart(kind));
             changeDataDefaultsAndOverrides();
             const after = await chart(kind);
             await expect.poll(() => pixels(after)).toBe(before);
@@ -136,7 +155,7 @@ describe("Feature: the chart keeps its look when a product changes the shared Ch
 
     describe("Scenario: a product registers plugins globally", () => {
         it.each(KINDS)("draws a %s chart with the same pixels", async (kind) => {
-            const before = await pixels(await chart(kind));
+            const before = await settledPixels(await chart(kind));
             const paint: Plugin = {
                 id: "productPaint",
                 afterDatasetsDraw: ({ ctx, width, height }) => {
