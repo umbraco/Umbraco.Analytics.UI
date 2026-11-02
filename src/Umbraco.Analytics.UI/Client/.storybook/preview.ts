@@ -21,6 +21,22 @@ const themes: Record<string, string> = {
 };
 
 let themeStyleEl: HTMLStyleElement | null = null;
+let scopedThemesEl: HTMLStyleElement | null = null;
+
+/**
+ * Each theme's tokens again, scoped to `[data-uaui-sb-theme="<name>"]` instead of `:root`. A docs page renders every
+ * story of a component in one document, so a story that asks for a theme (e.g. a "Dark" story) must not switch the
+ * whole page: each story's wrapper carries its own theme instead.
+ */
+function ensureScopedThemes() {
+    if (scopedThemesEl) return;
+    scopedThemesEl = document.createElement("style");
+    scopedThemesEl.id = "uui-theme-scoped";
+    scopedThemesEl.textContent = Object.entries(themes)
+        .map(([name, css]) => css.replaceAll(":root", `[data-uaui-sb-theme="${name}"]`))
+        .join("\n");
+    document.head.appendChild(scopedThemesEl);
+}
 
 function applyTheme(theme: string) {
     if (!themeStyleEl) {
@@ -76,8 +92,21 @@ const preview: Preview = {
     tags: ["autodocs"],
     decorators: [
         (story, context) => {
-            applyTheme(context.globals["theme"] ?? "light");
-            return html`<div class="uui-font uui-text">${story()}</div>`;
+            const theme = context.globals["theme"] ?? "light";
+            ensureScopedThemes();
+            // A story on its own fills the canvas, so the page takes its theme. On a docs page the page stays
+            // light and each story's wrapper carries its own theme, so a "Dark" story doesn't turn the others dark.
+            applyTheme(context.viewMode === "docs" ? "light" : theme);
+            // On a docs page a story in another theme gets that theme's background, so it reads as a panel.
+            const panel = context.viewMode === "docs" && theme !== "light";
+            return html`<div
+                class="uui-font uui-text"
+                data-uaui-sb-theme=${theme}
+                style=${panel
+                    ? "color: var(--uui-color-text); background: var(--uui-color-background); padding: var(--uui-size-space-5); border-radius: var(--uui-border-radius)"
+                    : "color: var(--uui-color-text)"}>
+                ${story()}
+            </div>`;
         },
     ],
 };
