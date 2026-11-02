@@ -124,6 +124,37 @@ describe("Feature: series coloured by a status", () => {
         }
     });
 
+    describe("Scenario: slot 4 against slot 1 and positive in the dark theme", () => {
+        let themeStyle: HTMLStyleElement;
+        beforeEach(() => {
+            themeStyle = document.createElement("style");
+            document.head.appendChild(themeStyle);
+        });
+        afterEach(() => themeStyle.remove());
+
+        /** A computed `rgb()` or `color(srgb ...)` colour as CIELAB, to compare how far apart two colours look. */
+        const lab = (computed: string) => {
+            const numbers = computed.match(/-?[\d.]+(?:e-?\d+)?/g)!.map(Number);
+            const rgb = computed.startsWith("color(srgb") ? numbers.slice(0, 3) : numbers.slice(0, 3).map((c) => c / 255);
+            const [r, g, b] = rgb.map((c) => (c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4));
+            const f = (t: number) => (t > 0.008856 ? Math.cbrt(t) : 7.787 * t + 16 / 116);
+            const [x, y, z] = [(0.4124 * r + 0.3576 * g + 0.1805 * b) / 0.95047, 0.2126 * r + 0.7152 * g + 0.0722 * b, (0.0193 * r + 0.1192 * g + 0.9505 * b) / 1.08883].map(f);
+            return [116 * y - 16, 500 * (x - y), 200 * (y - z)];
+        };
+        /** CIE76 colour difference. Jungle green, the old dark slot 4, was 16 from positive and read as the same green. */
+        const difference = (a: string, b: string) => Math.hypot(...lab(a).map((v, i) => v - lab(b)[i]));
+
+        it("draws slot 4 lavender, clearly unlike slot 1's blue and the positive green", async () => {
+            themeStyle.textContent = darkCss;
+            const el = await chart("line", [approved]);
+            const { series, status } = uauiChartColors(el);
+            for (const token of ["line", "bar"] as const) {
+                expect(difference(series[3][token], series[0][token]), `slot 4 vs slot 1 ${token}`).toBeGreaterThan(30);
+                expect(difference(series[3][token], status.positive[token]), `slot 4 vs positive ${token}`).toBeGreaterThan(30);
+            }
+        });
+    });
+
     describe("Scenario: a chart mixes a status with the slot it looks like", () => {
         let warn: MockInstance<typeof console.warn>;
         beforeEach(() => {
