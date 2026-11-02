@@ -253,7 +253,7 @@ export const ShareDark: Story = {
 };
 
 /**
- * One line per source page, 11 in all: series 5 to 8 take the teal, orchid, coral and olive slots, then the colours
+ * One line per source page, 11 in all: series 5 to 8 take slots 5 to 8 (teal, sky blue, plum and olive here; sage, orchid, pink and gold in dark), then the colours
  * repeat. The legend lists the first 7 and folds the rest behind "Show 4 more"; hover a date and the tooltip lists the
  * 7 largest and "+4 more" (the hidden table has every page). Order the series largest first, so the fold hides the
  * smallest. Past eight series, consider grouping the smallest into one "Other" series with `color: "default"`.

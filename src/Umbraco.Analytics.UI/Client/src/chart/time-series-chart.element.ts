@@ -137,7 +137,7 @@ export const UauiTimeSeriesChartElementBase = UauiChartMixin(UmbLitElement);
  * powers of ten, bending toward 0 at the bottom so 0 stays on the axis line.
  * `stack="percent"` with `kind="stacked-bar"` or `"area"` is a 100% share view: each date's series as its share of that
  * date's total, on a 0 to 100% axis, with the share and the value in the tooltip and the hidden table.
- * Many series stay readable: series 5 to 8 get their own palette slots (teal, orchid, coral, olive) before the colours
+ * Many series stay readable: series 5 to 8 get their own palette slots (teal, sky blue, plum, olive in light; sage, orchid, pink, gold in dark) before the colours
  * repeat, a legend of more than 8 series folds to the first 7 and a "Show N more" button, and a tooltip of more than 8
  * rows lists the 7 largest (in its usual order) and "+N more". In the share view the tooltip lists the rows as the stack
  * draws them, top first.
@@ -159,7 +159,7 @@ export const UauiTimeSeriesChartElementBase = UauiChartMixin(UmbLitElement);
  * @cssprop --uaui-series-2 - Colour of the second series.
  * @cssprop --uaui-series-3 - Colour of the third series.
  * @cssprop --uaui-series-4 - Colour of the fourth series.
- * @cssprop --uaui-series-5 - Colour of the fifth series (teal by default). `--uaui-series-6` to `--uaui-series-8` (orchid, coral, olive) follow.
+ * @cssprop --uaui-series-5 - Colour of the fifth series (teal in light, sage in dark). `--uaui-series-6` to `--uaui-series-8` follow (sky blue, plum and olive in light; orchid, pink and gold in dark).
  * @cssprop --uaui-bar-1 - Colour of the first series' bars. Bars 2 to 8 follow (`--uaui-bar-5` to `--uaui-bar-8` default to their line colours). Each falls back to `--uaui-series-N`, then to a livelier default than the line colour.
  * @cssprop --uaui-bar-2 - Colour of the second series' bars.
  * @cssprop --uaui-bar-3 - Colour of the third series' bars.

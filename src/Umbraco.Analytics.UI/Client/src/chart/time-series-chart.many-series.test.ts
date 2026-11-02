@@ -9,6 +9,7 @@ import darkCss from "@umbraco-ui/uui/themes/dark.css?inline";
 import highContrastCss from "@umbraco-ui/uui/themes/high-contrast.css?inline";
 import { render } from "vitest-browser-lit";
 import { axeRun } from "../internal/test/a11y.js";
+import { colourDifference, type UauiTestVision } from "../internal/test/colour-difference.js";
 import { screenshotIt } from "../internal/test/screenshot.js";
 import { deepQuery, deepQueryAll, renderElement, settle, shadow, type UauiTestElement } from "../internal/test/dom.js";
 import type { UauiChartKind, UauiSeries } from "./types.js";
@@ -43,17 +44,20 @@ const hoverDate = async (el: Element, index: number) => {
     await expect.poll(() => tooltip(el)?.style.visibility).toBe("visible");
 };
 
-/** A computed `rgb()` or `color(srgb ...)` colour as CIELAB, to compare how far apart two colours look. */
-const lab = (computed: string) => {
-    const numbers = computed.match(/-?[\d.]+(?:e-?\d+)?/g)!.map(Number);
-    const rgb = computed.startsWith("color(srgb") ? numbers.slice(0, 3) : numbers.slice(0, 3).map((c) => c / 255);
-    const [r, g, b] = rgb.map((c) => (c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4));
-    const f = (t: number) => (t > 0.008856 ? Math.cbrt(t) : 7.787 * t + 16 / 116);
-    const [x, y, z] = [(0.4124 * r + 0.3576 * g + 0.1805 * b) / 0.95047, 0.2126 * r + 0.7152 * g + 0.0722 * b, (0.0193 * r + 0.1192 * g + 0.9505 * b) / 1.08883].map(f);
-    return [116 * y - 16, 500 * (x - y), 200 * (y - z)];
+/**
+ * The smallest CIEDE2000 difference slots 5 to 8 must keep, per theme and vision (normal, then Machado 2009 protan,
+ * deutan and tritan at severity 1.0), to every other slot's line and bar, each status and the compare colour, and to
+ * each other. Set just under what the user's pick (02-11-2026) reaches, so a palette change that brings two colours
+ * closer fails here. High contrast takes the light values.
+ */
+const MIN_DIFFERENCE: Record<"light" | "dark", Record<UauiTestVision, number>> = {
+    // Reached: normal 15.5 (slot 6 vs bar 4), protan 3.9 and deutan 2.9 (slot 8 olive vs slot 3), tritan 3.7 (slot 5
+    // teal vs positive). The low colour-blind figures are olive and teal, kept from before the pick; 6 and 7 do better.
+    light: { normal: 15, protan: 3.5, deutan: 2.5, tritan: 3.4 },
+    // Reached: normal 19.7 (slot 5 vs slot 3), protan 8.3 (slot 7 vs default), deutan 9.4 (slot 5 vs compare), tritan
+    // 8.5 (slot 7 vs compare).
+    dark: { normal: 19.5, protan: 8, deutan: 9, tritan: 8.3 },
 };
-/** CIE76 colour difference, as the slot 4 spec (T64) measures it. */
-const difference = (a: string, b: string) => Math.hypot(...lab(a).map((v, i) => v - lab(b)[i]));
 
 describe("Feature: many series stay readable", () => {
     describe("Scenario: a chart with 11 series", () => {
@@ -194,10 +198,10 @@ describe("Feature: many series stay readable", () => {
         });
     });
 
-    for (const [theme, themeCss, minimum] of [
-        ["light", lightCss, 25],
-        ["dark", darkCss, 30],
-        ["high contrast", highContrastCss, 25],
+    for (const [theme, themeCss, minimums] of [
+        ["light", lightCss, MIN_DIFFERENCE.light],
+        ["dark", darkCss, MIN_DIFFERENCE.dark],
+        ["high contrast", highContrastCss, MIN_DIFFERENCE.light],
     ] as const) {
         describe(`Scenario: slots 5 to 8 in the ${theme} theme`, () => {
             let themeStyle: HTMLStyleElement;
@@ -208,22 +212,27 @@ describe("Feature: many series stay readable", () => {
             });
             afterEach(() => themeStyle.remove());
 
-            it(`differs from every other slot, the statuses and the compare colour by more than ${minimum}`, async () => {
-                const el = await chart(pages.slice(0, 2));
-                const colors = uauiChartColors(el);
-                const others = [
-                    ...colors.series.map((slot, i) => [`slot ${i + 1}`, slot.line] as const),
-                    ...Object.entries(colors.status).map(([status, shades]) => [status, shades.line] as const),
-                    ["compare", colors.compare] as const,
-                ];
-                for (const [i, slot] of colors.series.entries()) {
-                    if (i < 4) continue;
-                    for (const [name, other] of others) {
-                        if (name === `slot ${i + 1}`) continue;
-                        expect(difference(slot.line, other), `slot ${i + 1} vs ${name}`).toBeGreaterThan(minimum);
-                    }
-                }
-            });
+            for (const vision of ["normal", "protan", "deutan", "tritan"] as const) {
+                it(`stays apart from the other slots, the statuses, the compare colour and each other (${vision}, CIEDE2000 above ${minimums[vision]})`, async () => {
+                    const el = await chart(pages.slice(0, 2));
+                    const colors = uauiChartColors(el);
+                    const others = [
+                        ...colors.series.slice(0, 4).flatMap((slot, i) => [[`slot ${i + 1}`, slot.line], [`bar ${i + 1}`, slot.bar]] as const),
+                        ...Object.entries(colors.status).map(([status, shades]) => [status, shades.line] as const),
+                        ["compare", colors.compare] as const,
+                    ];
+                    let smallest = { value: Infinity, pair: "" };
+                    colors.series.slice(4).forEach((slot, i) => {
+                        const pairs = [...others, ...colors.series.slice(4 + i + 1).map((next, j) => [`slot ${i + 6 + j}`, next.line] as const)];
+                        for (const [name, other] of pairs) {
+                            const value = colourDifference(slot.line, other, vision);
+                            if (value < smallest.value) smallest = { value, pair: `slot ${i + 5} vs ${name}` };
+                        }
+                    });
+                    console.log(`[palette] ${theme} ${vision}: ${smallest.value.toFixed(2)} (${smallest.pair})`);
+                    expect(smallest.value, smallest.pair).toBeGreaterThan(minimums[vision]);
+                });
+            }
         });
     }
 
