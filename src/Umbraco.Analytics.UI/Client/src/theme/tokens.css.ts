@@ -26,11 +26,15 @@ import { css, type CSSResult } from "@umbraco-cms/backoffice/external/lit";
  * | series-1   | space-cadet 14.62          | malibu-light 4.44             |
  * | series-2   | maroon-flush 4.54          | maroon-flush-light 3.05       |
  * | series-3   | sunglow-dark 4.07          | sunglow 8.94                  |
- * | series-4   | violet-blue 9.80           | jungle-green 5.58             |
+ * | series-4   | violet-blue 9.80           | lavender 5.62                 |
  * | compare    | chamoisee 3.71             | deep-saffron 5.92             |
  *
  * Replaced because they fail 3:1: space-cadet (1.15 dark), violet-blue (1.30 dark), spanish-pink
  * (1.17 light), sunglow (1.43 light), deep-saffron (2.15 light; no orange shade passes on white).
+ *
+ * Lavender (dark series 4) is `color-mix(in srgb, violet-blue-light 45%, white)`: the palette's violets all fail
+ * 3:1 on the dark surface, and its greens read as the positive status (jungle-green, the old series 4, was 1.56:1
+ * against forest-green-light). It is paler than series 1's malibu-light, so the two still differ.
  *
  * Fills (areas) use `--uaui-color-fill-N` at low alpha, not the line colour: the line
  * tokens are darker so lines clear 3:1, and a pale tint of them looks grey. In light, fill 1 is the
@@ -48,7 +52,7 @@ import { css, type CSSResult } from "@umbraco-cms/backoffice/external/lit";
  * | bar-1      | violet-blue 9.80           | malibu-light 4.44             |
  * | bar-2      | maroon-flush-light 4.18    | maroon-flush-light 3.05       |
  * | bar-3      | sunglow 1.43               | sunglow 8.94                  |
- * | bar-4      | malibu 3.93                | jungle-green 5.58             |
+ * | bar-4      | malibu 3.93                | lavender 5.62                 |
  *
  * Status series (a series' `color` of `"default"`, `"positive"`, `"warning"` or `"danger"`, the status cell's names) use
  * `--uaui-color-series-<status>` for lines, `--uaui-color-fill-<status>` for areas and `--uaui-color-bar-<status>` for
@@ -57,7 +61,7 @@ import { css, type CSSResult } from "@umbraco-cms/backoffice/external/lit";
  * `--uui-color-scheme`, so it takes the light value. The lines are UUI's positive and danger colours in light. Warning
  * matches series 3 and danger series 2 (lines and bars, in every theme): the palette has no other yellow or red that
  * clears 3:1, so don't mix those slots with those statuses (the chart warns once if you do). Positive is forest green in
- * dark too, not jungle green, which is series 4 there (1.56:1 between the two). Default is a neutral grey, as the
+ * dark too, and series 4 is lavender there, not a green, so the two don't look alike. Default is a neutral grey, as the
  * status cell's default is.
  * Fills are the line colour, but warning's is sunglow (as fill 3). Bars follow the slot bars' rule (no 3:1 target).
  *
@@ -135,7 +139,7 @@ export const UauiPaletteStyles: CSSResult = css`
         );
         --uaui-color-series-4: var(
             --uaui-series-4,
-            light-dark(var(--uui-palette-violet-blue), var(--uui-palette-jungle-green))
+            light-dark(var(--uui-palette-violet-blue), color-mix(in srgb, var(--uui-palette-violet-blue-light) 45%, white))
         );
         --uaui-color-fill-1: var(
             --uaui-series-1,
@@ -148,7 +152,7 @@ export const UauiPaletteStyles: CSSResult = css`
         --uaui-color-fill-3: var(--uaui-series-3, var(--uui-palette-sunglow));
         --uaui-color-fill-4: var(
             --uaui-series-4,
-            light-dark(var(--uui-palette-malibu), var(--uui-palette-jungle-green))
+            light-dark(var(--uui-palette-malibu), color-mix(in srgb, var(--uui-palette-violet-blue-light) 45%, white))
         );
         --uaui-color-bar-1: var(
             --uaui-bar-1,
@@ -161,7 +165,7 @@ export const UauiPaletteStyles: CSSResult = css`
         --uaui-color-bar-3: var(--uaui-bar-3, var(--uaui-series-3, var(--uui-palette-sunglow)));
         --uaui-color-bar-4: var(
             --uaui-bar-4,
-            var(--uaui-series-4, light-dark(var(--uui-palette-malibu), var(--uui-palette-jungle-green)))
+            var(--uaui-series-4, light-dark(var(--uui-palette-malibu), color-mix(in srgb, var(--uui-palette-violet-blue-light) 45%, white)))
         );
         --uaui-color-series-default: var(
             --uaui-series-default,
