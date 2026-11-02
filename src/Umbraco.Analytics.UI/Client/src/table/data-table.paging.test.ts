@@ -8,6 +8,7 @@ import highContrastCss from "@umbraco-ui/uui/themes/high-contrast.css?inline";
 import { render } from "vitest-browser-lit";
 import { userEvent } from "vitest/browser";
 import { axeRun } from "../internal/test/a11y.js";
+import { pressTab } from "../internal/test/keyboard.js";
 import { deepQueryAll, deepText, nextEvent, recordEvents, renderElement, settle, shadow, type UauiTestElement } from "../internal/test/dom.js";
 import "./data-table.element.js";
 import { manyRows, nameColumns } from "./table-fixtures.js";
@@ -276,9 +277,10 @@ describe("Feature: page through rows", () => {
         });
 
         it("reaches next with Tab from the page size select, skipping the disabled previous", async () => {
-            await pageSizeSelect(el).updateComplete;
+            // Both ends of the hop rendered, so next's inner button is there to take focus.
+            await Promise.all([pageSizeSelect(el).updateComplete, nextButton(el).updateComplete]);
             pageSizeSelect(el).shadowRoot!.querySelector("select")!.focus();
-            await userEvent.tab();
+            await pressTab();
             expect(pagerElement(el)!.shadowRoot!.activeElement).toBe(nextButton(el));
         });
     });
