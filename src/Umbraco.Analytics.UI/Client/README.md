@@ -38,9 +38,27 @@ TypeScript types for Umbraco Analytics UI: shared backoffice charts, tables, KPI
    html`<uaui-delta-badge .value=${12.4}></uaui-delta-badge>`;
    ```
 
+## Your own charts: the shared Chart.js
+
+The package also ships Chart.js, so your own charts use the site's one copy instead of bundling another:
+
+```ts
+import { ArcElement, Chart, DoughnutController } from "@umbraco/analytics-ui/external/chart.js";
+```
+
+It is Chart.js as is, with its own types (`chart.js` is installed with this package for them). The external rule in step 3 already covers it. Never import from `"chart.js"` in backoffice code, and never by a path to the file: the first bundles a second copy, and the second misses the backoffice's cache-busting query on import map URLs, so the browser loads a second copy.
+
+Chart.js's registry and defaults are shared by every product on the site, so:
+
+- Register the controllers, elements and scales you use with `Chart.register` (they're shared, and that's fine).
+- Never change `Chart.defaults` or `Chart.overrides`. Set options on your chart.
+- Pass your own and third-party plugins in your chart's `plugins` array. Never register them globally.
+
+See [Custom charts with Chart.js](https://umbraco.github.io/Umbraco.Analytics.UI/?path=/docs/guides-custom-charts-with-chart-js--docs) for an example.
+
 ## Versioning
 
-The package major matches the Umbraco CMS major. Minor and patch releases never break the public API: element names, attributes, events and types.
+The package major matches the Umbraco CMS major. Minor and patch releases never break the public API: element names, attributes, events and types. That includes Chart.js's major: a new Chart.js major only comes with a new CMS major.
 
 ## Elements and helpers
 

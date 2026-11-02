@@ -9,7 +9,7 @@ import lightCss from "@umbraco-ui/uui/themes/light.css?inline";
 import darkCss from "@umbraco-ui/uui/themes/dark.css?inline";
 import highContrastCss from "@umbraco-ui/uui/themes/high-contrast.css?inline";
 import { page, userEvent } from "vitest/browser";
-import { Chart } from "chart.js";
+import { Chart } from "@umbraco/analytics-ui/external/chart.js";
 import { deepQuery, renderElement, settle, shadow, type UauiTestElement } from "../internal/test/dom.js";
 import "../delta-badge/delta-badge.element.js";
 import "../chart/time-series-chart.element.js";

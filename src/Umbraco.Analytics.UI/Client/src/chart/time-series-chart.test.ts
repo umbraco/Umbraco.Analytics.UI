@@ -1,7 +1,7 @@
 // CHT-1 — Line and area chart
 // Canvas-only outcomes are checked with screenshot comparison (toMatchScreenshot). The first run
 // writes the baseline; review it against docs/design/phase-1/screenshots before committing it.
-import { Chart } from "chart.js";
+import { Chart } from "@umbraco/analytics-ui/external/chart.js";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { page, userEvent } from "vitest/browser";
 import { html } from "@umbraco-cms/backoffice/external/lit";

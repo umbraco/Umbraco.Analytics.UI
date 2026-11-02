@@ -3,8 +3,25 @@
   "version": "19.0.0-alpha.1",
   "type": "module",
   "types": "./types/umbraco-analytics-ui-public.d.ts",
+  "exports": {
+    ".": {
+      "types": "./types/umbraco-analytics-ui-public.d.ts"
+    },
+    "./external/chart.js": {
+      "types": "./types/external/chart.js/index.d.ts"
+    },
+    "./package.json": "./package.json"
+  },
+  "typesVersions": {
+    "*": {
+      "external/chart.js": [
+        "types/external/chart.js/index.d.ts"
+      ]
+    }
+  },
   "files": [
     "types/umbraco-analytics-ui-public.d.ts",
+    "types/external/chart.js/index.d.ts",
     "README.md"
   ],
   "engines": {

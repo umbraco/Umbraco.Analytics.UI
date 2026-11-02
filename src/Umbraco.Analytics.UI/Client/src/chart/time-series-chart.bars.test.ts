@@ -1,6 +1,6 @@
 // CHT-3 — Bar and stacked bar chart
 // Canvas-only outcomes are checked with screenshot comparison (toMatchScreenshot): see screenshotIt.
-import { Chart } from "chart.js";
+import { Chart } from "@umbraco/analytics-ui/external/chart.js";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { page, userEvent } from "vitest/browser";
 import { html } from "@umbraco-cms/backoffice/external/lit";

@@ -1,6 +1,6 @@
 // CHT-2 — Compare with another period
 // Canvas-only outcomes are checked with screenshot comparison (toMatchScreenshot): see screenshotIt.
-import { Chart } from "chart.js";
+import { Chart } from "@umbraco/analytics-ui/external/chart.js";
 /// <reference types="vite/client" />
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { page, userEvent } from "vitest/browser";
