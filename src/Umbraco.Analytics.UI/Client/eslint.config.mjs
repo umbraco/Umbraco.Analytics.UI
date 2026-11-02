@@ -40,8 +40,8 @@ export default tseslint.config(
         },
     },
     {
-        // The one module that may import Chart.js directly: it re-exports it as the shared external entry.
-        files: ["src/external/chart.js/index.ts"],
+        // The shared external entry is the one place that may import Chart.js directly: it re-exports it.
+        files: ["src/external/chart.js/*.ts"],
         rules: { "no-restricted-imports": "off" },
     },
 );

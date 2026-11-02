@@ -1,0 +1,18 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/api-extractor/v7/api-extractor.schema.json",
+  // The shared Chart.js entry (`@umbraco/analytics-ui/external/chart.js`). Our additions to it (uauiChartColors,
+  // uauiChartOptions, uauiWatchTheme, UauiChartColors) follow the package's semver like the main API, so they get their
+  // own report (api/analytics-ui-external-chart.api.md), checked by `check:api`. Chart.js's own exports follow Chart.js's
+  // semver and show as one `export * from "chart.js"` line.
+  "extends": "./api-extractor.json",
+  "mainEntryPointFilePath": "<projectFolder>/types/external/chart.js/index.d.ts",
+  "apiReport": {
+    "enabled": true,
+    "reportFileName": "analytics-ui-external-chart.api.md",
+    "reportFolder": "<projectFolder>/api/",
+    "reportTempFolder": "<projectFolder>/temp/"
+  },
+  "dtsRollup": {
+    "enabled": false
+  }
+}

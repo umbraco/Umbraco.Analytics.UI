@@ -7,6 +7,7 @@
     "ci:build-client": "cd ./src/Umbraco.Analytics.UI/Client && npm run build:app && npm run check:size",
     "ci:pack-client": "cd ./src/Umbraco.Analytics.UI/Client && npm run build-and-pack:api",
     "ci:lint-client": "cd ./src/Umbraco.Analytics.UI/Client && npm run lint",
+    "ci:check-api-client": "cd ./src/Umbraco.Analytics.UI/Client && npm run check:api",
     "ci:test-client": "cd ./src/Umbraco.Analytics.UI/Client && npm run test:ci",
     "ci:test-perf-client": "cd ./src/Umbraco.Analytics.UI/Client && npm run test:perf",
     "ci:storybook-client": "cd ./src/Umbraco.Analytics.UI/Client && npm run storybook:build",

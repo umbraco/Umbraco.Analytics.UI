@@ -88,6 +88,11 @@ extends:
               - script: npm run ci:lint-client
                 displayName: Lint
 
+              # Fails if the public API changed and api/*.api.md was not updated and committed. Run before
+              # anything that runs `build:api`, which rewrites the reports (API Extractor --local).
+              - script: npm run ci:check-api-client
+                displayName: Check API reports
+
               # TF_BUILD makes vite.config.ts run every browser engine, not just Chromium. Screenshot specs
               # run in Chromium on Linux only (the image) and skip in Firefox and WebKit.
               - script: npm run ci:test-client

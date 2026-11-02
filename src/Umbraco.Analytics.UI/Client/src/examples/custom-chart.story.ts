@@ -3,29 +3,48 @@ import { css, customElement, html, property, query, repeat } from "@umbraco-cms/
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { regionSource, sourceDocs } from "../internal/story/source.js";
 import raw from "./custom-chart.story.ts?raw";
-import { ArcElement, Chart, DoughnutController, Tooltip, type ChartData } from "@umbraco/analytics-ui/external/chart.js";
+import {
+    ArcElement,
+    Chart,
+    DoughnutController,
+    Tooltip,
+    uauiChartColors,
+    uauiChartOptions,
+    uauiWatchTheme,
+    type ChartData,
+    type UauiChartColors,
+} from "@umbraco/analytics-ui/external/chart.js";
 import { UauiPaletteStyles } from "../theme/index.js";
 
 const imports = `import { css, customElement, html, property, query, repeat } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UauiPaletteStyles } from "@umbraco/analytics-ui";
-// The site's one copy of Chart.js, shared with uaui-time-series-chart. Never import from "chart.js": that bundles another.
-import { ArcElement, Chart, DoughnutController, Tooltip, type ChartData } from "@umbraco/analytics-ui/external/chart.js";`;
+// The site's one copy of Chart.js, shared with uaui-time-series-chart, plus the package's chart look.
+// Never import from "chart.js": that bundles another.
+import {
+    ArcElement,
+    Chart,
+    DoughnutController,
+    Tooltip,
+    uauiChartColors,
+    uauiChartOptions,
+    uauiWatchTheme,
+    type ChartData,
+    type UauiChartColors,
+} from "@umbraco/analytics-ui/external/chart.js";`;
 
 // #region chart
-// Controllers, elements and Chart.js's own plugins live in the shared registry. Registering them again is harmless.
-Chart.register(DoughnutController, ArcElement, Tooltip);
-
 interface ExampleSlice {
     label: string;
     value: number;
 }
 
 /**
- * A product's own doughnut chart on the shared Chart.js. Slices take the package's series colours
- * (`--uaui-color-series-1` to `-4`), so they match `uaui-time-series-chart` in every theme and follow a product's
- * `--uaui-series-N` override. A canvas can't read CSS custom properties, so each colour is read back from a probe
- * element as a computed `color`. The legend is HTML, as ours is.
+ * A product's own doughnut chart on the shared Chart.js, in the package's look. `uauiChartColors` gives the slices the
+ * package's series colours (`--uaui-color-bar-1` to `-4`), so they match `uaui-time-series-chart` in every theme and
+ * follow a product's `--uaui-series-N` override; `uauiChartOptions` gives the font and the rest; `uauiWatchTheme`
+ * recolours the chart when the backoffice theme changes. The element adds `UauiPaletteStyles`, where those colours
+ * come from. The legend is HTML, as ours is.
  */
 @customElement("example-device-doughnut")
 class ExampleDeviceDoughnutElement extends UmbLitElement {
@@ -33,69 +52,74 @@ class ExampleDeviceDoughnutElement extends UmbLitElement {
     @property({ attribute: false }) slices: ExampleSlice[] = [];
 
     @query("canvas") private _canvas!: HTMLCanvasElement;
-    @query(".probe") private _probe!: HTMLElement;
 
     #chart?: Chart<"doughnut">;
+    #stopThemeWatch?: () => void;
 
-    #color(expression: string): string {
-        this._probe.style.color = expression;
-        return getComputedStyle(this._probe).color;
-    }
-
-    #data(): ChartData<"doughnut"> {
+    #data(colors: UauiChartColors): ChartData<"doughnut"> {
         return {
             labels: this.slices.map((slice) => slice.label),
             datasets: [
                 {
                     data: this.slices.map((slice) => slice.value),
-                    backgroundColor: this.slices.map((_, i) => this.#color(`var(--uaui-color-series-${(i % 4) + 1})`)),
-                    borderColor: this.#color("var(--uui-color-surface)"),
-                    borderWidth: 2,
+                    // Opaque slot colours, as the legend swatches below use.
+                    backgroundColor: this.slices.map((_, i) => colors.series[i % 4].bar),
                 },
             ],
         };
     }
 
     override updated() {
+        const colors = uauiChartColors(this);
         if (this.#chart) {
-            this.#chart.data = this.#data();
+            this.#chart.data = this.#data(colors);
             this.#chart.update();
             return;
         }
+        // Register what this chart uses, here with the chart. Controllers, elements and Chart.js's own plugins can only
+        // go in the shared registry; registering one again is harmless. Never change Chart.defaults.
+        Chart.register(DoughnutController, ArcElement, Tooltip);
+        const look = uauiChartOptions(this, "doughnut", colors);
         this.#chart = new Chart<"doughnut">(this._canvas, {
             type: "doughnut",
-            data: this.#data(),
+            data: this.#data(colors),
             options: {
-                responsive: true,
-                maintainAspectRatio: false,
+                // The package look (font, colours, legend and title off, responsive), set on this chart.
+                ...look,
                 cutout: "65%",
-                // Everything is set on this chart, never on Chart.defaults, which every product shares. Set each
-                // Chart.js plugin you rely on, on or off: another product may have registered Legend or Title.
-                plugins: {
-                    legend: { display: false },
-                    title: { display: false },
-                    tooltip: { enabled: true },
-                },
+                // Set each Chart.js plugin you rely on, on or off: another product may have registered it.
+                plugins: { ...look.plugins, tooltip: { ...look.plugins?.tooltip, enabled: true } },
             },
         });
+        // Recolour the slices when the backoffice theme changes. The look's own colours are updated for you.
+        this.#stopThemeWatch = uauiWatchTheme(this, this.#chart, (next, chart) => {
+            chart.data.datasets[0].backgroundColor = this.slices.map((_, i) => next.series[i % 4].bar);
+        });
+    }
+
+    override connectedCallback() {
+        super.connectedCallback();
+        // The chart is destroyed on disconnect, so build it again on reconnect.
+        if (this.hasUpdated) this.requestUpdate();
     }
 
     override disconnectedCallback() {
         super.disconnectedCallback();
+        this.#stopThemeWatch?.();
+        this.#stopThemeWatch = undefined;
         this.#chart?.destroy();
         this.#chart = undefined;
     }
 
     override render() {
         return html`
-            <span class="probe" aria-hidden="true"></span>
             <div class="canvas"><canvas role="img" aria-label=${this.label}></canvas></div>
             <ul class="legend">
                 ${repeat(
                     this.slices,
                     (slice) => slice.label,
                     (slice, i) => html`<li>
-                        <span class="swatch" style="background-color: var(--uaui-color-series-${(i % 4) + 1})"></span>
+                        <span class="swatch" style="background-color: var(--uaui-color-bar-${(i % 4) + 1})"></span>
                         ${slice.label}
                         <span class="value">${slice.value.toLocaleString(this.localize.lang())}</span>
                     </li>`,
@@ -111,9 +135,6 @@ class ExampleDeviceDoughnutElement extends UmbLitElement {
                 display: flex;
                 align-items: center;
                 gap: var(--uui-size-space-5);
-            }
-            .probe {
-                display: none;
             }
             .canvas {
                 position: relative;

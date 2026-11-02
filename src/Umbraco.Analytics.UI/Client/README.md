@@ -46,7 +46,7 @@ The package also ships Chart.js, so your own charts use the site's one copy inst
 import { ArcElement, Chart, DoughnutController } from "@umbraco/analytics-ui/external/chart.js";
 ```
 
-It is Chart.js as is, with its own types (`chart.js` is installed with this package for them). The external rule in step 3 already covers it. Never import from `"chart.js"` in backoffice code, and never by a path to the file: the first bundles a second copy, and the second misses the backoffice's cache-busting query on import map URLs, so the browser loads a second copy.
+It is Chart.js as is, with its own types (`chart.js` is installed with this package for them), plus three helpers that give your chart the package's look and follow the backoffice theme: `uauiChartColors(host)`, `uauiChartOptions(host, type)` and `uauiWatchTheme(host, chart)` (see the "Custom charts with Chart.js" guide in Storybook). The helpers follow this package's semver; the Chart.js types they use follow Chart.js's. The external rule in step 3 already covers it. Never import from `"chart.js"` in backoffice code, and never by a path to the file: the first bundles a second copy, and the second misses the backoffice's cache-busting query on import map URLs, so the browser loads a second copy.
 
 Chart.js's registry and defaults are shared by every product on the site, so:
 

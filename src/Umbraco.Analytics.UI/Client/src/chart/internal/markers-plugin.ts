@@ -1,5 +1,5 @@
 import type { Chart, Plugin } from "@umbraco/analytics-ui/external/chart.js";
-import type { UauiChartColors } from "./chart-colors.js";
+import type { UauiChartDrawColors } from "./chart-colors.js";
 
 /** One dot to draw: at the `index`th date of the chart, standing for `count` markers. */
 export interface UauiMarkerPin {
@@ -19,7 +19,7 @@ export interface UauiMarkersState {
     pins: UauiMarkerPin[];
     /** The date index of the dot that is hovered or focused. It is drawn larger and stronger. */
     active?: number;
-    colors?: UauiChartColors;
+    colors?: UauiChartDrawColors;
     onLayout: (placements: UauiMarkerPlacement[]) => void;
 }
 

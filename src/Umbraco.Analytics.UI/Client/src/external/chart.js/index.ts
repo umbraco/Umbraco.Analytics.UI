@@ -6,3 +6,7 @@
 // This is Chart.js's API and types, not ours: it is kept out of `src/index.ts` and the API report.
 // Its major is part of our compatibility promise, so a Chart.js major only comes with a CMS major.
 export * from "chart.js";
+
+// Our only additions: the package's look for a product's own charts (they take and return Chart.js types, so they
+// live here, not in the main entry). `uaui-time-series-chart` uses them too.
+export { uauiChartColors, uauiChartOptions, uauiWatchTheme, type UauiChartColors } from "./look.js";

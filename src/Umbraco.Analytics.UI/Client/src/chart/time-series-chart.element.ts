@@ -30,11 +30,10 @@ import "./internal/chart-markers.element.js";
 import "./internal/chart-tooltip.element.js";
 import type { UauiChartMarkersActiveDetail } from "./internal/chart-markers.element.js";
 import type { UauiChartTooltipCompare, UauiChartTooltipElement, UauiChartTooltipRow } from "./internal/chart-tooltip.element.js";
-import { colorsDiffer, resolveChartColors, type UauiChartColors } from "./internal/chart-colors.js";
+import { colorsDiffer, resolveChartColors, type UauiChartDrawColors } from "./internal/chart-colors.js";
 import { UauiChartRenderer, type UauiChartHover } from "./internal/chart-renderer.js";
 import { niceScale } from "./internal/nice-scale.js";
 import { clampInside, placeTooltip } from "./internal/place-tooltip.js";
-import { watchTheme } from "./internal/theme-watch.js";
 import type { UauiCompare, UauiDateRange } from "../date-range/types.js";
 import type { UauiChartKind, UauiMarker, UauiMarkerClickDetail, UauiSeries } from "./types.js";
 
@@ -261,8 +260,7 @@ export class UauiTimeSeriesChartElement extends UmbLitElement {
     private _activeMarker?: number;
 
     #renderer?: UauiChartRenderer;
-    #stopThemeWatch?: () => void;
-    #colors?: UauiChartColors;
+    #colors?: UauiChartDrawColors;
     /** Everything derived from the inputs below: shared dates, formatted labels and formatters. */
     #derived: Derived = emptyDerived;
     /** What `#derived` was built from. Hovering re-renders the element but changes none of these. */
@@ -274,7 +272,6 @@ export class UauiTimeSeriesChartElement extends UmbLitElement {
 
     override connectedCallback() {
         super.connectedCallback();
-        this.#stopThemeWatch = watchTheme(() => this.#syncColors());
         document.addEventListener("keydown", this.#onDocumentKeydown);
         // On reconnect the first render has already happened, so rebuild the chart in `updated`.
         if (this.hasUpdated) this.requestUpdate();
@@ -282,8 +279,6 @@ export class UauiTimeSeriesChartElement extends UmbLitElement {
 
     override disconnectedCallback() {
         super.disconnectedCallback();
-        this.#stopThemeWatch?.();
-        this.#stopThemeWatch = undefined;
         this.#renderer?.destroy();
         this.#renderer = undefined;
         this.#colors = undefined;
@@ -395,11 +390,14 @@ export class UauiTimeSeriesChartElement extends UmbLitElement {
     #syncChart() {
         const canvas = this.#canvas;
         const probe = this.#probe;
-        if (!canvas || !probe) return;
+        // An update already queued can run after disconnect: build nothing then, as nothing would destroy it.
+        // Reconnecting asks for an update, which draws.
+        if (!canvas || !probe || !this.isConnected) return;
 
         if (!this.#renderer) {
             this.#renderer = new UauiChartRenderer(
                 canvas,
+                this,
                 (hover) => {
                     this._hoverDismissed = false;
                     this._hover = hover;
@@ -407,6 +405,8 @@ export class UauiTimeSeriesChartElement extends UmbLitElement {
                 (placements) => {
                     this._markerPlacements = placements;
                 },
+                // The renderer watches the theme with `uauiWatchTheme`, as a product's chart does.
+                () => this.#syncColors(),
             );
             this.#dirty = true;
             // Axis text is measured with the web font, so redraw once fonts have settled.
@@ -414,7 +414,7 @@ export class UauiTimeSeriesChartElement extends UmbLitElement {
         }
         if (!this.#dirty) return;
         this.#dirty = false;
-        this.#colors = resolveChartColors(probe, this.#slots);
+        this.#colors = resolveChartColors(this, probe, this.#slots);
         this.#draw();
     }
 
@@ -437,11 +437,11 @@ export class UauiTimeSeriesChartElement extends UmbLitElement {
         });
     }
 
-    /** Redraws with the theme's current colours, if they changed. Called when a stylesheet changes. */
+    /** Redraws with the theme's current colours, if they changed. Called by the renderer's theme watch. */
     #syncColors() {
         const probe = this.#probe;
         if (!probe || !this.#renderer) return;
-        const colors = resolveChartColors(probe, this.#slots);
+        const colors = resolveChartColors(this, probe, this.#slots);
         if (!colorsDiffer(this.#colors, colors)) return;
         this.#colors = colors;
         this.#draw();
