@@ -9,6 +9,8 @@ export interface UauiChartLegendEntry {
     label: string;
     /** What the series is coloured by: a palette slot (1 to 4) or a status colour. */
     color: UauiSeriesColorKey;
+    /** Draws a square in the bar colour (`true`) or a line (`false`) for this entry. Defaults to the legend's `bars`. */
+    bar?: boolean;
 }
 
 /**
@@ -23,7 +25,7 @@ export class UauiChartLegendElement extends UmbLitElement {
     @property({ attribute: false })
     entries: UauiChartLegendEntry[] = [];
 
-    /** Draw squares in the bar colours, as the bar kinds do. */
+    /** Draw squares in the bar colours, as the bar kinds do. An entry's own `bar` overrides it. */
     @property({ type: Boolean })
     bars = false;
 
@@ -31,23 +33,36 @@ export class UauiChartLegendElement extends UmbLitElement {
     @property({ type: String, attribute: "compare-label" })
     compareLabel?: string;
 
+    /**
+     * How the compared period is drawn, one swatch each in the compare entry: a bar (the compare total behind the bars)
+     * and a dashed line (a line's compare line), or one of them. Defaults to a bar with `bars`, else a line.
+     */
+    @property({ attribute: false })
+    compareShapes?: readonly ("bar" | "line")[];
+
     override render(): TemplateResult {
-        const token = this.bars ? "bar" : "series";
+        const shapes = this.compareShapes?.length ? this.compareShapes : [this.bars ? "bar" : "line"];
         return html`<ul aria-label=${this.localize.term("uauiAnalytics_chartLegendLabel")}>
             ${repeat(
                 this.entries,
                 (entry) => entry.id,
-                (entry) => html`<li>
-                    <span
-                        class=${this.bars ? "legend-swatch" : "legend-line"}
-                        style="--swatch: var(--uaui-color-${token}-${entry.color})"
-                        aria-hidden="true"></span>
-                    ${entry.label}
-                </li>`,
+                (entry) => {
+                    const bar = entry.bar ?? this.bars;
+                    return html`<li>
+                        <span
+                            class=${bar ? "legend-swatch" : "legend-line"}
+                            style="--swatch: var(--uaui-color-${bar ? "bar" : "series"}-${entry.color})"
+                            aria-hidden="true"></span>
+                        ${entry.label}
+                    </li>`;
+                },
             )}
             ${this.compareLabel
                 ? html`<li>
-                      <span class=${this.bars ? "legend-swatch legend-compare-swatch" : "legend-line legend-compare"} aria-hidden="true"></span>
+                      ${shapes.map(
+                          (shape) =>
+                              html`<span class=${shape === "bar" ? "legend-swatch legend-compare-swatch" : "legend-line legend-compare"} aria-hidden="true"></span>`,
+                      )}
                       ${this.compareLabel}
                   </li>`
                 : nothing}

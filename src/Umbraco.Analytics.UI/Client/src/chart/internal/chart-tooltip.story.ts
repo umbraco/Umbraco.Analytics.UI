@@ -68,3 +68,17 @@ export const Bars: Story = {
         compareTotal: { value: 2400, date: "Apr 27, 2026", current: 1920 },
     },
 };
+
+/** Bars and a line in one chart, on today's date: square swatches for the bars, a dot for the line, each row's own. */
+export const BarsAndLine: Story = {
+    name: "Bars and a line",
+    args: {
+        date: "Jun 22, 2026 (today)",
+        bars: true,
+        rows: [
+            { color: "positive", value: 6, label: "Approved" },
+            { color: "danger", value: 1, label: "Errored" },
+            { color: "warning", value: 14, label: "Pending", bar: false, compare: { value: 11, date: "May 23, 2026", current: 14 } },
+        ],
+    },
+};

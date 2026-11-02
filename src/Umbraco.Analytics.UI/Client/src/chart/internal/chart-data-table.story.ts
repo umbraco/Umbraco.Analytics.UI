@@ -23,17 +23,17 @@ const meta: Meta<UauiChartDataTableElement> = {
             { id: "pageviews", label: "Pageviews", values: [120, 150, null], compare: [100, 90, 80] },
             { id: "sessions", label: "Sessions", values: [60, 70, 80] },
         ],
-        bars: false,
         totals: undefined,
         totalLabel: "Total",
         compareTotal: undefined,
+        logScale: false,
     },
     // The table is clipped to 1px; the story puts it back in the flow.
     render: (args) => html`<uaui-chart-data-table
         style="position: static; width: auto; height: auto; margin: 0; overflow: visible; clip-path: none"
         .dates=${args.dates}
         .series=${args.series}
-        .bars=${args.bars}
+        .logScale=${args.logScale}
         .totals=${args.totals}
         .totalLabel=${args.totalLabel}
         .compareTotal=${args.compareTotal}></uaui-chart-data-table>`,
@@ -45,10 +45,12 @@ type Story = StoryObj<UauiChartDataTableElement>;
 /** Lines: a column per series, and one for its compare points. */
 export const Default: Story = {};
 
+/** On a log y-axis the caption says so, as the table is all a screen reader gets of the chart. */
+export const LogScale: Story = { name: "Log scale", args: { logScale: true } };
+
 /** Bars: the total and the compare total are columns of their own. */
 export const Bars: Story = {
     args: {
-        bars: true,
         series: [
             { id: "pageviews", label: "Pageviews", values: [120, 150, 40] },
             { id: "sessions", label: "Sessions", values: [60, 70, 80] },

@@ -44,6 +44,14 @@ export default {
         chartMarkerSeparator: "; ",
         chartMarkersMore: "+{0} more",
         chartComparisonLabel: "Comparison",
+        // Drawn over the chart's today line.
+        chartToday: "Today",
+        // Today's date in the tooltip and the hidden table, "Nov 2, 2026 (today)".
+        chartTodayDate: "{0} (today)",
+        // The same for a week or month that contains today, "Nov 2, 2026 (includes today)".
+        chartTodayInBucket: "{0} (includes today)",
+        // The hidden table's caption when the chart's y-axis is logarithmic.
+        chartTableCaptionLog: "Chart data (logarithmic scale)",
 
         // Funnel
         funnelAriaLabel: "Funnel",

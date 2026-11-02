@@ -20,6 +20,8 @@ export interface UauiChartTooltipCompare {
 export interface UauiChartTooltipRow {
     /** What the series is coloured by: a palette slot (1 to 4) or a status colour. */
     color: UauiSeriesColorKey;
+    /** Draws a square in the bar colour (`true`) or a dot (`false`) for this row. Defaults to the tooltip's `bars`. */
+    bar?: boolean;
     value: number;
     /** The series' label. Left out when there is only one series. */
     label?: string;
@@ -69,10 +71,10 @@ export class UauiChartTooltipElement extends UmbLitElement {
     }
 
     /** The compare value, with the change from it to the current value, worked out by the badge: none when there is nothing to divide by. */
-    #renderCompare({ value, date, current }: UauiChartTooltipCompare): TemplateResult {
+    #renderCompare({ value, date, current }: UauiChartTooltipCompare, square: boolean): TemplateResult {
         return html`<div class="tooltip-compare">
             <div class="tooltip-row">
-                <span class=${this.bars ? "swatch swatch-compare swatch-square" : "swatch swatch-compare"}></span>
+                <span class=${square ? "swatch swatch-compare swatch-square" : "swatch swatch-compare"}></span>
                 <span class="tooltip-value">${this.#format(value)}</span>
                 ${Number.isFinite(deltaChange(undefined, current ?? undefined, value, "percent"))
                     ? html`<uaui-delta-badge size="sm" .current=${current} .previous=${value} .lowerIsBetter=${this.lowerIsBetter}></uaui-delta-badge>`
@@ -83,24 +85,23 @@ export class UauiChartTooltipElement extends UmbLitElement {
     }
 
     override render(): TemplateResult {
-        const token = this.bars ? "bar" : "series";
-        const swatch = this.bars ? "swatch swatch-square" : "swatch";
         return html`<div class="tooltip-date">${this.date}</div>
-            ${this.rows.map(
-                (row) => html`<div class="tooltip-row tooltip-series">
-                        <span class=${swatch} style="--swatch: var(--uaui-color-${token}-${row.color})"></span>
+            ${this.rows.map((row) => {
+                const bar = row.bar ?? this.bars;
+                return html`<div class="tooltip-row tooltip-series">
+                        <span class=${bar ? "swatch swatch-square" : "swatch"} style="--swatch: var(--uaui-color-${bar ? "bar" : "series"}-${row.color})"></span>
                         <span class="tooltip-value">${this.#format(row.value)}</span>
                         ${row.label === undefined ? nothing : html`<span class="tooltip-label">${row.label}</span>`}
                     </div>
-                    ${row.compare ? this.#renderCompare(row.compare) : nothing}`,
-            )}
+                    ${row.compare ? this.#renderCompare(row.compare, bar) : nothing}`;
+            })}
             ${this.total
                 ? html`<div class="tooltip-row tooltip-total">
                       <span class="tooltip-value">${this.#format(this.total.value)}</span>
                       <span class="tooltip-label">${this.total.label}</span>
                   </div>`
                 : nothing}
-            ${this.compareTotal ? this.#renderCompare(this.compareTotal) : nothing}`;
+            ${this.compareTotal ? this.#renderCompare(this.compareTotal, true) : nothing}`;
     }
 
     static override styles: CSSResultGroup = [

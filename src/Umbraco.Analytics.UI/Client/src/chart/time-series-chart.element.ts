@@ -23,7 +23,8 @@ import "../internal/loading/skeleton.element.js";
 import { UauiPaletteStyles } from "../theme/index.js";
 import { bucketMarkers, type MarkerBucket } from "./internal/marker-buckets.js";
 import type { UauiMarkerPlacement } from "./internal/markers-plugin.js";
-import { allWhole, buildChartData, maxValue, seriesTotals, type UauiChartData } from "./internal/chart-data.js";
+import { allWhole, buildChartData, maxValue, minPositive, seriesTotals, type UauiChartData } from "./internal/chart-data.js";
+import { logScale } from "./internal/log-scale.js";
 import "./internal/chart-data-table.element.js";
 import "./internal/chart-legend.element.js";
 import "./internal/chart-markers.element.js";
@@ -35,7 +36,7 @@ import { UauiChartRenderer, type UauiChartHover } from "./internal/chart-rendere
 import { niceScale } from "./internal/nice-scale.js";
 import { clampInside, placeTooltip } from "./internal/place-tooltip.js";
 import type { UauiCompare, UauiDateRange } from "../date-range/types.js";
-import type { UauiChartKind, UauiMarker, UauiMarkerClickDetail, UauiSeries } from "./types.js";
+import type { UauiChartKind, UauiChartScale, UauiMarker, UauiMarkerClickDetail, UauiSeries, UauiSeriesKind } from "./types.js";
 import type { UauiColorSlot } from "../theme/types.js";
 
 const axisDateFormat: Record<UauiGroupBy, Intl.DateTimeFormatOptions> = {
@@ -51,6 +52,7 @@ const tooltipDateFormat: Record<UauiGroupBy, Intl.DateTimeFormatOptions> = {
 };
 
 interface DerivedFrom {
+    kind: UauiChartKind;
     series: UauiSeries[];
     compareSeries: UauiSeries[];
     range?: UauiDateRange;
@@ -63,11 +65,13 @@ interface DerivedFrom {
 
 interface Derived {
     data: UauiChartData;
+    /** How each series is drawn: its own `kind`, else the chart's. */
+    kinds: UauiSeriesKind[];
     axisLabels: string[];
     dateLabels: string[];
     /** Per series, the formatted date of each compare point (empty string where there is none). */
     compareDateLabels: string[][];
-    /** The sum of the series per date, `null` where every series is missing a point. */
+    /** The sum of the bar series per date (of every series when there are no bars), `null` where all are missing a point. */
     totals: (number | null)[];
     /** For the bar kinds, the formatted date of each compare total (empty string where there is none). */
     compareTotalDateLabels: string[];
@@ -85,6 +89,7 @@ interface MarkersFrom {
 
 const emptyDerived: Derived = {
     data: { dates: [], series: [] },
+    kinds: [],
     axisLabels: [],
     dateLabels: [],
     compareDateLabels: [],
@@ -104,6 +109,12 @@ const COLOR_KEYS: ReadonlySet<unknown> = new Set<UauiSeriesColorKey>([1, 2, 3, 4
 function colorKeyOf(series: UauiSeries | undefined, position: number): UauiSeriesColorKey {
     const color = series?.color;
     return COLOR_KEYS.has(color) ? (color as UauiSeriesColorKey) : (((position % 4) + 1) as UauiColorSlot);
+}
+
+/** How a series is drawn: its own `kind` when valid, else bars in the bar kinds and a line in the others. */
+function seriesKindOf(series: UauiSeries, kind: UauiChartKind): UauiSeriesKind {
+    if (series.kind === "line" || series.kind === "bar") return series.kind;
+    return kind === "bar" || kind === "stacked-bar" ? "bar" : "line";
 }
 
 /** Whole numbers on the axis unless the step is fractional; compact once the numbers get long. */
@@ -128,6 +139,11 @@ function tickFormat(valueFormat: Intl.NumberFormatOptions | undefined, max: numb
  * The bar kinds draw each date's compare series, added together, as one bar behind the current bar or bars
  * (so there `compare-series` needn't match the `id`s of `series`). `stacked-bar` stacks the series per date and
  * adds a total to the tooltip and the hidden table.
+ * A series' own `kind` (`"line"` or `"bar"`) mixes the two in one chart, on one y-axis: lines are drawn over the bars
+ * and never stack; a compare series matched to a line by `id` is its dashed line, and the rest add up into the compare
+ * bar. The total counts the bars only.
+ * `today` draws a thin labelled line at today's date, for dates that run past it. `y-scale="log"` spaces the y-axis by
+ * powers of ten, bending toward 0 at the bottom so 0 stays on the axis line.
  * `markers` draw a dashed line and a dot on the x-axis at their date (in the bucket that contains it when grouped by
  * week or month; none when it is outside the chart). Each dot is a button: hover or focus shows the markers' dates,
  * titles and descriptions, and click or Enter raises `marker-click`. Markers in one bucket share a dot.
@@ -162,9 +178,22 @@ function tickFormat(valueFormat: Intl.NumberFormatOptions | undefined, max: numb
  */
 @customElement("uaui-time-series-chart")
 export class UauiTimeSeriesChartElement extends UmbLitElement {
-    /** How the series are drawn. */
+    /** How the series are drawn. A series' own `kind` (`"line"` or `"bar"`) overrides it for that series. */
     @property({ type: String, reflect: true })
     kind: UauiChartKind = "line";
+
+    /**
+     * How the y-axis spaces its values. `"log"` spaces it by powers of ten, for values that span widely. It still starts
+     * at 0: 0 sits on the axis line and the axis bends toward it near the bottom, so a 0 needs no gap and the smallest
+     * bar still shows. Higher up, each power of ten gets close to the same height; the lowest decade is about three
+     * quarters of one. The shape depends on the smallest value above 0 (the first tick is the power of ten at or below
+     * it), so it can change when the date range does. Ticks are at 0 and each power of ten (with the 2s and 5s when there
+     * are only one or two), every other or third one when the axis is too short for all. The hidden table's caption
+     * says the scale is logarithmic. `stacked-bar` keeps a linear axis, as stacked segments on a log axis don't add up
+     * by height. Any other value is linear.
+     */
+    @property({ type: String, attribute: "y-scale", reflect: true })
+    yScale: UauiChartScale = "linear";
 
     /** One line per series. Dates are ISO ("2026-06-11"). Series needn't share the same dates. */
     @property({ attribute: false })
@@ -208,6 +237,16 @@ export class UauiTimeSeriesChartElement extends UmbLitElement {
     /** Events shown as a dot on the x-axis with a dashed line. One outside the chart's dates draws nothing. */
     @property({ attribute: false })
     markers: UauiMarker[] = [];
+
+    /**
+     * Today's ISO date ("2026-11-02"), to draw a thin solid line at it labelled "Today", for a chart whose dates run on
+     * past today (reviews due next week). Taken from the product, not the clock, so it is the editor's day as the
+     * product counts it. It is drawn in the date (or the week or month, per `group-by`) that contains it, and not at all
+     * when no date does. The tooltip and the hidden table name that date as today. Dates after today are drawn like any
+     * other: pass a point (0 when there is nothing yet) for each, as the chart's dates are its points' dates.
+     */
+    @property({ type: String })
+    today?: string;
 
     /** Sets the format of the x-axis labels, and the bucket unit (day, week, month) that compare points are aligned in. The points themselves are not grouped: pass them already grouped, with each bucket at its first day. */
     @property({ type: String, attribute: "group-by" })
@@ -278,6 +317,11 @@ export class UauiTimeSeriesChartElement extends UmbLitElement {
     #derivedFrom?: DerivedFrom;
     #markerBuckets: MarkerBucket[] = [];
     #markersFrom?: MarkersFrom;
+    /** The index of the date that contains `today`, if any. */
+    #todayIndex?: number;
+    /** The dates of the hidden table and the tooltip, with today's named, and the `#derived` they were made from. */
+    #tableDates: string[] = [];
+    #tableDatesFrom?: Derived;
     /** The chart needs drawing: the derived data or the kind changed. */
     #dirty = true;
 
@@ -307,14 +351,23 @@ export class UauiTimeSeriesChartElement extends UmbLitElement {
 
     protected override willUpdate(changed: PropertyValues<this>) {
         super.willUpdate(changed);
-        const next = { series: this.series, compareSeries: this.compareSeries, range: this.range, compare: this.compare, groupBy: this.groupBy, weekStart: resolveWeekStart(this.weekStart), valueFormat: this.valueFormat, lang: this.localize.lang() };
+        const next = { kind: this.kind, series: this.series, compareSeries: this.compareSeries, range: this.range, compare: this.compare, groupBy: this.groupBy, weekStart: resolveWeekStart(this.weekStart), valueFormat: this.valueFormat, lang: this.localize.lang() };
         const prev = this.#derivedFrom;
         if (!prev || (Object.keys(next) as (keyof typeof next)[]).some((key) => prev[key] !== next[key])) {
             this.#derivedFrom = next;
             this.#derived = this.#derive(next);
             this.#dirty = true;
         }
-        if (changed.has("kind") || changed.has("lowerIsBetter")) this.#dirty = true;
+        if (changed.has("kind") || changed.has("lowerIsBetter") || changed.has("yScale") || changed.has("today")) this.#dirty = true;
+
+        const todayIndex = this.today ? bucketMarkers([{ id: "today", date: this.today, title: "" }], this.#derived.data.dates, this.groupBy)[0]?.index : undefined;
+        if (todayIndex !== this.#todayIndex || this.#tableDatesFrom !== this.#derived) {
+            this.#todayIndex = todayIndex;
+            this.#tableDatesFrom = this.#derived;
+            const { dateLabels } = this.#derived;
+            this.#tableDates = todayIndex === undefined ? dateLabels : dateLabels.map((label, i) => (i === todayIndex ? this.#todayDate(label) : label));
+            this.#dirty = true;
+        }
 
         const markersNext = { markers: this.markers, dates: this.#derived.data.dates, groupBy: this.groupBy };
         const markersPrev = this.#markersFrom;
@@ -349,17 +402,21 @@ export class UauiTimeSeriesChartElement extends UmbLitElement {
      * too slow for the hundreds of labels and table cells of a long chart. These formatters use the
      * same language `localize` does.
      */
-    #derive({ series, compareSeries, range, compare, groupBy, weekStart, valueFormat, lang }: DerivedFrom): Derived {
-        const data = buildChartData(series, compareSeries, groupBy, { from: range?.from, compareFrom: compare?.from }, weekStart);
+    #derive({ kind, series, compareSeries, range, compare, groupBy, weekStart, valueFormat, lang }: DerivedFrom): Derived {
+        const kinds = series.map((s) => seriesKindOf(s, kind));
+        const lines = kinds.map((k) => k === "line");
+        const bars = kinds.map((k) => k === "bar");
+        const data = buildChartData(series, compareSeries, groupBy, { from: range?.from, compareFrom: compare?.from }, weekStart, lines);
         const axisDate = new Intl.DateTimeFormat(lang, axisDateFormat[groupBy] ?? axisDateFormat.day);
         const tooltipDate = new Intl.DateTimeFormat(lang, tooltipDateFormat[groupBy] ?? tooltipDateFormat.day);
         const tooltipLabel = (iso: string | null) => (iso ? formatIsoDate(iso, tooltipDate) : "");
         return {
             data,
+            kinds,
             axisLabels: data.dates.map((d) => formatIsoDate(d, axisDate)),
             dateLabels: data.dates.map(tooltipLabel),
             compareDateLabels: data.series.map((s) => (s.compareDates ?? []).map(tooltipLabel)),
-            totals: seriesTotals(data),
+            totals: seriesTotals(data, bars.some(Boolean) ? bars : undefined),
             compareTotalDateLabels: (data.compareTotal?.dates ?? []).map(tooltipLabel),
             numberFormat: getNumberFormat(lang, valueFormat),
             markerDate: new Intl.DateTimeFormat(lang, tooltipDateFormat.day),
@@ -371,22 +428,44 @@ export class UauiTimeSeriesChartElement extends UmbLitElement {
         return this.#derived.data.series.map((_, i) => colorKeyOf(this.series[i], i));
     }
 
-    get #isBars() {
-        return this.kind === "bar" || this.kind === "stacked-bar";
+    /** How many series are drawn as bars. */
+    get #barCount() {
+        return this.#derived.kinds.filter((k) => k === "bar").length;
     }
 
-    /** Bar kinds compare the total of the compare series; line kinds compare each series with its match. */
+    /** Bars compare against the compare total (one bar per date behind them). */
+    get #comparesBars() {
+        return this.#barCount > 0 && !!this.#derived.data.compareTotal;
+    }
+
+    /** A line compares against its own compare series (matched by `id`), drawn dashed. */
+    get #comparesLines() {
+        return this.#derived.data.series.some((s, i) => this.#derived.kinds[i] === "line" && s.compare);
+    }
+
     get #isComparing() {
-        const { data } = this.#derived;
-        return this.#isBars ? !!data.compareTotal : data.series.some((s) => s.compare);
+        return this.#comparesBars || this.#comparesLines;
     }
 
     /**
-     * The total of the series is shown (tooltip, hidden table) where there are several to add up and it is either
+     * The total of the bars is shown (tooltip, hidden table) where there are several to add up and it is either
      * what the bars stack to or what the compare total is compared against.
      */
     get #showsTotal() {
-        return this.#isBars && this.#derived.data.series.length > 1 && (this.kind === "stacked-bar" || this.#isComparing);
+        return this.#barCount > 1 && (this.kind === "stacked-bar" || this.#comparesBars);
+    }
+
+    /** Log, unless the bars stack: stacked segments on a log axis don't add up by height. */
+    get #isLog() {
+        return this.yScale === "log" && !(this.kind === "stacked-bar" && this.#barCount > 0);
+    }
+
+    /** A date as the tooltip and the hidden table name it when it is today's. */
+    #todayDate(label: string) {
+        // A week or month isn't today: it contains it.
+        return this.groupBy === "week" || this.groupBy === "month"
+            ? this.localize.term("uauiAnalytics_chartTodayInBucket", label)
+            : this.localize.term("uauiAnalytics_chartTodayDate", label);
     }
 
     get #totalText() {
@@ -432,21 +511,60 @@ export class UauiTimeSeriesChartElement extends UmbLitElement {
     #draw() {
         if (!this.#renderer || !this.#colors) return;
         this.#warnColorClash(this.#colors);
-        const { data, axisLabels, lang } = this.#derived;
-        const scale = niceScale(maxValue(data, this.kind), 5, allWhole(data));
-        const tick = getNumberFormat(lang, tickFormat(this.valueFormat, scale.max, scale.step));
-        this.#renderer.update({
+        const { data, kinds, axisLabels, lang } = this.#derived;
+        const max = maxValue(data, this.kind, kinds.map((k) => k === "bar"));
+        const common = {
             kind: this.kind,
             labels: axisLabels,
-            datasets: data.series.map((s) => ({ label: s.label, values: s.values, compare: this.#isBars ? undefined : s.compare })),
-            compareTotal: this.#isBars ? data.compareTotal?.values : undefined,
             markers: this.#markerBuckets.map((b) => ({ index: b.index, count: b.markers.length })),
+            today: this.#todayIndex === undefined ? undefined : { index: this.#todayIndex, label: this.localize.term("uauiAnalytics_chartToday") },
+            todayRoom: !!this.today,
+            colors: this.#colors,
+            lowerIsBetter: this.lowerIsBetter,
+        };
+        const datasetsOf = (to: (value: number | null) => number | null) =>
+            data.series.map((s, i) => ({
+                label: s.label,
+                kind: kinds[i],
+                values: s.values.map(to),
+                compare: kinds[i] === "line" ? s.compare?.map(to) : undefined,
+            }));
+        const compareTotal = this.#barCount > 0 ? data.compareTotal?.values : undefined;
+        this.#warnLogStacked();
+        if (this.#isLog) {
+            // Drawn at their heights on the log curve, on a linear Chart.js axis with our own ticks (see `logScale`).
+            const log = logScale(max, minPositive(data));
+            const tick = getNumberFormat(lang, tickFormat(this.valueFormat, log.top, log.unit));
+            this.#renderer.update({
+                ...common,
+                datasets: datasetsOf(log.toAxis),
+                compareTotal: compareTotal?.map(log.toAxis),
+                yMax: log.toAxis(log.top)!,
+                yStep: 1,
+                formatTick: (value) => tick.format(value),
+                yTicks: log.ticks.map((value) => ({ value: log.toAxis(value)!, label: tick.format(value) })),
+            });
+            return;
+        }
+        const scale = niceScale(max, 5, allWhole(data));
+        const tick = getNumberFormat(lang, tickFormat(this.valueFormat, scale.max, scale.step));
+        this.#renderer.update({
+            ...common,
+            datasets: datasetsOf((value) => value),
+            compareTotal,
             yMax: scale.max,
             yStep: scale.step,
             formatTick: (value) => tick.format(value),
-            colors: this.#colors,
-            lowerIsBetter: this.lowerIsBetter,
         });
+    }
+
+    #warnedLogStacked = false;
+
+    /** Warns once per chart that `y-scale="log"` is ignored while bars stack. */
+    #warnLogStacked() {
+        if (this.#warnedLogStacked || this.yScale !== "log" || this.#isLog || !this.#barCount) return;
+        this.#warnedLogStacked = true;
+        console.warn('[uaui] uaui-time-series-chart: y-scale="log" is ignored with kind="stacked-bar", as stacked bars on a log axis don\'t add up by height. Use kind="bar".');
     }
 
     #warnedColorClash = false;
@@ -488,17 +606,18 @@ export class UauiTimeSeriesChartElement extends UmbLitElement {
     /** One row per series with a point at the hovered date, and for the bar kinds the total and the compare total. */
     #renderTooltip() {
         const hover = this._hover;
-        const { data, dateLabels, compareDateLabels, compareTotalDateLabels, totals, numberFormat } = this.#derived;
+        const { data, kinds, dateLabels, compareDateLabels, compareTotalDateLabels, totals, numberFormat } = this.#derived;
         if (!hover || this._hoverDismissed || !dateLabels[hover.index] || this._activeMarker !== undefined) return nothing;
         const { index } = hover;
-        const bars = this.#isBars;
+        const bars = this.#barCount > 0;
         const rows = data.series.flatMap((s, i): UauiChartTooltipRow[] => {
             const value = s.values[index];
             if (value === null) return [];
-            const compare = bars ? null : s.compare?.[index];
+            const compare = s.compare?.[index];
             return [
                 {
                     color: colorKeyOf(this.series[i], i),
+                    bar: kinds[i] === "bar",
                     value,
                     label: data.series.length > 1 ? s.label : undefined,
                     compare: compare === null || compare === undefined ? undefined : { value: compare, date: compareDateLabels[i][index], current: value },
@@ -514,7 +633,7 @@ export class UauiTimeSeriesChartElement extends UmbLitElement {
         return html`<uaui-chart-tooltip
             style="visibility:hidden"
             aria-hidden="true"
-            .date=${dateLabels[index]}
+            .date=${this.#tableDates[index] ?? dateLabels[index]}
             .rows=${rows}
             .bars=${bars}
             .lowerIsBetter=${this.lowerIsBetter}
@@ -545,24 +664,27 @@ export class UauiTimeSeriesChartElement extends UmbLitElement {
 
     #renderLegend() {
         if (this.series.length < 2 && !this.#isComparing) return nothing;
-        const entries = this.series.map((s, i) => ({ id: s.id, label: s.label, color: colorKeyOf(s, i) }));
+        const { kinds } = this.#derived;
+        const entries = this.series.map((s, i) => ({ id: s.id, label: s.label, color: colorKeyOf(s, i), bar: kinds[i] === "bar" }));
+        // The compare entry shows each way the chart draws the compared period: a bar, a dashed line, or both.
+        const compareShapes = [...(this.#comparesBars ? (["bar"] as const) : []), ...(this.#comparesLines ? (["line"] as const) : [])];
         return html`<uaui-chart-legend
             .entries=${entries}
-            .bars=${this.#isBars}
+            .bars=${this.#barCount > 0}
+            .compareShapes=${compareShapes}
             .compareLabel=${this.#isComparing ? this.#compareText : undefined}></uaui-chart-legend>`;
     }
 
     /** The same data for screen readers. Every input is stable until the data changes, so it re-renders only then. */
     #renderTable() {
-        const { data, dateLabels, totals, numberFormat } = this.#derived;
-        const bars = this.#isBars;
+        const { data, totals, numberFormat } = this.#derived;
         return html`<uaui-chart-data-table
-            .dates=${dateLabels}
+            .dates=${this.#tableDates}
             .series=${data.series}
-            .bars=${bars}
             .totals=${this.#showsTotal ? totals : undefined}
             .totalLabel=${this.#totalText}
-            .compareTotal=${bars ? data.compareTotal?.values : undefined}
+            .compareTotal=${this.#comparesBars ? data.compareTotal?.values : undefined}
+            .logScale=${this.#isLog}
             .numberFormat=${numberFormat}></uaui-chart-data-table>`;
     }
 

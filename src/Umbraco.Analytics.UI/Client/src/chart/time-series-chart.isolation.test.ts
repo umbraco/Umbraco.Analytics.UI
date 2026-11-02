@@ -20,13 +20,19 @@ const lastPeriod = { id: "pv", label: "Pageviews", points: [
     { date: "2026-05-01", value: 60 }, { date: "2026-05-02", value: 90 }, { date: "2026-05-03", value: 200 },
 ] };
 
-const KINDS = ["line", "area", "bar", "stacked-bar"] as const;
+// The four kinds, then (T58) bars with a line series stacked, a log axis, and a today line.
+const KINDS = ["line", "area", "bar", "stacked-bar", "stacked-bar+line", "bar log", "bar today"] as const;
 
-const chart = (kind: string, series: unknown[] = [pageviews, sessions]) =>
-    renderElement(
-        html`<uaui-time-series-chart kind=${kind} .series=${series} .compareSeries=${[lastPeriod]} style="width:400px"></uaui-time-series-chart>`,
+const chart = (variant: string, series: unknown[] = [pageviews, sessions]) => {
+    const [kind, extra] = variant.split(" ");
+    const mixed = kind === "stacked-bar+line";
+    return renderElement(
+        html`<uaui-time-series-chart kind=${mixed ? "stacked-bar" : kind} y-scale=${extra === "log" ? "log" : "linear"}
+            .today=${extra === "today" ? "2026-06-02" : undefined}
+            .series=${mixed ? [pageviews, { ...sessions, kind: "line" }] : series} .compareSeries=${[lastPeriod]} style="width:400px"></uaui-time-series-chart>`,
         "uaui-time-series-chart",
     );
+};
 const canvasOf = (el: Element) => shadow(el).querySelector("canvas")!;
 const chartOf = (el: Element) => Chart.getChart(canvasOf(el))!;
 const nextFrame = () => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));

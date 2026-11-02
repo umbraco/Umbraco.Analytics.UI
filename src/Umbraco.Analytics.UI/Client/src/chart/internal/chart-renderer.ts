@@ -8,23 +8,31 @@ import {
     type PointElement,
     type Plugin,
 } from "@umbraco/analytics-ui/external/chart.js";
-import type { UauiChartKind } from "../types.js";
+import type { UauiChartKind, UauiSeriesKind } from "../types.js";
 import type { UauiChartDrawColors } from "./chart-colors.js";
 import { createMarkersPlugin, type UauiMarkerPin, type UauiMarkerPlacement, type UauiMarkersState } from "./markers-plugin.js";
+import { createTodayPlugin, TODAY_LABEL_ROOM, type UauiTodayPin, type UauiTodayState } from "./today-plugin.js";
 import "./register.js";
 
 /** What the renderer draws. Our own shape: Chart.js types stay inside `src/chart/internal`. */
 export interface UauiChartModel {
+    /** `area` fills the lines; `stacked-bar` stacks the bars. Each dataset says whether it is a line or bars. */
     kind: UauiChartKind;
     labels: string[];
-    /** For the line kinds, `compare` is drawn as a dashed line, with the gap to `values` shaded. */
-    datasets: { label: string; values: (number | null)[]; compare?: (number | null)[] }[];
-    /** For the bar kinds, one compare bar per date, drawn behind the current bars. */
+    /** A line's `compare` is drawn as a dashed line, with the gap to `values` shaded. Bars have none. */
+    datasets: { label: string; kind: UauiSeriesKind; values: (number | null)[]; compare?: (number | null)[] }[];
+    /** When there are bars, one compare bar per date, drawn behind the current bars. */
     compareTotal?: (number | null)[];
-    /** The y-axis runs from 0 to `yMax` in steps of `yStep`. */
+    /** The y-axis runs from 0 to `yMax` in steps of `yStep`, unless `yTicks` is given. */
     yMax: number;
     yStep: number;
     formatTick: (value: number) => string;
+    /** Ticks at these heights (from 0 to `yMax`) with these labels, in place of `yStep` and `formatTick`: the log axis. */
+    yTicks?: { value: number; label: string }[];
+    /** A line at this date, labelled above the plot. */
+    today?: UauiTodayPin;
+    /** Keep room above the plot for the today label (whenever the chart has a `today`, even out of range). */
+    todayRoom?: boolean;
     colors: UauiChartDrawColors;
     /** Line kinds: a series below its compare line is doing better, so the gap shading flips. */
     lowerIsBetter?: boolean;
@@ -43,14 +51,12 @@ export interface UauiChartHover {
 const MAX_BAR_WIDTH = 28;
 const COMPARE_BAR_EXTRA_WIDTH = 12;
 
-const isBarKind = (kind: UauiChartKind) => kind === "bar" || kind === "stacked-bar";
-
 /**
  * Chart.js is shared with the products (`@umbraco/analytics-ui/external/chart.js`), so its registry and `Chart.defaults`
  * are too. Our chart sets everything it relies on per chart, so a product's global registrations and defaults don't
  * change it: every registered plugin but these is off for our chart.
  */
-const OWN_PLUGINS = new Set(["filler", "tooltip", "uauiHoverLine", "uauiMarkers"]);
+const OWN_PLUGINS = new Set(["filler", "tooltip", "uauiHoverLine", "uauiMarkers", "uauiToday"]);
 
 /** Whether `id` is a plugin in the shared registry. Chart.js doesn't type `items`, so read it with care. */
 const isRegisteredPlugin = (id: string): boolean =>
@@ -81,6 +87,33 @@ const lineClip = (borderWidth: number, pointRadius: number, pointHoverRadius: nu
     return { top: 0, bottom: 0, left: side, right: side };
 };
 
+/** The least room a y tick label gets, in pixels: the 11px tick font and a little air. */
+const MIN_TICK_SPACING = 18;
+
+/**
+ * Our own y ticks (the log axis: ascending, the first at 0 and the last at the top, `max`), thinned so no two labels
+ * on an axis `height` pixels tall are nearer than `MIN_TICK_SPACING`. It keeps the top and every `step`th tick below
+ * it, with the smallest `step` that fits, so a crowded axis shows every other (or every third...) power of ten rather
+ * than whichever Chart.js's auto-skip happens to drop. 0 always stays; a kept tick too near it is dropped.
+ */
+export function thinTicks<T extends { value: number }>(ticks: T[], height: number): T[] {
+    const max = ticks[ticks.length - 1]?.value ?? 0;
+    if (ticks.length < 3 || !(height > 0) || !(max > 0)) return ticks;
+    const pixel = (tick: T) => (tick.value / max) * height;
+    const last = ticks.length - 1;
+    for (let step = 1; step <= last; step++) {
+        const kept = ticks.filter((_, i) => i > 0 && (last - i) % step === 0);
+        const fits = kept.every((tick, i) => i === 0 || pixel(tick) - pixel(kept[i - 1]) >= MIN_TICK_SPACING);
+        if (!fits) continue;
+        while (kept.length > 1 && pixel(kept[0]) - pixel(ticks[0]) < MIN_TICK_SPACING) kept.shift();
+        return [ticks[0], ...kept];
+    }
+    return [ticks[0], ticks[last]];
+}
+
+/** Room around the plot, in pixels. A today line adds `TODAY_LABEL_ROOM` at the top for its label. */
+const PADDING = { top: 8, right: 12, bottom: 0, left: 0 };
+
 const LINE_WIDTH = 2.25;
 const COMPARE_LINE_WIDTH = 1.75;
 const POINT_HOVER_RADIUS = 4;
@@ -105,6 +138,7 @@ export class UauiChartRenderer {
     #stopThemeWatch?: () => void;
     #inThemeChange = false;
     #markers: UauiMarkersState;
+    #today: UauiTodayState = {};
 
     /**
      * `host` is the element whose palette the chart draws in. `onMarkerLayout` is told where the marker dots are drawn,
@@ -166,7 +200,7 @@ export class UauiChartRenderer {
         const config: ChartConfiguration = {
             type: family,
             data: { labels: [], datasets: [] },
-            plugins: [hoverLine, createMarkersPlugin(this.#markers)],
+            plugins: [hoverLine, createTodayPlugin(this.#today), createMarkersPlugin(this.#markers)],
             // Everything we rely on is set here rather than left to `Chart.defaults`, which products share.
             options: {
                 responsive,
@@ -177,7 +211,7 @@ export class UauiChartRenderer {
                 parsing: true as unknown as false,
                 normalized: false,
                 events,
-                layout: { padding: { top: 8, right: 12, bottom: 0, left: 0 } },
+                layout: { padding: { ...PADDING } },
                 interaction: { mode: "index", intersect: false, axis: "x" },
                 hover: { mode: "index", intersect: false, axis: "x" },
                 scales: { x: {}, y: { min: 0 } },
@@ -231,7 +265,11 @@ export class UauiChartRenderer {
         this.#colors = model.colors;
         this.#markers.colors = model.colors;
         this.#markers.pins = model.markers ?? [];
-        const family = isBarKind(model.kind) ? "bar" : "line";
+        this.#today.colors = model.colors;
+        this.#today.pin = model.today;
+        // A chart with any bars is a bar chart (its x-axis leaves room for them); its lines are line datasets in it.
+        const barKind = model.kind === "bar" || model.kind === "stacked-bar";
+        const family = (model.datasets.length ? model.datasets.some((set) => set.kind === "bar") : barKind) ? "bar" : "line";
         if (!this.#chart || this.#family !== family) {
             this.#destroyChart();
             this.#chart = this.#create(family, model.colors);
@@ -241,14 +279,21 @@ export class UauiChartRenderer {
         }
         const chart = this.#chart;
         chart.data.labels = model.labels;
-        chart.data.datasets = family === "bar" ? this.#barDatasets(model) : this.#lineDatasets(model);
+        chart.data.datasets = this.#datasets(model, family === "bar" && model.datasets.some((set) => set.kind === "line"));
 
-        const stacked = model.kind === "stacked-bar";
+        // Only bars stack: a `stacked-bar` chart whose series are all lines draws them unstacked. Lines also carry a
+        // stack key of their own, so they never stack with bars or with each other.
+        const stacked = model.kind === "stacked-bar" && family === "bar";
+        // Room above the plot for the today label, whether or not today is among the dates, so the plot doesn't jump
+        // as the editor moves through date ranges; the padding otherwise stays as it was.
+        chart.options.layout = { padding: { ...PADDING, top: PADDING.top + (model.todayRoom ? TODAY_LABEL_ROOM : 0) } };
         const scales = chart.options.scales!;
         // The package's axis look (`uauiChartOptions`, as a product's chart gets it): our font, colours and Chart.js's
         // own values for what we don't style, all set per chart so a product's `Chart.defaults.scale` can't move them.
         const look = uauiChartOptions(this.#host, family, model.colors).scales as { x: CartesianScaleOptions; y: CartesianScaleOptions };
         scales["x"] = { ...look.x, stacked };
+        const yTicks = model.yTicks;
+        const labelOf = new Map(yTicks?.map((tick) => [tick.value, tick.label]));
         scales["y"] = {
             ...look.y,
             stacked,
@@ -257,54 +302,86 @@ export class UauiChartRenderer {
             ticks: {
                 ...look.y.ticks,
                 stepSize: model.yStep,
-                callback: (value) => model.formatTick(Number(value)),
+                // Our ticks are thinned below, by a rule we choose, so Chart.js mustn't drop any of them itself.
+                ...(yTicks ? { autoSkip: false } : {}),
+                callback: yTicks ? (value: unknown) => labelOf.get(Number(value)) ?? "" : (value: unknown) => model.formatTick(Number(value)),
             },
+            // Set per chart, so only this chart's ticks change. Chart.js calls it before it makes the tick labels, once
+            // it knows the axis height (`maxHeight`).
+            afterBuildTicks: yTicks
+                ? (axis: { ticks: { value: number }[]; maxHeight: number }) => {
+                      axis.ticks = thinTicks(yTicks, axis.maxHeight).map((tick) => ({ value: tick.value }));
+                  }
+                : undefined,
         } as typeof look.y;
         if (!this.#inThemeChange) chart.update();
     }
 
-    // The datasets are built as plain objects: Chart.js types the dataset by chart type, and the two families differ.
-    #lineDatasets(model: UauiChartModel) {
+    /**
+     * Every series in its own place (each keeps its dataset index, by which hover and the tooltip find it), as a line or
+     * bars, then the lines' compare lines, then the compare bar. `mixed`: lines over bars, so they are drawn last.
+     */
+    #datasets(model: UauiChartModel, mixed: boolean) {
+        const compared = model.datasets.flatMap((set, i) => (set.kind === "line" && set.compare ? [i] : []));
+        const barCount = model.datasets.filter((set) => set.kind === "bar").length;
+        const current = model.datasets.map((set, i) =>
+            set.kind === "bar" ? this.#barDataset(model, i) : this.#lineDataset(model, i, compared.indexOf(i), mixed),
+        );
+        const compareLines = compared.map((i) => this.#compareLineDataset(model, i, mixed));
+        const compareBar = barCount && model.compareTotal ? [this.#compareBarDataset(model, barCount)] : [];
+        return [...current, ...compareLines, ...compareBar];
+    }
+
+    // The datasets are built as plain objects: Chart.js types the dataset by chart type, and the two kinds differ.
+    // `compareIndex` is this line's place among the compare lines, which come after every series (-1 for none).
+    #lineDataset(model: UauiChartModel, i: number, compareIndex: number, mixed: boolean) {
         const { colors } = model;
+        const set = model.datasets[i];
         const gap = model.lowerIsBetter ? { above: colors.gapBad, below: colors.gapGood } : { above: colors.gapGood, below: colors.gapBad };
         const showDots = model.labels.length <= MAX_POINTS_WITH_DOTS;
-        // Compare lines come after every series, so each series keeps its dataset index.
-        const compared = model.datasets.flatMap((set, i) => (set.compare ? [i] : []));
-        const currentSets = model.datasets.map((set, i) => {
-            const color = colors.series[i];
-            const compareIndex = compared.indexOf(i);
-            const pointRadius = showDots && compareIndex < 0 ? 2 : 0;
-            return {
-                label: set.label,
-                data: set.values,
-                borderColor: color.line,
-                backgroundColor: color.fill,
-                borderWidth: LINE_WIDTH,
-                clip: lineClip(LINE_WIDTH, pointRadius, POINT_HOVER_RADIUS),
-                borderJoinStyle: "round" as const,
-                borderCapStyle: "butt" as const,
-                cubicInterpolationMode: "monotone" as const,
-                tension: 0,
-                stepped: false,
-                showLine: true,
-                spanGaps: true,
-                fill:
-                    compareIndex >= 0
-                        ? { target: model.datasets.length + compareIndex, ...gap }
-                        : model.kind === "area"
-                          ? ("origin" as const)
-                          : false,
-                pointRadius,
-                pointStyle: "circle" as const,
-                pointBackgroundColor: color.line,
-                pointBorderColor: color.line,
-                pointHoverRadius: POINT_HOVER_RADIUS,
-                pointHoverBackgroundColor: colors.surface,
-                pointHoverBorderColor: color.line,
-                pointHoverBorderWidth: 2,
-            };
-        });
-        const compareSets = compared.map((i) => ({
+        const color = colors.series[i];
+        const pointRadius = showDots && compareIndex < 0 ? 2 : 0;
+        return {
+            type: "line" as const,
+            // In a chart with bars: drawn over them, and never stacked with them or another line.
+            stack: `line-${i}`,
+            ...(mixed ? { order: -1 } : {}),
+            label: set.label,
+            data: set.values,
+            borderColor: color.line,
+            backgroundColor: color.fill,
+            borderWidth: LINE_WIDTH,
+            clip: lineClip(LINE_WIDTH, pointRadius, POINT_HOVER_RADIUS),
+            borderJoinStyle: "round" as const,
+            borderCapStyle: "butt" as const,
+            cubicInterpolationMode: "monotone" as const,
+            tension: 0,
+            stepped: false,
+            showLine: true,
+            spanGaps: true,
+            fill:
+                compareIndex >= 0
+                    ? { target: model.datasets.length + compareIndex, ...gap }
+                    : model.kind === "area"
+                      ? ("origin" as const)
+                      : false,
+            pointRadius,
+            pointStyle: "circle" as const,
+            pointBackgroundColor: color.line,
+            pointBorderColor: color.line,
+            pointHoverRadius: POINT_HOVER_RADIUS,
+            pointHoverBackgroundColor: colors.surface,
+            pointHoverBorderColor: color.line,
+            pointHoverBorderWidth: 2,
+        };
+    }
+
+    #compareLineDataset(model: UauiChartModel, i: number, mixed: boolean) {
+        const { colors } = model;
+        return {
+            type: "line" as const,
+            stack: `compare-line-${i}`,
+            ...(mixed ? { order: -1 } : {}),
             label: model.datasets[i].label,
             data: model.datasets[i].compare!,
             borderColor: colors.compare,
@@ -326,22 +403,17 @@ export class UauiChartRenderer {
             pointHoverBackgroundColor: colors.surface,
             pointHoverBorderColor: colors.compare,
             pointHoverBorderWidth: 2,
-        }));
-        return [...currentSets, ...compareSets];
+        };
     }
 
-    /**
-     * Current bars first, so each series keeps its dataset index. The compare total is one more bar per date,
-     * not grouped with the others and drawn first (a higher `order` is drawn earlier), so it sits behind them,
-     * wider than the group.
-     */
-    #barDatasets(model: UauiChartModel) {
+    /** One series' bars, grouped beside the other bar series, or stacked on them in `stacked-bar`. */
+    #barDataset(model: UauiChartModel, i: number) {
         const { colors } = model;
         const stacked = model.kind === "stacked-bar";
-        const groupWidth = stacked ? MAX_BAR_WIDTH : MAX_BAR_WIDTH * Math.max(model.datasets.length, 1);
-        const currentSets = model.datasets.map((set, i) => ({
-            label: set.label,
-            data: set.values,
+        return {
+            type: "bar" as const,
+            label: model.datasets[i].label,
+            data: model.datasets[i].values,
             order: 0,
             stack: stacked ? "current" : undefined,
             grouped: true,
@@ -355,25 +427,30 @@ export class UauiChartRenderer {
             categoryPercentage: 0.8,
             barPercentage: stacked ? 0.55 : 0.9,
             maxBarThickness: MAX_BAR_WIDTH,
-        }));
-        if (!model.compareTotal) return currentSets;
-        return [
-            ...currentSets,
-            {
-                label: "",
-                data: model.compareTotal,
-                order: 1,
-                stack: "compare",
-                grouped: false,
-                backgroundColor: colors.compareBar,
-                borderWidth: 0,
-                borderRadius: 0,
-                clip: 0,
-                categoryPercentage: 0.9,
-                barPercentage: 1,
-                maxBarThickness: groupWidth + COMPARE_BAR_EXTRA_WIDTH,
-            },
-        ];
+        };
+    }
+
+    /**
+     * The compare total: one more bar per date, not grouped with the others and drawn first (a higher `order` is drawn
+     * earlier), so it sits behind them, wider than the group of `barCount` bars.
+     */
+    #compareBarDataset(model: UauiChartModel, barCount: number) {
+        const groupWidth = model.kind === "stacked-bar" ? MAX_BAR_WIDTH : MAX_BAR_WIDTH * Math.max(barCount, 1);
+        return {
+            type: "bar" as const,
+            label: "",
+            data: model.compareTotal!,
+            order: 1,
+            stack: "compare",
+            grouped: false,
+            backgroundColor: model.colors.compareBar,
+            borderWidth: 0,
+            borderRadius: 0,
+            clip: 0,
+            categoryPercentage: 0.9,
+            barPercentage: 1,
+            maxBarThickness: groupWidth + COMPARE_BAR_EXTRA_WIDTH,
+        };
     }
 
     /** Redraws with the current data, e.g. once a web font has loaded. */

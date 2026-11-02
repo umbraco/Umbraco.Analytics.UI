@@ -20,6 +20,9 @@ import {
     sessionsPrevious,
     sundayWeeks,
     sundayWeeksPrevious,
+    wideRange,
+    workflowActivity,
+    workflowToday,
 } from "./internal/chart-fixtures.js";
 
 const meta: Meta<UauiTimeSeriesChartElement> = {
@@ -32,6 +35,8 @@ const meta: Meta<UauiTimeSeriesChartElement> = {
         compareLabel: undefined,
         lowerIsBetter: false,
         markers: [],
+        today: undefined,
+        yScale: "linear",
         groupBy: "day",
         weekStart: 1,
         valueFormat: undefined,
@@ -45,6 +50,7 @@ const meta: Meta<UauiTimeSeriesChartElement> = {
     },
     argTypes: {
         kind: { control: "inline-radio", options: ["line", "area", "bar", "stacked-bar"] },
+        yScale: { control: "inline-radio", options: ["linear", "log"] },
         groupBy: { control: "inline-radio", options: ["day", "week", "month"] },
         weekStart: { control: "inline-radio", options: [1, 2, 3, 4, 5, 6, 7], description: "ISO weekday: 1 is Monday, 7 is Sunday" },
     },
@@ -57,6 +63,8 @@ const meta: Meta<UauiTimeSeriesChartElement> = {
                 .compareLabel=${args.compareLabel}
                 .lowerIsBetter=${args.lowerIsBetter}
                 .markers=${args.markers}
+                .today=${args.today}
+                .yScale=${args.yScale}
                 .groupBy=${args.groupBy}
                 .weekStart=${args.weekStart}
                 .valueFormat=${args.valueFormat}
@@ -172,4 +180,46 @@ export const StatusColors: Story = {
 export const StatusColorCompare: Story = {
     name: "Status colour, compare",
     args: { series: [errored], compareSeries: [erroredPrevious], compareLabel: compareRangeLabel },
+};
+
+/**
+ * Workflow's approval activity: approved, cancelled and errored as daily bars in their status colours, with pending
+ * (a running total) as a line over them (`kind: "line"` on that series). 28 days back and 7 ahead, with `today`
+ * drawing a labelled line. Try `stacked-bar` (the line doesn't stack) and `log`.
+ */
+export const WorkflowActivity: Story = {
+    name: "Bars and a line, with today",
+    args: { kind: "bar", series: workflowActivity, today: workflowToday },
+};
+
+/** Days after today: the series has a point (0) for each, and the today line shows where today is. */
+export const DaysAfterToday: Story = {
+    name: "Days after today",
+    args: { kind: "bar", series: [workflowActivity[0]], today: workflowToday },
+};
+
+/**
+ * `y-scale="log"` for values that span widely: hundreds of pageviews beside a few errors. The axis is spaced by
+ * powers of ten and bends toward 0 at the bottom, so 0 sits on the axis line and days with no errors still draw.
+ */
+export const LogScale: Story = {
+    name: "Log scale",
+    args: { kind: "line", series: wideRange, yScale: "log" },
+};
+
+/** Nine decades on a short axis: the ticks thin to every other (or third) power of ten, so labels never overlap. */
+export const LogScaleManyDecades: Story = {
+    name: "Log scale, many decades",
+    args: {
+        kind: "line",
+        yScale: "log",
+        series: [{ id: "bytes", label: "Bytes", points: ["2026-06-01", "2026-06-02", "2026-06-03", "2026-06-04"].map((date, i) => ({ date, value: [1, 1e3, 1e6, 1e9][i] })) }],
+    },
+    render: (args, context) => html`<div style="--uaui-chart-height: 140px">${meta.render!(args, context)}</div>`,
+};
+
+/** The Workflow activity chart on a log axis: the few errors stay readable beside the pending total. */
+export const LogScaleMixed: Story = {
+    name: "Log scale, bars and a line",
+    args: { kind: "bar", series: workflowActivity, today: workflowToday, yScale: "log" },
 };
