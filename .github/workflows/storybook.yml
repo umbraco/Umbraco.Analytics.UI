@@ -42,6 +42,14 @@ jobs:
       # Fails if the public API changed and api/*.api.md was not updated and committed
       - run: npm run check:api
       - run: npm test
+      # A failed chart isolation spec writes both canvases and what each chart resolved here
+      # (src/internal/test/chart-diagnostics.ts), so a CI-only mismatch can be explained.
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: chart-diagnostics
+          path: src/Umbraco.Analytics.UI/Client/test-results/chart-diagnostics
+          if-no-files-found: ignore
       # Timing specs: CI leaves them out of `npm test` so three engines don't compete for the runner
       - run: npm run test:perf
 

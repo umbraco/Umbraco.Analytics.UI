@@ -6,6 +6,7 @@ import { Chart, Colors, Legend, Title, type Plugin } from "@umbraco/analytics-ui
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { page, userEvent } from "vitest/browser";
 import { html } from "@umbraco-cms/backoffice/external/lit";
+import { chartSnapshot, environmentSnapshot, writeChartDiagnostics } from "../internal/test/chart-diagnostics.js";
 import { renderElement, settle, shadow, type UauiTestElement } from "../internal/test/dom.js";
 import "./time-series-chart.element.js";
 
@@ -57,6 +58,28 @@ const settledPixels = async (el: UauiTestElement) => {
         last = next;
     }
     return last;
+};
+
+/** The settled baseline, with what the chart resolved, for the diagnostics if the second chart doesn't match it. */
+const baseline = async (el: UauiTestElement) => ({
+    hash: await settledPixels(el),
+    png: canvasOf(el).toDataURL(),
+    snapshot: chartSnapshot(chartOf(el)),
+    environment: environmentSnapshot(el),
+});
+
+/** Same pixels as the baseline. On a mismatch, writes both canvases and what each chart resolved (see chart-diagnostics.ts). */
+const expectSamePixels = async (before: Awaited<ReturnType<typeof baseline>>, after: UauiTestElement) => {
+    try {
+        await expect.poll(() => pixels(after)).toBe(before.hash);
+    } catch (error) {
+        await writeChartDiagnostics(expect.getState().currentTestName ?? "isolation", before, {
+            png: canvasOf(after).toDataURL(),
+            snapshot: chartSnapshot(chartOf(after)),
+            environment: environmentSnapshot(after),
+        });
+        throw error;
+    }
 };
 
 // Every change is undone after each spec, as Chart.defaults and the registry are shared by the whole test run.
@@ -115,17 +138,17 @@ const changeDataDefaultsAndOverrides = () => {
 describe("Feature: the chart keeps its look when a product changes the shared Chart.js", () => {
     describe("Scenario: a product changes common Chart.defaults", () => {
         it.each(KINDS)("draws a %s chart with the same pixels", async (kind) => {
-            const before = await settledPixels(await chart(kind));
+            const before = await baseline(await chart(kind));
             changeCommonDefaults();
             const after = await chart(kind);
-            await expect.poll(() => pixels(after)).toBe(before);
+            await expectSamePixels(before, after);
         });
 
         it.each(KINDS)("draws a %s chart with the same pixels with data defaults and Chart.overrides changed", async (kind) => {
-            const before = await settledPixels(await chart(kind));
+            const before = await baseline(await chart(kind));
             changeDataDefaultsAndOverrides();
             const after = await chart(kind);
-            await expect.poll(() => pixels(after)).toBe(before);
+            await expectSamePixels(before, after);
         });
 
         it("keeps its own tick font and colour, its clip, and no animation", async () => {
@@ -161,7 +184,7 @@ describe("Feature: the chart keeps its look when a product changes the shared Ch
 
     describe("Scenario: a product registers plugins globally", () => {
         it.each(KINDS)("draws a %s chart with the same pixels", async (kind) => {
-            const before = await settledPixels(await chart(kind));
+            const before = await baseline(await chart(kind));
             const paint: Plugin = {
                 id: "productPaint",
                 afterDatasetsDraw: ({ ctx, width, height }) => {
@@ -174,7 +197,7 @@ describe("Feature: the chart keeps its look when a product changes the shared Ch
             change(Chart.defaults.plugins.title, "text", "A product's title");
             change(Chart.defaults.plugins.colors, "forceOverride", true);
             const after = await chart(kind);
-            await expect.poll(() => pixels(after)).toBe(before);
+            await expectSamePixels(before, after);
         });
 
         it("doesn't run a plugin registered after it was drawn, on a resize or an update", async () => {

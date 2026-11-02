@@ -106,6 +106,14 @@ extends:
                   testResultsFiles: src/Umbraco.Analytics.UI/Client/test-results/junit.xml
                   testRunTitle: Client tests
 
+              # A failed chart isolation spec writes both canvases and what each chart resolved here
+              # (src/internal/test/chart-diagnostics.ts), so a CI-only mismatch can be explained.
+              - publish: src/Umbraco.Analytics.UI/Client/test-results/chart-diagnostics
+                artifact: chart-diagnostics-$(System.JobAttempt)
+                displayName: Publish chart diagnostics
+                condition: failed()
+                continueOnError: true
+
               # Proves every story still builds; the site itself is published to GitHub Pages
               - script: npm run ci:storybook-client
                 displayName: Build Storybook
