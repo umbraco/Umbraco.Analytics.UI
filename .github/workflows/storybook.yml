@@ -50,7 +50,9 @@ jobs:
     # and either a public repo or a GitHub plan that allows Pages on private repos.
     # One Storybook site for the newest major. When v20 arrives, publish each supported major into its
     # own folder (e.g. a gh-pages branch with /v19/).
-    if: github.event_name == 'push' && github.ref == 'refs/heads/v19/main'
+    # Settings > Environments > github-pages must allow v19/main. A manual run (workflow_dispatch) on
+    # v19/main publishes too, so the site can be refreshed without a new push.
+    if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/v19/main'
     needs: test
     runs-on: ubuntu-latest
     permissions:
