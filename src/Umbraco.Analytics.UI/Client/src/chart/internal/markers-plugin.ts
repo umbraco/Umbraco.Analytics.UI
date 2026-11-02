@@ -1,4 +1,4 @@
-import type { Chart, Plugin } from "chart.js";
+import type { Chart, Plugin } from "@umbraco/analytics-ui/external/chart.js";
 import type { UauiChartColors } from "./chart-colors.js";
 
 /** One dot to draw: at the `index`th date of the chart, standing for `count` markers. */

@@ -1,4 +1,4 @@
-import { Chart, type ChartConfiguration, type PointElement, type Plugin } from "chart.js";
+import { Chart, registry, type ChartConfiguration, type PointElement, type Plugin } from "@umbraco/analytics-ui/external/chart.js";
 import type { UauiChartKind } from "../types.js";
 import type { UauiChartColors } from "./chart-colors.js";
 import { createMarkersPlugin, type UauiMarkerPin, type UauiMarkerPlacement, type UauiMarkersState } from "./markers-plugin.js";
@@ -35,6 +35,33 @@ const MAX_BAR_WIDTH = 28;
 const COMPARE_BAR_EXTRA_WIDTH = 12;
 
 const isBarKind = (kind: UauiChartKind) => kind === "bar" || kind === "stacked-bar";
+
+/**
+ * Chart.js is shared with the products (`@umbraco/analytics-ui/external/chart.js`), so its registry and `Chart.defaults`
+ * are too. Our chart sets everything it relies on per chart, so a product's global registrations and defaults don't
+ * change it: every registered plugin but these is off for our chart.
+ */
+const OWN_PLUGINS = new Set(["filler", "tooltip", "uauiHoverLine", "uauiMarkers"]);
+
+/** Whether `id` is a plugin in the shared registry. Chart.js doesn't type `items`, so read it with care. */
+const isRegisteredPlugin = (id: string): boolean =>
+    Object.prototype.hasOwnProperty.call((registry.plugins as unknown as { items?: object }).items ?? {}, id);
+
+/**
+ * Wraps a chart's `options.plugins` so it answers `false` (off) for every registered plugin we don't use. Chart.js asks
+ * each time it rebuilds a chart's plugin list (every update and resize), so a plugin a product registers globally,
+ * even after our chart was drawn, never runs on our chart.
+ */
+const onlyOwnPlugins = <T extends object>(plugins: T): T =>
+    new Proxy(plugins, {
+        get: (target, key, receiver) =>
+            typeof key === "string" && !OWN_PLUGINS.has(key) && !Object.prototype.hasOwnProperty.call(target, key) && isRegisteredPlugin(key)
+                ? false
+                : Reflect.get(target, key, receiver),
+    });
+
+/** Chart.js's default events, set per chart so a product changing `Chart.defaults.events` doesn't stop our hover. */
+const EVENTS = ["mousemove", "mouseout", "click", "touchstart", "touchmove"] as const;
 
 /** Above this many points per series, dots would crowd the line, so only the hovered point shows. */
 const MAX_POINTS_WITH_DOTS = 45;
@@ -103,17 +130,29 @@ export class UauiChartRenderer {
             type: family,
             data: { labels: [], datasets: [] },
             plugins: [hoverLine, createMarkersPlugin(this.#markers)],
+            // Everything we rely on is set here rather than left to `Chart.defaults`, which products share.
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
                 animation: false,
-                layout: { padding: { top: 8, right: 12 } },
-                interaction: { mode: "index", intersect: false },
+                indexAxis: "x",
+                // Chart.js types `parsing` as keys or `false`; `true` (its default) parses our plain number arrays.
+                parsing: true as unknown as false,
+                normalized: false,
+                events: [...EVENTS],
+                layout: { padding: { top: 8, right: 12, bottom: 0, left: 0 } },
+                interaction: { mode: "index", intersect: false, axis: "x" },
+                hover: { mode: "index", intersect: false, axis: "x" },
                 scales: { x: {}, y: { min: 0 } },
                 plugins: {
-                    legend: { display: false },
+                    filler: { propagate: true, drawTime: "beforeDatasetDraw" },
                     tooltip: {
                         enabled: false,
+                        mode: "index",
+                        intersect: false,
+                        axis: "x",
+                        position: "average",
+                        filter: () => true,
                         external: ({ tooltip }) => {
                             const points = tooltip.opacity === 0 ? [] : tooltip.dataPoints;
                             if (!points?.length) {
@@ -136,6 +175,7 @@ export class UauiChartRenderer {
                 },
             },
         };
+        config.options!.plugins = onlyOwnPlugins(config.options!.plugins!);
         return new Chart(this.#canvas, config);
     }
 
@@ -156,25 +196,43 @@ export class UauiChartRenderer {
         chart.data.datasets = family === "bar" ? this.#barDatasets(model) : this.#lineDatasets(model);
 
         const { colors } = model;
-        const font = { family: colors.fontFamily, size: 11 };
+        // The whole font, not just family and size, so `Chart.defaults.font` can't restyle the ticks.
+        const font = { family: colors.fontFamily, size: 11, style: "normal" as const, weight: "normal" as const, lineHeight: 1.2 };
         const stacked = model.kind === "stacked-bar";
         const options = chart.options;
         const scales = options.scales!;
+        // Chart.js's own values for what we don't style, set here so a product's `Chart.defaults.scale` can't move them.
+        const ticks = {
+            display: true,
+            color: colors.tick,
+            font,
+            align: "center" as const,
+            crossAlign: "near" as const,
+            mirror: false,
+            minRotation: 0,
+            autoSkipPadding: 3,
+            showLabelBackdrop: false,
+            textStrokeWidth: 0,
+        };
+        const axis = { reverse: false, grace: 0, border: { dash: [], dashOffset: 0 } };
         scales["x"] = {
+            ...axis,
             stacked,
-            grid: { display: false },
-            border: { color: colors.grid },
-            ticks: { color: colors.tick, font, maxRotation: 45, autoSkip: true },
+            position: "bottom",
+            grid: { display: false, lineWidth: 1, tickLength: 8 },
+            border: { ...axis.border, display: true, color: colors.grid, width: 1 },
+            ticks: { ...ticks, padding: 3, maxRotation: 45, autoSkip: true },
         };
         scales["y"] = {
+            ...axis,
             stacked,
+            position: "left",
             min: 0,
             max: model.yMax,
-            grid: { color: colors.grid, drawTicks: false },
-            border: { display: false },
+            grid: { display: true, color: colors.grid, lineWidth: 1, tickLength: 8, drawTicks: false },
+            border: { ...axis.border, display: false },
             ticks: {
-                color: colors.tick,
-                font,
+                ...ticks,
                 stepSize: model.yStep,
                 padding: 8,
                 callback: (value) => model.formatTick(Number(value)),
@@ -200,7 +258,11 @@ export class UauiChartRenderer {
                 backgroundColor: color.fill,
                 borderWidth: 2.25,
                 borderJoinStyle: "round" as const,
+                borderCapStyle: "butt" as const,
                 cubicInterpolationMode: "monotone" as const,
+                tension: 0,
+                stepped: false,
+                showLine: true,
                 spanGaps: true,
                 fill:
                     compareIndex >= 0
@@ -209,6 +271,7 @@ export class UauiChartRenderer {
                           ? ("origin" as const)
                           : false,
                 pointRadius: showDots && compareIndex < 0 ? 2 : 0,
+                pointStyle: "circle" as const,
                 pointBackgroundColor: color.line,
                 pointBorderColor: color.line,
                 pointHoverRadius: 4,
@@ -225,10 +288,15 @@ export class UauiChartRenderer {
             borderWidth: 1.75,
             borderDash: [5, 4],
             borderJoinStyle: "round" as const,
+            borderCapStyle: "butt" as const,
             cubicInterpolationMode: "monotone" as const,
+            tension: 0,
+            stepped: false,
+            showLine: true,
             spanGaps: true,
             fill: false,
             pointRadius: 0,
+            pointStyle: "circle" as const,
             pointHoverRadius: 4,
             pointHoverBackgroundColor: colors.surface,
             pointHoverBorderColor: colors.compare,
@@ -251,11 +319,14 @@ export class UauiChartRenderer {
             data: set.values,
             order: 0,
             stack: stacked ? "current" : undefined,
+            grouped: true,
             backgroundColor: colors.series[i].bar,
             // Stacked segments are told apart by a surface-coloured hairline as well as by colour.
             borderColor: colors.surface,
             borderWidth: stacked ? { top: 1, bottom: 1, left: 0, right: 0 } : 0,
             borderSkipped: false as const,
+            borderRadius: 0,
+            clip: false as const,
             categoryPercentage: 0.8,
             barPercentage: stacked ? 0.55 : 0.9,
             maxBarThickness: MAX_BAR_WIDTH,
@@ -271,6 +342,8 @@ export class UauiChartRenderer {
                 grouped: false,
                 backgroundColor: colors.compareBar,
                 borderWidth: 0,
+                borderRadius: 0,
+                clip: false as const,
                 categoryPercentage: 0.9,
                 barPercentage: 1,
                 maxBarThickness: groupWidth + COMPARE_BAR_EXTRA_WIDTH,

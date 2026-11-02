@@ -1,7 +1,7 @@
 // CHT-4 — Event markers
 // The dot and dashed line are canvas; each dot also has an HTML button over it, which the specs drive.
 /// <reference types="vite/client" />
-import { Chart } from "chart.js";
+import { Chart } from "@umbraco/analytics-ui/external/chart.js";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { page, userEvent } from "vitest/browser";
 import { html } from "@umbraco-cms/backoffice/external/lit";

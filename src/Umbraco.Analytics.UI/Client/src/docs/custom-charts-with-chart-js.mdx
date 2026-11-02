@@ -1,0 +1,51 @@
+import { Meta } from "@storybook/addon-docs/blocks";
+
+<Meta title="Guides/Custom charts with Chart.js" />
+
+# Custom charts with Chart.js
+
+`uaui-time-series-chart` draws with [Chart.js](https://www.chartjs.org/docs/latest/). The package shares that copy, so your own charts (a doughnut, a heatmap) use it too, instead of bundling another one into your product.
+
+## Import it from the package
+
+The `Umbraco.Analytics.UI` NuGet package maps `@umbraco/analytics-ui/external/chart.js` in the backoffice import map, as the backoffice does for `@umbraco-cms/backoffice/external/lit`:
+
+```ts
+import { ArcElement, Chart, DoughnutController } from "@umbraco/analytics-ui/external/chart.js";
+```
+
+- It is Chart.js as is: its whole API (`Chart`, `registerables`, controllers, elements, scales, plugins) and its own types.
+- The types come with the npm package, which installs `chart.js` for them. Its code always comes from the site, never from npm.
+- Keep it external in your bundler. The rule from [Getting started](?path=/docs/guides-getting-started--docs), `/^@umbraco\/analytics-ui(\/|$)/`, already covers it.
+- Never import from `"chart.js"` in backoffice code. That bundles a second copy, with its own registry.
+- Always import it by this name, never by a path to the file. The backoffice adds a cache-busting query (`?umb__rnd=...`) to import map URLs, and the browser loads a module once per URL: a path without that query would load a second copy, with a second registry. The package's own chart imports it by this name too, so a site has exactly one.
+- Chart.js's major is part of the package's [versioning](?path=/docs/guides-versioning--docs) promise: a new Chart.js major only comes with a new CMS major.
+
+## One registry for every product
+
+Chart.js keeps one registry and one set of defaults (`Chart.defaults`) per copy. On a site, every product shares them. So:
+
+| Do | Don't |
+|---|---|
+| Register the controllers, elements and scales you use: `Chart.register(DoughnutController, ArcElement)`. Registering one again is harmless. | Change `Chart.defaults` or `Chart.overrides`. That restyles every product's charts. |
+| Set every option on your chart's own config. | Register your own or a third-party plugin globally. |
+| Pass your own and third-party plugins in the chart's `plugins` array. | Rely on a Chart.js plugin's default being on or off. |
+
+Chart.js's own plugins (`Legend`, `Title`, `Tooltip`, `Filler`, `Colors`) are the exception: they only work from the registry, so register them there. Another product may have registered one too, so set each plugin you rely on, on or off, in your chart's `options.plugins`. For example `legend: { display: false }`. The package's chart registers `Tooltip` and `Filler`, so a chart of yours shows Chart.js's tooltip unless you turn it off.
+
+`uaui-time-series-chart` doesn't depend on any of this. It sets everything it relies on per chart and keeps every registered plugin it doesn't use off, even one registered after it was drawn, so a product's globals can't change it.
+
+## Use the package's colours
+
+A canvas can't read CSS custom properties. Add `UauiPaletteStyles` to your element, set a colour on a hidden probe element and read it back as a computed `color`:
+
+```ts
+this._probe.style.color = "var(--uaui-color-series-1)";
+const color = getComputedStyle(this._probe).color;
+```
+
+The [Theming and palette](?path=/docs/guides-theming-and-palette--docs) guide lists the names. When the backoffice theme changes, read the colours again and call `chart.update()`.
+
+## Example
+
+[Examples > Custom chart with the shared Chart.js](?path=/docs/examples-custom-chart-with-the-shared-chart-js--docs) is a doughnut chart with an HTML legend, coloured with the series palette. Its source is in the docs panel.

@@ -1,7 +1,7 @@
 // FND-3 — Empty and loading states (AC2 to AC6 on the chart), plus the chart's own plumbing:
 // accessibility, cleanup on disconnect and redrawing when the theme changes.
 /// <reference types="vite/client" />
-import { Chart } from "chart.js";
+import { Chart } from "@umbraco/analytics-ui/external/chart.js";
 import { beforeEach, describe, expect, it } from "vitest";
 import { html } from "@umbraco-cms/backoffice/external/lit";
 import darkCss from "@umbraco-ui/uui/themes/dark.css?inline";

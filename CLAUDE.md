@@ -5,8 +5,9 @@ Shared backoffice analytics components (Lit + UUI) consumed by Engage, Commerce 
 ## Rules
 
 - Components draw only. No API calls, no product contexts (`ENGAGE_*`, `UC_*`, `UAI_*`), no product types in the public API.
-- Never expose Chart.js types or config in the public API. Wrap it in our own options types.
-- Chart.js is bundled (not external). Only `@umbraco-cms/*` is external.
+- Never expose Chart.js types or config in our public API (`src/index.ts`, `api/analytics-ui.api.md`). Wrap it in our own options types.
+- Chart.js is bundled into its own entry, `src/external/chart.js/index.ts` (re-exported as is), mapped as `@umbraco/analytics-ui/external/chart.js` for products. Our code imports it only by that bare specifier (aliased to the source for tests, tsc and Storybook; external in the build), never `"chart.js"` or a relative path (lint enforced; `check:size` checks the bundle): the CMS cache-busts import map URLs, so a relative import loads a second copy. Only `@umbraco-cms/*` is external. Chart.js's major is part of our compatibility promise: a Chart.js major only at a CMS major.
+- Register per chart, never globally: no `Chart.defaults` changes and no global `Chart.register` of plugins (pass them in the chart's `plugins`). Our chart sets everything it relies on per chart; `time-series-chart.isolation.test.ts` guards that.
 - Colours via UUI CSS custom properties only. Must work in light and dark mode.
 - Number/date formatting via `Intl` with the backoffice user's culture. Currency and units come from the consumer.
 - Every user-facing string (text, `aria-*`, `title`, `placeholder`, visually hidden text, announced joins and separators) goes through a localization key: reuse an Umbraco key for generic words (`general_*`, `buttons_*`), else add a `uauiAnalytics_*` key to `Client/src/lang/en.ts`. Keys are whole literals, never built from parts. `src/lang/localization.*.test.ts` fails on untranslated text, missing or unused keys.

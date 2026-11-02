@@ -32,6 +32,7 @@
 - [CHT-3](#cht-3-bar-and-stacked-bar-chart) Bar and stacked bar chart, 4 criteria
 - [CHT-4](#cht-4-event-markers) Event markers, 5 criteria
 - [CHT-5](#cht-5-compare-points-under-the-same-bucket) Compare points under the same bucket, 8 criteria
+- [CHT-6](#cht-6-the-chart-keeps-its-look-on-a-shared-chartjs) The chart keeps its look on a shared Chart.js, 4 criteria
 
 **Date range**
 
@@ -775,6 +776,11 @@ AC4 — Version stamped
   Given a release build
   When  the package is packed
   Then  umbraco-package.json's version matches the NuGet package version
+
+AC5 — Shared Chart.js
+  Given that site
+  When  a product imports @umbraco/analytics-ui/external/chart.js
+  Then  it resolves to /App_Plugins/Umbraco.Analytics.UI/external/chart.js/index.js, the same Chart.js our chart uses
 ```
 
 ## KPI-3: KPI tile with no data
@@ -1294,4 +1300,32 @@ AC11 — A replaced table
   Given the page draws another table
   When  it attaches
   Then  the old table is no longer listened to, and the new table gets the last rows, page and sort
+```
+
+## CHT-6: The chart keeps its look on a shared Chart.js
+
+As a product developer,
+I want our analytics chart to look the same whatever my product does with the shared Chart.js,
+so that one product's charts can't restyle another's.
+
+```
+AC1 — Defaults changed
+  Given a product changed common Chart.defaults (font, colours, animation, index axis, padding, element and scale styles)
+  When  a line, area, bar or stacked bar chart renders
+  Then  it draws the same pixels as without the change, with its own tick font and colour and no animation
+
+AC2 — Hover still works
+  Given a product changed Chart.defaults.events and the tooltip position
+  When  the editor hovers a date
+  Then  the chart's tooltip shows
+
+AC3 — Global plugins
+  Given a product registered its own plugin and Chart.js's Legend, Title and Colors globally, with the title on and colours forced
+  When  the chart renders, or updates after a plugin was registered later
+  Then  it draws the same pixels and none of those plugins runs on it
+
+AC4 — The product's own charts
+  Given that product's own chart
+  When  it renders
+  Then  its globally registered plugin still runs on it
 ```
