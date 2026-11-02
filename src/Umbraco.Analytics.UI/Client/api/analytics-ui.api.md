@@ -26,6 +26,7 @@ export const UAUI_TABLE_CELL: {
     readonly share: "uaui-share-cell";
     readonly status: "uaui-status-cell";
     readonly date: "uaui-date-cell";
+    readonly progress: "uaui-progress-cell";
 };
 
 // @public
@@ -263,23 +264,28 @@ export class UauiGroupByElement extends UmbLitElement {
 
 // @public
 export class UauiKpiTileElement extends UmbLitElement {
+    color?: UauiStatusColor;
     current?: number;
     delta?: number;
     deltaUnit: UauiDeltaUnit;
     deselectable: boolean;
     error: boolean;
+    href?: string;
     icon?: string;
     label: string;
     loading: boolean;
     lowerIsBetter: boolean;
     noData: boolean;
+    openable: boolean;
     previous?: number;
+    rel?: string;
     // (undocumented)
     render(): TemplateResult;
     selectable: boolean;
     selected: boolean;
     // (undocumented)
     static styles: CSSResultGroup;
+    target?: "_blank" | "_parent" | "_self" | "_top";
     value?: string;
 }
 
@@ -350,6 +356,21 @@ export function uauiPreviousPeriod(range: UauiDateSpan): UauiDateSpan | undefine
 
 // @public
 export function uauiPreviousYear(range: UauiDateSpan): UauiDateSpan | undefined;
+
+// @public
+export class UauiProgressCellElement extends UmbLitElement implements UauiTableCellElement {
+    column: UauiTableColumn;
+    item: Record<string, unknown>;
+    loading: boolean;
+    // (undocumented)
+    render(): TemplateResult | typeof nothing;
+    // (undocumented)
+    static styles: CSSResultGroup;
+    total?: number;
+    value: unknown;
+    // (undocumented)
+    protected willUpdate(changed: PropertyValues<this>): void;
+}
 
 // @public
 export type UauiSearchDetail = {
@@ -467,6 +488,7 @@ export interface UauiTableColumnMeta {
     hrefKey?: string;
     lowerIsBetter?: boolean;
     textKey?: string;
+    totalKey?: string;
 }
 
 // @public

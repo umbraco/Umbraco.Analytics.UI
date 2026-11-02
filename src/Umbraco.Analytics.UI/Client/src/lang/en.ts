@@ -122,5 +122,7 @@ export default {
         tableScrollRegion: "Table, scroll sideways to see more columns",
         // The same when the table has a `label`: {0} is that label, "Top pages, scroll sideways to see more columns".
         tableScrollRegionNamed: "{0}, scroll sideways to see more columns",
+        // The progress cell: {0} is the completed count and {1} the total, both formatted, "2 of 3".
+        tableProgress: "{0} of {1}",
     },
 } satisfies UmbLocalizationDictionary;

@@ -17,7 +17,7 @@ Usage and API are in [Storybook](https://umbraco.github.io/Umbraco.Analytics.UI/
 
 | Element | What it does |
 |---|---|
-| `uaui-kpi-tile` | A headline number as a card, with an icon and a change badge. Can be selectable. |
+| `uaui-kpi-tile` | A headline number as a card, with an icon and a change badge. Can be selectable, a link (`href`) or a button that raises `open`, and can take a status `color`. |
 | `uaui-delta-badge` | The change against a comparison period, e.g. "▲ 12.4%". |
 | `uaui-time-series-chart` | Lines, areas, bars or stacked bars over time (or bars and a line together), with compare, markers, a today line, a log y-axis option and a legend. |
 | `uaui-funnel` | Conversion funnel: honest-width bars, the share that moved on between steps, and last period as brackets. |
@@ -27,7 +27,7 @@ Usage and API are in [Storybook](https://umbraco.github.io/Umbraco.Analytics.UI/
 | `uaui-data-table` | Sortable, searchable, pageable table. Client or server mode. |
 | `uaui-search-field` | Search box that raises `search` as you type. Works anywhere; in a table, put it in the `toolbar` or `toolbar-start` slot and the table filters itself. |
 | `uaui-stat` | One figure with its label and change badge. Stacked over a table column (in its column toolbar), or inline in a box header. |
-| `uaui-text-cell`, `uaui-link-cell`, `uaui-number-cell`, `uaui-percent-cell`, `uaui-share-cell`, `uaui-status-cell`, `uaui-date-cell` | Table cells. Name one in a column's `elementName`, or write your own. |
+| `uaui-text-cell`, `uaui-link-cell`, `uaui-number-cell`, `uaui-percent-cell`, `uaui-share-cell`, `uaui-status-cell`, `uaui-date-cell`, `uaui-progress-cell` | Table cells. Name one in a column's `elementName`, or write your own. |
 | `uaui-table-compare-badge` | The change badge of a table cell: finds the compare row and shows how a value moved. Use it in your own cells. |
 | `uaui-empty-state` | "Nothing to show" message. The chart and table use it too. |
 | `uaui-error-state` | "Could not load" message, with an optional Retry button. The chart and table show it when their `error` is set. The KPI tile shows a dash instead, with no Retry. |
