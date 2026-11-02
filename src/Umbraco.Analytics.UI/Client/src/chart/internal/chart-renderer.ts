@@ -63,6 +63,22 @@ const onlyOwnPlugins = <T extends object>(plugins: T): T =>
 /** Chart.js's default events, set per chart so a product changing `Chart.defaults.events` doesn't stop our hover. */
 const EVENTS = ["mousemove", "mouseout", "click", "touchstart", "touchmove"] as const;
 
+/**
+ * Where a line may draw past the chart area, set per dataset so a product's `Chart.defaults.clip` can't let our lines
+ * and fills spill over the axes. It is the clip Chart.js works out itself (`LineController.getMaxOverflow`): none above
+ * or below, as the y-axis has a fixed min and max; at the sides, half the widest of the line and its end dots, a dot
+ * counting at its hover radius, with the line's width as its border.
+ */
+const lineClip = (borderWidth: number, pointRadius: number, pointHoverRadius: number) => {
+    const dot = pointRadius ? (Math.max(pointRadius, pointHoverRadius) + borderWidth) * 2 : 0;
+    const side = Math.max(borderWidth, dot) / 2;
+    return { top: 0, bottom: 0, left: side, right: side };
+};
+
+const LINE_WIDTH = 2.25;
+const COMPARE_LINE_WIDTH = 1.75;
+const POINT_HOVER_RADIUS = 4;
+
 /** Above this many points per series, dots would crowd the line, so only the hovered point shows. */
 const MAX_POINTS_WITH_DOTS = 45;
 
@@ -251,12 +267,14 @@ export class UauiChartRenderer {
         const currentSets = model.datasets.map((set, i) => {
             const color = colors.series[i];
             const compareIndex = compared.indexOf(i);
+            const pointRadius = showDots && compareIndex < 0 ? 2 : 0;
             return {
                 label: set.label,
                 data: set.values,
                 borderColor: color.line,
                 backgroundColor: color.fill,
-                borderWidth: 2.25,
+                borderWidth: LINE_WIDTH,
+                clip: lineClip(LINE_WIDTH, pointRadius, POINT_HOVER_RADIUS),
                 borderJoinStyle: "round" as const,
                 borderCapStyle: "butt" as const,
                 cubicInterpolationMode: "monotone" as const,
@@ -270,11 +288,11 @@ export class UauiChartRenderer {
                         : model.kind === "area"
                           ? ("origin" as const)
                           : false,
-                pointRadius: showDots && compareIndex < 0 ? 2 : 0,
+                pointRadius,
                 pointStyle: "circle" as const,
                 pointBackgroundColor: color.line,
                 pointBorderColor: color.line,
-                pointHoverRadius: 4,
+                pointHoverRadius: POINT_HOVER_RADIUS,
                 pointHoverBackgroundColor: colors.surface,
                 pointHoverBorderColor: color.line,
                 pointHoverBorderWidth: 2,
@@ -285,7 +303,8 @@ export class UauiChartRenderer {
             data: model.datasets[i].compare!,
             borderColor: colors.compare,
             backgroundColor: colors.compare,
-            borderWidth: 1.75,
+            borderWidth: COMPARE_LINE_WIDTH,
+            clip: lineClip(COMPARE_LINE_WIDTH, 0, POINT_HOVER_RADIUS),
             borderDash: [5, 4],
             borderJoinStyle: "round" as const,
             borderCapStyle: "butt" as const,
@@ -297,7 +316,7 @@ export class UauiChartRenderer {
             fill: false,
             pointRadius: 0,
             pointStyle: "circle" as const,
-            pointHoverRadius: 4,
+            pointHoverRadius: POINT_HOVER_RADIUS,
             pointHoverBackgroundColor: colors.surface,
             pointHoverBorderColor: colors.compare,
             pointHoverBorderWidth: 2,
@@ -326,7 +345,7 @@ export class UauiChartRenderer {
             borderWidth: stacked ? { top: 1, bottom: 1, left: 0, right: 0 } : 0,
             borderSkipped: false as const,
             borderRadius: 0,
-            clip: false as const,
+            clip: 0, // Chart.js's own clip for bars: none past the chart area
             categoryPercentage: 0.8,
             barPercentage: stacked ? 0.55 : 0.9,
             maxBarThickness: MAX_BAR_WIDTH,
@@ -343,7 +362,7 @@ export class UauiChartRenderer {
                 backgroundColor: colors.compareBar,
                 borderWidth: 0,
                 borderRadius: 0,
-                clip: false as const,
+                clip: 0,
                 categoryPercentage: 0.9,
                 barPercentage: 1,
                 maxBarThickness: groupWidth + COMPARE_BAR_EXTRA_WIDTH,

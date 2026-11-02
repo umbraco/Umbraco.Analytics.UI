@@ -128,7 +128,11 @@ describe("Feature: the chart keeps its look when a product changes the shared Ch
             await expect.poll(() => pixels(after)).toBe(before);
         });
 
-        it("keeps its own tick font and colour, and no animation", async () => {
+        it("keeps its own tick font and colour, its clip, and no animation", async () => {
+            const clipsOf = (el: Element) =>
+                chartOf(el).getSortedVisibleDatasetMetas().map((meta) => (meta as unknown as { _clip: object })._clip);
+            // Chart.js's own clip, worked out from the line and dot sizes while Chart.defaults is untouched.
+            const ownClips = clipsOf(await chart("line"));
             changeCommonDefaults();
             const el = await chart("line");
             const y = (chartOf(el).scales["y"].options as unknown as { ticks: { font: object; color: unknown } }).ticks;
@@ -140,6 +144,8 @@ describe("Feature: the chart keeps its look when a product changes the shared Ch
             expect(y.font).not.toMatchObject({ family: "ProductFont, fantasy" });
             expect(y.color).not.toBe("rgb(255, 0, 0)");
             expect(chartOf(el).options.animation).toBe(false);
+            // Not `Chart.defaults.clip`, which would let a fill spill past the axes.
+            expect(clipsOf(el)).toEqual(ownClips);
             expect(chartOf(el).options.indexAxis).toBe("x");
         });
 
