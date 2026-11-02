@@ -62,11 +62,12 @@ Slots 1 to 4 are the main colours. Slots 5 to 8 (teal, orchid, coral and olive) 
 one per source page: a series past the fourth takes them before the colours repeat from slot 1. They are mixes of UUI
 palette shades, picked to stay apart from slots 1 to 4, the status colours and the compare colour.
 
-- Pass the series largest first. Above 8 series the legend shows the first 7 and a "+N more" button, and the tooltip
-  lists the 7 largest and "+N more". The hidden table always has every series.
+- Pass the series largest first. Above 8 series the legend shows the first 7 and a "Show N more" button, and the
+  tooltip lists the 7 largest (in series order) and "+N more". The hidden table always has every series.
 - Past 8 series two series share a colour. To keep colours unique, group the smallest into one "Other" series with
   `color: "default"` (a neutral grey).
-- In your own Chart.js chart, `uauiChartColors(host).series` has all 8 slots: use `series[i % series.length]`.
+- In your own Chart.js chart, `uauiChartColors(host).series` now has all 8 slots (it had 4). Code that cycles with
+  `series[i % series.length]` gives series 5 and up the new colours; `series[i % 4]` keeps the four main ones.
 
 ## Colour a series by its meaning
 

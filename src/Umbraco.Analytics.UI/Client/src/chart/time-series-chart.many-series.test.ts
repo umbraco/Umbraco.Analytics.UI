@@ -69,27 +69,30 @@ describe("Feature: many series stay readable", () => {
             expect(lines.slice(8)).toEqual(series.slice(0, 3).map((slot) => slot.line));
         });
 
-        it("folds the legend to the first 7 series and a +4 more button", () => {
+        it("folds the legend to the first 7 series and a Show 4 more button", async () => {
             expect(legendLabels(el)).toEqual(pages.slice(0, 7).map((p) => p.label));
-            expect(toggle(el)!.textContent!.trim()).toBe("+4 more");
-            expect(toggle(el)!.getAttribute("aria-expanded")).toBe("false");
+            await expect.element(page.elementLocator(toggle(el)!)).toHaveAccessibleName("Show 4 more");
         });
 
-        it("lists every series when +4 more is pressed, and folds again on Show fewer", async () => {
+        it("names the button by its text alone: no aria-label or aria-expanded saying it twice", () => {
+            expect(toggle(el)!.hasAttribute("aria-label")).toBe(false);
+            expect(toggle(el)!.hasAttribute("aria-expanded")).toBe(false);
+        });
+
+        it("lists every series when Show 4 more is pressed, and folds again on Show fewer", async () => {
             toggle(el)!.click();
             await legend(el).updateComplete;
             expect(legendLabels(el)).toEqual(pages.map((p) => p.label));
-            expect(toggle(el)!.textContent!.trim()).toBe("Show fewer");
-            expect(toggle(el)!.getAttribute("aria-expanded")).toBe("true");
+            await expect.element(page.elementLocator(toggle(el)!)).toHaveAccessibleName("Show fewer");
             toggle(el)!.click();
             await legend(el).updateComplete;
             expect(legendLabels(el)).toHaveLength(7);
         });
 
-        it("lists the 7 largest rows, largest first, and +4 more in the tooltip", async () => {
+        it("lists the 7 largest rows in series order, and +4 more in the tooltip", async () => {
             await hoverDate(el, 1);
             const labels = deepQueryAll<HTMLElement>(tooltip(el).shadowRoot!, ".tooltip-series .tooltip-label").map((l) => l.textContent!.trim());
-            expect(labels).toEqual(["Page 11", "Page 10", "Page 9", "Page 8", "Page 7", "Page 6", "Page 5"]);
+            expect(labels).toEqual(["Page 5", "Page 6", "Page 7", "Page 8", "Page 9", "Page 10", "Page 11"]);
             expect(deepQuery(tooltip(el).shadowRoot!, ".tooltip-more")!.textContent!.trim()).toBe("+4 more");
         });
 
@@ -139,7 +142,18 @@ describe("Feature: many series stay readable", () => {
             await userEvent.keyboard(" ");
             await legend(el).updateComplete;
             expect(legendLabels(el)).toHaveLength(7);
-            expect(toggle(el)!.getAttribute("aria-expanded")).toBe("false");
+            await expect.element(page.elementLocator(toggle(el)!)).toHaveAccessibleName("Show 4 more");
+        });
+
+        it("moves focus to the legend list when the series drop to 8 while the button has focus", async () => {
+            toggle(el)!.focus();
+            await userEvent.keyboard("{Enter}");
+            await legend(el).updateComplete;
+            (el as unknown as { series: UauiSeries[] }).series = pages.slice(0, 8);
+            await settle(el);
+            await legend(el).updateComplete;
+            expect(toggle(el)).toBe(null);
+            expect(legend(el).shadowRoot!.activeElement).toBe(legend(el).shadowRoot!.querySelector("ul"));
         });
     });
 
@@ -160,7 +174,7 @@ describe("Feature: many series stay readable", () => {
     });
 
     describe("Scenario: the share view with many series", () => {
-        it("sorts the tooltip's rows by share", async () => {
+        it("lists the tooltip's rows in stack order, top first, keeping the 7 largest", async () => {
             const el = await chart(pages, "stacked-bar", "percent");
             await hoverDate(el, 0);
             const values = deepQueryAll<HTMLElement>(tooltip(el).shadowRoot!, ".tooltip-series .tooltip-value").map((v) => v.textContent!.trim());

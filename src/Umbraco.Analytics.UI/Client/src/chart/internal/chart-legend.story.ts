@@ -50,10 +50,10 @@ const manyEntries = [
     "Partners",
 ].map((label, i) => ({ id: `page-${i + 1}`, label, color: ((i % 8) + 1) as 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 }));
 
-/** More than 8 series fold: the first 7, then a "+4 more" button (Tab to it, Enter or Space). */
+/** More than 8 series fold: the first 7, then a "Show 4 more" button (Tab to it, Enter or Space). */
 export const Folded: Story = { args: { bars: true, entries: manyEntries } };
 
-/** The folded legend after pressing "+4 more": every series, and "Show fewer" to fold it again. */
+/** The folded legend after pressing "Show 4 more": every series, and "Show fewer" to fold it again. */
 export const Expanded: Story = {
     args: { bars: true, entries: manyEntries },
     play: async ({ canvasElement }) => {

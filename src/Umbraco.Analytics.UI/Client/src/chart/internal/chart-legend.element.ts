@@ -1,4 +1,4 @@
-import { css, customElement, html, nothing, property, repeat, state, type CSSResultGroup, type TemplateResult } from "@umbraco-cms/backoffice/external/lit";
+import { css, customElement, html, nothing, property, repeat, state, type CSSResultGroup, type PropertyValues, type TemplateResult } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import type { UauiSeriesColorKey } from "./chart-colors.js";
 import { UauiPaletteStyles } from "../../theme/index.js";
@@ -20,9 +20,11 @@ export const LEGEND_MAX_ENTRIES = 8;
  * The legend under a chart: a list with a line (or, for the bar kinds, a square) in each series'
  * colour, and an entry for the compared period when `compareLabel` is set. Internal: not exported.
  *
- * With more series than `max` it folds: the first `max - 1` series, then a "+N more" button (`aria-expanded`) that
- * lists the rest, where it becomes "Show fewer". The entries wrap onto more lines either way. The compare entry always
- * shows. The button keeps its place, so focus stays on it.
+ * With more series than `max` it folds: the first `max - 1` series, then a "Show N more" button that lists the rest,
+ * where it becomes "Show fewer". The button's text is its name and says what pressing it does, so it carries no
+ * `aria-expanded` (a name that changes with the state would say it twice). The entries wrap onto more lines either way.
+ * The compare entry always shows. The button keeps its place in the list, so focus stays on it when pressed; if the
+ * series drop to `max` or fewer while it has focus, the button goes and focus moves to the list.
  *
  * @element uaui-chart-legend
  */
@@ -55,6 +57,21 @@ export class UauiChartLegendElement extends UmbLitElement {
     @state()
     private _expanded = false;
 
+    /** The toggle had focus before an update that may remove it. */
+    #toggleHadFocus = false;
+
+    protected override willUpdate(changed: PropertyValues<this>) {
+        super.willUpdate(changed);
+        this.#toggleHadFocus = this.shadowRoot?.activeElement?.classList.contains("legend-toggle") ?? false;
+    }
+
+    protected override updated(changed: PropertyValues<this>) {
+        super.updated(changed);
+        // The button went while it had focus (the series dropped to `max` or fewer): keep focus in the legend, not on body.
+        if (this.#toggleHadFocus && !this.shadowRoot?.querySelector(".legend-toggle")) this.shadowRoot?.querySelector<HTMLElement>("ul")?.focus();
+        this.#toggleHadFocus = false;
+    }
+
     /** How many series fit before the fold, or `undefined` when they all show without one. */
     get #foldAt(): number | undefined {
         const max = Math.max(Math.floor(this.max) || LEGEND_MAX_ENTRIES, 2);
@@ -68,7 +85,7 @@ export class UauiChartLegendElement extends UmbLitElement {
     #renderToggle(foldAt: number) {
         const hidden = this.entries.length - foldAt;
         return html`<li class="legend-toggle-item">
-            <button type="button" class="legend-toggle" aria-expanded=${this._expanded ? "true" : "false"} @click=${this.#toggle}>
+            <button type="button" class="legend-toggle" @click=${this.#toggle}>
                 ${this._expanded ? this.localize.term("uauiAnalytics_chartLegendFewer") : this.localize.term("uauiAnalytics_chartLegendMore", hidden)}
             </button>
         </li>`;
@@ -78,7 +95,8 @@ export class UauiChartLegendElement extends UmbLitElement {
         const shapes = this.compareShapes?.length ? this.compareShapes : [this.bars ? "bar" : "line"];
         const foldAt = this.#foldAt;
         const shown = foldAt === undefined || this._expanded ? this.entries : this.entries.slice(0, foldAt);
-        return html`<ul aria-label=${this.localize.term("uauiAnalytics_chartLegendLabel")}>
+        // `tabindex="-1"`: not a tab stop, but focus can move here when the button goes.
+        return html`<ul aria-label=${this.localize.term("uauiAnalytics_chartLegendLabel")} tabindex="-1">
             ${repeat(
                 shown,
                 (entry) => entry.id,
@@ -170,6 +188,10 @@ export class UauiChartLegendElement extends UmbLitElement {
             .legend-toggle:focus-visible {
                 outline: calc(2px * var(--uui-show-focus-outline, 1)) solid var(--uui-color-focus);
                 outline-offset: 1px;
+            }
+
+            ul:focus {
+                outline: none;
             }
 
             .legend-compare {

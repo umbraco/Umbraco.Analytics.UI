@@ -578,7 +578,7 @@ describe("Feature: the Forms analytics page", () => {
             expect(SAMPLE_FORM.pages.length).toBeGreaterThan(8);
             const legend = deepQuery<HTMLElement>(shadow(chartIn(page, "origins")), "uaui-chart-legend")!;
             await settle(legend);
-            expect(legend.shadowRoot!.querySelector(".legend-toggle")?.textContent?.trim()).toBe(`+${SAMPLE_FORM.pages.length - 7} more`);
+            expect(legend.shadowRoot!.querySelector(".legend-toggle")?.textContent?.trim()).toBe(`Show ${SAMPLE_FORM.pages.length - 7} more`);
         });
 
         it("shows entries per page as lines at first", () => {

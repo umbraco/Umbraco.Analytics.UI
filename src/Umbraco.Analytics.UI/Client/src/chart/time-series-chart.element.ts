@@ -18,7 +18,7 @@ import { getNumberFormat } from "../internal/format/number-format.js";
 import { bucketMarkers, type MarkerBucket } from "./internal/marker-buckets.js";
 import type { UauiMarkerPlacement } from "./internal/markers-plugin.js";
 import { buildChartData } from "./internal/chart-data.js";
-import { maxValue, seriesTotals, shareValues, type UauiChartData } from "./internal/chart-values.js";
+import { maxValue, seriesTotals, shareTotals, shareValues, type UauiChartData } from "./internal/chart-values.js";
 import "./internal/chart-data-table.element.js";
 import "./internal/chart-legend.element.js";
 import "./internal/chart-markers.element.js";
@@ -138,8 +138,9 @@ export const UauiTimeSeriesChartElementBase = UauiChartMixin(UmbLitElement);
  * `stack="percent"` with `kind="stacked-bar"` or `"area"` is a 100% share view: each date's series as its share of that
  * date's total, on a 0 to 100% axis, with the share and the value in the tooltip and the hidden table.
  * Many series stay readable: series 5 to 8 get their own palette slots (teal, orchid, coral, olive) before the colours
- * repeat, a legend of more than 8 series folds to the first 7 and a "+N more" button, and a tooltip of more than 8 rows
- * lists the 7 largest and "+N more".
+ * repeat, a legend of more than 8 series folds to the first 7 and a "Show N more" button, and a tooltip of more than 8
+ * rows lists the 7 largest (in its usual order) and "+N more". In the share view the tooltip lists the rows as the stack
+ * draws them, top first.
  * `markers` draw a dashed line and a dot on the x-axis at their date (in the bucket that contains it when grouped by
  * week or month; none when it is outside the chart). Each dot is a button: hover or focus shows the markers' dates,
  * titles and descriptions, and click or Enter raises `marker-click`. Markers in one bucket share a dot.
@@ -352,7 +353,8 @@ export class UauiTimeSeriesChartElement extends UauiTimeSeriesChartElementBase {
             axisLabels: data.labels.map((d) => formatIsoDate(d, axisDate)),
             dateLabels: data.labels.map(tooltipLabel),
             compareDateLabels: data.series.map((s) => (s.compareLabels ?? []).map(tooltipLabel)),
-            totals: seriesTotals(data, share ? undefined : bars.some(Boolean) ? bars : undefined),
+            // The share view's total counts a value below 0 as 0, as its shares do, so the shares add up to it.
+            totals: share ? shareTotals(data) : seriesTotals(data, bars.some(Boolean) ? bars : undefined),
             compareTotalDateLabels: (data.compareTotal?.labels ?? []).map(tooltipLabel),
             shares: share ? shareValues(data) : undefined,
             numberFormat: getNumberFormat(lang, valueFormat),
@@ -438,7 +440,7 @@ export class UauiTimeSeriesChartElement extends UauiTimeSeriesChartElementBase {
                 labels: axisLabels,
                 roomAbove: this.today ? TODAY_LABEL_ROOM : 0,
                 colors,
-                datasets: data.series.map((s, i) => ({ label: s.label, kind: kinds[i], values: this.#derived.shares?.[i] ?? [] })),
+                datasets: data.series.map((s, i) => ({ label: s.label, kind: kinds[i], values: this.#bandValues(i) })),
                 yMax: 1,
                 yStep: SHARE_STEP,
                 formatTick: (value) => tick.format(value),
@@ -477,6 +479,19 @@ export class UauiTimeSeriesChartElement extends UauiTimeSeriesChartElementBase {
             "log-stacked",
             'y-scale="log" is ignored with kind="stacked-bar", as stacked bars on a log axis don\'t add up by height. Use kind="bar".',
         );
+    }
+
+    /**
+     * The share view's drawn values of series `i`: its shares. For `area`, a series with no point on a date that has a
+     * total is drawn at 0 (a band of no thickness), else the band above it, filled down to it, would have a hole there.
+     * Only a date whose total is 0 stays `null` (every series together), so it is left empty. The tooltip and hidden table
+     * keep the `null`: the series has no value there. Stacked bars need no 0: a missing segment leaves no hole.
+     */
+    #bandValues(i: number): (number | null)[] {
+        const shares = this.#derived.shares ?? [];
+        const values = shares[i] ?? [];
+        if (this.kind !== "area") return values;
+        return values.map((v, date) => (v === null && shares.some((s) => s[date] !== null) ? 0 : v));
     }
 
     /** Warns once per chart about what `stack="percent"` ignores, or that it is ignored. */
@@ -526,6 +541,8 @@ export class UauiTimeSeriesChartElement extends UauiTimeSeriesChartElementBase {
                 },
             ];
         });
+        // The share view lists the rows as the stack draws them, top segment or band first (the last series).
+        if (shares) rows.reverse();
         const total = totals[index];
         const compareTotalValue = bars ? data.compareTotal?.values[index] : null;
         const compareTotal: UauiChartTooltipCompare | undefined =

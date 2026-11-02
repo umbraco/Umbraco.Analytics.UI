@@ -1,6 +1,6 @@
 // T59 — 100% share view: each date's series as its share of that date's total (`stack="percent"`).
 // Canvas-only outcomes are checked with screenshot comparison (toMatchScreenshot): see screenshotIt.
-import { Chart } from "@umbraco/analytics-ui/external/chart.js";
+import { Chart, uauiChartColors } from "@umbraco/analytics-ui/external/chart.js";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { page, userEvent } from "vitest/browser";
 import { html } from "@umbraco-cms/backoffice/external/lit";
@@ -83,7 +83,8 @@ describe("Feature: 100% share view", () => {
             it("draws each value as its share of its date's total", () => {
                 const c = chartOf(el);
                 expect(c.data.datasets.map((set) => set.data[0])).toEqual([0.6, 0.2, 0.2]);
-                expect(c.data.datasets.map((set) => set.data[2])).toEqual([0.25, 0.75, null]);
+                // Blog has no point on 3 Jun: no segment in stacked bars, a band of no thickness in an area (see below).
+                expect(c.data.datasets.map((set) => set.data[2])).toEqual([0.25, 0.75, kind === "area" ? 0 : null]);
             });
 
             it("stacks every series on one y-axis from 0 to 100%", () => {
@@ -107,10 +108,11 @@ describe("Feature: 100% share view", () => {
 
             it("shows each share, its label and its value in the tooltip, and the total", async () => {
                 await hoverDate(el, 0);
+                // Stack order, top first: the last series is on top.
                 expect(tooltipRows(el)).toEqual([
-                    ["60%", "Home", "30"],
-                    ["20%", "Events", "10"],
                     ["20%", "Blog", "10"],
+                    ["20%", "Events", "10"],
+                    ["60%", "Home", "30"],
                 ]);
                 expect(deepText(deepQuery(tooltip(el).shadowRoot!, ".tooltip-total")!)).toContain("50");
             });
@@ -133,8 +135,8 @@ describe("Feature: 100% share view", () => {
             await userEvent.hover(page.elementLocator(canvas), { position: { x, y: canvas.getBoundingClientRect().height / 2 } });
             await expect.poll(() => tooltip(el)?.style.visibility).toBe("visible");
             expect(tooltipRows(el)).toEqual([
-                ["0", "A", ""],
                 ["0", "B", ""],
+                ["0", "A", ""],
             ]);
         });
     });
@@ -152,10 +154,42 @@ describe("Feature: 100% share view", () => {
     });
 
     describe("Scenario: values below 0", () => {
-        it("counts them as 0 in the share, and shows them as they are in the table", async () => {
+        it("counts them as 0 in the share and the total, and shows them as they are in the table", async () => {
             const el = await chart({ kind: "stacked-bar", series: [seriesOf("a", "A", [3, 1, 1]), seriesOf("b", "B", [-1, 1, 1])] });
             expect(chartOf(el).data.datasets.map((set) => set.data[0])).toEqual([1, 0]);
-            expect(bodyRows(el)[0].slice(1)).toEqual(["100% (3)", "0% (-1)", "2"]);
+            // The total is 3, not 2: the shares add up to it.
+            expect(bodyRows(el)[0].slice(1)).toEqual(["100% (3)", "0% (-1)", "3"]);
+        });
+    });
+
+    describe("Scenario: a series with no point on a date that has a total", () => {
+        // Events has no point on 2 Jun, between Home and Blog, while the date has a total.
+        const sparse = [seriesOf("home", "Home", [30, 20, 10]), seriesOf("events", "Events", [10, undefined, 30]), seriesOf("blog", "Blog", [10, 20, 10])];
+
+        it("draws its area band at 0 there, so the band above has no hole", async () => {
+            const el = await chart({ kind: "area", series: sparse });
+            expect(chartOf(el).data.datasets.map((set) => set.data[1])).toEqual([0.5, 0, 0.5]);
+        });
+
+        it("fills the band above down to it: the band above covers the plot there", async () => {
+            const el = await chart({ kind: "area", series: sparse });
+            const c = chartOf(el);
+            const x = Math.round(c.scales["x"].getPixelForValue(1));
+            // Halfway up Blog's band (50% to 100%) on 2 Jun, a canvas pixel in Blog's bar colour, not the surface.
+            const y = Math.round(c.scales["y"].getPixelForValue(0.75));
+            const ratio = c.currentDevicePixelRatio;
+            const [r, g, b] = c.ctx.getImageData(x * ratio, y * ratio, 1, 1).data;
+            expect(`rgb(${r}, ${g}, ${b})`).toBe(uauiChartColors(el).series[2].bar);
+        });
+
+        it("keeps no value for it in the tooltip and the hidden table", async () => {
+            const el = await chart({ kind: "area", series: sparse });
+            expect(bodyRows(el)[1].slice(1)).toEqual(["50% (20)", "", "50% (20)", "40"]);
+        });
+
+        it("leaves stacked bars as they are: no segment, no 0", async () => {
+            const el = await chart({ kind: "stacked-bar", series: sparse });
+            expect(chartOf(el).data.datasets.map((set) => set.data[1])).toEqual([0.5, null, 0.5]);
         });
     });
 

@@ -40,8 +40,9 @@ export const TOOLTIP_MAX_ROWS = 8;
 /**
  * The tooltip over the hovered x value (a date, a category) of a chart: its heading, one row per series with its
  * compare point and change, and for the bar kinds the total and the compare total. With more rows than `maxRows` it
- * lists the `maxRows - 1` largest (by share, else value), largest first, and a "+N more" line for the rest: the hidden
- * table has them all. It draws what it is given and has no
+ * lists the `maxRows - 1` largest (by share, else value), in the order given, and a "+N more" line for the rest: the
+ * hidden table has them all. Keeping the order means rows never jump between series order and size order as series are
+ * added; the chart gives them in its own order (series order, or stack order top first in the share view). It draws what it is given and has no
  * position of its own: the chart places it. Internal: not exported.
  *
  * @element uaui-chart-tooltip
@@ -111,8 +112,9 @@ export class UauiChartTooltipElement extends UmbLitElement {
         const max = Math.max(Math.floor(this.maxRows) || TOOLTIP_MAX_ROWS, 2);
         if (this.rows.length <= max) return { rows: this.rows, more: 0 };
         const size = (row: UauiChartTooltipRow) => row.share ?? row.value;
-        const largest = [...this.rows].sort((a, b) => size(b) - size(a)).slice(0, max - 1);
-        return { rows: largest, more: this.rows.length - largest.length };
+        const largest = new Set([...this.rows].sort((a, b) => size(b) - size(a)).slice(0, max - 1));
+        const rows = this.rows.filter((row) => largest.has(row));
+        return { rows, more: this.rows.length - rows.length };
     }
 
     #renderRow(row: UauiChartTooltipRow) {

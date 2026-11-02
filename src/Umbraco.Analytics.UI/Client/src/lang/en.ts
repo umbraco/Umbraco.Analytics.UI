@@ -62,8 +62,8 @@ export default {
         chartShareValue: "{0} ({1})",
         // The tooltip's last line when it lists only the largest rows: {0} how many more series have a value there.
         chartTooltipMore: "+{0} more",
-        // The legend's button that shows the rest of a long legend: {0} how many series it hides.
-        chartLegendMore: "+{0} more",
+        // The legend's button that shows the rest of a long legend: {0} how many series it hides. Its text is its name.
+        chartLegendMore: "Show {0} more",
         // The same button once the legend shows every series: folds it back.
         chartLegendFewer: "Show fewer",
 

@@ -82,7 +82,7 @@ export const Share: Story = {
     },
 };
 
-/** More than 8 rows (11 source pages): the 7 largest, largest first, and "+4 more" for the rest. */
+/** More than 8 rows (11 source pages): the 7 largest, in the order given, and "+4 more" for the rest. */
 export const ManyRows: Story = {
     name: "Many rows",
     args: {
