@@ -70,7 +70,7 @@ chart.series = [
 ```
 
 - It works in every kind (line, area, bar, stacked bar), and in the legend and tooltip. A compare line or bar keeps the compare colour.
-- `"default"` is a neutral grey, as in the status cell. `"warning"` looks like slot 3 and `"danger"` like slot 2 in every theme, so don't mix those slots with those statuses in one chart: the chart warns once in the console if you do. `"positive"` and `"default"` differ from every slot.
+- `"default"` is a neutral grey, as in the status cell. `"warning"` looks like slot 3 and `"danger"` like slot 2 in every theme, so don't mix those slots with those statuses in one chart: the chart warns once in the console if you do. `"positive"` and `"default"` differ from every slot: slot 4 is lavender in the dark theme, not a green, so it doesn't read as positive.
 - Any other value draws the series in the slot of its position.
 - Say the meaning in the label too. The colour only repeats it.
 - For your own Chart.js chart, `uauiChartColors(host).status.danger` gives the same `{ line, fill, bar }`.
