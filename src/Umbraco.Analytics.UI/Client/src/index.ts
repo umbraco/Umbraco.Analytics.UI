@@ -14,4 +14,5 @@ export * from "./toggle-group/index.js";
 export * from "./group-by/index.js";
 export * from "./empty-state/index.js";
 export * from "./error-state/index.js";
+export * from "./load-state/index.js";
 export * from "./theme/index.js";

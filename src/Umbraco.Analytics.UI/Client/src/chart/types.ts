@@ -57,3 +57,37 @@ export type UauiSeriesKind = "line" | "bar";
  * height, for values that span widely (a few errors beside hundreds of approvals).
  */
 export type UauiChartScale = "linear" | "log";
+
+/** One x-axis value of `uaui-category-chart`, such as an hour of the day. */
+export type UauiCategory = {
+    /** Identifies the category: a series' points name it in `category`. */
+    id: string;
+    /** Shown on the x-axis, as the tooltip's heading and in the screen reader table. Pass it already localized. */
+    label: string;
+};
+
+/**
+ * One value in one category. Two points of a series in the same category are added, so aggregate rates and averages
+ * before passing them. A value below 0 is drawn at 0, as on the time-series chart; the tooltip and hidden table show it
+ * as it is.
+ */
+export type UauiCategoryPoint = {
+    /** The `id` of the category the value is in. A point in a category the chart wasn't given is not drawn. */
+    category: string;
+    value: number;
+};
+
+/** A named set of bars on `uaui-category-chart`. */
+export type UauiCategorySeries = {
+    /** Identifies the series. A comparison series is matched to its current series by `id`. */
+    id: string;
+    /** Shown in the legend, the tooltip and the screen reader table. */
+    label: string;
+    /** The series' colour, as `UauiSeries.color`: a palette slot (1 to 4) or a status colour. Defaults to the slot of the series' position, as does any other value. */
+    color?: UauiColorSlot | UauiStatusColor;
+    /** Its values, by category. A category with no point has no bar. */
+    points: UauiCategoryPoint[];
+};
+
+/** How `uaui-category-chart` draws its series: side by side, or stacked in one bar per category. */
+export type UauiCategoryChartKind = "bar" | "stacked-bar";

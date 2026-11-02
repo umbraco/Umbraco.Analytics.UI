@@ -12,12 +12,13 @@ const meta: Meta<UauiChartDataTableElement> = {
         docs: {
             description: {
                 component: notPublicApi(
-                    "`uaui-chart-data-table` is the visually hidden table of `uaui-time-series-chart`'s data, for screen readers. It is clipped away, so the story shows it unclipped to inspect.",
+                    "`uaui-chart-data-table` is the visually hidden table of a chart's data (`uaui-time-series-chart`, `uaui-category-chart`), for screen readers. It is clipped away, so the story shows it unclipped to inspect.",
                 ),
             },
         },
     },
     args: {
+        labelsHeader: "Date",
         labels: ["Jun 9, 2026", "Jun 10, 2026", "Jun 11, 2026"],
         series: [
             { id: "pageviews", label: "Pageviews", values: [120, 150, null], compare: [100, 90, 80] },
@@ -31,6 +32,7 @@ const meta: Meta<UauiChartDataTableElement> = {
     // The table is clipped to 1px; the story puts it back in the flow.
     render: (args) => html`<uaui-chart-data-table
         style="position: static; width: auto; height: auto; margin: 0; overflow: visible; clip-path: none"
+        .labelsHeader=${args.labelsHeader}
         .labels=${args.labels}
         .series=${args.series}
         .logScale=${args.logScale}

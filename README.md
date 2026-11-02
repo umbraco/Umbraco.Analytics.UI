@@ -20,6 +20,7 @@ Usage and API are in [Storybook](https://umbraco.github.io/Umbraco.Analytics.UI/
 | `uaui-kpi-tile` | A headline number as a card, with an icon and a change badge. Can be selectable, a link (`href`) or a button that raises `open`, and can take a status `color`. |
 | `uaui-delta-badge` | The change against a comparison period, e.g. "▲ 12.4%". |
 | `uaui-time-series-chart` | Lines, areas, bars or stacked bars over time (or bars and a line together), with compare, markers, a today line, a log y-axis option and a legend. |
+| `uaui-category-chart` | Bars or stacked bars over categories instead of dates (e.g. submissions by hour of day), with compare, a log y-axis option and a legend. Same look, tooltip and states as the time-series chart. |
 | `uaui-funnel` | Conversion funnel: honest-width bars, the share that moved on between steps, and last period as brackets. |
 | `uaui-toggle-group` | Toggle group: a row of options, exactly one selected. |
 | `uaui-group-by` | Day, week or month switch for a chart. |
@@ -32,7 +33,7 @@ Usage and API are in [Storybook](https://umbraco.github.io/Umbraco.Analytics.UI/
 | `uaui-empty-state` | "Nothing to show" message. The chart and table use it too. |
 | `uaui-error-state` | "Could not load" message, with an optional Retry button. The chart and table show it when their `error` is set. The KPI tile shows a dash instead, with no Retry. |
 
-Also public: `UAUI_TABLE_CELL` (the cell element names), `UAUI_TABLE_CONTEXT` (what a custom cell reads from its table), `UauiPaletteStyles` (the colour palette for your own elements), `UauiTableServerController` (runs a table in `server` mode) and the date helpers `uauiPreviousPeriod`, `uauiPreviousYear`, `uauiCompareFor`, `uauiDaysIn`, `uauiDateBuckets` and `uauiFormatDateRange`.
+Also public: `UauiLoadStateMixin` (the loading, error and empty settings the charts, funnel and table share, with the error > loading > empty rule and the `retry` event), `UauiChartMixin` (built on it: the settings both charts share, such as `series`, `y-scale` and `value-format`), `UAUI_TABLE_CELL` (the cell element names), `UAUI_TABLE_CONTEXT` (what a custom cell reads from its table), `UauiPaletteStyles` (the colour palette for your own elements), `UauiTableServerController` (runs a table in `server` mode) and the date helpers `uauiPreviousPeriod`, `uauiPreviousYear`, `uauiCompareFor`, `uauiDaysIn`, `uauiDateBuckets` and `uauiFormatDateRange`.
 
 ## Packages
 

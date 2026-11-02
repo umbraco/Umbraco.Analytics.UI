@@ -8,6 +8,7 @@ import { deepQuery, deepQueryAll, renderElement, settle, shadow, type UauiTestEl
 import { renderWithModals } from "../internal/test/modal-host.js";
 import { markerFor, registerMarkerTranslations, untranslatedWords } from "../internal/test/untranslated.js";
 import "../chart/time-series-chart.element.js";
+import "../chart/category-chart.element.js";
 import "../chart/internal/chart-tooltip.element.js";
 import "../chart/internal/chart-marker-tooltip.element.js";
 import "../funnel/funnel.element.js";
@@ -210,6 +211,18 @@ describe("Feature: built-in text is translated, with nothing hard-coded", () => 
 
         it("has no hard-coded words in a chart reloading", async () => {
             expect(await wordsIn(await chart(html`<uaui-time-series-chart style=${wide} loading .series=${series}></uaui-time-series-chart>`))).toEqual([]);
+        });
+
+        it("has no hard-coded words in a category chart with stacked bars, a total and a comparison", async () => {
+            const categories = [{ id: "a", label: "DATA" }, { id: "b", label: "DATA" }];
+            const values = (a: number, b: number) => [{ category: "a", value: a }, { category: "b", value: b }];
+            const el = await renderElement(
+                html`<uaui-category-chart kind="stacked-bar" style=${wide} .categories=${categories}
+                    .series=${[{ id: "a", label: "DATA", points: values(3, 5) }, { id: "b", label: "DATA", points: values(1, 2) }]}
+                    .compareSeries=${[{ id: "a", label: "DATA", points: values(2, 4) }]}></uaui-category-chart>`,
+                "uaui-category-chart",
+            );
+            expect(await wordsIn(el)).toEqual([]);
         });
     });
 

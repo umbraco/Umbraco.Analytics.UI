@@ -9,6 +9,7 @@ import {
     type TemplateResult,
 } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
+import { UauiChartMixin } from "./chart.mixin.js";
 import type { UauiGroupBy } from "../group-by/group-by.element.js";
 import type { UauiWeekStart } from "../date-helpers/date-helpers.js";
 import { resolveWeekStart } from "../internal/date/date-math.js";
@@ -33,7 +34,7 @@ import { chartYAxis, usesLogScale } from "./internal/chart-y-axis.js";
 import { UauiTimeSeriesOverlays } from "./internal/time-series-overlays.js";
 import { TODAY_LABEL_ROOM } from "./internal/today-plugin.js";
 import type { UauiCompare, UauiDateRange } from "../date-range/types.js";
-import type { UauiChartKind, UauiChartScale, UauiMarker, UauiMarkerClickDetail, UauiSeries, UauiSeriesKind } from "./types.js";
+import type { UauiChartKind, UauiMarker, UauiMarkerClickDetail, UauiSeries, UauiSeriesKind } from "./types.js";
 
 const axisDateFormat: Record<UauiGroupBy, Intl.DateTimeFormatOptions> = {
     day: { day: "numeric", month: "short" },
@@ -97,6 +98,12 @@ const emptyDerived: Derived = {
 };
 
 /**
+ * `UmbLitElement` with the settings every chart shares (`UauiChartMixin`), for dated series: the base of
+ * `uaui-time-series-chart`. Exported so its type has a name in the public API; extend the element, not this.
+ */
+export const UauiTimeSeriesChartElementBase = UauiChartMixin(UmbLitElement);
+
+/**
  * Shows a metric over time as lines, filled areas, bars or stacked bars, with a legend, a hover tooltip and a visually
  * hidden table of the same data for screen readers.
  *
@@ -145,35 +152,10 @@ const emptyDerived: Derived = {
  * @cssprop --uaui-gap-negative - Shading between a series and its compare line where the series is doing worse than it (below it, or above it with `lower-is-better`).
  */
 @customElement("uaui-time-series-chart")
-export class UauiTimeSeriesChartElement extends UmbLitElement {
+export class UauiTimeSeriesChartElement extends UauiTimeSeriesChartElementBase {
     /** How the series are drawn. A series' own `kind` (`"line"` or `"bar"`) overrides it for that series. */
     @property({ type: String, reflect: true })
     kind: UauiChartKind = "line";
-
-    /**
-     * How the y-axis spaces its values. `"log"` spaces it by powers of ten, for values that span widely. It still starts
-     * at 0: 0 sits on the axis line and the axis bends toward it near the bottom, so a 0 needs no gap and the smallest
-     * bar still shows. Higher up, each power of ten gets close to the same height; the lowest decade is about three
-     * quarters of one. The shape depends on the smallest value above 0 (the first tick is the power of ten at or below
-     * it), so it can change when the date range does. Ticks are at 0 and each power of ten (with the 2s and 5s when there
-     * are only one or two), every other or third one when the axis is too short for all. The hidden table's caption
-     * says the scale is logarithmic. `stacked-bar` keeps a linear axis, as stacked segments on a log axis don't add up
-     * by height. Any other value is linear.
-     */
-    @property({ type: String, attribute: "y-scale", reflect: true })
-    yScale: UauiChartScale = "linear";
-
-    /** One line per series. Dates are ISO ("2026-06-11"). Series needn't share the same dates. */
-    @property({ attribute: false })
-    series: UauiSeries[] = [];
-
-    /**
-     * The same metrics for another period, drawn as a dashed line. Each is matched to the series with the same `id`,
-     * and its points to that series' dates by bucket offset (the Nth `group-by` bucket from its first date under the Nth
-     * from the series' first date), so the two periods can cover different dates. Points on one date add up.
-     */
-    @property({ attribute: false })
-    compareSeries: UauiSeries[] = [];
 
     /**
      * The period the series cover, as `uaui-date-range` emits it. Optional but recommended with `compare`: compare
@@ -190,17 +172,20 @@ export class UauiTimeSeriesChartElement extends UmbLitElement {
     @property({ attribute: false })
     compare?: UauiCompare;
 
-    /** Names the compared period in the legend and tooltip, e.g. "Apr 25, 2026 – May 24, 2026". Defaults to the translation of "Comparison". */
-    @property({ type: String, attribute: "compare-label" })
-    compareLabel?: string;
+    /**
+     * One line (or set of bars) per series, from `UauiChartMixin`. Dates are ISO ("2026-06-11"); a date-time is read as
+     * the day it starts with. Series needn't share the same dates. Points of one series on the same date add up, so
+     * aggregate rates and averages first.
+     */
+    declare series: UauiSeries[];
 
     /**
-     * Shows a fall as good, for a metric like refund rate, bounce rate or average duration. The gap shading between a series
-     * and its compare line flips (below the compare line is good) and every change badge in the tooltip reads a fall as an
-     * improvement. One chart shows one metric, so it applies to every series and to the total.
+     * The same metrics for another period, from `UauiChartMixin`. A line's compare series is matched to the series with
+     * the same `id` and drawn as a dashed line; its points line up by bucket offset (the Nth `group-by` bucket from its
+     * first date under the Nth from the series' first date), so the two periods can cover different dates. Points on
+     * one date add up. The bar kinds add every compare series up, matched or not, into one compare bar per date.
      */
-    @property({ type: Boolean, attribute: "lower-is-better", reflect: true })
-    lowerIsBetter = false;
+    declare compareSeries: UauiSeries[];
 
     /** Events shown as a dot on the x-axis with a dashed line. One outside the chart's dates draws nothing. */
     @property({ attribute: false })
@@ -229,38 +214,6 @@ export class UauiTimeSeriesChartElement extends UmbLitElement {
      */
     @property({ type: Number, attribute: "week-start" })
     weekStart: UauiWeekStart = 1;
-
-    /** How numbers are formatted, e.g. `{ style: "currency", currency: "EUR" }`. */
-    @property({ type: Object, attribute: "value-format" })
-    valueFormat?: Intl.NumberFormatOptions;
-
-    /** Shows a skeleton on first load, or a loading bar over the old data when reloading. */
-    @property({ type: Boolean, reflect: true })
-    loading = false;
-
-    /** The load failed. Shows `uaui-error-state` in place of the plot, legend and data table, and wins over `loading` and the empty state. */
-    @property({ type: Boolean, reflect: true })
-    error = false;
-
-    /** Headline of the error state. Defaults to the translation of "Something went wrong". */
-    @property({ type: String, attribute: "error-headline" })
-    errorHeadline?: string;
-
-    /** Description of the error state. Defaults to the translation of "The data could not be loaded.". */
-    @property({ type: String, attribute: "error-description" })
-    errorDescription?: string;
-
-    /** Shows a Retry button in the error state. Pressing it raises `retry` on the chart. */
-    @property({ type: Boolean })
-    retryable = false;
-
-    /** Headline of the empty state. Defaults to the translation of "No data yet". */
-    @property({ type: String, attribute: "empty-headline" })
-    emptyHeadline?: string;
-
-    /** Description of the empty state. Defaults to the translation of "Try a wider date range.". */
-    @property({ type: String, attribute: "empty-description" })
-    emptyDescription?: string;
 
     /** Where the renderer drew the marker dots, to put a button over each. */
     @state()
@@ -542,6 +495,7 @@ export class UauiTimeSeriesChartElement extends UmbLitElement {
     #renderTable() {
         const { data, totals, numberFormat } = this.#derived;
         return html`<uaui-chart-data-table
+            .labelsHeader=${this.localize.term("uauiAnalytics_chartTableDateHeader")}
             .labels=${this.#tableDates}
             .series=${data.series}
             .totals=${this.#showsTotal ? totals : undefined}
@@ -555,11 +509,13 @@ export class UauiTimeSeriesChartElement extends UmbLitElement {
         return renderChartFrame({
             label: this.localize.term("uauiAnalytics_chartAriaLabel"),
             hasData: this.#hasData,
-            loading: this.loading,
+            mode: this.loadingMode(this.#hasData),
+            busy: this.isBusy(),
             error: this.error,
             errorHeadline: this.errorHeadline,
             errorDescription: this.errorDescription,
             retryable: this.retryable,
+            onRetry: this.dispatchRetry,
             emptyHeadline: this.emptyHeadline,
             emptyDescription: this.emptyDescription,
             tooltip: this.#renderTooltip(),

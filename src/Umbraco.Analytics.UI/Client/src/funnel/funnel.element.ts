@@ -17,7 +17,7 @@ import "../error-state/error-state.element.js";
 import { deltaChange } from "../internal/delta/delta-change.js";
 import { deltaSentiment, deltaSentimentWord, formatDelta, roundDelta } from "../internal/delta/delta-text.js";
 import { getNumberFormat } from "../internal/format/number-format.js";
-import { getLoadingMode, isBusy } from "../internal/loading/loading-mode.js";
+import { UauiLoadStateMixin } from "../load-state/load-state.mixin.js";
 import "../internal/loading/loading-bar.element.js";
 import "../internal/loading/skeleton.element.js";
 import { UauiPaletteStyles } from "../theme/index.js";
@@ -43,6 +43,12 @@ interface Derived {
 }
 
 /**
+ * `UmbLitElement` with the shared load states (`UauiLoadStateMixin`): the base of `uaui-funnel`. Exported so its type
+ * has a name in the public API; extend the element, not this.
+ */
+export const UauiFunnelElementBase = UauiLoadStateMixin(UmbLitElement);
+
+/**
  * Shows how many reached each step of a process (visitors, carts, orders) and how many moved on to the next, as
  * centred bars that narrow down the page. Each bar's width is its value against the largest value shown, so the shape
  * is honest; the link between two bars shows the share that moved on.
@@ -66,7 +72,7 @@ interface Derived {
  * @cssprop --uaui-compare - Colour of the compare brackets.
  */
 @customElement("uaui-funnel")
-export class UauiFunnelElement extends UmbLitElement {
+export class UauiFunnelElement extends UauiFunnelElementBase {
     /** The steps, in funnel order. */
     @property({ attribute: false })
     steps: UauiFunnelStep[] = [];
@@ -86,34 +92,6 @@ export class UauiFunnelElement extends UmbLitElement {
     /** How the values are formatted, e.g. `{ maximumFractionDigits: 0 }`. Shares are always percents. */
     @property({ type: Object, attribute: "value-format" })
     valueFormat?: Intl.NumberFormatOptions;
-
-    /** Shows a skeleton on first load, or a loading bar over the old funnel when reloading. */
-    @property({ type: Boolean, reflect: true })
-    loading = false;
-
-    /** The load failed. Shows `uaui-error-state` in place of the funnel, and wins over `loading` and the empty state. */
-    @property({ type: Boolean, reflect: true })
-    error = false;
-
-    /** Headline of the error state. Defaults to the translation of "Something went wrong". */
-    @property({ type: String, attribute: "error-headline" })
-    errorHeadline?: string;
-
-    /** Description of the error state. Defaults to the translation of "The data could not be loaded.". */
-    @property({ type: String, attribute: "error-description" })
-    errorDescription?: string;
-
-    /** Shows a Retry button in the error state. Pressing it raises `retry` on the funnel. */
-    @property({ type: Boolean })
-    retryable = false;
-
-    /** Headline of the empty state. Defaults to the translation of "No data yet". */
-    @property({ type: String, attribute: "empty-headline" })
-    emptyHeadline?: string;
-
-    /** Description of the empty state. Defaults to the translation of "Try a wider date range.". */
-    @property({ type: String, attribute: "empty-description" })
-    emptyDescription?: string;
 
     /** The step whose tooltip shows: hovered, or focused. */
     @state()
@@ -425,14 +403,9 @@ export class UauiFunnelElement extends UmbLitElement {
         </div>`;
     }
 
-    // The error state's `retry` stops at its shadow root, so the funnel raises its own.
-    #onRetry() {
-        this.dispatchEvent(new Event("retry", { bubbles: true }));
-    }
-
     override render(): TemplateResult {
-        const mode = getLoadingMode(this.loading, this.#hasData, this.error);
-        const busy = isBusy(this.loading, this.error);
+        const mode = this.loadingMode(this.#hasData);
+        const busy = this.isBusy();
         return html`<div
             class="region"
             role="group"
@@ -446,7 +419,7 @@ export class UauiFunnelElement extends UmbLitElement {
                               .headline=${this.errorHeadline}
                               .description=${this.errorDescription}
                               .retryable=${this.retryable}
-                              @retry=${this.#onRetry}></uaui-error-state>
+                              @retry=${this.dispatchRetry}></uaui-error-state>
                       </div>`
                     : mode === "skeleton"
                       ? this.#renderSkeleton()

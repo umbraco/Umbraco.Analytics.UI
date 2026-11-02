@@ -27,7 +27,11 @@ type UauiStatusColor = "default" | "positive" | "warning" | "danger"; // uui-tag
 type UauiGroupBy = "day" | "week" | "month";
 type UauiChartKind = "line" | "area" | "bar" | "stacked-bar";
 type UauiSeriesKind = "line" | "bar";                          // one series drawn as a line or as bars, whatever the chart's kind
-type UauiChartScale = "linear" | "log";                        // the time-series chart's y-axis
+type UauiChartScale = "linear" | "log";                        // a chart's y-axis (both charts)
+type UauiCategory = { id: string; label: string };             // one x value of the category chart; label already localized
+type UauiCategoryPoint = { category: string; value: number };  // category: a UauiCategory id
+type UauiCategorySeries = { id: string; label: string; points: UauiCategoryPoint[]; color?: UauiColorSlot | UauiStatusColor };
+type UauiCategoryChartKind = "bar" | "stacked-bar";
 type UauiDateRange = { from: string; to: string; preset?: string };
 type UauiCompare = { mode: "previous-period" | "previous-year" | "custom"; from: string; to: string };
 type UauiDateSpan = { from: string; to: string };              // any range; a UauiDateRange or UauiCompare fits
@@ -109,22 +113,22 @@ Storybook gets a "Pane" story showing this recipe, a chart and a table in one `u
 ![Stacked bar chart with comparison](../../design/phase-1/screenshots/vis-cmp.png)
 ![Marker tooltip](../../design/phase-1/screenshots/an-pin-tip.png)
 
-- Properties:
+- Properties (the ones marked * come from `UauiChartMixin`, shared with `uaui-category-chart`, §11; `loading`, `error` and its texts, `retryable` and the empty texts from `UauiLoadStateMixin`, §8, which the chart mixin builds on):
   - `kind` (`UauiChartKind`); a series' own `kind` overrides it for that series (see Bars and a line)
-  - `y-scale` (`UauiChartScale`, reflected, default `"linear"`): see Log scale
+  - `y-scale`* (`UauiChartScale`, reflected, default `"linear"`): see Log scale
   - `today` (ISO date): see Today
-  - `series` (`UauiSeries[]`)
-  - `compare-series` (`UauiSeries[]`, matched to `series` by `id`)
-  - `compare-label`
+  - `series`* (`UauiSeries[]`)
+  - `compare-series`* (`UauiSeries[]`, matched to `series` by `id`)
+  - `compare-label`*
   - `markers` (`UauiMarker[]`)
   - `group-by` (`UauiGroupBy`, sets the x-axis label format)
   - `week-start` (`UauiWeekStart`, 1 to 7, default 1 = Monday): the day weeks start on when `group-by` is `week`. Decides which week a compare point sits in, so give it the same value as `uauiDateBuckets`. Anything but a whole number from 1 to 7 is read as Monday
-  - `value-format` (`Intl.NumberFormatOptions`)
+  - `value-format`* (`Intl.NumberFormatOptions`)
   - `range` (`UauiDateRange`), `compare` (`UauiCompare`): the period starts, to align compare points (see Comparison)
-  - `lower-is-better` (boolean, reflected, default false): see Lower is better
-  - `loading`
-  - `empty-headline`, `empty-description`
-  - `error`, `error-headline`, `error-description`, `retryable`: see Error
+  - `lower-is-better`* (boolean, reflected, default false): see Lower is better
+  - `loading`*
+  - `empty-headline`*, `empty-description`*
+  - `error`*, `error-headline`*, `error-description`*, `retryable`*: see Error
 - **Error:** `error` replaces the plot, legend and hidden table with `uaui-error-state` (§8), passing on `error-headline`, `error-description` and `retryable`. The canvas stays in the DOM, hidden, so a retry doesn't rebuild the chart. The chart re-raises the state's `retry` from its own host. Precedence is error, then loading, then empty: an element in error is not `aria-busy` and shows no skeleton or loading bar. `error` is a plain property, so the product decides what an error is.
 - **Comparison, by kind:**
   - `line` and `area`: a dashed `--uaui-compare` line, with the gap between the two lines shaded.
@@ -246,6 +250,7 @@ Storybook gets a "Pane" story showing this recipe, a chart and a table in one `u
   - `retryable` shows a Retry button that raises `retry` (a plain `Event`, bubbling, not composed, no detail). Without it there is no button.
   - The text is announced when it appears (`role="alert"`).
   - The chart and table show it when `error` is set. The KPI tile shows a dash instead.
+- **Shared load states (`UauiLoadStateMixin`, T60):** the charts, the funnel and the table take `loading`, `error`, `error-headline`, `error-description`, `retryable`, `empty-headline` and `empty-description` from one public mixin (same attribute names, reflection and defaults on each), with its protected `loadingMode(hasData)` (error wins over loading, and loading over empty; `skeleton`, `reload` or `idle`), `isBusy()` (`aria-busy`) and `dispatchRetry()` (the one `retry`: a plain `Event`, bubbling, not composed, not cancelable). Each element still draws its states where it needs them (the table under its header, with its own "no results" empty state), and keeps its own default texts (the category chart's empty description is neutral). The KPI tile keeps its own `loading` and `error` (no Retry, no empty texts).
 - **Loading:** each data element (chart, table, KPI tile) has a `loading` property.
   - On first load it shows a skeleton the same size as the loaded element, so the page doesn't jump.
   - While reloading with data already shown, the old data stays visible under a thin loading bar at the top.
@@ -289,6 +294,26 @@ Used by Engage (conversion funnel beside the orders chart, about 360px wide) and
 - **Accessibility:** a visually hidden table holds step, count, % of first step, share from the previous step and dropped off (never below 0), plus the compare count, share and dropped off when comparing. The first step's "from previous" cells are blank; any other missing figure (where the funnel shows a dash, or a step has no compare value) reads "No value". The visible element is a labelled group ("Funnel"). Each step is named "{label}: {value}" and has an `aria-describedby` description with the tooltip's facts, since the tooltip is `aria-hidden`: "{current-label}: {value}", then when comparing "{compare-label}: {compare value}, {change}, {improvement / decline / no change}" (just "{compare-label}: {compare value}" when the tooltip shows no badge), then for later steps "Of {first step}: {share}" and "From previous step: {share or No value}", joined by ". ". The description is `hidden` (read only through `aria-describedby`), so the reading order, which already has the table, doesn't get it twice; it is rebuilt with the data.
 - **Localization:** new keys for the group name, the hidden table caption and headers (including "Of first step" and "Dropped off"), its "No value" cell, the tooltip lines ("Of {0}", "From previous step"), and the step description's lines and separator (`funnelDescription*`; the change words reuse the delta badge's keys). Generic words reuse Umbraco keys.
 - No events in v1. A `step-click` can be added later without breaking anything.
+
+### 11. `uaui-category-chart`: bars over categories (T60)
+
+For an x-axis that isn't dates: Forms' submissions by hour of day first (24 categories), later anything a product splits a metric by (device, form, status). It is `uaui-time-series-chart`'s bar kinds with categories in place of dates: same look, tooltip, legend, hidden table, palette and status colours, y-axis (linear or log), value formatting, loading, empty and error states, built from the same internal parts (`UauiChartController`, `renderChartFrame`, the shared y-axis, series, legend, tooltip and table elements).
+
+- Properties:
+  - `kind` (`UauiCategoryChartKind`, reflected, default `"bar"`): `"bar"` draws the series side by side, `"stacked-bar"` stacks them in one bar per category. Any other value draws `"bar"`. No line kind yet; one can be added later without breaking anything.
+  - `categories` (`UauiCategory[]`): the x-axis, in order. The product passes each label already localized ("2 PM" or "14" for an hour, in the editor's culture) and names the category by `id` in its points. A repeated id counts once, at its first place.
+  - `category-label` (string): the hidden table's heading for the categories ("Hour of day"). Defaults to the translation of "Category" (`uauiAnalytics_chartTableCategoryHeader`).
+  - From `UauiChartMixin` (and the `UauiLoadStateMixin` it builds on), with the same attribute names, defaults and behaviour as on the time-series chart: `series` and `compare-series` (narrowed to `UauiCategorySeries[]`), `y-scale`, `compare-label`, `lower-is-better`, `value-format`, `loading`, `error`, `error-headline`, `error-description`, `retryable`, `empty-headline`, `empty-description` (default "There is nothing to show yet.", `uauiAnalytics_chartCategoryEmptyDescription`).
+- **Data:** a series' points name their category by id; points in the same category add up (aggregate rates first), a category with no point has no bar (an empty cell in the hidden table), and a point in a category that isn't in `categories` is not drawn. No points in any given category shows the empty state.
+- **Comparison:** a compare value is matched by series `id` and category `id`. The compare series that a series has the `id` of are added up per category into one compare bar behind the current bar or bars (`--uaui-compare` at 45%), as the time-series chart's bar kinds do; a compare series with no matching series is left out, so the compare bar covers the same series as the bars. Tooltip: the compare value under the current total (or the single value), the `compare-label` (or "Comparison") as its sub line, and a change badge (`lower-is-better` flips it). Legend: a square for each series plus the compare entry. Hidden table: a "Total (compare)" column.
+- **Total:** with two or more series, stacked or compared, the tooltip and hidden table add "Total".
+- **Tooltip:** headed by the hovered category's label; one row per series with a value there (the series' label when there are several); hidden from assistive tech, as the hidden table has the data. Escape dismisses it (WCAG 1.4.13) until the pointer moves to another category.
+- **Log scale:** as the time-series chart: `y-scale="log"` with `kind="bar"`; ignored with `stacked-bar`, with one console warning per chart naming `uaui-category-chart`.
+- **X-axis:** many categories (24 hours on a narrow box) label as many as fit, rotating when crowded, as the time-series chart's dates do. The tooltip and hidden table always name every category.
+- **Accessibility:** the canvas is hidden; the hidden table has a row per category (heading `category-label`), a column per series, and the total and compare total columns.
+- **Isolation:** as the time-series chart: no `Chart.defaults` changes, no global plugin registration (CHT-6 specs run for `bar`, `stacked-bar` and a log axis).
+- **CSS properties:** `--uaui-chart-height`, `--uaui-chart-padding`, `--uaui-bar-1` to `--uaui-bar-4` (falling back to `--uaui-series-N`), `--uaui-bar-<status>`, `--uaui-compare`.
+- **Events:** `retry` only, as the time-series chart.
 
 ### The five moments
 

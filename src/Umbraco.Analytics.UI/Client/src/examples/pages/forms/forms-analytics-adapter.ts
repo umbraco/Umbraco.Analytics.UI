@@ -1,4 +1,4 @@
-import type { UauiSeries } from "../../../chart/types.js";
+import type { UauiCategory, UauiCategorySeries, UauiSeries } from "../../../chart/types.js";
 import { uauiDateBuckets, type UauiDateSpan } from "../../../date-helpers/index.js";
 import type { UauiGroupBy } from "../../../group-by/group-by.element.js";
 import type { UauiFunnelStep } from "../../../funnel/types.js";
@@ -8,7 +8,7 @@ import type { FormsAnalyticsResult, FormsColumn } from "./forms-fake-data.js";
 // #region adapter
 // Forms' analytics API answers every query as a table: `columns` names each value, `rows` holds the values in that
 // order. These functions turn an answer into what the package's elements take: rows keyed by column for
-// `uaui-data-table`, series for `uaui-time-series-chart`, steps for `uaui-funnel`. They read columns by name, never
+// `uaui-data-table`, series for `uaui-time-series-chart` and `uaui-category-chart`, steps for `uaui-funnel`. They read columns by name, never
 // by position, so a query that asks for other columns still maps.
 
 /** The answer's rows as objects keyed by column name, for `uaui-data-table`'s `rows` (and `compareRows`). */
@@ -69,6 +69,27 @@ export function formsSeriesBy(result: FormsAnalyticsResult, dimension: FormsColu
         byName.set(name, series);
     }
     return [...byName.values()];
+}
+
+/**
+ * The 24 hours of the day as `uaui-category-chart` categories: ids "0" to "23", as Forms' `hour` column answers them,
+ * labelled in the editor's culture ("2 PM", "14"). The hour is the answer's, so it is formatted as is, in UTC.
+ */
+export function formsHours(lang: string): UauiCategory[] {
+    const format = new Intl.DateTimeFormat(lang, { hour: "numeric", timeZone: "UTC" });
+    return Array.from({ length: 24 }, (_, hour) => ({ id: String(hour), label: format.format(Date.UTC(2026, 0, 1, hour)) }));
+}
+
+/**
+ * One category series from `[hour, metric]` rows, for `uaui-category-chart` over `formsHours`. Forms leaves out an hour
+ * with nothing in it; for a count that is 0, so every hour gets a point. Empty when the answer has no rows.
+ */
+export function formsHourSeries(result: FormsAnalyticsResult | undefined, column: FormsColumn, label: string): UauiCategorySeries[] {
+    const h = result ? result.columns.indexOf("hour") : -1;
+    const m = result ? result.columns.indexOf(column) : -1;
+    if (!result || h < 0 || m < 0 || !result.rows.length) return [];
+    const byHour = new Map(result.rows.map((row) => [String(row[h]), Number(row[m]) || 0]));
+    return [{ id: column, label, points: Array.from({ length: 24 }, (_, hour) => ({ category: String(hour), value: byHour.get(String(hour)) ?? 0 })) }];
 }
 
 /** The sum of a metric column over every row of an answer. */
