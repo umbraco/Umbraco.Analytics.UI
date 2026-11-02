@@ -1,4 +1,4 @@
-import { css, customElement, html, nothing, property, state } from "@umbraco-cms/backoffice/external/lit";
+import { css, customElement, html, ifDefined, nothing, property, state } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
 import "../../../kpi-tile/kpi-tile.element.js";
@@ -16,12 +16,12 @@ import {
     workflowHistoryRows,
     workflowIsEmpty,
     workflowSeries,
-    workflowStatusCode,
-    workflowToday,
+    workflowChartToday,
+    workflowStatusCodes,
     type WorkflowApprovalTimes,
     type WorkflowStatusId,
 } from "./workflow-dashboard-adapter.js";
-import { getActivity, getInstances, getReviews, WORKFLOW_NOW, type WorkflowActivityResponse, type WorkflowReviewsResponse } from "./workflow-fake-data.js";
+import { getActivity, getInstances, getReviews, type WorkflowActivityResponse, type WorkflowReviewsResponse } from "./workflow-fake-data.js";
 
 // #region page
 // A product localizes labels, headlines and column names with this.localize.term(...). The examples keep English for readability.
@@ -127,10 +127,11 @@ export class ExampleWorkflowDashboardPageElement extends UmbLitElement {
     #historyRequest = 0;
 
     /**
-     * Today, as the editor's calendar day. A product takes it from `new Date()`; the example fixes the moment so its
-     * data, and its screenshots, are the same on every day. See `workflowToday` for why it is a day, not a moment.
+     * The editor's time zone, sent with every query: the server buckets the chart days, and writes `today` and the
+     * history's date-times, as the editor sees them. Today comes from each chart answer (`workflowChartToday`), never
+     * from the browser's clock, so it is always one of the answer's days.
      */
-    #today = workflowToday(new Date(WORKFLOW_NOW));
+    #timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
     override connectedCallback() {
         super.connectedCallback();
@@ -151,7 +152,7 @@ export class ExampleWorkflowDashboardPageElement extends UmbLitElement {
         this._activityLoading = true;
         this._activityError = false;
         try {
-            const [activity, instances] = await Promise.all([getActivity({ days: this._days }, this.#api), getInstances({ days: this._days }, this.#api)]);
+            const [activity, instances] = await Promise.all([getActivity({ days: this._days, timeZone: this.#timeZone }, this.#api), getInstances({ days: this._days, timeZone: this.#timeZone }, this.#api)]);
             if (request !== this.#activityRequest) return;
             this._activity = activity;
             this._times = workflowApprovalTimes(instances.items);
@@ -167,7 +168,7 @@ export class ExampleWorkflowDashboardPageElement extends UmbLitElement {
         this._reviewsLoading = true;
         this._reviewsError = false;
         try {
-            const reviews = await getReviews({ days: this._days, ahead: REVIEWS_AHEAD }, this.#api);
+            const reviews = await getReviews({ days: this._days, ahead: REVIEWS_AHEAD, timeZone: this.#timeZone }, this.#api);
             if (request !== this.#reviewsRequest) return;
             this._reviews = reviews;
         } catch {
@@ -183,8 +184,9 @@ export class ExampleWorkflowDashboardPageElement extends UmbLitElement {
         this._historyLoading = true;
         this._historyError = false;
         try {
-            const status = this._filter === "all" ? undefined : workflowStatusCode[this._filter];
-            const answer = await getInstances({ days: this._days, status }, this.#api);
+            // Pending is two codes (pending approval and resubmitted), as on its tile.
+            const statuses = this._filter === "all" ? undefined : workflowStatusCodes(this._filter);
+            const answer = await getInstances({ days: this._days, statuses, timeZone: this.#timeZone }, this.#api);
             if (request !== this.#historyRequest) return;
             this._historyRows = workflowHistoryRows(answer.items).map((row) => ({
                 ...row,
@@ -253,7 +255,9 @@ export class ExampleWorkflowDashboardPageElement extends UmbLitElement {
     #renderTimes() {
         if (this._activityError) return nothing;
         const times = this._times;
-        if (this._activityLoading && !times) return html`<uui-loader-bar></uui-loader-bar>`;
+        // While loading, as the tiles do: no figures of the period before, which would read as the new one's.
+        if (this._activityLoading)
+            return html`<div class="times-loading" role="progressbar" aria-label=${this.localize.term("general_loading")}><uui-loader-bar></uui-loader-bar></div>`;
         if (!times || times.count === 0) return html`<p class="times-none">No approvals finished in this period.</p>`;
         return html`<div class="times" role="group" aria-label="Approval time">
             <uaui-stat label="Fastest approval" value=${this.#duration(times.fastest!)}></uaui-stat>
@@ -270,7 +274,7 @@ export class ExampleWorkflowDashboardPageElement extends UmbLitElement {
             <uaui-time-series-chart
                 kind="bar"
                 y-scale=${this._scale}
-                today=${this.#today}
+                today=${ifDefined(workflowChartToday(this._activity))}
                 .series=${workflowSeries(series, [
                     { name: "approved", label: "Approved", color: "positive" },
                     { name: "rejected", label: "Rejected", color: "danger" },
@@ -293,7 +297,7 @@ export class ExampleWorkflowDashboardPageElement extends UmbLitElement {
         return html`<uui-box headline="Content reviews" headline-variant="h3" style="--uui-box-default-padding: 0">
             <uaui-time-series-chart
                 kind="stacked-bar"
-                today=${this.#today}
+                today=${ifDefined(workflowChartToday(this._reviews))}
                 .series=${workflowSeries(series, [
                     { name: "reviewed", label: "Reviewed", color: "positive" },
                     { name: "overdue", label: "Overdue", color: "danger" },
@@ -379,6 +383,9 @@ export class ExampleWorkflowDashboardPageElement extends UmbLitElement {
                 display: flex;
                 flex-wrap: wrap;
                 gap: var(--uui-size-layout-2);
+                padding: var(--uui-size-space-5) var(--uui-size-space-5) 0;
+            }
+            .times-loading {
                 padding: var(--uui-size-space-5) var(--uui-size-space-5) 0;
             }
             .times-none {

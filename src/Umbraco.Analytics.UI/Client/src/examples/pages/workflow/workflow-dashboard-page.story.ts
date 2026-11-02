@@ -5,7 +5,7 @@ import raw from "./workflow-dashboard-page.element.ts?raw";
 import adapterRaw from "./workflow-dashboard-adapter.ts?raw";
 import "./workflow-dashboard-page.element.js";
 
-const imports = `import { css, customElement, html, nothing, property, state } from "@umbraco-cms/backoffice/external/lit";
+const imports = `import { css, customElement, html, ifDefined, nothing, property, state } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UAUI_TABLE_CELL, type UauiChartScale, type UauiStatusColor, type UauiTableColumn, type UauiToggleGroupOption } from "@umbraco/analytics-ui";
 // The adapter below: Workflow's chart and history answers to the package's series, rows and numbers.
@@ -14,17 +14,17 @@ import {
     workflowHistoryRows,
     workflowIsEmpty,
     workflowSeries,
-    workflowStatusCode,
-    workflowToday,
+    workflowChartToday,
+    workflowStatusCodes,
     type WorkflowApprovalTimes,
     type WorkflowStatusId,
 } from "./workflow-dashboard-adapter.js";
 // Your API client: Workflow's dashboard endpoints and their types. In this story they are a fake, generated from the dates.
-import { getActivity, getInstances, getReviews, WORKFLOW_NOW, type WorkflowActivityResponse, type WorkflowReviewsResponse } from "./workflow-api.js";`;
+import { getActivity, getInstances, getReviews, type WorkflowActivityResponse, type WorkflowReviewsResponse } from "./workflow-api.js";`;
 
 const adapterImports = `// workflow-dashboard-adapter.ts
 import type { UauiColorSlot, UauiSeries, UauiSeriesKind, UauiStatusColor } from "@umbraco/analytics-ui";
-import { WORKFLOW_STATUS, type WorkflowChartSeries, type WorkflowInstance, type WorkflowStatusCode } from "./workflow-api.js";`;
+import { WORKFLOW_STATUS, type WorkflowChartResponse, type WorkflowChartSeries, type WorkflowInstance, type WorkflowStatusCode } from "./workflow-api.js";`;
 
 const code = `${regionSource(raw, "page", imports)}\n${regionSource(adapterRaw, "adapter", adapterImports)}`;
 
@@ -55,7 +55,8 @@ const render = (latency?: number, failing = false) => html`
  * status cell.
  *
  * The adapter avoids three bugs of Workflow's own dashboard: "fastest" always showing "-", an average that counted
- * unfinished workflows, and a "Today" label that never showed. The data is made up.
+ * unfinished workflows, and a "Today" label that never showed. Every query sends the editor's time zone, and the
+ * charts' days, their `today` and the history's date-times (ISO with offsets) all come from the server in that zone. The data is made up.
  */
 export const Dashboard: StoryObj = {
     render: () => render(),

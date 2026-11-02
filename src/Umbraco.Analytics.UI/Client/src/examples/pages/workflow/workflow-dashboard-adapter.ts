@@ -1,17 +1,19 @@
 import type { UauiSeries, UauiSeriesKind } from "../../../chart/types.js";
 import type { UauiColorSlot, UauiStatusColor } from "../../../theme/types.js";
-import { WORKFLOW_STATUS, type WorkflowChartSeries, type WorkflowInstance, type WorkflowStatusCode } from "./workflow-fake-data.js";
+import { WORKFLOW_STATUS, type WorkflowChartResponse, type WorkflowChartSeries, type WorkflowInstance, type WorkflowStatusCode } from "./workflow-fake-data.js";
 
 // #region adapter
 // Workflow's dashboard API, as this example imagines it (the types are in the fake API, `workflow-fake-data.ts`):
 //
+// Every query sends the editor's time zone (`timeZone`, an IANA name), so the server buckets days as the editor sees them.
 // - Charts: `GET /workflow/chart/activity?days=N` and `GET /workflow/chart/reviews?days=N&ahead=M` answer
-//   `{ series: [{ name, data: [{ x, y }] }] }`, where `x` is the start of a day in epoch milliseconds (UTC midnight)
-//   and `y` that day's count. The activity answer also has `totals` (`approved`, `rejected`, `cancelled` in the
-//   period; `pending` waiting now).
-// - History: `GET /workflow/instances?days=N&status=S` answers `{ items, total }`; each item has `node`, `type`,
-//   `status` (a numeric `WorkflowStatus` code), `requestedBy`, `requestedOn` and `completedOn` (local date-times,
-//   `completedOn` null while open), and `currentStep` of `totalSteps`.
+//   `{ series: [{ name, data: [{ x, y }] }], today }`. `x` names one of the editor's calendar days, written as that
+//   day's UTC midnight in epoch milliseconds, and `y` is that day's count; `today` is the editor's current day in the
+//   same frame. The activity answer also has `totals` (`approved`, `rejected`, `cancelled` in the period; `pending`
+//   waiting now).
+// - History: `GET /workflow/instances?days=N&status=S&status=T` answers `{ items, total }`; each item has `node`,
+//   `type`, `status` (a numeric `WorkflowStatus` code), `requestedBy`, `requestedOn` and `completedOn` (ISO 8601 with
+//   an offset, `completedOn` null while open), and `currentStep` of `totalSteps`.
 //
 // These functions are the only code that knows those shapes. They turn an answer into what the package's elements
 // take: series for `uaui-time-series-chart`, rows for `uaui-data-table`, and plain numbers for the tiles and stats.
@@ -44,27 +46,28 @@ export function workflowStatus(code: WorkflowStatusCode | number): { id: Workflo
     }
 }
 
-/** The status code to ask the history endpoint for, for a status the page filters on. */
-export const workflowStatusCode: Record<"approved" | "pending" | "rejected" | "cancelled", WorkflowStatusCode> = {
-    approved: WORKFLOW_STATUS.approved,
-    pending: WORKFLOW_STATUS.pendingApproval,
-    rejected: WORKFLOW_STATUS.rejected,
-    cancelled: WORKFLOW_STATUS.cancelled,
-};
+/**
+ * The status codes to ask the history endpoint for, for a status the page filters on: every code that
+ * `workflowStatus` shows as that status. Pending is pending approval and resubmitted, so the Pending tile's count
+ * (waiting now, both codes) and the rows it opens agree.
+ */
+export function workflowStatusCodes(id: WorkflowStatusId): WorkflowStatusCode[] {
+    return Object.values(WORKFLOW_STATUS).filter((code) => workflowStatus(code).id === id);
+}
 
-/** The ISO day of a chart point's `x` (UTC midnight in epoch milliseconds). */
+/** The ISO day a chart point's `x` names (that day's UTC midnight in epoch milliseconds). */
 export const workflowDay = (x: number): string => new Date(x).toISOString().slice(0, 10);
 
 /**
- * The editor's calendar day of a moment, as an ISO date, for the chart's `today`.
+ * The chart's `today`: the answer's own `today`, read in the same frame as its points' `x`, so the today line always
+ * lands on the answer's day and never on the day before or after.
  *
  * Workflow's own chart compared each day's timestamp with the current time, which is never exactly midnight, so its
- * "Today" label never showed. The chart takes a day, not a moment: pass it the day.
+ * "Today" label never showed. Working today out from the browser's clock instead would still miss: the points are
+ * the server's days, and in the morning east of UTC (or the evening west of it) the browser's day is another one.
  */
-export function workflowToday(now: Date): string {
-    const pad = (n: number) => String(n).padStart(2, "0");
-    return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
-}
+export const workflowChartToday = (response: Pick<WorkflowChartResponse<string>, "today"> | undefined): string | undefined =>
+    response ? workflowDay(response.today) : undefined;
 
 /** A chart series to plot: which named series of the answer, and how. */
 export type WorkflowSeriesSpec<TName extends string> = { name: TName; label: string; color?: UauiColorSlot | UauiStatusColor; kind?: UauiSeriesKind };
@@ -98,7 +101,8 @@ export type WorkflowApprovalTimes = { fastest?: number; slowest?: number; averag
 export function workflowApprovalTimes(instances: readonly WorkflowInstance[] | undefined): WorkflowApprovalTimes {
     const times = (instances ?? []).flatMap((w) => {
         if (w.status !== WORKFLOW_STATUS.approved || !w.completedOn) return [];
-        const took = Date.parse(`${w.completedOn}Z`) - Date.parse(`${w.requestedOn}Z`);
+        // Both carry their offset, so this is the elapsed time even across a daylight saving change.
+        const took = Date.parse(w.completedOn) - Date.parse(w.requestedOn);
         return Number.isFinite(took) && took >= 0 ? [took] : [];
     });
     if (!times.length) return { count: 0 };
