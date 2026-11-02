@@ -32,6 +32,12 @@ export interface UauiChartModel {
     colors: UauiChartDrawColors;
     /** Line kinds: a series below its compare line is doing better, so the gap shading flips. */
     lowerIsBetter?: boolean;
+    /**
+     * The share view: `values` are shares (0 to 1) and every dataset stacks, lines too. Lines are drawn as bands, each
+     * filled down to the one below in its bar colour with a surface hairline on top, as stacked bar segments are. A gap
+     * (`null`, a date whose total is 0) is left empty rather than bridged.
+     */
+    share?: boolean;
 }
 
 /** The x value (date or category) the pointer is on, and where to anchor a tooltip (canvas pixels). */
@@ -273,8 +279,8 @@ export class UauiChartRenderer {
         chart.data.datasets = this.#datasets(model, family === "bar" && model.datasets.some((set) => set.kind === "line"));
 
         // Only bars stack: a `stacked-bar` chart whose series are all lines draws them unstacked. Lines also carry a
-        // stack key of their own, so they never stack with bars or with each other.
-        const stacked = model.kind === "stacked-bar" && family === "bar";
+        // stack key of their own, so they never stack with bars or with each other. The share view stacks everything.
+        const stacked = (model.kind === "stacked-bar" && family === "bar") || !!model.share;
         // Room above the plot for what the chart's own plugins draw there (the today label).
         chart.options.layout = { padding: { ...PADDING, top: PADDING.top + (model.roomAbove ?? 0) } };
         const scales = chart.options.scales!;
@@ -325,6 +331,7 @@ export class UauiChartRenderer {
     // The datasets are built as plain objects: Chart.js types the dataset by chart type, and the two kinds differ.
     // `compareIndex` is this line's place among the compare lines, which come after every series (-1 for none).
     #lineDataset(model: UauiChartModel, i: number, compareIndex: number, mixed: boolean) {
+        if (model.share) return this.#shareBandDataset(model, i);
         const { colors } = model;
         const set = model.datasets[i];
         const gap = model.lowerIsBetter ? { above: colors.gapBad, below: colors.gapGood } : { above: colors.gapGood, below: colors.gapBad };
@@ -359,6 +366,40 @@ export class UauiChartRenderer {
             pointStyle: "circle" as const,
             pointBackgroundColor: color.line,
             pointBorderColor: color.line,
+            pointHoverRadius: POINT_HOVER_RADIUS,
+            pointHoverBackgroundColor: colors.surface,
+            pointHoverBorderColor: color.line,
+            pointHoverBorderWidth: 2,
+        };
+    }
+
+    /**
+     * The share view's area: one band per series, stacked on the bands before it and filled down to the one below (the
+     * first to the axis), in the bar colour with a surface hairline on top, as stacked bar segments are told apart.
+     */
+    #shareBandDataset(model: UauiChartModel, i: number) {
+        const { colors } = model;
+        const color = colors.series[i];
+        return {
+            type: "line" as const,
+            stack: "share",
+            label: model.datasets[i].label,
+            data: model.datasets[i].values,
+            borderColor: colors.surface,
+            backgroundColor: color.bar,
+            borderWidth: 1,
+            clip: lineClip(1, 0, POINT_HOVER_RADIUS),
+            borderJoinStyle: "round" as const,
+            borderCapStyle: "butt" as const,
+            cubicInterpolationMode: "default" as const,
+            tension: 0,
+            stepped: false,
+            showLine: true,
+            // A date with no total has no share: leave it empty rather than bridging it.
+            spanGaps: false,
+            fill: i === 0 ? ("origin" as const) : ("-1" as const),
+            pointRadius: 0,
+            pointStyle: "circle" as const,
             pointHoverRadius: POINT_HOVER_RADIUS,
             pointHoverBackgroundColor: colors.surface,
             pointHoverBorderColor: color.line,

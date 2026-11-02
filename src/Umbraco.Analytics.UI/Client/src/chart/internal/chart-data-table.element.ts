@@ -45,6 +45,17 @@ export class UauiChartDataTableElement extends UmbLitElement {
     @property({ attribute: false })
     numberFormat?: Intl.NumberFormat;
 
+    /**
+     * The share view: per series (in `series` order), each value's share (0 to 1) of its row's total, `null` where there
+     * is none. Set to show each series cell as its share and its value ("42.5% (1,234)") and say so in the caption.
+     */
+    @property({ attribute: false })
+    shares?: (number | null)[][];
+
+    /** Formats a share. Defaults to a percent with up to one decimal in the backoffice user's culture. */
+    @property({ attribute: false })
+    shareFormat?: Intl.NumberFormat;
+
     #format(value: number) {
         return (this.numberFormat ?? getNumberFormat(this.localize.lang())).format(value);
     }
@@ -53,11 +64,23 @@ export class UauiChartDataTableElement extends UmbLitElement {
         return html`<td>${value === null || value === undefined ? "" : this.#format(value)}</td>`;
     }
 
+    /** A series cell of the share view: the share and the value, or the value alone where there is no share. */
+    #shareCell(value: number | null, share: number | null | undefined) {
+        if (value === null || share === null || share === undefined) return this.#cell(value);
+        const format = this.shareFormat ?? getNumberFormat(this.localize.lang(), { style: "percent", maximumFractionDigits: 1 });
+        return html`<td>${this.localize.term("uauiAnalytics_chartShareValue", format.format(share), this.#format(value))}</td>`;
+    }
+
+    get #caption() {
+        if (this.shares) return this.localize.term("uauiAnalytics_chartTableCaptionShare");
+        return this.logScale ? this.localize.term("uauiAnalytics_chartTableCaptionLog") : this.localize.term("uauiAnalytics_chartTableCaption");
+    }
+
     override render(): TemplateResult {
-        const { series, totals, compareTotal } = this;
+        const { series, totals, compareTotal, shares } = this;
         return html`<table class="visually-hidden">
             <caption>
-                ${this.logScale ? this.localize.term("uauiAnalytics_chartTableCaptionLog") : this.localize.term("uauiAnalytics_chartTableCaption")}
+                ${this.#caption}
             </caption>
             <thead>
                 <tr>
@@ -78,7 +101,12 @@ export class UauiChartDataTableElement extends UmbLitElement {
                 ${this.labels.map(
                     (label, row) => html`<tr>
                         <th scope="row">${label}</th>
-                        ${series.map((s) => html`${this.#cell(s.values[row])}${s.compare ? this.#cell(s.compare[row]) : nothing}`)}
+                        ${series.map(
+                            (s, i) =>
+                                html`${shares ? this.#shareCell(s.values[row], shares[i]?.[row]) : this.#cell(s.values[row])}${s.compare
+                                    ? this.#cell(s.compare[row])
+                                    : nothing}`,
+                        )}
                         ${totals ? this.#cell(totals[row]) : nothing} ${compareTotal ? this.#cell(compareTotal[row]) : nothing}
                     </tr>`,
                 )}

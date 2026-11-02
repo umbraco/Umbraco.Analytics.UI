@@ -192,7 +192,7 @@ describe("Feature: series coloured by a status", () => {
     });
 
     describe("Scenario: a color that is neither a slot nor a status", () => {
-        for (const color of ["red", "Danger", 0, 5, null]) {
+        for (const color of ["red", "Danger", 0, 9, null]) {
             it(`falls back to the slot of the series' position for ${JSON.stringify(color)}`, async () => {
                 const el = await chart("line", [approved, seriesOf("x", "Other", [1, 2, 3], color)]);
                 expect(drawn(el, 1, "line")).toEqual(expected(uauiChartColors(el).series[1], "line"));

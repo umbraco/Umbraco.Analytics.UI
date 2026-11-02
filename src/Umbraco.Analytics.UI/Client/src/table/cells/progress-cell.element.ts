@@ -19,7 +19,7 @@ import type { UauiTableCellElement, UauiTableColumn } from "../types.js";
  * usable on its own.
  *
  * @element uaui-progress-cell
- * @cssprop --uaui-series-1 - Bar colour of palette slot 1. Also `--uaui-series-2` to `--uaui-series-4` (`meta.color`).
+ * @cssprop --uaui-series-1 - Bar colour of palette slot 1. Also `--uaui-series-2` to `--uaui-series-8` (`meta.color`).
  * @cssprop --uaui-tint-neutral - Colour of the track behind the bar.
  */
 @customElement("uaui-progress-cell")

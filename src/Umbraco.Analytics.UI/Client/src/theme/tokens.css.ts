@@ -36,6 +36,21 @@ import { css, type CSSResult } from "@umbraco-cms/backoffice/external/lit";
  * 3:1 on the dark surface, and its greens read as the positive status (jungle-green, the old series 4, was 1.56:1
  * against forest-green-light). It is paler than series 1's malibu-light, so the two still differ.
  *
+ * Slots 5 to 8 are for charts with many series, such as one per source page. The UUI palette has no teal, sky blue,
+ * plum, sage or olive, so each is a `color-mix()` of two palette shades, as lavender is. The user picked them
+ * (02-11-2026) from a search that kept lines at 3:1 and maximised the smallest CIEDE2000 difference to slots 1 to 4
+ * (lines and bars), the status colours, the compare colour and each other, in normal vision and in simulated protan,
+ * deutan and tritan vision (Machado 2009). Light (and high contrast) also keeps the hues of 6 and 7 apart; dark can't
+ * fit four colours under that rule, so it takes the best set over a floor, and its families differ from light's.
+ * Their fills and bars are the line colour. Past 8 series the slots repeat.
+ *
+ * | token      | light (on #fff)                                         | dark (on #2d333b)                                       |
+ * | ---------- | ------------------------------------------------------- | ------------------------------------------------------- |
+ * | series-5   | teal #197f86: forest-green 70% + malibu 4.77            | sage #adc176: deep-saffron-light 60% + jungle-green-light 6.49 |
+ * | series-6   | sky blue #399dd1: malibu 60% + jungle-green-light 3.02  | orchid #996abf: malibu-light 60% + maroon-flush-light 3.12 |
+ * | series-7   | plum #793065: violet-blue-dimmed 60% + maroon-flush-light 8.67 | pink #f9aab9: spanish-pink-dark 70% + maroon-flush-light 6.97 |
+ * | series-8   | olive #7e8923: sunglow-dark 70% + jungle-green-dark 3.83 | gold #927b0a: sunglow-dark 90% + forest-green-light 3.06 |
+ *
  * Fills (areas) use `--uaui-color-fill-N` at low alpha, not the line colour: the line
  * tokens are darker so lines clear 3:1, and a pale tint of them looks grey. In light, fill 1 is the
  * design's violet blue, fill 3 is sunglow, and fill 4 is malibu so it differs from fill 1; fills 2 and
@@ -167,6 +182,42 @@ export const UauiPaletteStyles: CSSResult = css`
             --uaui-bar-4,
             var(--uaui-series-4, light-dark(var(--uui-palette-malibu), color-mix(in srgb, var(--uui-palette-violet-blue-light) 45%, white)))
         );
+        --uaui-color-series-5: var(
+            --uaui-series-5,
+            light-dark(
+                color-mix(in srgb, var(--uui-palette-forest-green) 70%, var(--uui-palette-malibu)),
+                color-mix(in srgb, var(--uui-palette-deep-saffron-light) 60%, var(--uui-palette-jungle-green-light))
+            )
+        );
+        --uaui-color-series-6: var(
+            --uaui-series-6,
+            light-dark(
+                color-mix(in srgb, var(--uui-palette-malibu) 60%, var(--uui-palette-jungle-green-light)),
+                color-mix(in srgb, var(--uui-palette-malibu-light) 60%, var(--uui-palette-maroon-flush-light))
+            )
+        );
+        --uaui-color-series-7: var(
+            --uaui-series-7,
+            light-dark(
+                color-mix(in srgb, var(--uui-palette-violet-blue-dimmed) 60%, var(--uui-palette-maroon-flush-light)),
+                color-mix(in srgb, var(--uui-palette-spanish-pink-dark) 70%, var(--uui-palette-maroon-flush-light))
+            )
+        );
+        --uaui-color-series-8: var(
+            --uaui-series-8,
+            light-dark(
+                color-mix(in srgb, var(--uui-palette-sunglow-dark) 70%, var(--uui-palette-jungle-green-dark)),
+                color-mix(in srgb, var(--uui-palette-sunglow-dark) 90%, var(--uui-palette-forest-green-light))
+            )
+        );
+        --uaui-color-fill-5: var(--uaui-color-series-5);
+        --uaui-color-fill-6: var(--uaui-color-series-6);
+        --uaui-color-fill-7: var(--uaui-color-series-7);
+        --uaui-color-fill-8: var(--uaui-color-series-8);
+        --uaui-color-bar-5: var(--uaui-bar-5, var(--uaui-color-series-5));
+        --uaui-color-bar-6: var(--uaui-bar-6, var(--uaui-color-series-6));
+        --uaui-color-bar-7: var(--uaui-bar-7, var(--uaui-color-series-7));
+        --uaui-color-bar-8: var(--uaui-bar-8, var(--uaui-color-series-8));
         --uaui-color-series-default: var(
             --uaui-series-default,
             light-dark(var(--uui-palette-dusty-grey-dark), var(--uui-palette-dusty-grey))

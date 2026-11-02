@@ -20,7 +20,7 @@ const shareFormatOptions: Intl.NumberFormatOptions = { style: "percent", minimum
  * the table's `UAUI_TABLE_CONTEXT`. On its own, or to override the table, set `total`, `max`, `color` and `compareValue`.
  *
  * @element uaui-share-cell
- * @cssprop --uaui-series-1 - Bar colour of palette slot 1. Also `--uaui-series-2` to `--uaui-series-4`.
+ * @cssprop --uaui-series-1 - Bar colour of palette slot 1. Also `--uaui-series-2` to `--uaui-series-8`.
  * @cssprop --uaui-tint-neutral - Colour of the track behind the bar.
  */
 @customElement("uaui-share-cell")
@@ -45,7 +45,7 @@ export class UauiShareCellElement extends UmbLitElement implements UauiTableCell
     @property({ type: Number })
     max?: number;
 
-    /** The palette slot of the bar: the same slot values (1–4) as `UauiSeries.color`. Defaults to `column.meta.color`, then the cell's position among the table's share columns, then 1. */
+    /** The palette slot of the bar: the same slot values (1–8) as `UauiSeries.color`. Defaults to `column.meta.color`, then the cell's position among the table's share columns (cycling through slots 1 to 4), then 1. */
     @property({ type: Number })
     color?: UauiColorSlot;
 

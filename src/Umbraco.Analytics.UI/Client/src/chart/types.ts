@@ -14,7 +14,7 @@ export type UauiSeries = {
     /** Shown in the legend, the tooltip and the screen reader table. */
     label: string;
     /**
-     * The series' colour (line, fill and bar): a palette slot (1 to 4), or a status colour (`"default"`, `"positive"`,
+     * The series' colour (line, fill and bar): a palette slot (1 to 8), or a status colour (`"default"`, `"positive"`,
      * `"warning"` or `"danger"`, as the status cell's) for a series that carries a meaning, such as errors in `"danger"`.
      * Defaults to the slot of the series' position, as does any other value. Say the meaning in the label too: the
      * colour only repeats it.
@@ -48,6 +48,13 @@ export type UauiMarkerClickDetail = { id: string };
 
 /** How a chart draws its series. */
 export type UauiChartKind = "line" | "area" | "bar" | "stacked-bar";
+
+/**
+ * How `uaui-time-series-chart` stacks its series. `"normal"` draws the values as the chart's `kind` says. `"percent"` is
+ * a 100% share view: each date's series as its share of that date's total, stacked to 100% (with `kind` `"stacked-bar"`
+ * or `"area"`).
+ */
+export type UauiChartStack = "normal" | "percent";
 
 /** How one series is drawn, overriding the chart's `kind`: as a line or as bars. */
 export type UauiSeriesKind = "line" | "bar";
@@ -83,7 +90,7 @@ export type UauiCategorySeries = {
     id: string;
     /** Shown in the legend, the tooltip and the screen reader table. */
     label: string;
-    /** The series' colour, as `UauiSeries.color`: a palette slot (1 to 4) or a status colour. Defaults to the slot of the series' position, as does any other value. */
+    /** The series' colour, as `UauiSeries.color`: a palette slot (1 to 8) or a status colour. Defaults to the slot of the series' position, as does any other value. */
     color?: UauiColorSlot | UauiStatusColor;
     /** Its values, by category. A category with no point has no bar. */
     points: UauiCategoryPoint[];

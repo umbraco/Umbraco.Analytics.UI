@@ -100,8 +100,8 @@ describe("Feature: the package's look for a product's own chart", () => {
                 colors = uauiChartColors(host);
             });
 
-            it("gives the four series slots in order, as the palette resolves them", () => {
-                expect(colors.series).toHaveLength(4);
+            it("gives the eight series slots in order, as the palette resolves them", () => {
+                expect(colors.series).toHaveLength(8);
                 colors.series.forEach((slot, i) => {
                     expect(slot.line).toBe(resolved(host, `var(--uaui-color-series-${i + 1})`));
                     expect(slot.bar).toBe(resolved(host, `var(--uaui-color-bar-${i + 1})`));

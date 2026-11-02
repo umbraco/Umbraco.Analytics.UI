@@ -56,6 +56,16 @@ export default {
         chartTodayInBucket: "{0} (includes today)",
         // The hidden table's caption when the chart's y-axis is logarithmic.
         chartTableCaptionLog: "Chart data (logarithmic scale)",
+        // The hidden table's caption in the share view (stack="percent"), where each cell is chartShareValue.
+        chartTableCaptionShare: "Chart data (each value with its share of the date's total)",
+        // A share with its value in the share view's hidden table: {0} the share ("42.5%"), {1} the value ("1,234").
+        chartShareValue: "{0} ({1})",
+        // The tooltip's last line when it lists only the largest rows: {0} how many more series have a value there.
+        chartTooltipMore: "+{0} more",
+        // The legend's button that shows the rest of a long legend: {0} how many series it hides. Its text is its name.
+        chartLegendMore: "Show {0} more",
+        // The same button once the legend shows every series: folds it back.
+        chartLegendFewer: "Show fewer",
 
         // Funnel
         funnelAriaLabel: "Funnel",

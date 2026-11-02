@@ -36,6 +36,33 @@ export const WithCompare: Story = { name: "With compare", args: { compareLabel: 
 /** The bar kinds use squares in the bar colours. */
 export const Bars: Story = { args: { bars: true, compareLabel: "Comparison" } };
 
+const manyEntries = [
+    "Summer conference",
+    "Events",
+    "Workshop: Getting started",
+    "Home",
+    "Newsletter, June",
+    "Blog: Spring recap",
+    "Contact",
+    "Pricing",
+    "About us",
+    "Careers",
+    "Partners",
+].map((label, i) => ({ id: `page-${i + 1}`, label, color: ((i % 8) + 1) as 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 }));
+
+/** More than 8 series fold: the first 7, then a "Show 4 more" button (Tab to it, Enter or Space). */
+export const Folded: Story = { args: { bars: true, entries: manyEntries } };
+
+/** The folded legend after pressing "Show 4 more": every series, and "Show fewer" to fold it again. */
+export const Expanded: Story = {
+    args: { bars: true, entries: manyEntries },
+    play: async ({ canvasElement }) => {
+        const legend = canvasElement.querySelector("uaui-chart-legend")!;
+        await legend.updateComplete;
+        legend.shadowRoot!.querySelector<HTMLButtonElement>(".legend-toggle")?.click();
+    },
+};
+
 /** Bars and a line in one chart: each entry its own swatch, and the compare entry both a bar and a dashed line. */
 export const BarsAndLine: Story = {
     name: "Bars and a line",

@@ -107,8 +107,8 @@ const workflow = (id: number, name: string, failRate: number): Workflow => ({
     failRate,
 });
 
-// The made-up site's forms. Event registration is the sample form: multi-page, five source pages (more lines than
-// the chart's four palette slots) and a workflow that fails now and then.
+// The made-up site's forms. Event registration is the sample form: multi-page, eleven source pages (more than the
+// chart's eight palette slots, so its legend folds) and a workflow that fails now and then.
 export const FORMS: Form[] = [
     {
         id: "f0a1c2d3-0001-4e5f-8a9b-000000000001",
@@ -120,11 +120,17 @@ export const FORMS: Form[] = [
         completion: 0.42,
         workflows: [workflow(1, "Send confirmation email", 0.004), workflow(2, "Post to CRM", 0.06), workflow(3, "Notify events team", 0)],
         pages: [
-            page(1, "Summer conference", "/events/summer-conference/", 0.34),
-            page(2, "Events", "/events/", 0.22),
-            page(3, "Workshop: Getting started", "/events/workshop-getting-started/", 0.18),
-            page(4, "Home", "/", 0.15),
-            page(5, "Newsletter, June", "/newsletter/june/", 0.11),
+            page(1, "Summer conference", "/events/summer-conference/", 0.24),
+            page(2, "Events", "/events/", 0.15),
+            page(3, "Workshop: Getting started", "/events/workshop-getting-started/", 0.12),
+            page(4, "Home", "/", 0.1),
+            page(5, "Newsletter, June", "/newsletter/june/", 0.08),
+            page(11, "Blog: Spring recap", "/blog/spring-recap/", 0.07),
+            page(12, "Speakers", "/events/summer-conference/speakers/", 0.06),
+            page(13, "Programme", "/events/summer-conference/programme/", 0.05),
+            page(14, "Venue and travel", "/events/summer-conference/venue/", 0.05),
+            page(15, "Workshop: Advanced", "/events/workshop-advanced/", 0.04),
+            page(16, "Partners", "/partners/", 0.04),
         ],
     },
     {

@@ -95,7 +95,10 @@ export interface UauiChartMixinInterface<TSeries = unknown> extends UauiLoadStat
 export type UauiChartScale = "linear" | "log";
 
 // @public
-export type UauiColorSlot = 1 | 2 | 3 | 4;
+export type UauiChartStack = "normal" | "percent";
+
+// @public
+export type UauiColorSlot = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
 
 // @public
 export type UauiCompare = {
@@ -689,6 +692,7 @@ export class UauiTimeSeriesChartElement extends UauiTimeSeriesChartElementBase {
     // (undocumented)
     render(): TemplateResult;
     series: UauiSeries[];
+    stack: UauiChartStack;
     // (undocumented)
     static styles: CSSResultGroup;
     today?: string;

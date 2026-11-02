@@ -38,9 +38,9 @@ The colour is the one our share bars use, in the light, dark and high contrast t
 
 | Read this | For | Override it with |
 |---|---|---|
-| `--uaui-color-series-1` to `--uaui-color-series-4` | lines and bars | `--uaui-series-1` to `--uaui-series-4` |
-| `--uaui-color-fill-1` to `--uaui-color-fill-4` | area fills (use at low opacity) | `--uaui-series-N` |
-| `--uaui-color-bar-1` to `--uaui-color-bar-4` | livelier bars | `--uaui-bar-N`, then `--uaui-series-N` |
+| `--uaui-color-series-1` to `--uaui-color-series-8` | lines and bars (5 to 8 for charts with many series) | `--uaui-series-1` to `--uaui-series-8` |
+| `--uaui-color-fill-1` to `--uaui-color-fill-8` | area fills (use at low opacity) | `--uaui-series-N` |
+| `--uaui-color-bar-1` to `--uaui-color-bar-8` | livelier bars (5 to 8 are their line colours) | `--uaui-bar-N`, then `--uaui-series-N` |
 | `--uaui-color-series-default`, `-positive`, `-warning`, `-danger` | lines of a series coloured by a status (`color: "danger"`) | `--uaui-series-default` and so on |
 | `--uaui-color-fill-default`, `-positive`, `-warning`, `-danger` | area fills of a status series (use at low opacity) | `--uaui-series-<status>` |
 | `--uaui-color-bar-default`, `-positive`, `-warning`, `-danger` | bars of a status series | `--uaui-bar-<status>`, then `--uaui-series-<status>` |
@@ -55,6 +55,20 @@ The colour is the one our share bars use, in the light, dark and high contrast t
 - To override, set `--uaui-*` (for example `--uaui-series-1: #0a7`) on an ancestor, so it reaches both your elements and ours. Setting it on your own `:host` only changes your element.
 - The block sets `color-scheme` on the element's `:host`. Its subtree inherits it, slotted children included, which aligns native controls and scrollbars with the UUI theme. With no UUI theme it resets to `normal`.
 - The palette is tested to 3:1 for lines and bars in all three themes. If you override a colour, you own its contrast.
+
+## Many series
+
+Slots 1 to 4 are the main colours. Slots 5 to 8 are for charts with many series, such as one per source page: a series
+past the fourth takes them before the colours repeat from slot 1. In light (and high contrast) they are teal, sky blue,
+plum and olive; in dark, sage, orchid, pink and gold. They are mixes of UUI palette shades, picked to stay apart from
+slots 1 to 4, the status colours, the compare colour and each other, also for colour-blind readers.
+
+- Pass the series largest first. Above 8 series the legend shows the first 7 and a "Show N more" button, and the
+  tooltip lists the 7 largest (in series order) and "+N more". The hidden table always has every series.
+- Past 8 series two series share a colour. To keep colours unique, group the smallest into one "Other" series with
+  `color: "default"` (a neutral grey).
+- In your own Chart.js chart, `uauiChartColors(host).series` now has all 8 slots (it had 4). Code that cycles with
+  `series[i % series.length]` gives series 5 and up the new colours; `series[i % 4]` keeps the four main ones.
 
 ## Colour a series by its meaning
 

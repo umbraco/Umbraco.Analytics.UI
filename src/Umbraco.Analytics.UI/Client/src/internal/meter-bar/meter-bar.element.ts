@@ -14,7 +14,7 @@ export class UauiMeterBarElement extends UmbLitElement {
     @property({ type: Number })
     percent = 0;
 
-    /** The palette slot of the bar (1 to 4). */
+    /** The palette slot of the bar (1 to 8). */
     @property({ type: Number })
     color: UauiColorSlot = 1;
 

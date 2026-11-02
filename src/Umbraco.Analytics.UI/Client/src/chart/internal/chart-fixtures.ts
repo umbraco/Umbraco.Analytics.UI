@@ -132,3 +132,36 @@ export const markers: UauiMarker[] = [
     { id: "m6", date: "2026-06-18", title: "Webinar recording shared" },
     { id: "m7", date: "2026-06-22", title: "Pricing page update", description: "New plan comparison table." },
 ];
+
+/** Forms-like source pages, largest first, with their share of a form's entries (T59). */
+const sourcePageNames: [string, number][] = [
+    ["Summer conference", 0.22],
+    ["Events", 0.16],
+    ["Workshop: Getting started", 0.13],
+    ["Home", 0.11],
+    ["Newsletter, June", 0.09],
+    ["Blog: Spring recap", 0.08],
+    ["Contact", 0.06],
+    ["Pricing", 0.05],
+    ["About us", 0.04],
+    ["Careers", 0.035],
+    ["Partners", 0.025],
+];
+
+/** The day (31 May) the made-up form took no entries at all: the share view shows nothing there. */
+export const quietDay = "2026-05-31";
+
+/**
+ * Entries per source page (25 May to 23 Jun 2026): one series per page, 11 in all, so the palette's eight slots run
+ * out, the legend folds and the tooltip lists the largest. No page has an entry on `quietDay`.
+ */
+export const sourcePages: UauiSeries[] = sourcePageNames.map(([label, weight], p) =>
+    toSeries(
+        `page-${p + 1}`,
+        label,
+        pageviewValues.map((v, i) => (dayAfter25May(i) === quietDay ? 0 : Math.round(v * weight * (0.6 + ((i * 7 + p * 13) % 10) / 12)))),
+    ),
+);
+
+/** The five largest source pages: few enough for every one to keep its own colour and legend entry. */
+export const topSourcePages: UauiSeries[] = sourcePages.slice(0, 5);
