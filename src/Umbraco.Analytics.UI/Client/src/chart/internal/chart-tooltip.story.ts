@@ -50,10 +50,10 @@ export const SeveralSeries: Story = {
     },
 };
 
-/** Lines with a compare point: the compare value, its date and the change, in a badge. */
+/** Lines with a compare point: the compare value, its x value (a date here) and the change, in a badge. */
 export const WithCompare: Story = {
     name: "With compare",
-    args: { rows: [{ color: 1, value: 1280, compare: { value: 1000, date: "Apr 27, 2026", current: 1280 } }] },
+    args: { rows: [{ color: 1, value: 1280, compare: { value: 1000, label: "Apr 27, 2026", current: 1280 } }] },
 };
 
 /** Bars: square swatches, the total of the stack and the compare total. */
@@ -65,7 +65,7 @@ export const Bars: Story = {
             { color: 2, value: 640, label: "Sessions" },
         ],
         total: { value: 1920, label: "Total" },
-        compareTotal: { value: 2400, date: "Apr 27, 2026", current: 1920 },
+        compareTotal: { value: 2400, label: "Apr 27, 2026", current: 1920 },
     },
 };
 
@@ -78,7 +78,7 @@ export const BarsAndLine: Story = {
         rows: [
             { color: "positive", value: 6, label: "Approved" },
             { color: "danger", value: 1, label: "Errored" },
-            { color: "warning", value: 14, label: "Pending", bar: false, compare: { value: 11, date: "May 23, 2026", current: 14 } },
+            { color: "warning", value: 14, label: "Pending", bar: false, compare: { value: 11, label: "May 23, 2026", current: 14 } },
         ],
     },
 };

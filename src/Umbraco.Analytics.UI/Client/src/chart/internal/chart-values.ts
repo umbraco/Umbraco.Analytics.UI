@@ -5,30 +5,30 @@ import type { UauiChartKind } from "../types.js";
 
 export interface UauiChartData {
     /** The x-axis values, in order: for the time-series chart, every date in any series, ascending. */
-    dates: string[];
+    labels: string[];
     /**
-     * For the bar kinds: the compare series added up into one total per date, matched to `dates` by bucket offset.
-     * Absent when there is no compare series.
+     * For the bar kinds: the compare series added up into one total per x value, matched to `labels` (by bucket offset
+     * on the time-series chart), with the x value each total is from. Absent when there is no compare series.
      */
-    compareTotal?: { values: (number | null)[]; dates: (string | null)[] };
+    compareTotal?: { values: (number | null)[]; labels: (string | null)[] };
     series: {
         id: string;
         label: string;
         values: (number | null)[];
-        /** The compare series' values on the same dates, matched by bucket offset. Absent when it has no compare series. */
+        /** The compare series' values on the same x values (matched by bucket offset on the time-series chart). Absent when it has no compare series. */
         compare?: (number | null)[];
-        /** The ISO date of each compare value, on the same indexes as `compare`. */
-        compareDates?: (string | null)[];
+        /** The x value each compare value is from (an ISO date on the time-series chart), on the same indexes as `compare`. */
+        compareLabels?: (string | null)[];
     }[];
 }
 
 /**
- * The total of each date: the sum of the series' values, or `null` where every series is missing a point. With
+ * The total of each x value: the sum of the series' values, or `null` where every series is missing a point. With
  * `include`, only the series it marks `true` count (the bars of a chart that mixes bars and lines).
  */
 export function seriesTotals(data: UauiChartData, include?: boolean[]): (number | null)[] {
     const counted = include ? data.series.filter((_, i) => include[i]) : data.series;
-    return data.dates.map((_, i) => {
+    return data.labels.map((_, i) => {
         const present = counted.map((s) => s.values[i]).filter((v): v is number => v !== null);
         return present.length ? present.reduce((a, b) => a + b, 0) : null;
     });
@@ -52,7 +52,7 @@ export function minPositive(data: UauiChartData): number | undefined {
 
 /**
  * The largest value the y-axis has to reach, or 0 when there are none. A line counts its values and its compare
- * values. Bars count each value (with `stacked-bar`, each date's total of the bars) and the compare total. `bars`
+ * values. Bars count each value (with `stacked-bar`, each x value's total of the bars) and the compare total. `bars`
  * says which series are bars; left out, every series is a bar in the bar kinds and a line in the others.
  */
 export function maxValue(data: UauiChartData, kind: UauiChartKind = "line", bars?: boolean[]): number {

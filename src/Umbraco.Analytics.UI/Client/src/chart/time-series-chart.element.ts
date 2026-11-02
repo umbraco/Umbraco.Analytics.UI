@@ -84,7 +84,7 @@ interface MarkersFrom {
 }
 
 const emptyDerived: Derived = {
-    data: { dates: [], series: [] },
+    data: { labels: [], series: [] },
     kinds: [],
     axisLabels: [],
     dateLabels: [],
@@ -292,8 +292,8 @@ export class UauiTimeSeriesChartElement extends UmbLitElement {
     #tableDates: string[] = [];
     #tableDatesFrom?: Derived;
 
-    // `connectedCallback`, `disconnectedCallback` and `updated` stay overridden so the public API report is unchanged:
-    // the chart controller does the connect, disconnect and draw work.
+    // The chart controller does the connect, disconnect and draw work. `connectedCallback` and `updated` stay overridden
+    // only because the public API report lists them (dropping them changes `api/analytics-ui.api.md`).
     override connectedCallback() {
         super.connectedCallback();
     }
@@ -317,7 +317,7 @@ export class UauiTimeSeriesChartElement extends UmbLitElement {
         }
         if (changed.has("kind") || changed.has("lowerIsBetter") || changed.has("yScale") || changed.has("today")) this.#chart.invalidate();
 
-        const todayIndex = this.today ? bucketMarkers([{ id: "today", date: this.today, title: "" }], this.#derived.data.dates, this.groupBy)[0]?.index : undefined;
+        const todayIndex = this.today ? bucketMarkers([{ id: "today", date: this.today, title: "" }], this.#derived.data.labels, this.groupBy)[0]?.index : undefined;
         if (todayIndex !== this.#todayIndex || this.#tableDatesFrom !== this.#derived) {
             this.#todayIndex = todayIndex;
             this.#tableDatesFrom = this.#derived;
@@ -326,7 +326,7 @@ export class UauiTimeSeriesChartElement extends UmbLitElement {
             this.#chart.invalidate();
         }
 
-        const markersNext = { markers: this.markers, dates: this.#derived.data.dates, groupBy: this.groupBy };
+        const markersNext = { markers: this.markers, dates: this.#derived.data.labels, groupBy: this.groupBy };
         const markersPrev = this.#markersFrom;
         if (!markersPrev || (Object.keys(markersNext) as (keyof MarkersFrom)[]).some((key) => markersPrev[key] !== markersNext[key])) {
             this.#markersFrom = markersNext;
@@ -360,11 +360,11 @@ export class UauiTimeSeriesChartElement extends UmbLitElement {
         return {
             data,
             kinds,
-            axisLabels: data.dates.map((d) => formatIsoDate(d, axisDate)),
-            dateLabels: data.dates.map(tooltipLabel),
-            compareDateLabels: data.series.map((s) => (s.compareDates ?? []).map(tooltipLabel)),
+            axisLabels: data.labels.map((d) => formatIsoDate(d, axisDate)),
+            dateLabels: data.labels.map(tooltipLabel),
+            compareDateLabels: data.series.map((s) => (s.compareLabels ?? []).map(tooltipLabel)),
             totals: seriesTotals(data, bars.some(Boolean) ? bars : undefined),
-            compareTotalDateLabels: (data.compareTotal?.dates ?? []).map(tooltipLabel),
+            compareTotalDateLabels: (data.compareTotal?.labels ?? []).map(tooltipLabel),
             numberFormat: getNumberFormat(lang, valueFormat),
             markerDate: new Intl.DateTimeFormat(lang, tooltipDateFormat.day),
             lang,
@@ -483,7 +483,7 @@ export class UauiTimeSeriesChartElement extends UmbLitElement {
                     bar: kinds[i] === "bar",
                     value,
                     label: data.series.length > 1 ? s.label : undefined,
-                    compare: compare === null || compare === undefined ? undefined : { value: compare, date: compareDateLabels[i][index], current: value },
+                    compare: compare === null || compare === undefined ? undefined : { value: compare, label: compareDateLabels[i][index], current: value },
                 },
             ];
         });
@@ -492,7 +492,7 @@ export class UauiTimeSeriesChartElement extends UmbLitElement {
         const compareTotal: UauiChartTooltipCompare | undefined =
             compareTotalValue === null || compareTotalValue === undefined
                 ? undefined
-                : { value: compareTotalValue, date: compareTotalDateLabels[index], current: total };
+                : { value: compareTotalValue, label: compareTotalDateLabels[index], current: total };
         return html`<uaui-chart-tooltip
             style="visibility:hidden"
             aria-hidden="true"

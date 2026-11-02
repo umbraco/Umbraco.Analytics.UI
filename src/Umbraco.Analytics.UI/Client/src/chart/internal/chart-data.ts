@@ -82,15 +82,15 @@ export function buildChartData(rawSeries: UauiSeries[], rawCompareSeries: UauiSe
     const allCompare = compareByOffset(totalled.flatMap((s) => s.points), groupBy, weekStart, compareStart);
     const total = place(allCompare);
     return {
-        dates,
-        compareTotal: allCompare.size === 0 ? undefined : { values: total.values, dates: total.compareDates },
+        labels: dates,
+        compareTotal: allCompare.size === 0 ? undefined : { values: total.values, labels: total.compareDates },
         series: series.map((s, i) => {
             const sums = sumByDate(s.points);
             const values = dates.map((d) => sums.get(d) ?? null);
             const match = !lines || lines[i] ? compareSeries.find((c) => c.id === s.id) : undefined;
             if (!match) return { id: s.id, label: s.label, values };
             const { values: compare, compareDates } = place(compareByOffset(match.points, groupBy, weekStart, compareStart));
-            return { id: s.id, label: s.label, values, compare, compareDates };
+            return { id: s.id, label: s.label, values, compare, compareLabels: compareDates };
         }),
     };
 }

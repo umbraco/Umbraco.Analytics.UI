@@ -6,12 +6,12 @@ import "../../delta-badge/delta-badge.element.js";
 import { deltaChange } from "../../internal/delta/delta-change.js";
 import { UauiChartTooltipSurface } from "./chart-tooltip-surface.css.js";
 
-/** The compared period's value for a row or a total, with the date it is from and the current value to measure the change against. */
+/** The compared period's value for a row or a total, with the x value (a date on the time-series chart) it is from and the current value to measure the change against. */
 export interface UauiChartTooltipCompare {
     /** The compare value. */
     value: number;
-    /** The compare point's formatted date. */
-    date: string;
+    /** The compare point's formatted x value. */
+    label: string;
     /** The current value the change is measured from. `null` when there is none, so no badge shows. */
     current: number | null;
 }
@@ -71,7 +71,7 @@ export class UauiChartTooltipElement extends UmbLitElement {
     }
 
     /** The compare value, with the change from it to the current value, worked out by the badge: none when there is nothing to divide by. */
-    #renderCompare({ value, date, current }: UauiChartTooltipCompare, square: boolean): TemplateResult {
+    #renderCompare({ value, label, current }: UauiChartTooltipCompare, square: boolean): TemplateResult {
         return html`<div class="tooltip-compare">
             <div class="tooltip-row">
                 <span class=${square ? "swatch swatch-compare swatch-square" : "swatch swatch-compare"}></span>
@@ -80,7 +80,7 @@ export class UauiChartTooltipElement extends UmbLitElement {
                     ? html`<uaui-delta-badge size="sm" .current=${current} .previous=${value} .lowerIsBetter=${this.lowerIsBetter}></uaui-delta-badge>`
                     : nothing}
             </div>
-            <div class="tooltip-sub">${date}</div>
+            <div class="tooltip-sub">${label}</div>
         </div>`;
     }
 

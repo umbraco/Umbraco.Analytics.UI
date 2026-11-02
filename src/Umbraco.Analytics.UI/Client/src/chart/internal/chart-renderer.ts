@@ -19,7 +19,7 @@ export interface UauiChartModel {
     labels: string[];
     /** A line's `compare` is drawn as a dashed line, with the gap to `values` shaded. Bars have none. */
     datasets: { label: string; kind: UauiSeriesKind; values: (number | null)[]; compare?: (number | null)[] }[];
-    /** When there are bars, one compare bar per date, drawn behind the current bars. */
+    /** When there are bars, one compare bar per x value, drawn behind the current bars. */
     compareTotal?: (number | null)[];
     /** The y-axis runs from 0 to `yMax` in steps of `yStep`, unless `yTicks` is given. */
     yMax: number;
@@ -231,7 +231,7 @@ export class UauiChartRenderer {
                                 x: tooltip.caretX,
                                 y: Math.min(...points.map((p) => (p.element as PointElement).y)),
                             };
-                            // Raised on every mouse move, but only a change of date or height matters.
+                            // Raised on every mouse move, but only a change of x value or height matters.
                             const last = this.#lastHover;
                             if (last && last.index === hover.index && last.y === hover.y) return;
                             this.#lastHover = hover;
@@ -421,7 +421,7 @@ export class UauiChartRenderer {
     }
 
     /**
-     * The compare total: one more bar per date, not grouped with the others and drawn first (a higher `order` is drawn
+     * The compare total: one more bar per x value, not grouped with the others and drawn first (a higher `order` is drawn
      * earlier), so it sits behind them, wider than the group of `barCount` bars.
      */
     #compareBarDataset(model: UauiChartModel, barCount: number) {
