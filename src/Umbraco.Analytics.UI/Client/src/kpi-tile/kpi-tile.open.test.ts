@@ -226,6 +226,37 @@ describe("Feature: KPI tiles that drill down", () => {
         });
     });
 
+    describe("Scenario: an interactive tile while it first loads", () => {
+        const variants = {
+            href: html`<uaui-kpi-tile label="Approved" loading href="#a"></uaui-kpi-tile>`,
+            openable: html`<uaui-kpi-tile label="Pending" loading openable></uaui-kpi-tile>`,
+            selectable: html`<uaui-kpi-tile label="Orders" loading selectable></uaui-kpi-tile>`,
+        };
+        const names = { href: "Approved", openable: "Pending", selectable: "Orders" };
+
+        for (const [name, template] of Object.entries(variants)) {
+            it(`keeps the label as the ${name} tile's accessible name behind the skeleton`, async () => {
+                const el = await tile(template);
+                const target = shadow(el).querySelector<HTMLElement>("a, button")!;
+                expect(shadow(el).querySelector("uaui-skeleton")).not.toBeNull();
+                expect(target.textContent?.replace(/\s+/g, " ").trim()).toBe(names[name as keyof typeof names]);
+                await expect.element(page.elementLocator(target)).toHaveAccessibleName(names[name as keyof typeof names]);
+            });
+
+            it(`passes the a11y audit: ${name} tile loading`, async () => {
+                const host = render(html`<div style="background: var(--uui-color-background); padding: 8px; width: 320px">${template}</div>`).container.querySelector("div")!;
+                await host.querySelector("uaui-kpi-tile")!.updateComplete;
+                expect(await axeRun(host)).toHaveNoViolations();
+            });
+        }
+
+        it("doesn't show the hidden label", async () => {
+            const el = await tile(variants.href);
+            const hidden = shadow(el).querySelector<HTMLElement>(".content .visually-hidden")!;
+            expect(hidden.getBoundingClientRect().width).toBeLessThanOrEqual(1);
+        });
+    });
+
     describe("Scenario: accessibility", () => {
         async function audit(template: TemplateResult, themeCss: string) {
             const theme = document.createElement("style");

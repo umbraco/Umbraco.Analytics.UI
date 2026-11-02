@@ -170,7 +170,8 @@ export class UauiKpiTileElement extends UmbLitElement {
                 : nothing}
             <span class="content" aria-busy=${busy ? "true" : "false"}>
                 ${mode === "skeleton"
-                    ? html`<uaui-skeleton></uaui-skeleton>`
+                    ? // The skeleton is hidden from assistive tech, so the label stays as hidden text: a link or button tile keeps its name while loading.
+                      html`<span class="visually-hidden">${this.label}</span><uaui-skeleton></uaui-skeleton>`
                     : html`<span class="body">
                           <span class="label">${this.label}</span>
                           <span class="row">
