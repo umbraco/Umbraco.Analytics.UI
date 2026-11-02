@@ -43,7 +43,7 @@ const emptyDerived: Derived = { data: { labels: [], series: [] }, labels: [], to
  * `UmbLitElement` with the settings every chart shares (`UauiChartMixin`), for category series: the base of
  * `uaui-category-chart`. Exported so its type has a name in the public API; extend the element, not this.
  */
-export const UauiCategoryChartElementBase = UauiChartMixin<UauiCategorySeries>(UmbLitElement);
+export const UauiCategoryChartElementBase = UauiChartMixin<UauiCategorySeries>()(UmbLitElement);
 
 /**
  * Shows a metric per category, such as submissions by hour of the day, as bars or stacked bars, with a legend, a hover
@@ -236,7 +236,7 @@ export class UauiCategoryChartElement extends UauiCategoryChartElementBase {
             errorDescription: this.errorDescription,
             retryable: this.retryable,
             emptyHeadline: this.emptyHeadline,
-            emptyDescription: this.emptyDescription,
+            emptyDescription: this.emptyDescription ?? this.localize.term("uauiAnalytics_chartCategoryEmptyDescription"),
             tooltip: this.#renderTooltip(),
             legend: () => this.#renderLegend(),
             table: () => this.#renderTable(),

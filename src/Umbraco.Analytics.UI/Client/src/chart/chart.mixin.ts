@@ -25,8 +25,11 @@ export interface UauiChartMixinInterface<TSeries> {
     series: TSeries[];
 
     /**
-     * The same metrics for another period, matched to `series` by `id`: drawn as a compare bar behind the bars (the
-     * compare series added up), or as a dashed line beside a line. How their points line up is the chart's own (see it).
+     * The same metrics for another period, drawn as a compare bar behind the bars, or as a dashed line beside a line.
+     * How compare series are matched differs per chart (see each chart): on `uaui-time-series-chart` a line's compare
+     * series is matched by `id`, while its bar kinds add up every compare series, matched or not, into the compare bar,
+     * and points line up by bucket offset; on `uaui-category-chart` only compare series with the `id` of a series count,
+     * matched by category id.
      */
     compareSeries: TSeries[];
 
@@ -86,13 +89,18 @@ export interface UauiChartMixinInterface<TSeries> {
 }
 
 /**
- * Adds the settings every chart element shares (`UauiChartMixinInterface`) to `superClass`, with the same attribute
- * names and defaults on every chart. Pass the chart's series type: `UauiChartMixin<UauiSeries>(UmbLitElement)`.
+ * Adds the settings every chart element shares (`UauiChartMixinInterface`) to a class, with the same attribute names
+ * and defaults on every chart. Called in two steps, first with the chart's series type, then with the class to extend:
+ * `UauiChartMixin<UauiSeries>()(UmbLitElement)`. The two steps let the class's own type be inferred while the series
+ * type is given: TypeScript can't infer one type argument and take another explicitly in a single call, so a one-step
+ * `UauiChartMixin<UauiSeries>(MyBase)` would drop `MyBase`'s own members from the result.
  *
- * @param superClass - The class to extend, `UmbLitElement` or a subclass of it.
- * @returns The class with the shared chart settings.
+ * @returns A function that takes the class to extend (`UmbLitElement` or a subclass of it) and returns it with the
+ * shared chart settings.
  */
-export const UauiChartMixin = <TSeries, T extends HTMLElementConstructor<UmbLitElement> = typeof UmbLitElement>(superClass: T) => {
+export const UauiChartMixin =
+    <TSeries>() =>
+    <T extends HTMLElementConstructor<UmbLitElement>>(superClass: T): HTMLElementConstructor<UauiChartMixinInterface<TSeries>> & T => {
     class UauiChartMixinClass extends superClass {
         /**
          * How the y-axis spaces its values. `"log"` spaces it by powers of ten, for values that span widely. It still starts
@@ -112,8 +120,11 @@ export const UauiChartMixin = <TSeries, T extends HTMLElementConstructor<UmbLitE
         series: TSeries[] = [];
 
         /**
-         * The same metrics for another period, matched to `series` by `id`: drawn as a compare bar behind the bars (the
-         * compare series added up), or as a dashed line beside a line. How their points line up is the chart's own (see it).
+         * The same metrics for another period, drawn as a compare bar behind the bars, or as a dashed line beside a line.
+         * How compare series are matched differs per chart (see each chart): on `uaui-time-series-chart` a line's compare
+         * series is matched by `id`, while its bar kinds add up every compare series, matched or not, into the compare bar,
+         * and points line up by bucket offset; on `uaui-category-chart` only compare series with the `id` of a series count,
+         * matched by category id.
          */
         @property({ attribute: false })
         compareSeries: TSeries[] = [];

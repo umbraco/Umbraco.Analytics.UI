@@ -101,7 +101,7 @@ const emptyDerived: Derived = {
  * `UmbLitElement` with the settings every chart shares (`UauiChartMixin`), for dated series: the base of
  * `uaui-time-series-chart`. Exported so its type has a name in the public API; extend the element, not this.
  */
-export const UauiTimeSeriesChartElementBase = UauiChartMixin<UauiSeries>(UmbLitElement);
+export const UauiTimeSeriesChartElementBase = UauiChartMixin<UauiSeries>()(UmbLitElement);
 
 /**
  * Shows a metric over time as lines, filled areas, bars or stacked bars, with a legend, a hover tooltip and a visually
@@ -171,6 +171,21 @@ export class UauiTimeSeriesChartElement extends UauiTimeSeriesChartElementBase {
      */
     @property({ attribute: false })
     compare?: UauiCompare;
+
+    /**
+     * One line (or set of bars) per series, from `UauiChartMixin`. Dates are ISO ("2026-06-11"); a date-time is read as
+     * the day it starts with. Series needn't share the same dates. Points of one series on the same date add up, so
+     * aggregate rates and averages first.
+     */
+    declare series: UauiSeries[];
+
+    /**
+     * The same metrics for another period, from `UauiChartMixin`. A line's compare series is matched to the series with
+     * the same `id` and drawn as a dashed line; its points line up by bucket offset (the Nth `group-by` bucket from its
+     * first date under the Nth from the series' first date), so the two periods can cover different dates. Points on
+     * one date add up. The bar kinds add every compare series up, matched or not, into one compare bar per date.
+     */
+    declare compareSeries: UauiSeries[];
 
     /** Events shown as a dot on the x-axis with a dashed line. One outside the chart's dates draws nothing. */
     @property({ attribute: false })

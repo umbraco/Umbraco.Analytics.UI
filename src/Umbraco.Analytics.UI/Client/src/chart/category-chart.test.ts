@@ -300,6 +300,13 @@ describe("Feature: category chart states", () => {
         expect(shadow(el).querySelector("uaui-empty-state")?.shadowRoot?.textContent).toContain("No submissions yet");
     });
 
+    it("says there is nothing to show by default, not to widen a date range", async () => {
+        const el = await chart(html`<uaui-category-chart .categories=${categories} .series=${[]}></uaui-category-chart>`);
+        const text = shadow(el).querySelector("uaui-empty-state")?.shadowRoot?.textContent;
+        expect(text).toContain("There is nothing to show yet.");
+        expect(text).not.toContain("date range");
+    });
+
     it("shows the empty state when no point is in a given category", async () => {
         const el = await chart(
             html`<uaui-category-chart .categories=${categories} .series=${[{ id: "a", label: "A", points: [{ category: "watch", value: 1 }] }]}></uaui-category-chart>`,

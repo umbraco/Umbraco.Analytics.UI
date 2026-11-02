@@ -38,6 +38,8 @@ export default {
         chartTableDateHeader: "Date",
         // The category chart's hidden table: the heading of its column of categories (hours of the day, devices).
         chartTableCategoryHeader: "Category",
+        // The category chart's empty state description when the product sets none (not date-flavoured, unlike emptyDescription).
+        chartCategoryEmptyDescription: "There is nothing to show yet.",
         chartTableCompareHeader: "{0} (compare)",
         chartTotalLabel: "Total",
         chartMarkerAriaLabel: "Marker: {0}",

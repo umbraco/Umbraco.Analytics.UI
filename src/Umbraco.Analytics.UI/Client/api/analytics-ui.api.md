@@ -76,7 +76,7 @@ export type UauiCategorySeries = {
 export type UauiChartKind = "line" | "area" | "bar" | "stacked-bar";
 
 // @public
-export const UauiChartMixin: <TSeries, T extends HTMLElementConstructor<UmbLitElement> = typeof UmbLitElement>(superClass: T) => HTMLElementConstructor<UauiChartMixinInterface<TSeries>> & T;
+export const UauiChartMixin: <TSeries>() => <T extends HTMLElementConstructor<UmbLitElement>>(superClass: T) => HTMLElementConstructor<UauiChartMixinInterface<TSeries>> & T;
 
 // @public
 export interface UauiChartMixinInterface<TSeries> {
@@ -669,6 +669,7 @@ export class UauiTextCellElement extends UmbLitElement implements UauiTableCellE
 // @public
 export class UauiTimeSeriesChartElement extends UauiTimeSeriesChartElementBase {
     compare?: UauiCompare;
+    compareSeries: UauiSeries[];
     // (undocumented)
     connectedCallback(): void;
     // (undocumented)
@@ -679,6 +680,7 @@ export class UauiTimeSeriesChartElement extends UauiTimeSeriesChartElementBase {
     range?: UauiDateRange;
     // (undocumented)
     render(): TemplateResult;
+    series: UauiSeries[];
     // (undocumented)
     static styles: CSSResultGroup;
     today?: string;

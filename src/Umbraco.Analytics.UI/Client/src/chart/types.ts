@@ -66,7 +66,11 @@ export type UauiCategory = {
     label: string;
 };
 
-/** One value in one category. Two points of a series in the same category are added, so aggregate rates and averages before passing them. */
+/**
+ * One value in one category. Two points of a series in the same category are added, so aggregate rates and averages
+ * before passing them. A value below 0 is drawn at 0, as on the time-series chart; the tooltip and hidden table show it
+ * as it is.
+ */
 export type UauiCategoryPoint = {
     /** The `id` of the category the value is in. A point in a category the chart wasn't given is not drawn. */
     category: string;
