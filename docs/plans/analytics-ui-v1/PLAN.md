@@ -272,6 +272,7 @@ Research of umbraco/Forms `v19/dev` (1f7f14c) and umbraco/Umbraco-Workflow `v19/
     - `week` and `month` time dimensions, for unique members only: entries and errors add up from days on the client, distinct members don't.
     - A record states endpoint (opened, partially submitted, submitted per form and range), for a completion funnel.
     - `retentionDays` comes back as server-built English text ("Forever", "90 / Forever / 30"): send numbers (0 for forever) so the client can translate and format it.
-- [ ] **T63** - Workflow example page: admin dashboard with the approval activity chart (status tiles that drill down, fastest/slowest/average stats) and the content review chart, plus a filtered history table with the progress cell, with sample data shaped like Workflow's chart API.
+- [x] **T63** - Workflow example page: admin dashboard with the approval activity chart (status tiles that drill down, fastest/slowest/average stats) and the content review chart, plus a filtered history table with the progress cell, with sample data shaped like Workflow's chart API.
+  - Package gap candidates found while building it (not planned, no public API added): `uaui-stat` has no loading or error state (the page shows a loader bar, and hides the stats on error); there is no duration formatter (the page formats minutes, hours or days with `Intl` unit formats itself).
 
 Candidates noticed but not planned: Forms' entries list could use a simpler date-only range input; Workflow's history filters (document, user, language, type, status) stay product-specific.
