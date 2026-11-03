@@ -65,6 +65,28 @@ export const Link: Story = {
     parameters: { docs: { source: { code: `const column = { key: "name", label: "Page", meta: { hrefKey: "url" } };\n\n<uaui-link-cell .column=\${column} .item=\${row} .value=\${row.name}></uaui-link-cell>`, language: "html" } } },
 };
 
+/**
+ * `meta.secondaryKey` names the key in each row that holds a muted second line under the value, such as a SKU under a
+ * product name, an email under a customer name or a date range under a discount name. In a link cell only the first
+ * line is the link. The second line is one line, cut with an ellipsis (its `title` has the full text), and while loading
+ * the placeholder draws two lines.
+ */
+export const SecondLine: Story = {
+    name: "Second line",
+    render: () => {
+        const text: UauiTableColumn = { key: "name", label: "Product", meta: { secondaryKey: "sku" } };
+        const link: UauiTableColumn = { key: "name", label: "Customer", meta: { hrefKey: "url", secondaryKey: "email" } };
+        const range: UauiTableColumn = { key: "name", label: "Discount", meta: { secondaryKey: "range" } };
+        return html`<div style="display: grid; gap: var(--uui-size-space-4); width: 240px">
+            <uaui-text-cell .column=${text} .item=${{ name: "Umbraco hoodie", sku: "SKU-0042-BLACK-M" }} .value=${"Umbraco hoodie"}></uaui-text-cell>
+            <uaui-link-cell .column=${link} .item=${{ name: "Jane Smith", url: "/customers/1", email: "jane.smith@a-very-long-company-name.example.com" }} .value=${"Jane Smith"}></uaui-link-cell>
+            <uaui-text-cell .column=${range} .item=${{ name: "Summer sale", range: "1 Jun 2026 to 31 Aug 2026" }} .value=${"Summer sale"}></uaui-text-cell>
+            <uaui-text-cell loading .column=${text}></uaui-text-cell>
+        </div>`;
+    },
+    parameters: { docs: { source: { code: `const column = { key: "name", label: "Product", meta: { secondaryKey: "sku" } };\n\n<uaui-text-cell .column=\${column} .item=\${row} .value=\${row.name}></uaui-text-cell>`, language: "html" } } },
+};
+
 /** `uaui-number-cell` (`UAUI_TABLE_CELL.number`): a number in the editor's culture, formatted with the column's `valueFormat`. Set `align: "end"` on the column for numbers. */
 export const NumberCell: Story = {
     name: "Number",

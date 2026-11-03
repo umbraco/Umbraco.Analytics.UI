@@ -11,6 +11,13 @@ export interface UauiTableColumnMeta {
     /** `uaui-link-cell`: the key in each row that holds the URL. A missing or unsafe URL shows the text without a link. */
     hrefKey?: string;
     /**
+     * `uaui-text-cell` and `uaui-link-cell`: the key in each row that holds a second line under the value, e.g. a SKU
+     * under a product name. It is muted, smaller and one line, cut with an ellipsis when it doesn't fit (the full text is its
+     * `title`). A client-mode search also looks in it. The line is reserved for every row, empty when a row has none, so
+     * rows stay one height. While loading, the placeholder draws two lines. A custom cell can read it the same way.
+     */
+    secondaryKey?: string;
+    /**
      * `uaui-status-cell`: the key in each row that holds the color (`UauiStatusColor`: `"default"`, `"positive"`,
      * `"warning"` or `"danger"`). A missing or unknown color is `"default"`.
      */
@@ -48,7 +55,7 @@ export type UauiTableColumn = {
      * See `UauiTableCellElement`. Cells that need more than that read the table's `UAUI_TABLE_CONTEXT`.
      */
     elementName?: string;
-    /** Settings the cells read: `hrefKey`, `colorKey`, `textKey`, `totalKey`, `color`, `lowerIsBetter`, `deltaUnit`. See `UauiTableColumnMeta`. */
+    /** Settings the cells read: `hrefKey`, `secondaryKey`, `colorKey`, `textKey`, `totalKey`, `color`, `lowerIsBetter`, `deltaUnit`. See `UauiTableColumnMeta`. */
     meta?: UauiTableColumnMeta;
     /**
      * How numbers are formatted, e.g. `{ style: "currency", currency: "EUR" }`. Used by the number, percent, share,
