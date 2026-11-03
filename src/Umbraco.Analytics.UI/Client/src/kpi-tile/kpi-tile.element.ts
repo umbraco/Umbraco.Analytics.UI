@@ -5,12 +5,18 @@ import { UauiVisuallyHiddenStyles } from "../internal/a11y/visually-hidden.css.j
 import { UauiPaletteStyles } from "../theme/index.js";
 import { deltaChange } from "../internal/delta/delta-change.js";
 import { safeHref } from "../table/internal/safe-href.js";
+import { badgeFigures, UauiFigureFormatter } from "../internal/format/figure.js";
 import type { UauiStatusColor } from "../theme/types.js";
 import type { UauiDeltaUnit } from "../delta-badge/delta-badge.element.js";
 import "../delta-badge/delta-badge.element.js";
 
 /**
  * A headline number as a card: an icon in a pink square, a label, the value and an optional change badge.
+ *
+ * Give `value` as a number and the tile formats it in the backoffice user's culture, with `valueFormat` for the style
+ * (e.g. `{ style: "currency", currency: "EUR" }`). The product picks the currency or unit: the tile never guesses one.
+ * A string `value` (and the `value` attribute, which is always a string) is shown exactly as given, for a figure the
+ * product has formatted itself.
  *
  * Put tiles in a CSS grid row and they stay the same height. The badge drops below the value when the tile is
  * too narrow for both. While `loading` with no `value` it shows a skeleton the size of a loaded tile. While
@@ -26,7 +32,8 @@ import "../delta-badge/delta-badge.element.js";
  * Set `no-data` when the range has no data: the tile shows a dash instead of a number and no change badge.
  * Leave `delta` unset when there is nothing to compare with (no badge); a `delta` of 0 is "no change" and
  * shows a neutral badge. Instead of `delta` you can give the two numbers, `current` and `previous`, and the badge
- * works out the change, as `uaui-delta-badge` does. `delta` wins when both are set.
+ * works out the change, as `uaui-delta-badge` does. `current` defaults to a number `value`, so then `previous` is
+ * enough, on the value's scale (fractions for points with a percent `valueFormat`). `delta` wins when both are set.
  *
  * @element uaui-kpi-tile
  * @fires selected - A selectable, unselected tile was pressed. Cancelable: cancel it to keep the tile unselected.
@@ -42,9 +49,21 @@ export class UauiKpiTileElement extends UmbLitElement {
     @property({ type: String })
     label = "";
 
-    /** The number, already formatted by the product (e.g. "€ 4,837.40"). It is shown exactly as given. */
-    @property({ type: String })
-    value?: string;
+    /**
+     * The figure. A number is formatted in the backoffice user's culture with `valueFormat`. A string (and the
+     * attribute) is shown exactly as given, e.g. "€ 4,837.40" formatted by the product. 0 is a value; an empty string
+     * or a number that isn't finite (NaN, Infinity) is no value, as unset is.
+     */
+    @property()
+    value?: number | string;
+
+    /**
+     * How numbers are formatted, e.g. `{ style: "currency", currency: "EUR" }`. Formats a number `value`; a string
+     * `value` is shown as given. The product picks the currency or unit. Options `Intl` rejects (e.g. a bad currency
+     * code) fall back to the default number format.
+     */
+    @property({ type: Object, attribute: "value-format" })
+    valueFormat?: Intl.NumberFormatOptions;
 
     /**
      * The range has no data. Shows a dash with the hidden text "No data for this period" in place of the value, and no
@@ -100,12 +119,19 @@ export class UauiKpiTileElement extends UmbLitElement {
 
     /**
      * The value in the current period, as a number. With `previous`, the badge works out the change. Ignored when
-     * `delta` is set. The shown value is still `value`.
+     * `delta` is set. The shown value is still `value`. For points, give both in percent units (62 means 62%).
+     *
+     * Defaults to `value` when that is a number, and `previous` is then on the value's scale: with points and a
+     * `valueFormat` of `style: "percent"`, both are fractions (0.256 against 0.24 is +1.6 pp), as a table column's are.
      */
     @property({ type: Number })
     current?: number;
 
-    /** The same value in the comparison period. With `current`, the badge works out the change. Ignored when `delta` is set. */
+    /**
+     * The same value in the comparison period. With `current` (or a number `value`), the badge works out the change.
+     * Ignored when `delta` is set. On the same scale as `current`, or as `value` when `current` is unset: with points
+     * and a `valueFormat` of `style: "percent"`, a fraction then (0.24 is 24%).
+     */
     @property({ type: Number })
     previous?: number;
 
@@ -141,6 +167,18 @@ export class UauiKpiTileElement extends UmbLitElement {
     @property({ type: Boolean })
     deselectable = true;
 
+    #formatter = new UauiFigureFormatter();
+
+    // The text to show, or undefined for no value. The formatter is built on first use and kept per language and options.
+    get #shown(): string | undefined {
+        return this.#formatter.text(this.value, this.localize.lang(), this.valueFormat);
+    }
+
+    // The badge's two numbers: `current` and `previous`, or a number `value` and `previous` on its scale.
+    get #figures(): { current?: number; previous?: number } {
+        return badgeFigures(this.value, this.current, this.previous, this.deltaUnit, this.valueFormat);
+    }
+
     #toggle() {
         if (this.selected && !this.deselectable) return;
         const deselecting = this.selected;
@@ -156,12 +194,14 @@ export class UauiKpiTileElement extends UmbLitElement {
     }
 
     // Whether there is a change to show: the same rule the badge uses, so no empty badge takes up room.
-    #hasChange(): boolean {
-        return Number.isFinite(deltaChange(this.delta, this.current, this.previous, this.deltaUnit));
+    #hasChange(figures: { current?: number; previous?: number }): boolean {
+        return Number.isFinite(deltaChange(this.delta, figures.current, figures.previous, this.deltaUnit));
     }
 
     override render(): TemplateResult {
-        const hasValue = this.value !== undefined && this.value !== null && this.value !== "";
+        const shown = this.#shown;
+        const figures = this.#figures;
+        const hasValue = shown !== undefined;
         const mode = getLoadingMode(this.loading, hasValue || this.noData, this.error);
         const busy = isBusy(this.loading, this.error);
 
@@ -181,14 +221,14 @@ export class UauiKpiTileElement extends UmbLitElement {
                                         ><span class="visually-hidden">${this.localize.term(this.error ? "uauiAnalytics_errorHeadline" : "uauiAnalytics_kpiNoData")}</span></span
                                     >`
                                   : hasValue
-                                    ? html`<span class="value">${this.value}</span>`
+                                    ? html`<span class="value">${shown}</span>`
                                     : nothing}
-                              ${this.error || this.noData || !this.#hasChange()
+                              ${this.error || this.noData || !this.#hasChange(figures)
                                   ? nothing
                                   : html`<uaui-delta-badge
                                         .value=${this.delta}
-                                        .current=${this.current}
-                                        .previous=${this.previous}
+                                        .current=${figures.current}
+                                        .previous=${figures.previous}
                                         .unit=${this.deltaUnit}
                                         .lowerIsBetter=${this.lowerIsBetter}></uaui-delta-badge>`}
                           </span>

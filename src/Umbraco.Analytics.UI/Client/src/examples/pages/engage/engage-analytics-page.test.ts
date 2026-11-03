@@ -64,8 +64,8 @@ describe("Feature: Engage analytics page example", () => {
         });
 
         it("works the total's change out from the two periods", () => {
-            const total = table(page).querySelector("[slot='toolbar-pageviews']") as HTMLElement & { current?: number; previous?: number };
-            expect([typeof total.current, typeof total.previous]).toEqual(["number", "number"]);
+            const total = table(page).querySelector("[slot='toolbar-pageviews']") as HTMLElement & { value?: number | string; previous?: number };
+            expect([typeof total.value, typeof total.previous]).toEqual(["number", "number"]);
         });
 
         it("puts the search in the first column's toolbar", () => {

@@ -408,9 +408,9 @@ export class ExampleCommerceAnalyticsPageElement extends UmbLitElement {
         return html`<uaui-kpi-tile
             label=${metric.label}
             icon=${metric.icon}
-            .value=${value === undefined ? undefined : this.localize.number(value, metric.format)}
+            .value=${value}
+            .valueFormat=${metric.format}
             ?no-data=${totals !== undefined && (value === undefined || (!metric.rate && !totals.orders))}
-            .current=${value}
             .previous=${this.#previous(metric)}
             delta-unit=${metric.rate ? "points" : "percent"}
             ?loading=${this._loading}
@@ -434,8 +434,8 @@ export class ExampleCommerceAnalyticsPageElement extends UmbLitElement {
                       slot="header-actions"
                       layout="inline"
                       label="Overall"
-                      value=${this.localize.number(overall, PERCENT)}
-                      .current=${overall}
+                      .value=${overall}
+                      .valueFormat=${PERCENT}
                       .previous=${previous ? rateOf(previous.finalized, previous.totalCarts) : undefined}
                       delta-unit="points"></uaui-stat>`}
             <uaui-funnel
@@ -508,8 +508,8 @@ export class ExampleCommerceAnalyticsPageElement extends UmbLitElement {
                       slot="header-actions"
                       layout="inline"
                       label="Recovered"
-                      value=${this.localize.number(rate, PERCENT)}
-                      .current=${rate}
+                      .value=${rate}
+                      .valueFormat=${PERCENT}
                       .previous=${previous ? rateOf(previous.recoveredCarts, previous.notifiedCarts) : undefined}
                       delta-unit="points"></uaui-stat>`}
             <uaui-funnel
@@ -536,8 +536,8 @@ export class ExampleCommerceAnalyticsPageElement extends UmbLitElement {
                       slot="header-actions"
                       layout="inline"
                       label="Refund rate"
-                      value=${this.localize.number(current.refunds.refundRate, PERCENT)}
-                      .current=${current.refunds.refundRate}
+                      .value=${current.refunds.refundRate}
+                      .valueFormat=${PERCENT}
                       .previous=${previous?.totals.orders ? previous.refunds.refundRate : undefined}
                       delta-unit="points"
                       lower-is-better></uaui-stat>`}

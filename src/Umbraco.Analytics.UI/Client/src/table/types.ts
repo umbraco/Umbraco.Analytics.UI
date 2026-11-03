@@ -50,7 +50,10 @@ export type UauiTableColumn = {
     elementName?: string;
     /** Settings the cells read: `hrefKey`, `colorKey`, `textKey`, `totalKey`, `color`, `lowerIsBetter`, `deltaUnit`. See `UauiTableColumnMeta`. */
     meta?: UauiTableColumnMeta;
-    /** Formats the numbers of the number, percent, share, status and progress cells, e.g. `{ style: "currency", currency: "EUR" }`. */
+    /**
+     * How numbers are formatted, e.g. `{ style: "currency", currency: "EUR" }`. Used by the number, percent, share,
+     * status and progress cells. The product picks the currency or unit. Options `Intl` rejects (e.g. a bad currency code) fall back to the default number format.
+     */
     valueFormat?: Intl.NumberFormatOptions;
     /**
      * Formats the dates of the date cell, e.g. `{ day: "numeric", month: "short" }`. Defaults to `{ dateStyle: "medium" }`.

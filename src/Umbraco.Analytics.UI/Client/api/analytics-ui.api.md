@@ -337,7 +337,8 @@ export class UauiKpiTileElement extends UmbLitElement {
     // (undocumented)
     static styles: CSSResultGroup;
     target?: "_blank" | "_parent" | "_self" | "_top";
-    value?: string;
+    value?: number | string;
+    valueFormat?: Intl.NumberFormatOptions;
 }
 
 // @public
@@ -505,7 +506,8 @@ export class UauiStatElement extends UmbLitElement {
     render(): TemplateResult;
     // (undocumented)
     static styles: CSSResultGroup;
-    value?: string;
+    value?: number | string;
+    valueFormat?: Intl.NumberFormatOptions;
 }
 
 // @public

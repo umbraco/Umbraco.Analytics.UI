@@ -89,7 +89,10 @@ export class UauiFunnelElement extends UauiFunnelElementBase {
     @property({ type: String, attribute: "compare-label" })
     compareLabel?: string;
 
-    /** How the values are formatted, e.g. `{ maximumFractionDigits: 0 }`. Shares are always percents. */
+    /**
+     * How numbers are formatted, e.g. `{ style: "currency", currency: "EUR" }`. Formats the step values; shares are
+     * always percents. The product picks the currency or unit. Options `Intl` rejects (e.g. a bad currency code) fall back to the default number format.
+     */
     @property({ type: Object, attribute: "value-format" })
     valueFormat?: Intl.NumberFormatOptions;
 

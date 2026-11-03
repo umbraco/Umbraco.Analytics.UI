@@ -154,8 +154,7 @@ export class ExampleEngageAnalyticsPageElement extends UmbLitElement {
         return html`<uaui-stat
             slot=${`toolbar-${valueKey}`}
             .label=${label}
-            .value=${this.localize.number(total.current)}
-            .current=${total.current}
+            .value=${total.current}
             .previous=${total.previous}></uaui-stat>`;
     }
 

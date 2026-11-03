@@ -3,6 +3,8 @@ import { html } from "@umbraco-cms/backoffice/external/lit";
 import type { UauiStatElement } from "./stat.element.js";
 import "./stat.element.js";
 
+const PERCENT: Intl.NumberFormatOptions = { style: "percent", maximumFractionDigits: 1 };
+
 const meta: Meta<UauiStatElement> = {
     title: "Components/Stat",
     component: "uaui-stat",
@@ -17,9 +19,10 @@ const meta: Meta<UauiStatElement> = {
     },
     args: {
         label: "Total pageviews",
-        value: "272",
+        value: 272,
+        valueFormat: undefined,
         delta: undefined,
-        current: 272,
+        current: undefined,
         previous: 251,
         deltaUnit: "percent",
         lowerIsBetter: false,
@@ -33,6 +36,7 @@ const meta: Meta<UauiStatElement> = {
         html`<uaui-stat
             .label=${args.label}
             .value=${args.value}
+            .valueFormat=${args.valueFormat}
             .delta=${args.delta}
             .current=${args.current}
             .previous=${args.previous}
@@ -44,24 +48,58 @@ const meta: Meta<UauiStatElement> = {
 export default meta;
 type Story = StoryObj<UauiStatElement>;
 
-/** Give `current` and `previous` and the badge works out the change (here +8.4%). */
+/**
+ * A number `value` is formatted in the backoffice user's culture. `current` defaults to it, so `previous` alone gives
+ * the badge (here +8.4%).
+ */
 export const Default: Story = {};
+
+/** The product picks the currency, here euros. */
+export const CurrencyEur: Story = {
+    name: "Currency (EUR)",
+    args: { label: "Total revenue", value: 4837.4, valueFormat: { style: "currency", currency: "EUR" }, previous: 4075 },
+};
+
+/** The product picks the currency, here Danish kroner. */
+export const CurrencyDkk: Story = {
+    name: "Currency (DKK)",
+    args: { label: "Total revenue", value: 36125.5, valueFormat: { style: "currency", currency: "DKK" }, previous: 30410 },
+};
+
+/** `style: "percent"` takes a fraction: 0.038 is 3.8%. `previous` is a fraction too, and points come out right: +0.2 pp. */
+export const Percent: Story = {
+    args: { label: "Conversion rate", value: 0.038, valueFormat: PERCENT, previous: 0.036, deltaUnit: "points" },
+};
+
+/** A unit from `valueFormat`, here hours, written out in the user's language. */
+export const Unit: Story = {
+    args: { label: "Time saved", value: 12.5, valueFormat: { style: "unit", unit: "hour", unitDisplay: "long" }, previous: 11 },
+};
+
+/**
+ * A string `value` is shown exactly as given, for a figure the product formats itself. `valueFormat` is ignored, and
+ * the badge needs `current` as a number.
+ */
+export const StringValue: Story = {
+    name: "String value",
+    args: { label: "Total pageviews", value: "272 views", valueFormat: PERCENT, current: 272, previous: 251 },
+};
 
 /** Give `delta` when the product has already worked out the change. It wins over `current` and `previous`. */
 export const WithDelta: Story = {
     name: "With a delta",
-    args: { current: undefined, previous: undefined, delta: -3.2 },
+    args: { previous: undefined, delta: -3.2 },
 };
 
 /** Without a change to show there is no badge: no `previous`, or a `previous` of 0 for a percent change. */
 export const NoChange: Story = {
     name: "No badge",
-    args: { current: 272, previous: 0 },
+    args: { previous: 0 },
 };
 
-/** A rate compared in percentage points. Values are in percent units (62 means 62%). */
+/** A rate compared in percentage points. With a percent `valueFormat`, `value` and `previous` are fractions (0.62 is 62%). */
 export const Points: Story = {
-    args: { label: "Bounce rate", value: "62%", current: 62, previous: 66, deltaUnit: "points", lowerIsBetter: true },
+    args: { label: "Bounce rate", value: 0.62, valueFormat: PERCENT, previous: 0.66, deltaUnit: "points", lowerIsBetter: true },
 };
 
 /** In an end-aligned column the total ends on the right too. */
@@ -69,13 +107,13 @@ export const EndAligned: Story = {
     name: "End aligned",
     render: (args) =>
         html`<div style="text-align: end; width: 240px">
-            <uaui-stat .label=${args.label} .value=${args.value} .current=${args.current} .previous=${args.previous}></uaui-stat>
+            <uaui-stat .label=${args.label} .value=${args.value} .valueFormat=${args.valueFormat} .current=${args.current} .previous=${args.previous}></uaui-stat>
         </div>`,
 };
 
 /** On one line, in a `uui-box` header: the label muted, the value bold, then the badge. */
 export const Inline: Story = {
-    args: { label: "Overall", value: "3.8%", current: 3.8, previous: 3.6, deltaUnit: "points", layout: "inline" },
+    args: { label: "Overall", value: 0.038, valueFormat: PERCENT, previous: 0.036, deltaUnit: "points", layout: "inline" },
     render: (args) =>
         html`<uui-box headline="Conversion funnel" style="width: 360px">
             <uaui-stat
@@ -83,6 +121,7 @@ export const Inline: Story = {
                 layout="inline"
                 .label=${args.label}
                 .value=${args.value}
+                .valueFormat=${args.valueFormat}
                 .current=${args.current}
                 .previous=${args.previous}
                 .deltaUnit=${args.deltaUnit}
@@ -96,15 +135,15 @@ export const Dark: Story = {
     globals: { theme: "dark" },
     render: (args) =>
         html`<div style="display: grid; gap: 24px; justify-items: start">
-            <uaui-stat .label=${args.label} .value=${args.value} .current=${args.current} .previous=${args.previous}></uaui-stat>
+            <uaui-stat .label=${args.label} .value=${args.value} .valueFormat=${args.valueFormat} .current=${args.current} .previous=${args.previous}></uaui-stat>
             <uui-box headline="Cart conversion" style="width: 360px">
                 <uaui-stat
                     slot="header-actions"
                     layout="inline"
                     label="Overall"
-                    value="25.6%"
-                    .current=${25.6}
-                    .previous=${27.2}
+                    .value=${0.256}
+                    .valueFormat=${PERCENT}
+                    .previous=${0.272}
                     delta-unit="points"></uaui-stat>
             </uui-box>
         </div>`,

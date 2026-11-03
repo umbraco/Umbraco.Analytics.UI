@@ -32,6 +32,10 @@ import {
 // A product localizes labels, headlines and column names with this.localize.term(...). The examples keep English for readability.
 type Metric = "requests" | "inputTokens" | "outputTokens" | "totalTokens";
 
+const COMPACT: Intl.NumberFormatOptions = { notation: "compact", maximumFractionDigits: 1 };
+const PERCENT: Intl.NumberFormatOptions = { style: "percent", maximumFractionDigits: 1 };
+const SECONDS: Intl.NumberFormatOptions = { style: "unit", unit: "second", maximumFractionDigits: 2 };
+
 // Fixed dates keep the example's data, and its screenshots, the same on every day.
 const initialRange: UauiDateRange = { from: "2026-05-25", to: "2026-06-23" };
 const initialCompare = uauiCompareFor("previous-period", initialRange);
@@ -184,9 +188,9 @@ export class ExampleAiUsagePageElement extends UmbLitElement {
         return html`<uaui-kpi-tile
             label=${metricLabels[metric]}
             icon=${icon}
-            .value=${summary && this.#compact(pick(summary))}
+            .value=${summary && pick(summary)}
+            .valueFormat=${COMPACT}
             ?no-data=${summary !== undefined && !summary.requests}
-            .current=${summary && pick(summary)}
             .previous=${this._usage?.compareSummary && pick(this._usage.compareSummary)}
             ?loading=${this._usageLoading}
             ?error=${this._usageError}
@@ -194,10 +198,6 @@ export class ExampleAiUsagePageElement extends UmbLitElement {
             .deselectable=${false}
             .selected=${this._metric === metric}
             @selected=${() => this.#selectMetric(metric)}></uaui-kpi-tile>`;
-    }
-
-    #compact(value: number) {
-        return this.localize.number(value, { notation: "compact", maximumFractionDigits: 1 });
     }
 
     #successRate(t: UsageTotals) {
@@ -224,24 +224,20 @@ export class ExampleAiUsagePageElement extends UmbLitElement {
             <uaui-kpi-tile
                 label="Success rate"
                 icon="icon-check"
-                .value=${successRate === undefined
-                    ? undefined
-                    : this.localize.number(successRate, { style: "percent", maximumFractionDigits: 1 })}
+                .value=${successRate}
+                .valueFormat=${PERCENT}
                 ?no-data=${noData}
-                .current=${comparable ? this.#successRate(now) * 100 : undefined}
-                .previous=${comparable ? this.#successRate(before) * 100 : undefined}
+                .previous=${comparable ? this.#successRate(before) : undefined}
                 delta-unit="points"
                 ?loading=${this._usageLoading}
                 ?error=${this._usageError}></uaui-kpi-tile>
             <uaui-kpi-tile
                 label="Avg duration"
                 icon="icon-time"
-                .value=${duration === undefined
-                    ? undefined
-                    : this.localize.number(duration / 1000, { style: "unit", unit: "second", maximumFractionDigits: 2 })}
+                .value=${duration === undefined ? undefined : duration / 1000}
+                .valueFormat=${SECONDS}
                 ?no-data=${noData}
-                .current=${comparable ? this.#avgDuration(now) : undefined}
-                .previous=${comparable ? this.#avgDuration(before) : undefined}
+                .previous=${comparable ? this.#avgDuration(before) / 1000 : undefined}
                 lower-is-better
                 ?loading=${this._usageLoading}
                 ?error=${this._usageError}></uaui-kpi-tile>

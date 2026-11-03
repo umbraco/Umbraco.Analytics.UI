@@ -243,7 +243,7 @@ describe("Feature: the Workflow dashboard page", () => {
             ]);
             expect(tiles(page).every((t) => t.openable && !t.selectable)).toBe(true);
             const activity = await getActivity({ days: 30 });
-            expect(tile(page, "Pending").value).toBe(String(activity.totals.pending));
+            expect(tile(page, "Pending").value).toBe(activity.totals.pending);
         });
 
         it("draws approved, rejected and cancelled as status-coloured bars and pending as a line, with today and a log axis", () => {
@@ -280,7 +280,7 @@ describe("Feature: the Workflow dashboard page", () => {
 
         it("shows the fastest, average and slowest approval of the period", async () => {
             expect(stats(page).map((s) => s.label)).toEqual(["Fastest approval", "Average approval", "Slowest approval"]);
-            expect(stats(page).every((s) => !!s.value && /\d/.test(s.value))).toBe(true);
+            expect(stats(page).every((s) => /\d/.test(s.shadowRoot?.querySelector(".value")?.textContent ?? ""))).toBe(true);
             const { items } = await getInstances({ days: 30 });
             expect(workflowApprovalTimes(items).count).toBeGreaterThan(0);
         });
@@ -336,7 +336,7 @@ describe("Feature: the Workflow dashboard page", () => {
             (shadow(tile(page, "Pending")).querySelector("button") as HTMLElement).click();
             await expect.poll(() => filter(page).value).toBe("pending");
             await expect.poll(() => !table(page).loading && table(page).rows.every((r) => r.status === "pending")).toBe(true);
-            expect(String(table(page).rows.length)).toBe(tile(page, "Pending").value);
+            expect(table(page).rows.length).toBe(tile(page, "Pending").value);
         });
 
         it("shows every status again when the filter is set back to all", async () => {

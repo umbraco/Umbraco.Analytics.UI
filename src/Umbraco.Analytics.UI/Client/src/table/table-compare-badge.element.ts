@@ -2,6 +2,7 @@ import { customElement, html, nothing, property, state, type TemplateResult } fr
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import "../delta-badge/delta-badge.element.js";
 import type { UauiDeltaBadgeSize, UauiDeltaUnit } from "../delta-badge/delta-badge.element.js";
+import { deltaScale } from "../internal/delta/delta-scale.js";
 import { asNumber } from "./internal/cell-values.js";
 import { UAUI_TABLE_CONTEXT } from "./table-context.js";
 import type { UauiTableColumn, UauiTableCompareLookup } from "./types.js";
@@ -60,7 +61,7 @@ export class UauiTableCompareBadgeElement extends UmbLitElement {
         const unit: UauiDeltaUnit = this.column.meta?.deltaUnit === "points" ? "points" : "percent";
         // Points are the difference of two percentages: fractions shown as percent (0.05 is 5%) are scaled to them first.
         // A percent change is a ratio, so it needs no scaling.
-        const scale = unit === "points" && this.column.valueFormat?.style === "percent" ? 100 : 1;
+        const scale = deltaScale(unit, this.column.valueFormat);
         return html`<uaui-delta-badge
             .size=${this.size}
             .current=${value * scale}

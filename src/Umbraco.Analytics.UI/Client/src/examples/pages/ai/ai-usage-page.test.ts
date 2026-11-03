@@ -186,7 +186,7 @@ describe("Feature: Umbraco AI usage page", () => {
 
     describe("Scenario: changing the date range", () => {
         let page: UauiTestElement;
-        let requestsBefore: string | undefined;
+        let requestsBefore: number | string | undefined;
         beforeEach(async () => {
             page = await renderPage();
             requestsBefore = tile(page, "Requests").value;
