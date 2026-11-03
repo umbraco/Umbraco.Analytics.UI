@@ -3,7 +3,8 @@ import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 
 /**
  * The button inside a sortable column header: the label (slotted) and a `uui-symbol-sort`, as in `umb-table`.
- * It only draws and takes focus. The header cell around it carries `aria-sort` and handles the click, which
+ * The symbol follows the label, except with `align="end"`, where it comes first so the label's edge lines up with the
+ * column's values (the symbol takes its width even when it isn't drawn). It only draws and takes focus. The header cell around it carries `aria-sort` and handles the click, which
  * bubbles out of the native button. Internal: not exported.
  *
  * @element uaui-table-sort-button
@@ -19,7 +20,7 @@ export class UauiTableSortButtonElement extends UmbLitElement {
     @property({ type: Boolean })
     descending = false;
 
-    /** Which side the label sits on. */
+    /** Which side the label sits on. With `end` the symbol goes before the label, so the label ends flush with the column. */
     @property({ type: String, reflect: true })
     align: "start" | "end" = "start";
 
@@ -68,6 +69,14 @@ export class UauiTableSortButtonElement extends UmbLitElement {
 
         :host([align="end"]) button {
             justify-content: flex-end;
+        }
+
+        /*
+         * The symbol always takes its width, drawn or not. After the label of an end-aligned column it would push the
+         * label left of the column's values, so it goes before the label: the label ends where the values end.
+         */
+        :host([align="end"]) uui-symbol-sort {
+            order: -1;
         }
 
         button:focus-visible {
