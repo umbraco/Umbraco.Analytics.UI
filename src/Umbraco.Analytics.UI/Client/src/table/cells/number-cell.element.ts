@@ -3,7 +3,7 @@ import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { asNumber } from "../internal/cell-values.js";
 import { getNumberFormat } from "../../internal/format/number-format.js";
 import "../table-compare-badge.element.js";
-import "../internal/table-skeleton-cell.element.js";
+import "../table-skeleton-cell.element.js";
 import type { UauiTableCellElement, UauiTableColumn } from "../types.js";
 
 /**

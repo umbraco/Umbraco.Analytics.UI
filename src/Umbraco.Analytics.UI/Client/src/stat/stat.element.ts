@@ -1,8 +1,10 @@
 import { css, customElement, html, nothing, property, type CSSResultGroup, type TemplateResult } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { deltaChange } from "../internal/delta/delta-change.js";
+import { badgeFigures, UauiFigureFormatter, type UauiFigureText } from "../internal/format/figure.js";
 import type { UauiDeltaUnit } from "../delta-badge/delta-badge.element.js";
 import "../delta-badge/delta-badge.element.js";
+import "../internal/figure/figure-value.element.js";
 
 /** How a `uaui-stat` lays out its label, value and badge. */
 export type UauiStatLayout = "stacked" | "inline";
@@ -18,9 +20,14 @@ export type UauiStatLayout = "stacked" | "inline";
  * `layout="inline"` puts the label, value and badge on one line, lined up on their baseline, for a `uui-box`
  * `header-actions` slot ("Overall 3.8% +0.2 pp"). The label is muted and not in capitals there.
  *
- * The value is a string, shown exactly as given: the product formats it. For the badge, set `delta` (18.7 means
- * +18.7%), or give the two numbers, `current` and `previous`, and the badge works out the change, as `uaui-kpi-tile`
- * does. `delta` wins when both are set. With neither, or with nothing to compare with, there is no badge.
+ * Give `value` as a number and the stat formats it in the backoffice user's culture, with `valueFormat` for the style
+ * (e.g. `{ style: "currency", currency: "EUR" }`). The product picks the currency or unit: the stat never guesses one.
+ * A string `value` (and the `value` attribute, which is always a string) is shown exactly as given, for a figure the
+ * product has formatted itself.
+ *
+ * For the badge, set `delta` (18.7 means +18.7%), or give the two numbers, `current` and `previous`, and the badge
+ * works out the change, as `uaui-kpi-tile` does. `current` defaults to a number `value`, so then `previous` is enough, on the
+ * value's scale (fractions for points with a percent `valueFormat`). `delta` wins when both are set. With neither, or with nothing to compare with, there is no badge.
  *
  * @element uaui-stat
  */
@@ -30,9 +37,23 @@ export class UauiStatElement extends UmbLitElement {
     @property({ type: String })
     label = "";
 
-    /** The figure, already formatted by the product (e.g. "272"). It is shown exactly as given. */
-    @property({ type: String })
-    value?: string;
+    /**
+     * The figure. A number is formatted in the backoffice user's culture with `valueFormat`. A string (and the
+     * attribute) is shown exactly as given, e.g. "1,272" formatted by the product. 0 is a value; an empty string or a
+     * number that isn't finite (NaN, Infinity) is no value, as unset is.
+     */
+    @property()
+    value?: number | string;
+
+    /**
+     * How numbers are formatted, e.g. `{ style: "currency", currency: "EUR" }`. Formats a number `value`; a string
+     * `value` is shown as given. The product picks the currency or unit. A number of 1,000,000 or more (negative too)
+     * is shown compact ("€1.23M") unless this sets `notation`; `notation: "standard"` keeps the exact amount. The exact
+     * amount is the hover title and what screen readers read. Options `Intl` rejects (e.g. a bad currency
+     * code) fall back to the default number format.
+     */
+    @property({ type: Object, attribute: "value-format" })
+    valueFormat?: Intl.NumberFormatOptions;
 
     /**
      * The change against the comparison period. 18.7 means +18.7%. 0 is "no change" (a neutral badge).
@@ -43,12 +64,19 @@ export class UauiStatElement extends UmbLitElement {
 
     /**
      * The figure in the current period, as a number. With `previous`, the badge works out the change. Ignored when
-     * `delta` is set. The shown value is still `value`.
+     * `delta` is set. The shown value is still `value`. For points, give both in percent units (62 means 62%).
+     *
+     * Defaults to `value` when that is a number, and `previous` is then on the value's scale: with points and a
+     * `valueFormat` of `style: "percent"`, both are fractions (0.256 against 0.24 is +1.6 pp), as a table column's are.
      */
     @property({ type: Number })
     current?: number;
 
-    /** The same figure in the comparison period. With `current`, the badge works out the change. Ignored when `delta` is set. */
+    /**
+     * The same figure in the comparison period. With `current` (or a number `value`), the badge works out the change.
+     * Ignored when `delta` is set. On the same scale as `current`, or as `value` when `current` is unset: with points
+     * and a `valueFormat` of `style: "percent"`, a fraction then (0.24 is 24%).
+     */
     @property({ type: Number })
     previous?: number;
 
@@ -64,21 +92,34 @@ export class UauiStatElement extends UmbLitElement {
     @property({ type: String, reflect: true })
     layout: UauiStatLayout = "stacked";
 
+    #formatter = new UauiFigureFormatter();
+
+    // The text to show (and the exact amount behind a compact one), or undefined for no value. The formatter is built on first use and kept per language and options.
+    get #shown(): UauiFigureText | undefined {
+        return this.#formatter.figure(this.value, this.localize.lang(), this.valueFormat);
+    }
+
+    // The badge's two numbers: `current` and `previous`, or a number `value` and `previous` on its scale.
+    get #figures(): { current?: number; previous?: number } {
+        return badgeFigures(this.value, this.current, this.previous, this.deltaUnit, this.valueFormat);
+    }
+
     // Whether there is a change to show: the same rule the badge uses, so no empty badge takes up room.
-    #hasChange(): boolean {
-        return Number.isFinite(deltaChange(this.delta, this.current, this.previous, this.deltaUnit));
+    #hasChange(figures: { current?: number; previous?: number }): boolean {
+        return Number.isFinite(deltaChange(this.delta, figures.current, figures.previous, this.deltaUnit));
     }
 
     override render(): TemplateResult {
-        const hasValue = this.value !== undefined && this.value !== null && this.value !== "";
+        const shown = this.#shown;
+        const figures = this.#figures;
         return html`<span class="label">${this.label}</span>
             <span class="row"
-                >${hasValue ? html`<span class="value">${this.value}</span>` : nothing}${this.#hasChange()
+                >${shown !== undefined ? html`<span class="value"><uaui-figure-value .figure=${shown}></uaui-figure-value></span>` : nothing}${this.#hasChange(figures)
                     ? html`<uaui-delta-badge
                           size="sm"
                           .value=${this.delta}
-                          .current=${this.current}
-                          .previous=${this.previous}
+                          .current=${figures.current}
+                          .previous=${figures.previous}
                           .unit=${this.deltaUnit}
                           .lowerIsBetter=${this.lowerIsBetter}></uaui-delta-badge>`
                     : nothing}</span

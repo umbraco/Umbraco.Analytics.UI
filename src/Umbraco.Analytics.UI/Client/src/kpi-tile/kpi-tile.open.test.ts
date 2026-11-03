@@ -9,7 +9,7 @@ import lightCss from "@umbraco-ui/uui/themes/light.css?inline";
 import highContrastCss from "@umbraco-ui/uui/themes/high-contrast.css?inline";
 import { axeRun } from "../internal/test/a11y.js";
 import "./kpi-tile.element.js";
-import { recordEvents, renderElement, shadow, type UauiTestElement } from "../internal/test/dom.js";
+import { deepText, recordEvents, renderElement, shadow, type UauiTestElement } from "../internal/test/dom.js";
 
 const tile = (template: TemplateResult) => renderElement(template, "uaui-kpi-tile");
 const link = (el: Element) => shadow(el).querySelector("a");
@@ -36,7 +36,7 @@ describe("Feature: KPI tiles that drill down", () => {
 
         it("names the link by its label and value", async () => {
             const el = await tile(html`<uaui-kpi-tile label="Approved" value="128" href="#a"></uaui-kpi-tile>`);
-            expect(link(el)?.textContent?.replace(/\s+/g, " ").trim()).toBe("Approved 128");
+            expect(deepText(link(el)!).replace(/\s+/g, " ").trim()).toBe("Approved 128");
         });
 
         it("passes target on and adds noopener noreferrer for _blank, as uui-card", async () => {

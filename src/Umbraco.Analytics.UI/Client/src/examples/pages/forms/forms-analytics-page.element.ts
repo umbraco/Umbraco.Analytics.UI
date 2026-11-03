@@ -521,9 +521,9 @@ export class ExampleFormsAnalyticsPageElement extends UmbLitElement {
         return html`<uaui-kpi-tile
             label=${metric.label}
             icon=${metric.icon}
-            .value=${value === undefined ? undefined : this.localize.number(value, metric.format)}
+            .value=${value}
+            .valueFormat=${metric.format}
             ?no-data=${summary !== undefined && (value === undefined || this.#noEntries(summary))}
-            .current=${value}
             .previous=${previous}
             delta-unit=${metric.rate ? "points" : "percent"}
             ?lower-is-better=${metric.rate}
@@ -604,8 +604,8 @@ export class ExampleFormsAnalyticsPageElement extends UmbLitElement {
                       slot="header-actions"
                       layout="inline"
                       label="Submitted"
-                      value=${this.localize.number(completion, PERCENT)}
-                      .current=${completion}
+                      .value=${completion}
+                      .valueFormat=${PERCENT}
                       .previous=${compareSteps.length ? rateOf(compareSteps[compareSteps.length - 1].value, compareSteps[0].value) : undefined}
                       delta-unit="points"></uaui-stat>`}
             <uaui-funnel
@@ -774,7 +774,7 @@ export class ExampleFormsAnalyticsPageElement extends UmbLitElement {
             }
             .kpis {
                 display: grid;
-                grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+                grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
                 gap: var(--uui-size-space-5);
             }
             /* One column on a narrow page, exactly two (never more) once two 480px boxes fit. The two boxes of a pair share a height. */

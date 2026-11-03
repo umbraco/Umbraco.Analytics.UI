@@ -189,7 +189,7 @@ describe("Feature: the Commerce analytics page", () => {
         it("puts the recovery rate in the header, in points, equal to the tile's rate", () => {
             const total = headerTotal(page, "Abandoned carts")!;
             expect(total.deltaUnit).toBe("points");
-            expect(total.current).toBeCloseTo(tile(page, "Abandoned cart recovery").current!);
+            expect(total.value as number).toBeCloseTo(tile(page, "Abandoned cart recovery").value as number);
             expect(total.previous).toBeCloseTo(tile(page, "Abandoned cart recovery").previous!);
         });
 
@@ -237,12 +237,12 @@ describe("Feature: the Commerce analytics page", () => {
         });
 
         it("shows the same cart conversion on its tile as the funnel's Overall", () => {
-            expect(tile(page, "Cart conversion").current).toBeCloseTo(headerTotal(page, "Cart conversion")!.current!);
+            expect(tile(page, "Cart conversion").value as number).toBeCloseTo(headerTotal(page, "Cart conversion")!.value as number);
         });
 
         it("works out abandoned cart recovery as recovered carts over notified carts", async () => {
             const { totals } = await loadSnapshot(FIRST_RANGE);
-            expect(tile(page, "Abandoned cart recovery").current).toBeCloseTo((totals.recoveredCarts / totals.notifiedCarts) * 100);
+            expect(tile(page, "Abandoned cart recovery").value as number).toBeCloseTo((totals.recoveredCarts / totals.notifiedCarts) * 100);
         });
     });
 
@@ -306,7 +306,7 @@ describe("Feature: the Commerce analytics page", () => {
             const total = headerTotal(page, "Cart conversion")!;
             const [carts, , orders] = funnel(page).steps.map((s) => s.value);
             expect(total.label).toBe("Overall");
-            expect(total.current).toBeCloseTo((orders / carts) * 100);
+            expect(total.value as number).toBeCloseTo((orders / carts) * 100);
             expect(total.deltaUnit).toBe("points");
             expect(Number.isFinite(total.previous)).toBe(true);
         });
@@ -332,7 +332,7 @@ describe("Feature: the Commerce analytics page", () => {
 
         it("keeps the overall conversion, with nothing to compare it with", () => {
             const total = headerTotal(page, "Cart conversion")!;
-            expect(Number.isFinite(total.current)).toBe(true);
+            expect(Number.isFinite(total.value as number)).toBe(true);
             expect(total.previous).toBeUndefined();
         });
     });
@@ -377,7 +377,7 @@ describe("Feature: the Commerce analytics page", () => {
             expect(total.label).toBe("Refund rate");
             expect(total.deltaUnit).toBe("points");
             expect(total.lowerIsBetter).toBe(true);
-            expect(Number.isFinite(total.current)).toBe(true);
+            expect(Number.isFinite(total.value as number)).toBe(true);
             expect(Number.isFinite(total.previous)).toBe(true);
         });
 
@@ -621,7 +621,7 @@ describe("Feature: the Commerce analytics page", () => {
         it("shows the second range's summary", async () => {
             const { totals } = await loadSnapshot(late);
             expect(tile(page, "Revenue").loading).toBe(false);
-            expect(tile(page, "Revenue").current).toBe(totals.revenue);
+            expect(tile(page, "Revenue").value as number).toBe(totals.revenue);
         });
 
         it("shows the second range's stock forecast", async () => {
@@ -859,7 +859,7 @@ describe("Feature: the Commerce analytics page", () => {
             pageProps(page).failing = false;
             deepQuery<HTMLElement>(shadow(funnel(page)), "uaui-error-state")!.dispatchEvent(new Event("retry", { bubbles: true }));
             await expect.poll(() => !funnel(page).loading && !funnel(page).error && funnel(page).steps.length === 3).toBe(true);
-            expect(tiles(page).every((t) => !t.error && Number.isFinite(t.current))).toBe(true);
+            expect(tiles(page).every((t) => !t.error && Number.isFinite(t.value as number))).toBe(true);
         });
 
         it("loads the stock forecast once the API answers again and its Retry is pressed", async () => {
