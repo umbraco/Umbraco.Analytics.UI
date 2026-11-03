@@ -5,14 +5,17 @@ import { html } from "@umbraco-cms/backoffice/external/lit";
 import darkCss from "@umbraco-ui/uui/themes/dark.css?inline";
 import { render } from "vitest-browser-lit";
 import { axeRun } from "../internal/test/a11y.js";
-import { renderElement, settle, shadow } from "../internal/test/dom.js";
+import { deepText, renderElement, settle, shadow } from "../internal/test/dom.js";
 import type { UauiDeltaBadgeElement } from "../delta-badge/delta-badge.element.js";
 import type { UauiStatElement } from "./stat.element.js";
 import "./stat.element.js";
 
 const EUR: Intl.NumberFormatOptions = { style: "currency", currency: "EUR" };
 // Intl puts no-break spaces in some cultures' currency formats.
-const value = (el: Element) => shadow(el).querySelector(".value")?.textContent?.replace(/\s/g, " ");
+const value = (el: Element) => {
+    const node = shadow(el).querySelector(".value");
+    return node ? deepText(node).replace(/\s/g, " ") : undefined;
+};
 const badge = (el: Element) => shadow(el).querySelector("uaui-delta-badge") as UauiDeltaBadgeElement | null;
 
 describe("Feature: a stat formats its own number", () => {

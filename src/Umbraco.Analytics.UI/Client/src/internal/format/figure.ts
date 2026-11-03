@@ -10,28 +10,67 @@ export function numericValue(value: UauiFigureValue): number | undefined {
     return typeof value === "number" && Number.isFinite(value) ? value : undefined;
 }
 
+/** The size from which a number `value` is shown compact, unless the product sets `notation`. */
+const COMPACT_FROM = 1_000_000;
+
+/** How many significant digits a compact figure shows: "1.23M", "12.3M", "123M". */
+const COMPACT_DIGITS = 3;
+
+/** What a tile or stat shows for a `value`: the `text`, and the `exact` amount when `text` is a compact form of it. */
+export interface UauiFigureText {
+    text: string;
+    exact?: string;
+}
+
+// Options that choose the number of digits. A compact figure sets its own, so a product's `maximumFractionDigits: 2`
+// (meant for "4,837.40") doesn't change how many digits "1.23M" has, and Intl isn't handed fraction and significant
+// digits that disagree (or a rounding increment, which it rejects with significant digits).
+const DIGIT_OPTIONS = ["minimumFractionDigits", "maximumFractionDigits", "minimumSignificantDigits", "maximumSignificantDigits", "roundingPriority", "roundingIncrement"] as const;
+
+function compactOptions(valueFormat: Intl.NumberFormatOptions | undefined): Intl.NumberFormatOptions {
+    const options: Record<string, unknown> = { ...valueFormat };
+    for (const key of DIGIT_OPTIONS) delete options[key];
+    return { ...options, notation: "compact", maximumSignificantDigits: COMPACT_DIGITS };
+}
+
 /**
  * Formats the `value` of a tile or stat. Built lazily and kept per language and options object, so a render with
  * nothing changed reuses the formatter without building the cache key. Internal: not exported from the package.
  */
 export class UauiFigureFormatter {
-    #cached?: { lang: string; valueFormat?: Intl.NumberFormatOptions; format: Intl.NumberFormat };
+    #cached?: { lang: string; valueFormat?: Intl.NumberFormatOptions; format: Intl.NumberFormat; compact: Intl.NumberFormat };
 
     /**
-     * The text to show for `value`: a string exactly as given, a finite number formatted in `lang` with `valueFormat`.
+     * What to show for `value`: a string exactly as given, a finite number formatted in `lang` with `valueFormat`.
      * An empty string, a number that isn't finite (NaN, Infinity), `undefined` or `null` is no value (`undefined`).
+     *
+     * A number of 1,000,000 or more (by size: -1,200,000 too) is shown compact ("€1.23M") when `valueFormat` doesn't
+     * set `notation`; `exact` is then the full amount, formatted with `valueFormat`. `notation: "standard"` keeps the
+     * exact amount, and any other `notation` is the product's choice. The compact form uses up to 3 significant digits
+     * and ignores the product's digit options. The size is the number itself, not its rounded text, so 999,999.6 stays exact.
      */
-    text(value: UauiFigureValue, lang: string, valueFormat: Intl.NumberFormatOptions | undefined): string | undefined {
-        if (typeof value === "string") return value === "" ? undefined : value;
+    figure(value: UauiFigureValue, lang: string, valueFormat: Intl.NumberFormatOptions | undefined): UauiFigureText | undefined {
+        if (typeof value === "string") return value === "" ? undefined : { text: value };
         const number = numericValue(value);
-        return number === undefined ? undefined : this.#format(lang, valueFormat).format(number);
+        if (number === undefined) return undefined;
+        const { format, compact } = this.#formats(lang, valueFormat);
+        const exact = format.format(number);
+        if (valueFormat?.notation !== undefined || Math.abs(number) < COMPACT_FROM) return { text: exact };
+        const text = compact.format(number);
+        // Equal after an Intl fallback (a bad currency): nothing to add.
+        return text === exact ? { text } : { text, exact };
     }
 
-    #format(lang: string, valueFormat: Intl.NumberFormatOptions | undefined): Intl.NumberFormat {
+    #formats(lang: string, valueFormat: Intl.NumberFormatOptions | undefined) {
         if (!this.#cached || this.#cached.lang !== lang || this.#cached.valueFormat !== valueFormat) {
-            this.#cached = { lang, valueFormat, format: getNumberFormat(lang, valueFormat) };
+            this.#cached = {
+                lang,
+                valueFormat,
+                format: getNumberFormat(lang, valueFormat),
+                compact: getNumberFormat(lang, compactOptions(valueFormat)),
+            };
         }
-        return this.#cached.format;
+        return this.#cached;
     }
 }
 

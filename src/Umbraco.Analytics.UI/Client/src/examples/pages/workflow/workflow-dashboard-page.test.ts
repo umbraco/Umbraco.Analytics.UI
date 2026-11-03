@@ -5,7 +5,7 @@ import darkCss from "@umbraco-ui/uui/themes/dark.css?inline";
 import highContrastCss from "@umbraco-ui/uui/themes/high-contrast.css?inline";
 import { axeRun } from "../../../internal/test/a11y.js";
 import { renderPageExample, withTheme } from "../../../internal/test/page-example.js";
-import { settle, shadow, type UauiTestElement } from "../../../internal/test/dom.js";
+import { deepText, settle, shadow, type UauiTestElement } from "../../../internal/test/dom.js";
 import "./workflow-dashboard-page.element.js";
 import { getActivity, getInstances, getReviews, WORKFLOW_STATUS, type WorkflowInstance, type WorkflowStatusCode } from "./workflow-fake-data.js";
 import { workflowApprovalTimes, workflowChartToday, workflowHistoryRows, workflowIsEmpty, workflowSeries, workflowStatus, workflowStatusCodes } from "./workflow-dashboard-adapter.js";
@@ -280,7 +280,7 @@ describe("Feature: the Workflow dashboard page", () => {
 
         it("shows the fastest, average and slowest approval of the period", async () => {
             expect(stats(page).map((s) => s.label)).toEqual(["Fastest approval", "Average approval", "Slowest approval"]);
-            expect(stats(page).every((s) => /\d/.test(s.shadowRoot?.querySelector(".value")?.textContent ?? ""))).toBe(true);
+            expect(stats(page).every((s) => /\d/.test(deepText(s.shadowRoot!.querySelector(".value")!)))).toBe(true);
             const { items } = await getInstances({ days: 30 });
             expect(workflowApprovalTimes(items).count).toBeGreaterThan(0);
         });

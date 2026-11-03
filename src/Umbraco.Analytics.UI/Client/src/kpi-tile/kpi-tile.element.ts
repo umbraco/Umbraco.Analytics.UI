@@ -5,10 +5,11 @@ import { UauiVisuallyHiddenStyles } from "../internal/a11y/visually-hidden.css.j
 import { UauiPaletteStyles } from "../theme/index.js";
 import { deltaChange } from "../internal/delta/delta-change.js";
 import { safeHref } from "../table/internal/safe-href.js";
-import { badgeFigures, UauiFigureFormatter } from "../internal/format/figure.js";
+import { badgeFigures, UauiFigureFormatter, type UauiFigureText } from "../internal/format/figure.js";
 import type { UauiStatusColor } from "../theme/types.js";
 import type { UauiDeltaUnit } from "../delta-badge/delta-badge.element.js";
 import "../delta-badge/delta-badge.element.js";
+import "../internal/figure/figure-value.element.js";
 
 /**
  * A headline number as a card: an icon in a pink square, a label, the value and an optional change badge.
@@ -21,8 +22,9 @@ import "../delta-badge/delta-badge.element.js";
  * The tile takes its width from its parent: a grid cell, or a flex item with `flex: 1`. In a shrink-to-fit parent (a plain
  * flex item, a float, an inline-block) it is 180px wide. Put tiles in a CSS grid row and they stay the same height, e.g.
  * `repeat(auto-fit, minmax(240px, 1fr))`. Below 240px wide the icon stacks above the label and value, and the
- * value steps down from 24px to 18px, so a number never runs out of the tile. Very large amounts still need room: format them
- * with `valueFormat: { notation: "compact" }` ("€1.2M") rather than relying on the step-down. The badge drops below the value when the tile is too narrow for both. While `loading` with no `value` it shows a skeleton the size of a loaded tile. While
+ * value steps down from 24px to 18px, so a number never runs out of the tile. A number `value` of 1,000,000 or more is
+ * shown compact ("€1.23M", "1,23 mio." in Danish) so it fits, with the exact amount on hover and for screen readers;
+ * `valueFormat: { notation: "standard" }` keeps the exact amount, and the step-down is only a backup. The badge drops below the value when the tile is too narrow for both. While `loading` with no `value` it shows a skeleton the size of a loaded tile. While
  * loading with a `value` it keeps the value and marks the tile busy, without a loading bar.
  *
  * Set `error` when the load failed: the tile keeps its label and shows a dash with the hidden text "Something went
@@ -62,7 +64,9 @@ export class UauiKpiTileElement extends UmbLitElement {
 
     /**
      * How numbers are formatted, e.g. `{ style: "currency", currency: "EUR" }`. Formats a number `value`; a string
-     * `value` is shown as given. The product picks the currency or unit. Options `Intl` rejects (e.g. a bad currency
+     * `value` is shown as given. The product picks the currency or unit. A number of 1,000,000 or more (negative too)
+     * is shown compact ("€1.23M") unless this sets `notation`; `notation: "standard"` keeps the exact amount. The exact
+     * amount is the hover title and what screen readers read. Options `Intl` rejects (e.g. a bad currency
      * code) fall back to the default number format.
      */
     @property({ type: Object, attribute: "value-format" })
@@ -172,9 +176,9 @@ export class UauiKpiTileElement extends UmbLitElement {
 
     #formatter = new UauiFigureFormatter();
 
-    // The text to show, or undefined for no value. The formatter is built on first use and kept per language and options.
-    get #shown(): string | undefined {
-        return this.#formatter.text(this.value, this.localize.lang(), this.valueFormat);
+    // The text to show (and the exact amount behind a compact one), or undefined for no value. The formatter is built on first use and kept per language and options.
+    get #shown(): UauiFigureText | undefined {
+        return this.#formatter.figure(this.value, this.localize.lang(), this.valueFormat);
     }
 
     // The badge's two numbers: `current` and `previous`, or a number `value` and `previous` on its scale.
@@ -224,7 +228,7 @@ export class UauiKpiTileElement extends UmbLitElement {
                                         ><span class="visually-hidden">${this.localize.term(this.error ? "uauiAnalytics_errorHeadline" : "uauiAnalytics_kpiNoData")}</span></span
                                     >`
                                   : hasValue
-                                    ? html`<span class="value">${shown}</span>`
+                                    ? html`<span class="value"><uaui-figure-value .figure=${shown}></uaui-figure-value></span>`
                                     : nothing}
                               ${this.error || this.noData || !this.#hasChange(figures)
                                   ? nothing

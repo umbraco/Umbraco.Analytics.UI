@@ -9,7 +9,7 @@ import { axeRun } from "../internal/test/a11y.js";
 import "./kpi-tile.element.js";
 import type { UauiDeltaBadgeElement } from "../delta-badge/delta-badge.element.js";
 import type { UauiKpiTileElement } from "./kpi-tile.element.js";
-import { recordEvents, renderElement, shadow, type UauiTestElement } from "../internal/test/dom.js";
+import { deepText, recordEvents, renderElement, shadow, type UauiTestElement } from "../internal/test/dom.js";
 
 describe("Feature: KPI tile shows a headline number", () => {
     describe("Scenario: label, value and icon", () => {
@@ -26,7 +26,7 @@ describe("Feature: KPI tile shows a headline number", () => {
         });
 
         it("shows the value exactly as given", () => {
-            expect(shadow(el).textContent).toContain("€ 4,837.40");
+            expect(deepText(shadow(el))).toContain("€ 4,837.40");
         });
 
         it("shows the icon", () => {
@@ -212,7 +212,7 @@ describe("Feature: KPI tile shows a headline number", () => {
                 "uaui-kpi-tile",
             );
             expect(shadow(el).querySelector("uaui-skeleton")).toBe(null);
-            expect(shadow(el).textContent).toContain("€ 1");
+            expect(deepText(shadow(el))).toContain("€ 1");
         });
 
         it("marks its content busy while loading", async () => {

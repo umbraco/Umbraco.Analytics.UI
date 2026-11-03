@@ -1,9 +1,10 @@
 import { css, customElement, html, nothing, property, type CSSResultGroup, type TemplateResult } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { deltaChange } from "../internal/delta/delta-change.js";
-import { badgeFigures, UauiFigureFormatter } from "../internal/format/figure.js";
+import { badgeFigures, UauiFigureFormatter, type UauiFigureText } from "../internal/format/figure.js";
 import type { UauiDeltaUnit } from "../delta-badge/delta-badge.element.js";
 import "../delta-badge/delta-badge.element.js";
+import "../internal/figure/figure-value.element.js";
 
 /** How a `uaui-stat` lays out its label, value and badge. */
 export type UauiStatLayout = "stacked" | "inline";
@@ -46,7 +47,9 @@ export class UauiStatElement extends UmbLitElement {
 
     /**
      * How numbers are formatted, e.g. `{ style: "currency", currency: "EUR" }`. Formats a number `value`; a string
-     * `value` is shown as given. The product picks the currency or unit. Options `Intl` rejects (e.g. a bad currency
+     * `value` is shown as given. The product picks the currency or unit. A number of 1,000,000 or more (negative too)
+     * is shown compact ("€1.23M") unless this sets `notation`; `notation: "standard"` keeps the exact amount. The exact
+     * amount is the hover title and what screen readers read. Options `Intl` rejects (e.g. a bad currency
      * code) fall back to the default number format.
      */
     @property({ type: Object, attribute: "value-format" })
@@ -91,9 +94,9 @@ export class UauiStatElement extends UmbLitElement {
 
     #formatter = new UauiFigureFormatter();
 
-    // The text to show, or undefined for no value. The formatter is built on first use and kept per language and options.
-    get #shown(): string | undefined {
-        return this.#formatter.text(this.value, this.localize.lang(), this.valueFormat);
+    // The text to show (and the exact amount behind a compact one), or undefined for no value. The formatter is built on first use and kept per language and options.
+    get #shown(): UauiFigureText | undefined {
+        return this.#formatter.figure(this.value, this.localize.lang(), this.valueFormat);
     }
 
     // The badge's two numbers: `current` and `previous`, or a number `value` and `previous` on its scale.
@@ -111,7 +114,7 @@ export class UauiStatElement extends UmbLitElement {
         const figures = this.#figures;
         return html`<span class="label">${this.label}</span>
             <span class="row"
-                >${shown !== undefined ? html`<span class="value">${shown}</span>` : nothing}${this.#hasChange(figures)
+                >${shown !== undefined ? html`<span class="value"><uaui-figure-value .figure=${shown}></uaui-figure-value></span>` : nothing}${this.#hasChange(figures)
                     ? html`<uaui-delta-badge
                           size="sm"
                           .value=${this.delta}

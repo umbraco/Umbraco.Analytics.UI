@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/web-components-vite";
-import { html } from "@umbraco-cms/backoffice/external/lit";
+import { html, ifDefined } from "@umbraco-cms/backoffice/external/lit";
 import type { UauiKpiTileElement } from "./kpi-tile.element.js";
 import "./kpi-tile.element.js";
 
@@ -49,6 +49,7 @@ const meta: Meta<UauiKpiTileElement> = {
                 .selected=${args.selected}
                 .openable=${args.openable}
                 .href=${args.href}
+                lang=${ifDefined(args.lang || undefined)}
                 .color=${args.color}></uaui-kpi-tile>
         </div>`,
 };
@@ -74,6 +75,24 @@ export const PercentPoints: Story = {
 export const CurrencyDkk: Story = {
     name: "Currency (DKK)",
     args: { value: 36125.5, valueFormat: { style: "currency", currency: "DKK" } },
+};
+
+/** A number of 1,000,000 or more is shown compact ("€1.23M") unless `valueFormat` sets `notation`. The exact amount is the hover title and what screen readers read. */
+export const BigNumberEur: Story = {
+    name: "Big number (EUR)",
+    args: { value: 1234567.89, previous: 1075000, delta: undefined },
+};
+
+/** In Danish kroner, drawn in Danish (`lang="da-DK"`): "12,3 mio. kr.". */
+export const BigNumberDkk: Story = {
+    name: "Big number (DKK)",
+    args: { value: 12345678, valueFormat: { style: "currency", currency: "DKK" }, previous: 11000000, delta: undefined, lang: "da-DK" },
+};
+
+/** `notation: "standard"` keeps the exact amount. */
+export const BigNumberExact: Story = {
+    name: "Big number, exact",
+    args: { value: 1234567.89, valueFormat: { style: "currency", currency: "EUR", notation: "standard" }, previous: 1075000, delta: undefined },
 };
 
 /** `style: "percent"` takes a fraction: 0.256 is 25.6%. */

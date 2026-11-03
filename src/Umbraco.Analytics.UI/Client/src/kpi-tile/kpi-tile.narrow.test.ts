@@ -9,7 +9,7 @@ import { axeRun } from "../internal/test/a11y.js";
 import "./kpi-tile.element.js";
 import "../stat/stat.element.js";
 import type { UauiKpiTileElement } from "./kpi-tile.element.js";
-import { settle } from "../internal/test/dom.js";
+import { deepText, settle } from "../internal/test/dom.js";
 
 const EUR: Intl.NumberFormatOptions = { style: "currency", currency: "EUR" };
 
@@ -68,7 +68,7 @@ describe("Feature: KPI tiles don't overflow when narrow", () => {
         it("doesn't truncate the value", async () => {
             const el = await tileIn(220);
             expect(textRect(el).width).toBeLessThanOrEqual(value(el).getBoundingClientRect().width + 1);
-            expect(value(el).textContent).toContain("27,337.11");
+            expect(deepText(value(el))).toContain("27,337.11");
         });
 
         it("keeps the icon", async () => {
