@@ -139,6 +139,36 @@ export const CompareTwoSeries: Story = {
 };
 
 /**
+ * Press a legend entry to hide or show its series (they are toggle buttons: Tab to one, Enter or Space). Hiding is
+ * visual and per chart: the y-axis rescales to the series drawn, the tooltip and the hidden table list only those, and
+ * the other series keep their colours. Here the first series is hidden, as after pressing "Pageviews".
+ */
+export const LegendHiddenSeries: Story = {
+    name: "Legend, series hidden",
+    args: { series: [pageviews, sessions], compareSeries: [pageviewsPrevious, sessionsPrevious], compareLabel: compareRangeLabel },
+    play: async ({ canvasElement }) => {
+        const chart = canvasElement.querySelector("uaui-time-series-chart")!;
+        await chart.updateComplete;
+        const legend = chart.shadowRoot!.querySelector("uaui-chart-legend")!;
+        await legend.updateComplete;
+        legend.shadowRoot!.querySelector<HTMLButtonElement>("button.legend-entry")?.click();
+    },
+};
+
+/** In the share view, hiding a series recomputes the shares: the series left add up to 100% again. */
+export const LegendHiddenShare: Story = {
+    name: "Legend, series hidden in the share view",
+    args: { kind: "stacked-bar", stack: "percent", series: topSourcePages },
+    play: async ({ canvasElement }) => {
+        const chart = canvasElement.querySelector("uaui-time-series-chart")!;
+        await chart.updateComplete;
+        const legend = chart.shadowRoot!.querySelector("uaui-chart-legend")!;
+        await legend.updateComplete;
+        legend.shadowRoot!.querySelector<HTMLButtonElement>("button.legend-entry")?.click();
+    },
+};
+
+/**
  * Weeks that start on Sunday (`week-start="7"`, the same as `Intl.Locale.getWeekInfo().firstDay` for en-US): the
  * points are the Sundays of `uauiDateBuckets(range, "week", { weekStart: 7 })` and the compare weeks line up on them.
  */

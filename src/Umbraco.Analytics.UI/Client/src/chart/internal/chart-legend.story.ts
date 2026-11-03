@@ -27,8 +27,32 @@ const meta: Meta<UauiChartLegendElement> = {
 export default meta;
 type Story = StoryObj<UauiChartLegendElement>;
 
-/** Lines, one per series. */
+/** Lines, one per series. Each entry is a toggle button: pressing it raises `deselected` or `selected`, and the owner sets `selected`. */
 export const Default: Story = {};
+
+/** A hidden series: its entry is struck through with a hollow swatch (a dotted line), and `aria-pressed` is false. */
+export const HiddenSeries: Story = {
+    name: "Hidden series",
+    args: {
+        entries: [
+            { id: "pageviews", label: "Pageviews", color: 1 },
+            { id: "sessions", label: "Sessions", color: 2, selected: false },
+        ],
+        compareLabel: "Comparison",
+    },
+};
+
+/** Bars with a hidden series: the swatch is a hollow square. */
+export const HiddenBars: Story = {
+    name: "Hidden series, bars",
+    args: {
+        bars: true,
+        entries: [
+            { id: "pageviews", label: "Pageviews", color: 1, selected: false },
+            { id: "sessions", label: "Sessions", color: 2 },
+        ],
+    },
+};
 
 /** The compared period adds a dashed line named by `compareLabel`. */
 export const WithCompare: Story = { name: "With compare", args: { compareLabel: "Apr 25, 2026 – May 24, 2026" } };

@@ -91,6 +91,19 @@ export const TwoSeries: Story = {
     args: { categories: devices, series: [visits, orders], categoryLabel: "Device" },
 };
 
+/** Press a legend entry to hide or show its series. The y-axis rescales to the bars drawn; the first series is hidden here. */
+export const LegendHiddenSeries: Story = {
+    name: "Legend, series hidden",
+    args: { categories: devices, series: [visits, orders], categoryLabel: "Device" },
+    play: async ({ canvasElement }) => {
+        const chart = canvasElement.querySelector("uaui-category-chart")!;
+        await chart.updateComplete;
+        const legend = chart.shadowRoot!.querySelector("uaui-chart-legend")!;
+        await legend.updateComplete;
+        legend.shadowRoot!.querySelector<HTMLButtonElement>("button.legend-entry")?.click();
+    },
+};
+
 /** `stacked-bar` stacks the series in one bar per category; the tooltip and the hidden table add a total. */
 export const Stacked: Story = { args: { kind: "stacked-bar", series: [contact, newsletter] } };
 

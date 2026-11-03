@@ -122,11 +122,11 @@ describe("Feature: many series stay readable", () => {
             el = await chart(pages);
         });
 
-        it("is reached with Tab", async () => {
+        it("is reached with Tab, after the 7 series entries (each a button)", async () => {
             const before = document.createElement("button");
             el.before(before);
             before.focus();
-            await userEvent.tab();
+            for (let stop = 0; stop < 8; stop++) await userEvent.tab();
             expect(legend(el).shadowRoot!.activeElement).toBe(toggle(el));
             before.remove();
         });
