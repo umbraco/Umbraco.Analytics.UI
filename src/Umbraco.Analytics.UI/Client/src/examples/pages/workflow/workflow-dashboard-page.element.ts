@@ -372,7 +372,7 @@ export class ExampleWorkflowDashboardPageElement extends UmbLitElement {
             }
             .kpis {
                 display: grid;
-                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
                 gap: var(--uui-size-space-5);
             }
             .box {

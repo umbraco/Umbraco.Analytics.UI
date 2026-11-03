@@ -681,7 +681,7 @@ export class ExampleCommerceAnalyticsPageElement extends UmbLitElement {
             }
             .kpis {
                 display: grid;
-                grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+                grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
                 gap: var(--uui-size-space-5);
             }
             /* One column on a narrow page, exactly two (never more) once two 480px boxes fit. The two boxes of a pair share a height. */

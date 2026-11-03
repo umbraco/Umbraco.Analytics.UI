@@ -120,11 +120,40 @@ export const Reloading: Story = { args: { loading: true } };
 /** Tiles in one grid row keep the same height, even when a label wraps. The badge drops below a narrow value. */
 export const RowOfTiles: Story = {
     render: () =>
-        html`<div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; width: 880px">
+        html`<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; max-width: 1000px">
             <uaui-kpi-tile label="Revenue" .value=${4837.4} .valueFormat=${EUR} icon="icon-coins" .delta=${18.7}></uaui-kpi-tile>
             <uaui-kpi-tile label="Orders" .value=${26} icon="icon-inbox" .delta=${8.1}></uaui-kpi-tile>
             <uaui-kpi-tile label="Carts created" .value=${64} icon="icon-shopping-basket" .delta=${12.4}></uaui-kpi-tile>
             <uaui-kpi-tile label="New customers" .value=${13} icon="icon-user" .delta=${4.8}></uaui-kpi-tile>
+        </div>`,
+};
+
+/**
+ * The recommended grid for a row of tiles: `repeat(auto-fit, minmax(240px, 1fr))`. Tiles are 240px at the narrowest, which still
+ * fits the icon beside the text and a long value like "€27,337.11". Below 240px they stack the icon above the text.
+ * Resize the canvas to see the columns come and go.
+ */
+export const KpiRow: Story = {
+    name: "KPI row",
+    render: () =>
+        html`<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; max-width: 960px">
+            <uaui-kpi-tile label="Revenue" .value=${27337.11} .valueFormat=${EUR} icon="icon-coins" .delta=${18.7}></uaui-kpi-tile>
+            <uaui-kpi-tile label="Orders" .value=${526} icon="icon-inbox" .delta=${8.1}></uaui-kpi-tile>
+            <uaui-kpi-tile label="Average order value" .value=${51.97} .valueFormat=${EUR} icon="icon-shopping-basket" .delta=${-3.2}></uaui-kpi-tile>
+        </div>`,
+};
+
+/**
+ * A tile narrower than 240px stacks its icon above the label and value, and steps the value down from 24px to 18px as it
+ * gets narrower. Shown at 220px (the old grid minimum), with the loading skeleton the same height.
+ */
+export const Narrow: Story = {
+    render: () =>
+        html`<div style="display: grid; grid-template-columns: 220px 220px; gap: 16px; width: 456px">
+            <uaui-kpi-tile label="Revenue" .value=${27337.11} .valueFormat=${EUR} icon="icon-coins" .delta=${18.7}></uaui-kpi-tile>
+            <uaui-kpi-tile label="Revenue" .loading=${true} icon="icon-coins"></uaui-kpi-tile>
+            <uaui-kpi-tile label="Revenue" .value=${27337.11} .valueFormat=${EUR} icon="icon-coins" .delta=${18.7} selectable selected></uaui-kpi-tile>
+            <uaui-kpi-tile label="Revenue" .value=${27337.11} .valueFormat=${EUR} icon="icon-coins" href="#revenue"></uaui-kpi-tile>
         </div>`,
 };
 
@@ -138,7 +167,7 @@ export const Selectable: Story = { args: { selectable: true } };
 export const SelectableRow: Story = {
     render: () =>
         html`<div
-            style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; width: 880px"
+            style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; max-width: 1000px"
             @selected=${(e: Event) => {
                 const row = e.currentTarget as HTMLElement;
                 for (const tile of row.querySelectorAll("uaui-kpi-tile")) if (tile !== e.target) tile.selected = false;
@@ -163,7 +192,7 @@ export const Openable: Story = { args: { label: "Pending", value: 12, valueForma
  */
 export const StatusTiles: Story = {
     render: () =>
-        html`<div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; width: 880px">
+        html`<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; max-width: 1000px">
             <uaui-kpi-tile label="Approved" .value=${128} icon="icon-check" color="positive" href="#history?status=approved"></uaui-kpi-tile>
             <uaui-kpi-tile label="Pending" .value=${12} icon="icon-time" color="warning" href="#active"></uaui-kpi-tile>
             <uaui-kpi-tile label="Rejected" .value=${7} icon="icon-wrong" color="danger" href="#history?status=rejected"></uaui-kpi-tile>

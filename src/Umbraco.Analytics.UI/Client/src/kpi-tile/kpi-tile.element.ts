@@ -18,8 +18,11 @@ import "../delta-badge/delta-badge.element.js";
  * A string `value` (and the `value` attribute, which is always a string) is shown exactly as given, for a figure the
  * product has formatted itself.
  *
- * Put tiles in a CSS grid row and they stay the same height. The badge drops below the value when the tile is
- * too narrow for both. While `loading` with no `value` it shows a skeleton the size of a loaded tile. While
+ * The tile takes its width from its parent: a grid cell, or a flex item with `flex: 1`. In a shrink-to-fit parent (a plain
+ * flex item, a float, an inline-block) it is 180px wide. Put tiles in a CSS grid row and they stay the same height, e.g.
+ * `repeat(auto-fit, minmax(240px, 1fr))`. Below 240px wide the icon stacks above the label and value, and the
+ * value steps down from 24px to 18px, so a number never runs out of the tile. Very large amounts still need room: format them
+ * with `valueFormat: { notation: "compact" }` ("€1.2M") rather than relying on the step-down. The badge drops below the value when the tile is too narrow for both. While `loading` with no `value` it shows a skeleton the size of a loaded tile. While
  * loading with a `value` it keeps the value and marks the tile busy, without a loading bar.
  *
  * Set `error` when the load failed: the tile keeps its label and shows a dash with the hidden text "Something went
@@ -235,6 +238,11 @@ export class UauiKpiTileElement extends UmbLitElement {
                       </span>`}
             </span>`;
 
+        // The wrapper is the size container the narrow layout queries (a container can't style itself, so it can't be the tile).
+        return html`<div class="size">${this.#tile(content)}</div>`;
+    }
+
+    #tile(content: TemplateResult): TemplateResult {
         // A native button gives Enter and Space for free, and both arrive as one click.
         if (this.selectable) {
             return html`<button
@@ -273,6 +281,16 @@ export class UauiKpiTileElement extends UmbLitElement {
                     --uaui-kpi-selected,
                     light-dark(var(--uui-color-selected), var(--uui-palette-malibu-light))
                 );
+            }
+
+            /* The size container for the narrow layout. It fills the host, and the host fills its grid cell, so its width is the
+               tile's own width. Inline-size containment makes the content's width count as 0, so in a shrink-to-fit
+               parent (a float, an inline-block, or a flex item without flex: 1) the tile would collapse to nothing: the
+               min-width is the floor, so it is 180px wide there (and stacked). A grid cell or a flex: 1 item gives it its width. */
+            .size {
+                container-type: inline-size;
+                height: 100%;
+                min-width: 180px;
             }
 
             .tile {
@@ -449,11 +467,35 @@ export class UauiKpiTileElement extends UmbLitElement {
 
             .value {
                 display: block;
-                font-size: 24px;
+                /* Backup for a very long number: 24px from a 240px tile, stepping down smoothly to 18px at 180px. */
+                font-size: clamp(18px, 10cqi, 24px);
                 font-weight: 700;
                 line-height: 1.1;
                 white-space: nowrap;
                 color: var(--uui-color-text);
+            }
+
+            /* Narrow tile: the icon moves above the label and value. 240px is where "€127,337.11" (about 138px at 24px, Lato
+               bold) just stops fitting beside the 48px icon: 240 less the 34px of border and padding and the 62px icon and gap
+               leaves 144px. It is also the recommended grid minimum, so a row built on it never stacks. All tiles in a row share a width, so they switch together. The text block is at least 76px (the
+               content's min-height, the skeleton's height too), the height of one whose badge has wrapped below the value.
+               A stacked tile reserves that block loaded or not, so it doesn't jump on load; one with no badge has 28px spare.
+               align-items: flex-start follows the writing direction. */
+            @container (width < 240px) {
+                .tile {
+                    --_uaui-skeleton-height: 76px;
+                    flex-direction: column;
+                    align-items: flex-start;
+                    justify-content: flex-start;
+                    gap: 12px;
+                }
+
+                .content {
+                    flex: 0 0 auto;
+                    align-self: stretch;
+                    /* Top-aligned, so labels line up across a row when one tile's badge wraps and another's doesn't. */
+                    justify-content: flex-start;
+                }
             }
 
             .no-data {

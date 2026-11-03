@@ -316,7 +316,7 @@ export class ExampleAiUsagePageElement extends UmbLitElement {
             }
             .tiles {
                 display: grid;
-                grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+                grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
                 gap: var(--uui-size-space-4);
             }
         `,
