@@ -111,6 +111,27 @@ describe("Feature: conversion funnel", () => {
         });
     });
 
+    describe("Scenario: a compared funnel in a narrow column", () => {
+        // Regression: the hidden table (eight columns) is far wider than the column. A table can't be narrower than its
+        // min-content, so a 1px wrapper must clip it, or the page gets a horizontal scrollbar.
+        let el: UauiTestElement;
+        beforeEach(async () => {
+            el = await render(
+                html`<div style="width: 320px"><uaui-funnel .steps=${cartSteps} .compareSteps=${cartStepsPrevious}></uaui-funnel></div>`,
+            );
+        });
+
+        it("doesn't widen the page", () => {
+            expect(hiddenTable(el).getBoundingClientRect().width).toBeGreaterThan(document.documentElement.clientWidth);
+            expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(document.documentElement.clientWidth);
+        });
+
+        it("still exposes the hidden table as a table", async () => {
+            expect(getComputedStyle(hiddenTable(el)).display).toBe("table");
+            await expect.element(page.getByRole("table", { name: "Funnel data" })).toBeInTheDocument();
+        });
+    });
+
     describe("Scenario: bar and bracket sizes", () => {
         it("draws a tiny value at least 2px wide", async () => {
             const el = await render(

@@ -78,7 +78,12 @@ export class UauiChartDataTableElement extends UmbLitElement {
 
     override render(): TemplateResult {
         const { series, totals, compareTotal, shares } = this;
-        return html`<table class="visually-hidden">
+        // The class sits on a wrapping div, not the table: a table is never narrower than its min-content, so `width: 1px`
+        // on the table itself is ignored and the invisible table still widens the page's scrollable area. The div is a
+        // real 1px box whose `overflow: hidden` clips it. The table keeps its own display, so its table semantics stay
+        // (Safari/VoiceOver drops them when a table's display changes).
+        return html`<div class="visually-hidden">
+            <table>
             <caption>
                 ${this.#caption}
             </caption>
@@ -111,7 +116,8 @@ export class UauiChartDataTableElement extends UmbLitElement {
                     </tr>`,
                 )}
             </tbody>
-        </table>`;
+        </table>
+        </div>`;
     }
 
     static override styles: CSSResultGroup = [
