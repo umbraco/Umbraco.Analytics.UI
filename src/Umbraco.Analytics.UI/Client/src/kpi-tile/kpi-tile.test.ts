@@ -9,7 +9,7 @@ import { axeRun } from "../internal/test/a11y.js";
 import "./kpi-tile.element.js";
 import type { UauiDeltaBadgeElement } from "../delta-badge/delta-badge.element.js";
 import type { UauiKpiTileElement } from "./kpi-tile.element.js";
-import { recordEvents, renderElement, shadow, type UauiTestElement } from "../internal/test/dom.js";
+import { deepText, recordEvents, renderElement, shadow, type UauiTestElement } from "../internal/test/dom.js";
 
 describe("Feature: KPI tile shows a headline number", () => {
     describe("Scenario: label, value and icon", () => {
@@ -26,7 +26,7 @@ describe("Feature: KPI tile shows a headline number", () => {
         });
 
         it("shows the value exactly as given", () => {
-            expect(shadow(el).textContent).toContain("€ 4,837.40");
+            expect(deepText(shadow(el))).toContain("€ 4,837.40");
         });
 
         it("shows the icon", () => {
@@ -151,7 +151,7 @@ describe("Feature: KPI tile shows a headline number", () => {
     describe("Scenario: tiles in one row", () => {
         let tiles: UauiKpiTileElement[];
         beforeEach(async () => {
-            const { container } = render(html`<div style="display:grid;grid-template-columns:repeat(3,160px)">
+            const { container } = render(html`<div style="display:grid;grid-template-columns:repeat(3,200px)">
                 <uaui-kpi-tile label="Revenue" value="1"></uaui-kpi-tile>
                 <uaui-kpi-tile label="Carts created this period" value="2"></uaui-kpi-tile>
                 <uaui-kpi-tile label="Orders" value="3"></uaui-kpi-tile>
@@ -177,7 +177,7 @@ describe("Feature: KPI tile shows a headline number", () => {
         let el: UauiTestElement;
         beforeEach(async () => {
             el = await renderElement(
-                html`<div style="width:140px"><uaui-kpi-tile label="Revenue" value="€ 4,837.40" .delta=${18.7}></uaui-kpi-tile></div>`,
+                html`<div style="width:200px"><uaui-kpi-tile label="Revenue" value="€ 4,837.40" .delta=${18.7}></uaui-kpi-tile></div>`,
                 "uaui-kpi-tile",
             );
         });
@@ -212,7 +212,7 @@ describe("Feature: KPI tile shows a headline number", () => {
                 "uaui-kpi-tile",
             );
             expect(shadow(el).querySelector("uaui-skeleton")).toBe(null);
-            expect(shadow(el).textContent).toContain("€ 1");
+            expect(deepText(shadow(el))).toContain("€ 1");
         });
 
         it("marks its content busy while loading", async () => {

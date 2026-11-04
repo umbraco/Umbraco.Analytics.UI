@@ -305,7 +305,7 @@ describe("Feature: the Forms analytics page", () => {
         it("takes unique members from the overview answer's own figure, where Forms fills it, not days added up", async () => {
             const query = { startDate: `${FIRST_RANGE.from}T00:00:00`, endDate: `${FIRST_RANGE.to}T00:00:00`, metrics: ["entries" as const], dimensions: ["formId" as const] };
             const overview = await postOverview(query);
-            expect(tile(page, "Unique members").current).toBe(overview.uniqueMembers);
+            expect(tile(page, "Unique members").value as number).toBe(overview.uniqueMembers);
             const days = await postSubmissions({ ...query, metrics: ["uniqueMembers"], dimensions: ["date"] });
             expect(overview.uniqueMembers).toBeLessThan(formsTotal(days, "uniqueMembers"));
         });
@@ -314,7 +314,7 @@ describe("Feature: the Forms analytics page", () => {
             const rate = tile(page, "Workflow failure rate");
             expect(rate.deltaUnit).toBe("points");
             expect(rate.lowerIsBetter).toBe(true);
-            expect(Number.isFinite(rate.current)).toBe(true);
+            expect(Number.isFinite(rate.value as number)).toBe(true);
         });
 
         it("compares with the second query's figures, for the comparison range", async () => {
@@ -496,7 +496,7 @@ describe("Feature: the Forms analytics page", () => {
             expect(funnel(page).compareSteps.map((s) => s.id)).toEqual(["opened", "partiallySubmitted", "submitted"]);
             const [opened, , submitted] = funnel(page).steps.map((s) => s.value);
             const stat = headerStat(page)!;
-            expect(stat.current).toBeCloseTo((submitted / opened) * 100);
+            expect(stat.value as number).toBeCloseTo((submitted / opened) * 100);
             expect(stat.deltaUnit).toBe("points");
             expect(Number.isFinite(stat.previous)).toBe(true);
         });
@@ -507,7 +507,7 @@ describe("Feature: the Forms analytics page", () => {
             expect(funnel(page).steps.map((s) => s.label)).toEqual(["Opened", "Submitted"]);
             const states = await postRecordStates({ startDate: FIRST_RANGE.from, endDate: FIRST_RANGE.to, metrics: ["entries"], dimensions: ["state"], formId: single.id });
             expect(states.rows.map((r) => r[0])).toEqual(["opened", "submitted"]);
-            expect(headerStat(page)!.current).toBeCloseTo((funnel(page).steps[1].value / funnel(page).steps[0].value) * 100);
+            expect(headerStat(page)!.value as number).toBeCloseTo((funnel(page).steps[1].value / funnel(page).steps[0].value) * 100);
         });
 
         it("submitted matches the form's entries", () => {
@@ -637,7 +637,7 @@ describe("Feature: the Forms analytics page", () => {
 
         it("shows the second range's figures everywhere", async () => {
             const r = await postSubmissions({ startDate: late.from, endDate: late.to, metrics: ["entries"], dimensions: ["date"] });
-            expect(tile(page, "Entries").current).toBe(formsTotal(r, "entries"));
+            expect(tile(page, "Entries").value as number).toBe(formsTotal(r, "entries"));
             expect(chartIn(page, "formSubmissions").series[0].points[0].date).toBe("2026-04-01");
             expect(tableIn(page, "forms").rows.reduce((sum, row) => sum + (row.entries as number), 0)).toBe(formsTotal(r, "entries"));
         });

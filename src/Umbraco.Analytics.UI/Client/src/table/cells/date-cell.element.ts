@@ -2,7 +2,7 @@ import { css, customElement, html, nothing, property, type CSSResultGroup, type 
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { asIsoDay } from "../internal/cell-values.js";
 import { getUtcDateFormat } from "../../internal/format/date-format.js";
-import "../internal/table-skeleton-cell.element.js";
+import "../table-skeleton-cell.element.js";
 import type { UauiTableCellElement, UauiTableColumn } from "../types.js";
 
 /** How a date cell formats its day when the column has no `dateFormat`. */

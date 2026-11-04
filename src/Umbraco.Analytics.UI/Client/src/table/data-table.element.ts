@@ -23,7 +23,7 @@ import { UauiScrollOverflowController } from "./internal/scroll-overflow.control
 import { UauiSlotContentController, hasSlotContent } from "./internal/slot-content.controller.js";
 import { UauiTableContextController } from "./internal/table-context.controller.js";
 import "../internal/pager/compact-pager.element.js";
-import "./internal/table-skeleton-cell.element.js";
+import "./table-skeleton-cell.element.js";
 import "./internal/table-sort-button.element.js";
 import {
     DEFAULT_PAGE_SIZE,
@@ -125,7 +125,7 @@ export const UauiDataTableElementBase = UauiLoadStateMixin(UmbLitElement);
  * In `client` mode set `reset-page-on-rows` to also go back to page 1 whenever `rows` is replaced with a new array.
  *
  * Set `query` to search. In `client` mode the table keeps the rows that contain it, ignoring case, in the text of
- * the columns marked `searchable` (every column when none is), shows the empty state when none match, and goes
+ * the columns marked `searchable` (every column when none is; a column's `meta.secondaryKey` second line counts as its text), shows the empty state when none match, and goes
  * back to page 1. Put a `uaui-search-field` in the `toolbar` slot, or in a `toolbar-start` or `toolbar-[key]` slot, and the table sets `query` itself from its
  * `search` event. In `server` mode the table never filters: the product loads the matching rows. Column totals and
  * bars stay those of all the `rows`, searched or not.
@@ -660,6 +660,7 @@ export class UauiDataTableElement extends UauiDataTableElementBase {
                 display: block;
                 --_uaui-skeleton-height: 14px;
                 --_uaui-table-line: 20px;
+                --_uaui-table-secondary-line: 16px;
                 font-size: 13px;
                 line-height: var(--_uaui-table-line);
             }

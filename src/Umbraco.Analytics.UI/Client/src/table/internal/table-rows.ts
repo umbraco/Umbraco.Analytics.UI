@@ -71,9 +71,10 @@ export function findCompareRow(index: ReadonlyMap<string, UauiTableRow>, fields:
     return key === undefined ? undefined : index.get(key);
 }
 
-/** The text of the columns a search looks in. Text values only. */
+/** The text of the columns a search looks in, including a column's second line (`meta.secondaryKey`). Text values only. */
 function searchTextOf(row: UauiTableRow, columns: UauiTableColumn[]): string {
-    return columns.map((column) => (typeof row[column.key] === "string" ? (row[column.key] as string) : "")).join("\n");
+    const text = (key: string | undefined) => (key !== undefined && typeof row[key] === "string" ? (row[key] as string) : "");
+    return columns.map((column) => `${text(column.key)}\n${text(column.meta?.secondaryKey)}`).join("\n");
 }
 
 /** The query as searched for: trimmed and lower-cased in the language. Empty when there is nothing to search for. */
