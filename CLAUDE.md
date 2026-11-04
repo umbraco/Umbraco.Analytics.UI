@@ -25,6 +25,11 @@ Shared backoffice analytics components (Lit + UUI) consumed by Engage, Commerce 
 - Component folder layout follows UUI: `<name>.element.ts`, `<name>.story.ts`, `<name>.test.ts`, `index.ts`. Element prefix `uaui-`.
 - Every component needs a story covering each state and a test that includes `expect(await axeRun(el)).toHaveNoViolations()`.
 - Import Lit only from `@umbraco-cms/backoffice/external/lit` (lint enforced).
+- Changelog: any change a product team would notice adds a line under `## [Unreleased]` in `CHANGELOG.md`, in the same PR. That covers new or changed public elements, attributes, properties, events and exports (anything that moves `api/*.api.md`), visible UI changes, bug fixes, deprecations, and Chart.js or CMS range bumps. Tests, docs, stories, CI and refactors with no visible effect don't need one.
+  - Put each line under `### Added`, `### Changed`, `### Deprecated`, `### Removed`, `### Fixed` or `### Security`. Write it for a product developer: name the element or export, say what changed and what they must do, one line each. A `@deprecated` line names the replacement and the removal version.
+  - `### Security`: say only that it's fixed, with no detail, and only once the fix is released (responsible disclosure).
+  - On the release branch, in the commit that sets the final version, rename `## [Unreleased]` to `## [{version}] - DD-MM-YYYY`, using the exact `version.json` version (e.g. `## [19.1.0] - 04-11-2026`), and add a new empty `## [Unreleased]` above it. RCs don't get their own section; their entries stay under Unreleased until the final release.
+  - Once the pipeline sets `github_release_connection` (umbraco/Umbraco.Build#20), that section becomes the GitHub release notes, and a public build with no section for its version fails.
 - Before finishing: `npm run lint`, `npm test`, `npm run build` (commit any `api/*.api.md` change deliberately).
 - Plan folders: `docs/plans/<feature-slug>/` (devkit feature-* skills). Design references: `docs/design/<name>/`.
 - Packages: NuGet `Umbraco.Analytics.UI`, npm `@umbraco/analytics-ui` (also the import map key). API report: `api/analytics-ui.api.md`.
