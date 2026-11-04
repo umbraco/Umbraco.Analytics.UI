@@ -11,6 +11,13 @@ export interface UauiChartLegendEntry {
     color: UauiSeriesColorKey;
     /** Draws a square in the bar colour (`true`) or a line (`false`) for this entry. Defaults to the legend's `bars`. */
     bar?: boolean;
+    /** Whether the series is drawn. Defaults to `true`; `false` shows the entry as hidden (struck through, hollow swatch). Mirrors UUI's `selected`. */
+    selected?: boolean;
+}
+
+/** What a legend entry's `selected` and `deselected` events carry: the entry's `id`. */
+export interface UauiChartLegendToggleDetail {
+    id: string;
 }
 
 /** Above this many series the legend folds: it lists the first `max - 1` and a "+N more" button. */
@@ -23,6 +30,9 @@ export const LEGEND_MAX_ENTRIES = 8;
  * With more series than `max` it folds: the first `max - 1` series, then a "Show N more" button that lists the rest,
  * where it becomes "Show fewer". The button's text is its name and says what pressing it does, so it carries no
  * `aria-expanded` (a name that changes with the state would say it twice). The entries wrap onto more lines either way.
+ * Each series entry is a toggle button (`aria-pressed`, true while the series is drawn). Pressing one raises `deselected`
+ * (to hide the series) or `selected` (to show it again) with `{ id }`, as UUI's selectable elements do, and leaves the
+ * state to its owner: the entry follows `selected`. The events don't bubble. The compare entry isn't a button.
  * The compare entry always shows. The button keeps its place in the list, so focus stays on it when pressed; if the
  * series drop to `max` or fewer while it has focus, the button goes and focus moves to the list.
  *
@@ -82,6 +92,11 @@ export class UauiChartLegendElement extends UmbLitElement {
         this._expanded = !this._expanded;
     }
 
+    #toggleEntry(entry: UauiChartLegendEntry) {
+        const type = entry.selected === false ? "selected" : "deselected";
+        this.dispatchEvent(new CustomEvent<UauiChartLegendToggleDetail>(type, { detail: { id: entry.id } }));
+    }
+
     #renderToggle(foldAt: number) {
         const hidden = this.entries.length - foldAt;
         return html`<li class="legend-toggle-item">
@@ -102,12 +117,15 @@ export class UauiChartLegendElement extends UmbLitElement {
                 (entry) => entry.id,
                 (entry) => {
                     const bar = entry.bar ?? this.bars;
+                    const selected = entry.selected !== false;
                     return html`<li>
-                        <span
-                            class=${bar ? "legend-swatch" : "legend-line"}
-                            style="--swatch: var(--uaui-color-${bar ? "bar" : "series"}-${entry.color})"
-                            aria-hidden="true"></span>
-                        ${entry.label}
+                        <button type="button" class="legend-entry" aria-pressed=${selected ? "true" : "false"} @click=${() => this.#toggleEntry(entry)}>
+                            <span
+                                class=${bar ? "legend-swatch" : "legend-line"}
+                                style="--swatch: var(--uaui-color-${bar ? "bar" : "series"}-${entry.color})"
+                                aria-hidden="true"></span>
+                            ${entry.label}
+                        </button>
                     </li>`;
                 },
             )}
@@ -148,6 +166,53 @@ export class UauiChartLegendElement extends UmbLitElement {
                 display: inline-flex;
                 align-items: center;
                 gap: 7px;
+            }
+
+            /*
+             * The entry looks as it did before it was a button: the padding is cancelled by the margin, so only the hover
+             * tint and the focus ring reach past the text. A hidden series is struck through in grey with a hollow swatch
+             * (a hollow line for lines): shape and text carry it, not colour or opacity alone, so it holds in every theme.
+             */
+            .legend-entry {
+                display: inline-flex;
+                align-items: center;
+                gap: 7px;
+                margin: calc(-1 * var(--uui-size-1)) calc(-1 * var(--uui-size-2));
+                padding: var(--uui-size-1) var(--uui-size-2);
+                border: 0;
+                border-radius: var(--uui-border-radius);
+                background: none;
+                font: inherit;
+                color: inherit;
+                cursor: pointer;
+            }
+
+            .legend-entry:hover {
+                background: var(--uui-color-surface-emphasis);
+            }
+
+            .legend-entry:focus-visible {
+                outline: calc(2px * var(--uui-show-focus-outline, 1)) solid var(--uui-color-focus);
+                outline-offset: 1px;
+            }
+
+            /* Grey in either theme, still above 4.5:1 against the surface. */
+            .legend-entry[aria-pressed="false"] {
+                color: color-mix(in srgb, var(--uui-color-text) 60%, var(--uui-color-surface));
+                text-decoration: line-through;
+            }
+
+            .legend-entry[aria-pressed="false"] .legend-swatch {
+                box-sizing: border-box;
+                border: 1.5px solid var(--swatch);
+                background: none;
+            }
+
+            /* A hollow line, like the hollow square of a hidden bar. */
+            .legend-entry[aria-pressed="false"] .legend-line {
+                box-sizing: border-box;
+                height: 5px;
+                border: 1.5px solid var(--swatch);
             }
 
             .legend-line {

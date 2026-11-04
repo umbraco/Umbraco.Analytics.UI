@@ -7,6 +7,8 @@ import { maxValue, seriesTotals, type UauiChartData } from "./internal/chart-val
 import "./internal/chart-data-table.element.js";
 import "./internal/chart-legend.element.js";
 import "./internal/chart-tooltip.element.js";
+import { UauiSeriesVisibility, visibleData } from "./internal/series-visibility.js";
+import type { UauiChartLegendToggleDetail } from "./internal/chart-legend.element.js";
 import type { UauiChartTooltipCompare, UauiChartTooltipRow } from "./internal/chart-tooltip.element.js";
 import type { UauiChartDrawColors } from "./internal/chart-colors.js";
 import { UauiChartController } from "./internal/chart.controller.js";
@@ -22,10 +24,19 @@ interface DerivedFrom {
     compareSeries: UauiCategorySeries[];
     valueFormat?: Intl.NumberFormatOptions;
     lang: string;
+    /** The ids of the series the editor hid from the legend. */
+    hidden: ReadonlySet<string>;
 }
 
 interface Derived {
+    /** What is drawn: every series but the hidden ones. */
     data: UauiChartData;
+    /** For each series in `data`, its index in the chart's `series`. */
+    shown: number[];
+    /** Any series has a value, hidden ones counted, so hiding them all leaves the chart and its legend. */
+    hasData: boolean;
+    /** The chart compares, counting every series, so the legend's compare entry stays while the compared series is hidden. */
+    comparing: boolean;
     /** Each category's label, on the same indexes as `data.labels` (its ids). */
     labels: string[];
     /** The sum of the series per category, `null` where every series is missing a point. */
@@ -37,7 +48,16 @@ interface Derived {
 /** The compared period is drawn as a bar behind the bars: one array, so the legend doesn't re-render on hover. */
 const COMPARE_SHAPES = ["bar"] as const;
 
-const emptyDerived: Derived = { data: { labels: [], series: [] }, labels: [], totals: [], numberFormat: getNumberFormat("en"), lang: "en" };
+const emptyDerived: Derived = {
+    data: { labels: [], series: [] },
+    shown: [],
+    hasData: false,
+    comparing: false,
+    labels: [],
+    totals: [],
+    numberFormat: getNumberFormat("en"),
+    lang: "en",
+};
 
 /**
  * `UmbLitElement` with the settings every chart shares (`UauiChartMixin`), for category series: the base of
@@ -55,6 +75,8 @@ export const UauiCategoryChartElementBase = UauiChartMixin(UmbLitElement);
  * category that isn't in `categories` is not drawn. Pass last period's values in `compare-series`: a compare value is
  * matched by series `id` and category `id`, and the compare series added up are drawn per category as one bar behind the
  * current bar or bars. `stacked-bar` stacks the series per category and adds a total to the tooltip and the hidden table.
+ * Each series in the legend is a toggle button: pressing it hides or shows that series (visual only, for this chart only).
+ * The y-axis rescales to the bars drawn, and the tooltip and the hidden table list only those.
  * `y-scale="log"` spaces the y-axis by powers of ten (not with `stacked-bar`). Every number (axis, tooltip, table) is
  * formatted with `value-format` in the backoffice user's culture.
  * While `loading` is set it shows a skeleton on first load, or keeps the old data under a loading bar when reloading.
@@ -104,8 +126,9 @@ export class UauiCategoryChartElement extends UauiCategoryChartElementBase {
     declare emptyDescription?: string;
 
     /** Draws the chart (Chart.js through the renderer), and holds the hover. */
+    #visibility = new UauiSeriesVisibility(this);
     #chart = new UauiChartController(this, {
-        colorKeys: () => this.#derived.data.series.map((_, i) => colorKeyOf(this.series[i], i)),
+        colorKeys: () => this.#derived.shown.map((i) => colorKeyOf(this.series[i], i)),
         draw: (renderer, colors) => this.#draw(renderer, colors),
     });
     /** Everything derived from the inputs: the data on the categories, the totals and the number format. */
@@ -115,7 +138,7 @@ export class UauiCategoryChartElement extends UauiCategoryChartElementBase {
 
     protected override willUpdate(changed: PropertyValues<this>) {
         super.willUpdate(changed);
-        const next: DerivedFrom = { categories: this.categories, series: this.series, compareSeries: this.compareSeries, valueFormat: this.valueFormat, lang: this.localize.lang() };
+        const next: DerivedFrom = { categories: this.categories, series: this.series, compareSeries: this.compareSeries, valueFormat: this.valueFormat, lang: this.localize.lang(), hidden: this.#visibility.hidden };
         const prev = this.#derivedFrom;
         if (!prev || (Object.keys(next) as (keyof DerivedFrom)[]).some((key) => prev[key] !== next[key])) {
             this.#derivedFrom = next;
@@ -129,11 +152,23 @@ export class UauiCategoryChartElement extends UauiCategoryChartElementBase {
      * Builds the data, labels and number format once per change of inputs: `localize.number` builds a new `Intl`
      * formatter on every call, too slow for every table cell. This one uses the language `localize` does.
      */
-    #derive({ categories, series, compareSeries, valueFormat, lang }: DerivedFrom): Derived {
-        const data = buildCategoryData(categories, series, compareSeries);
+    #derive({ categories, series, compareSeries, valueFormat, lang, hidden }: DerivedFrom): Derived {
+        const full = buildCategoryData(categories, series, compareSeries);
+        const { data, shown } = visibleData(full, series.map((s) => s.id), hidden, () =>
+            buildCategoryData(categories, series, compareSeries.filter((c) => !hidden.has(c.id))),
+        );
         const labelOf = new Map<string, string>();
         for (const c of categories) if (!labelOf.has(c.id)) labelOf.set(c.id, c.label);
-        return { data, labels: data.labels.map((id) => labelOf.get(id) ?? id), totals: seriesTotals(data), numberFormat: getNumberFormat(lang, valueFormat), lang };
+        return {
+            data,
+            shown,
+            hasData: full.series.some((s) => s.values.some((v) => v !== null)),
+            comparing: !!full.compareTotal,
+            labels: data.labels.map((id) => labelOf.get(id) ?? id),
+            totals: seriesTotals(data),
+            numberFormat: getNumberFormat(lang, valueFormat),
+            lang,
+        };
     }
 
     /** The drawn kind: `"stacked-bar"`, else `"bar"`. */
@@ -142,9 +177,10 @@ export class UauiCategoryChartElement extends UauiCategoryChartElementBase {
     }
 
     get #hasData() {
-        return this.#derived.data.series.some((s) => s.values.some((v) => v !== null));
+        return this.#derived.hasData;
     }
 
+    /** The drawn bars are compared: there is a compare bar. */
     get #comparing() {
         return !!this.#derived.data.compareTotal;
     }
@@ -195,12 +231,13 @@ export class UauiCategoryChartElement extends UauiCategoryChartElementBase {
     /** One row per series with a value in the hovered category, then the total and the compare total. */
     #renderTooltip() {
         const hover = this.#chart.hover;
-        const { data, labels, totals, numberFormat } = this.#derived;
-        if (!hover || labels[hover.index] === undefined) return nothing;
+        const { data, shown, labels, totals, numberFormat } = this.#derived;
+        // With every series hidden nothing is drawn, so there is nothing to describe.
+        if (!hover || !data.series.length || labels[hover.index] === undefined) return nothing;
         const { index } = hover;
         const rows = data.series.flatMap((s, i): UauiChartTooltipRow[] => {
             const value = s.values[index];
-            return value === null ? [] : [{ color: colorKeyOf(this.series[i], i), value, label: data.series.length > 1 ? s.label : undefined }];
+            return value === null ? [] : [{ color: colorKeyOf(this.series[shown[i]], shown[i]), value, label: this.series.length > 1 ? s.label : undefined }];
         });
         const total = totals[index];
         const compareValue = data.compareTotal?.values[index];
@@ -219,13 +256,22 @@ export class UauiCategoryChartElement extends UauiCategoryChartElementBase {
     }
 
     #renderLegend() {
-        if (this.series.length < 2 && !this.#comparing) return nothing;
-        const entries = this.series.map((s, i) => ({ id: s.id, label: s.label, color: colorKeyOf(s, i), bar: true }));
+        const { comparing } = this.#derived;
+        if (this.series.length < 2 && !comparing) return nothing;
+        const hidden = this.#visibility.hidden;
+        const entries = this.series.map((s, i) => ({ id: s.id, label: s.label, color: colorKeyOf(s, i), bar: true, selected: !hidden.has(s.id) }));
         return html`<uaui-chart-legend
             .entries=${entries}
             .bars=${true}
             .compareShapes=${COMPARE_SHAPES}
-            .compareLabel=${this.#comparing ? this.#compareText : undefined}></uaui-chart-legend>`;
+            .compareLabel=${comparing ? this.#compareText : undefined}
+            @selected=${this.#onLegendToggle}
+            @deselected=${this.#onLegendToggle}></uaui-chart-legend>`;
+    }
+
+    /** A legend entry was pressed: hide its series, or show it again. */
+    #onLegendToggle(e: CustomEvent<UauiChartLegendToggleDetail>) {
+        this.#visibility.toggle(e.detail.id);
     }
 
     /** The same data for screen readers, a row per category. */

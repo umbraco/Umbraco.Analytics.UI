@@ -22,8 +22,10 @@ import { maxValue, seriesTotals, shareTotals, shareValues, type UauiChartData } 
 import "./internal/chart-data-table.element.js";
 import "./internal/chart-legend.element.js";
 import "./internal/chart-markers.element.js";
+import { UauiSeriesVisibility, visibleData } from "./internal/series-visibility.js";
 import "./internal/chart-tooltip.element.js";
 import type { UauiChartMarkersActiveDetail } from "./internal/chart-markers.element.js";
+import type { UauiChartLegendToggleDetail } from "./internal/chart-legend.element.js";
 import type { UauiChartTooltipCompare, UauiChartTooltipRow } from "./internal/chart-tooltip.element.js";
 import type { UauiChartDrawColors } from "./internal/chart-colors.js";
 import { UauiChartController } from "./internal/chart.controller.js";
@@ -66,12 +68,21 @@ interface DerivedFrom {
     lang: string;
     /** The share view is on (`stack="percent"` with a kind that stacks). */
     share: boolean;
+    /** The ids of the series the editor hid from the legend. */
+    hidden: ReadonlySet<string>;
 }
 
 interface Derived {
+    /** What is drawn: every series but the hidden ones. */
     data: UauiChartData;
-    /** How each series is drawn: its own `kind`, else the chart's. */
+    /** For each series in `data`, its index in the chart's `series`. */
+    shown: number[];
+    /** How each series in `data` is drawn: its own `kind`, else the chart's. */
     kinds: UauiSeriesKind[];
+    /** How every series is drawn, hidden ones too, for the legend. */
+    allKinds: UauiSeriesKind[];
+    /** How the chart compares, counting every series (hidden or not), so the legend's compare entry stays. */
+    legendCompare: { bars: boolean; lines: boolean };
     axisLabels: string[];
     dateLabels: string[];
     /** Per series, the formatted date of each compare point (empty string where there is none). */
@@ -101,7 +112,10 @@ interface MarkersFrom {
 
 const emptyDerived: Derived = {
     data: { labels: [], series: [] },
+    shown: [],
     kinds: [],
+    allKinds: [],
+    legendCompare: { bars: false, lines: false },
     axisLabels: [],
     dateLabels: [],
     compareDateLabels: [],
@@ -141,6 +155,9 @@ export const UauiTimeSeriesChartElementBase = UauiChartMixin(UmbLitElement);
  * repeat, a legend of more than 8 series folds to the first 7 and a "Show N more" button, and a tooltip of more than 8
  * rows lists the 7 largest (in its usual order) and "+N more". In the share view the tooltip lists the rows as the stack
  * draws them, top first.
+ * Each series in the legend is a toggle button: pressing it hides or shows that series (visual only, for this chart only).
+ * The y-axis rescales to the series drawn, and the tooltip and the hidden table list only those; in the share view the
+ * shares are worked out again. The compare entry stays, and with every series hidden the plot is empty but the legend stays.
  * `markers` draw a dashed line and a dot on the x-axis at their date (in the bucket that contains it when grouped by
  * week or month; none when it is outside the chart). Each dot is a button: hover or focus shows the markers' dates,
  * titles and descriptions, and click or Enter raises `marker-click`. Markers in one bucket share a dot.
@@ -260,6 +277,7 @@ export class UauiTimeSeriesChartElement extends UauiTimeSeriesChartElementBase {
     private _activeMarker?: number;
 
     /** Draws the chart (Chart.js through the renderer), and holds the hover. */
+    #visibility = new UauiSeriesVisibility(this);
     #chart = new UauiChartController(this, {
         colorKeys: () => this.#colorKeys,
         draw: (renderer, colors) => this.#draw(renderer, colors),
@@ -297,7 +315,7 @@ export class UauiTimeSeriesChartElement extends UauiTimeSeriesChartElementBase {
 
     protected override willUpdate(changed: PropertyValues<this>) {
         super.willUpdate(changed);
-        const next = { kind: this.kind, series: this.series, compareSeries: this.compareSeries, range: this.range, compare: this.compare, groupBy: this.groupBy, weekStart: resolveWeekStart(this.weekStart), valueFormat: this.valueFormat, lang: this.localize.lang(), share: this.#isShare };
+        const next = { kind: this.kind, series: this.series, compareSeries: this.compareSeries, range: this.range, compare: this.compare, groupBy: this.groupBy, weekStart: resolveWeekStart(this.weekStart), valueFormat: this.valueFormat, lang: this.localize.lang(), share: this.#isShare, hidden: this.#visibility.hidden };
         const prev = this.#derivedFrom;
         if (!prev || (Object.keys(next) as (keyof typeof next)[]).some((key) => prev[key] !== next[key])) {
             this.#derivedFrom = next;
@@ -338,18 +356,25 @@ export class UauiTimeSeriesChartElement extends UauiTimeSeriesChartElementBase {
      * too slow for the hundreds of labels and table cells of a long chart. These formatters use the
      * same language `localize` does.
      */
-    #derive({ kind, series, compareSeries, range, compare, groupBy, weekStart, valueFormat, lang, share }: DerivedFrom): Derived {
+    #derive({ kind, series, compareSeries, range, compare, groupBy, weekStart, valueFormat, lang, share, hidden }: DerivedFrom): Derived {
         // The share view draws every series as the chart's kind, so they all stack, and draws no compare.
-        const kinds = series.map((s) => (share ? seriesKindOf({}, kind) : seriesKindOf(s, kind)));
-        const lines = kinds.map((k) => k === "line");
+        const allKinds = series.map((s) => (share ? seriesKindOf({}, kind) : seriesKindOf(s, kind)));
+        const lines = allKinds.map((k) => k === "line");
+        const build = (compareOf: UauiSeries[]) =>
+            buildChartData(series, share ? [] : compareOf, groupBy, { from: range?.from, compareFrom: compare?.from }, weekStart, lines);
+        const full = build(compareSeries);
+        const { data, shown } = visibleData(full, series.map((s) => s.id), hidden, () => build(compareSeries.filter((c) => !hidden.has(c.id))));
+        const kinds = shown.map((i) => allKinds[i]);
         const bars = kinds.map((k) => k === "bar");
-        const data = buildChartData(series, share ? [] : compareSeries, groupBy, { from: range?.from, compareFrom: compare?.from }, weekStart, lines);
         const axisDate = new Intl.DateTimeFormat(lang, axisDateFormat[groupBy] ?? axisDateFormat.day);
         const tooltipDate = new Intl.DateTimeFormat(lang, tooltipDateFormat[groupBy] ?? tooltipDateFormat.day);
         const tooltipLabel = (iso: string | null) => (iso ? formatIsoDate(iso, tooltipDate) : "");
         return {
             data,
+            shown,
             kinds,
+            allKinds,
+            legendCompare: { bars: allKinds.includes("bar") && !!full.compareTotal, lines: full.series.some((s, i) => allKinds[i] === "line" && !!s.compare) },
             axisLabels: data.labels.map((d) => formatIsoDate(d, axisDate)),
             dateLabels: data.labels.map(tooltipLabel),
             compareDateLabels: data.series.map((s) => (s.compareLabels ?? []).map(tooltipLabel)),
@@ -365,7 +390,7 @@ export class UauiTimeSeriesChartElement extends UauiTimeSeriesChartElementBase {
     }
 
     get #colorKeys() {
-        return this.#derived.data.series.map((_, i) => colorKeyOf(this.series[i], i));
+        return this.#derived.shown.map((i) => colorKeyOf(this.series[i], i));
     }
 
     /** How many series are drawn as bars. */
@@ -376,15 +401,6 @@ export class UauiTimeSeriesChartElement extends UauiTimeSeriesChartElementBase {
     /** Bars compare against the compare total (one bar per date behind them). */
     get #comparesBars() {
         return this.#barCount > 0 && !!this.#derived.data.compareTotal;
-    }
-
-    /** A line compares against its own compare series (matched by `id`), drawn dashed. */
-    get #comparesLines() {
-        return this.#derived.data.series.some((s, i) => this.#derived.kinds[i] === "line" && s.compare);
-    }
-
-    get #isComparing() {
-        return this.#comparesBars || this.#comparesLines;
     }
 
     /**
@@ -521,8 +537,9 @@ export class UauiTimeSeriesChartElement extends UauiTimeSeriesChartElementBase {
     /** One row per series with a point at the hovered date, and for the bar kinds the total and the compare total. */
     #renderTooltip() {
         const hover = this.#chart.hover;
-        const { data, kinds, dateLabels, compareDateLabels, compareTotalDateLabels, totals, shares, numberFormat, shareFormat } = this.#derived;
-        if (!hover || !dateLabels[hover.index] || this._activeMarker !== undefined) return nothing;
+        const { data, shown, kinds, dateLabels, compareDateLabels, compareTotalDateLabels, totals, shares, numberFormat, shareFormat } = this.#derived;
+        // With every series hidden nothing is drawn, so there is nothing to describe.
+        if (!hover || !data.series.length || !dateLabels[hover.index] || this._activeMarker !== undefined) return nothing;
         const { index } = hover;
         // The share view draws bands and segments in the bar colours, so its swatches are squares.
         const bars = this.#barCount > 0 || !!shares;
@@ -532,10 +549,10 @@ export class UauiTimeSeriesChartElement extends UauiTimeSeriesChartElementBase {
             const compare = s.compare?.[index];
             return [
                 {
-                    color: colorKeyOf(this.series[i], i),
+                    color: colorKeyOf(this.series[shown[i]], shown[i]),
                     bar: !!shares || kinds[i] === "bar",
                     value,
-                    label: data.series.length > 1 ? s.label : undefined,
+                    label: this.series.length > 1 ? s.label : undefined,
                     ...(shares ? { share: shares[i][index] } : {}),
                     compare: compare === null || compare === undefined ? undefined : { value: compare, label: compareDateLabels[i][index], current: value },
                 },
@@ -582,18 +599,33 @@ export class UauiTimeSeriesChartElement extends UauiTimeSeriesChartElementBase {
             @marker-click=${this.#onMarkerClick}></uaui-chart-markers>`;
     }
 
+    /** A legend entry was pressed: hide its series, or show it again. */
+    #onLegendToggle(e: CustomEvent<UauiChartLegendToggleDetail>) {
+        this.#visibility.toggle(e.detail.id);
+    }
+
     #renderLegend() {
-        if (this.series.length < 2 && !this.#isComparing) return nothing;
-        const { kinds } = this.#derived;
+        const { allKinds, legendCompare } = this.#derived;
+        if (this.series.length < 2 && !legendCompare.bars && !legendCompare.lines) return nothing;
         const share = this.#isShare;
-        const entries = this.series.map((s, i) => ({ id: s.id, label: s.label, color: colorKeyOf(s, i), bar: share || kinds[i] === "bar" }));
-        // The compare entry shows each way the chart draws the compared period: a bar, a dashed line, or both.
-        const compareShapes = [...(this.#comparesBars ? (["bar"] as const) : []), ...(this.#comparesLines ? (["line"] as const) : [])];
+        const hidden = this.#visibility.hidden;
+        const entries = this.series.map((s, i) => ({
+            id: s.id,
+            label: s.label,
+            color: colorKeyOf(s, i),
+            bar: share || allKinds[i] === "bar",
+            selected: !hidden.has(s.id),
+        }));
+        // The compare entry shows each way the chart draws the compared period: a bar, a dashed line, or both. It counts
+        // every series, so it stays when the series that is compared is hidden.
+        const compareShapes = [...(legendCompare.bars ? (["bar"] as const) : []), ...(legendCompare.lines ? (["line"] as const) : [])];
         return html`<uaui-chart-legend
             .entries=${entries}
-            .bars=${share || this.#barCount > 0}
+            .bars=${share || entries.some((e) => e.bar)}
             .compareShapes=${compareShapes}
-            .compareLabel=${this.#isComparing ? this.#compareText : undefined}></uaui-chart-legend>`;
+            .compareLabel=${compareShapes.length ? this.#compareText : undefined}
+            @selected=${this.#onLegendToggle}
+            @deselected=${this.#onLegendToggle}></uaui-chart-legend>`;
     }
 
     /** The same data for screen readers. Every input is stable until the data changes, so it re-renders only then. */
