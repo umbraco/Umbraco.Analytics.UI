@@ -317,6 +317,9 @@ export class UauiFunnelElement extends UauiFunnelElementBase {
             <span id=${descriptionId} class="description" hidden>${this.#describeStep(row, index)}</span>
             <span class="label">${row.label}</span>
             <span class="bar-cell">
+                ${row.compareWidth && row.compareWidth > row.width
+                    ? html`<span class="reach" style="width: ${row.compareWidth}%"></span>`
+                    : nothing}
                 ${row.value > 0 ? html`<span class="bar" style="width: ${row.width}%"></span>` : nothing}
                 ${!row.compareWidth ? nothing : html`<span class="bracket" style="width: ${row.compareWidth}%"></span>`}
             </span>
@@ -503,7 +506,8 @@ export class UauiFunnelElement extends UauiFunnelElementBase {
             }
 
             .bar,
-            .bracket {
+            .bracket,
+            .reach {
                 position: absolute;
                 left: 50%;
                 transform: translateX(-50%);
@@ -531,6 +535,14 @@ export class UauiFunnelElement extends UauiFunnelElementBase {
                     1px 0 0 var(--uui-color-surface),
                     inset 1px 0 0 var(--uui-color-surface),
                     inset -1px 0 0 var(--uui-color-surface);
+            }
+
+            /* When last period's brackets sit past the bar, a dashed line joins them to it so they don't float alone.
+               It runs bracket to bracket behind the bar, so only the parts outside the bar show. */
+            .reach {
+                top: 50%;
+                height: 0;
+                border-top: 1px dashed var(--uaui-color-compare);
             }
 
             /* Room for the 18px rate line, the 5px a bracket pokes out above and below, and a clear gap on each side. */
