@@ -718,59 +718,76 @@ export class ExampleFormsAnalyticsPageElement extends UmbLitElement {
 
     override render() {
         return html`
-            <div class="actions">
-                <h2 class="uui-h3">Analytics</h2>
-                <div class="controls">
+            <umb-body-layout headline="Analytics">
+                <div slot="action-menu" class="actions">
                     <uaui-group-by .value=${this._groupBy} @change=${this.#onGroupByChange}></uaui-group-by>
                     <uaui-date-range today="2026-06-23" .value=${this._range} .compare=${this._compare} @change=${this.#onRangeChange}></uaui-date-range>
                 </div>
-            </div>
 
-            <div class="kpis">${metrics.map((m) => this.#renderTile(m))}</div>
+                <div class="content">
+                    <div class="kpis">${metrics.map((m) => this.#renderTile(m))}</div>
 
-            ${this.#renderOverviewBoxes()}
+                    ${this.#renderOverviewBoxes()}
 
-            <div class="actions section">
-                <h2 class="uui-h3">Form analytics</h2>
-                <uui-select
-                    label="Form"
-                    .options=${FORMS.map((f) => ({ name: f.name, value: f.id, selected: f.id === this._formId }))}
-                    .value=${this._formId}
-                    @change=${this.#onFormChange}></uui-select>
-            </div>
+                    <div class="section">
+                        <h2 class="uui-h3">Form analytics</h2>
+                        <uui-select
+                            label="Form"
+                            .options=${FORMS.map((f) => ({ name: f.name, value: f.id, selected: f.id === this._formId }))}
+                            .value=${this._formId}
+                            @change=${this.#onFormChange}></uui-select>
+                    </div>
 
-            ${this.#renderFormBoxes()}
+                    ${this.#renderFormBoxes()}
+                </div>
+
+                <uui-breadcrumbs slot="footer-info">
+                    <uui-breadcrumb-item href="#">Forms</uui-breadcrumb-item>
+                    <uui-breadcrumb-item last-item>Analytics</uui-breadcrumb-item>
+                </uui-breadcrumbs>
+            </umb-body-layout>
         `;
     }
 
     static override styles = [
         UmbTextStyles,
         css`
+            /* Fills the space the backoffice gives the view, so umb-body-layout keeps its header and footer in place while the content scrolls. */
             :host {
-                /* The box grids pick one or two columns from the page's own width, not the window's. */
+                display: block;
+                height: 100%;
+            }
+            .content {
+                /* The box grid picks one or two columns from the page's own width, not the window's. */
                 container-type: inline-size;
                 display: flex;
                 flex-direction: column;
                 gap: var(--uui-size-4);
-                padding: var(--uui-size-layout-1);
             }
-            /* UUI's .uui-h3 (written .uui-h3.uui-h3, so a plain h2 rule loses) adds a 24px bottom margin, which pushed the title above the controls' centre. Keep its -2px optical inset. */
-            .actions h2.uui-h3 {
-                margin-block: 0;
+            /* Inset from the footer's edge, as the backoffice's umb-workspace-breadcrumb is. */
+            uui-breadcrumbs {
+                margin-inline-start: var(--uui-size-layout-1);
+                min-width: 0;
+                overflow: hidden;
             }
+            /* The page-wide controls, in the header's action-menu slot. */
             .actions {
+                display: flex;
+                align-items: center;
+                gap: var(--uui-size-4);
+                padding-inline-end: var(--uui-size-layout-1);
+            }
+            /* The form picker's row, partway down the page. */
+            .section {
                 display: flex;
                 align-items: center;
                 justify-content: space-between;
                 gap: var(--uui-size-4);
-            }
-            .actions.section {
                 margin-top: var(--uui-size-layout-1);
             }
-            .controls {
-                display: flex;
-                align-items: center;
-                gap: var(--uui-size-4);
+            /* UUI's .uui-h3 (written .uui-h3.uui-h3, so a plain h2 rule loses) adds a 24px bottom margin, which pushed the title above the picker's centre. Keep its -2px optical inset. */
+            .section h2.uui-h3 {
+                margin-block: 0;
             }
             .kpis {
                 display: grid;

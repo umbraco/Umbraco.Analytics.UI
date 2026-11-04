@@ -247,72 +247,80 @@ export class ExampleAiUsagePageElement extends UmbLitElement {
     override render() {
         const usage = this._usage;
         return html`
-            <div class="actions">
-                <h2 class="uui-h3">Usage</h2>
-                <div class="controls">
+            <umb-body-layout headline="Usage">
+                <div slot="action-menu" class="actions">
                     <uaui-group-by .value=${this._groupBy} @change=${this.#onGroupBy}></uaui-group-by>
                     <uaui-date-range today="2026-06-23" .value=${this._range} .compare=${this._compare} @change=${this.#onDateRange}></uaui-date-range>
                 </div>
-            </div>
 
-            ${this.#tiles()}
+                <div class="content">
+                    ${this.#tiles()}
 
-            <uui-box headline="${metricLabels[this._metric]} over time" headline-variant="h3" style="--uui-box-default-padding: 0">
-                <uaui-time-series-chart
-                    kind="stacked-bar"
-                    .series=${toSeries(this._metric, usage?.buckets)}
-                    .compareSeries=${toSeries(this._metric, usage?.compareBuckets)}
-                    .range=${this._range}
-                    .compare=${this._compare}
-                    .compareLabel=${this._compare ? uauiFormatDateRange(this.localize, this._compare) : undefined}
-                    .groupBy=${this._groupBy}
-                    ?loading=${this._usageLoading}
-                    ?error=${this._usageError}
-                    retryable
-                    @retry=${() => this.#loadUsage()}></uaui-time-series-chart>
-            </uui-box>
+                    <uui-box headline="${metricLabels[this._metric]} over time" headline-variant="h3" style="--uui-box-default-padding: 0">
+                        <uaui-time-series-chart
+                            kind="stacked-bar"
+                            .series=${toSeries(this._metric, usage?.buckets)}
+                            .compareSeries=${toSeries(this._metric, usage?.compareBuckets)}
+                            .range=${this._range}
+                            .compare=${this._compare}
+                            .compareLabel=${this._compare ? uauiFormatDateRange(this.localize, this._compare) : undefined}
+                            .groupBy=${this._groupBy}
+                            ?loading=${this._usageLoading}
+                            ?error=${this._usageError}
+                            retryable
+                            @retry=${() => this.#loadUsage()}></uaui-time-series-chart>
+                    </uui-box>
 
-            <uui-box headline="Breakdown" headline-variant="h3" style="--uui-box-default-padding: 0">
-                <uaui-toggle-group
-                    slot="header-actions"
-                    label="Break down by"
-                    .value=${this._by}
-                    .options=${breakdownOptions}
-                    @change=${this.#onBreakdownBy}></uaui-toggle-group>
-                <uaui-data-table
-                    ${ref(this.#breakdown.attach)}
-                    label="Breakdown"
-                    row-key="name"
-                    .columns=${tableColumns(this._by)}>
-                    <div slot="toolbar"><uaui-search-field></uaui-search-field></div>
-                </uaui-data-table>
-            </uui-box>
+                    <uui-box headline="Breakdown" headline-variant="h3" style="--uui-box-default-padding: 0">
+                        <uaui-toggle-group
+                            slot="header-actions"
+                            label="Break down by"
+                            .value=${this._by}
+                            .options=${breakdownOptions}
+                            @change=${this.#onBreakdownBy}></uaui-toggle-group>
+                        <uaui-data-table
+                            ${ref(this.#breakdown.attach)}
+                            label="Breakdown"
+                            row-key="name"
+                            .columns=${tableColumns(this._by)}>
+                            <div slot="toolbar"><uaui-search-field></uaui-search-field></div>
+                        </uaui-data-table>
+                    </uui-box>
+                </div>
+
+                <uui-breadcrumbs slot="footer-info">
+                    <uui-breadcrumb-item href="#">AI</uui-breadcrumb-item>
+                    <uui-breadcrumb-item last-item>Usage</uui-breadcrumb-item>
+                </uui-breadcrumbs>
+            </umb-body-layout>
         `;
     }
 
     static override styles = [
         UmbTextStyles,
         css`
+            /* Fills the space the backoffice gives the view, so umb-body-layout keeps its header and footer in place while the content scrolls. */
             :host {
+                display: block;
+                height: 100%;
+            }
+            .content {
                 display: flex;
                 flex-direction: column;
                 gap: var(--uui-size-4);
-                padding: var(--uui-size-layout-1);
             }
-            /* UUI's .uui-h3 (written .uui-h3.uui-h3, so a plain h2 rule loses) adds a 24px bottom margin, which pushed the title above the controls' centre. Keep its -2px optical inset. */
-            .actions h2.uui-h3 {
-                margin-block: 0;
+            /* Inset from the footer's edge, as the backoffice's umb-workspace-breadcrumb is. */
+            uui-breadcrumbs {
+                margin-inline-start: var(--uui-size-layout-1);
+                min-width: 0;
+                overflow: hidden;
             }
-            .controls {
-                display: flex;
-                align-items: center;
-                gap: var(--uui-size-4);
-            }
+            /* The page-wide controls, in the header's action-menu slot. */
             .actions {
                 display: flex;
                 align-items: center;
-                justify-content: space-between;
                 gap: var(--uui-size-4);
+                padding-inline-end: var(--uui-size-layout-1);
             }
             .tiles {
                 display: grid;

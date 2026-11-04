@@ -129,6 +129,10 @@ iconRegistry.setIcons(
 );
 iconRegistry.attach(document.body);
 
+// The backoffice's layout sizes (umb-css.css in Umbraco CMS), which umb-body-layout's header and footer read.
+document.documentElement.style.setProperty("--umb-header-layout-height", "70px");
+document.documentElement.style.setProperty("--umb-footer-layout-height", "54px");
+
 // Stories show text, not keys: register translations like the backoffice would.
 registerUauiLocalization(backofficeEn);
 

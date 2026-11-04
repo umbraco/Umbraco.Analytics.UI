@@ -338,37 +338,52 @@ export class ExampleWorkflowDashboardPageElement extends UmbLitElement {
 
     override render() {
         return html`
-            <div class="actions">
-                <h2 class="uui-h3">Workflow</h2>
-                <uaui-toggle-group label="Period" .options=${periods} .value=${String(this._days)} @change=${this.#onPeriodChange}></uaui-toggle-group>
-            </div>
+            <umb-body-layout headline="Workflow">
+                <div slot="action-menu" class="actions">
+                    <uaui-toggle-group label="Period" .options=${periods} .value=${String(this._days)} @change=${this.#onPeriodChange}></uaui-toggle-group>
+                </div>
 
-            <div class="kpis">${tiles.map((t) => this.#renderTile(t))}</div>
+                <div class="content">
+                    <div class="kpis">${tiles.map((t) => this.#renderTile(t))}</div>
 
-            <div class="box" data-box="activity">${this.#renderActivity()}</div>
-            <div class="box" data-box="reviews">${this.#renderReviews()}</div>
-            <div class="box" data-box="history">${this.#renderHistory()}</div>
+                    <div class="box" data-box="activity">${this.#renderActivity()}</div>
+                    <div class="box" data-box="reviews">${this.#renderReviews()}</div>
+                    <div class="box" data-box="history">${this.#renderHistory()}</div>
+                </div>
+
+                <uui-breadcrumbs slot="footer-info">
+                    <uui-breadcrumb-item href="#">Content</uui-breadcrumb-item>
+                    <uui-breadcrumb-item last-item>Workflow</uui-breadcrumb-item>
+                </uui-breadcrumbs>
+            </umb-body-layout>
         `;
     }
 
     static override styles = [
         UmbTextStyles,
         css`
+            /* Fills the space the backoffice gives the view, so umb-body-layout keeps its header and footer in place while the content scrolls. */
             :host {
+                display: block;
+                height: 100%;
+            }
+            .content {
                 display: flex;
                 flex-direction: column;
                 gap: var(--uui-size-4);
-                padding: var(--uui-size-layout-1);
             }
-            /* UUI's .uui-h3 adds a bottom margin, which pushes the title above the controls' centre. */
-            .actions h2.uui-h3 {
-                margin-block: 0;
+            /* Inset from the footer's edge, as the backoffice's umb-workspace-breadcrumb is. */
+            uui-breadcrumbs {
+                margin-inline-start: var(--uui-size-layout-1);
+                min-width: 0;
+                overflow: hidden;
             }
+            /* The page-wide controls, in the header's action-menu slot. */
             .actions {
                 display: flex;
                 align-items: center;
-                justify-content: space-between;
                 gap: var(--uui-size-4);
+                padding-inline-end: var(--uui-size-layout-1);
             }
             .kpis {
                 display: grid;
