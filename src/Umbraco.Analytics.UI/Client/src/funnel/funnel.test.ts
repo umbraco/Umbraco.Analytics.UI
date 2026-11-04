@@ -374,6 +374,13 @@ describe("Feature: conversion funnel", () => {
             expect(deepText(deepQuery(tooltip(el)!.shadowRoot!, "uaui-delta-badge")!)).toContain("6.8%");
         });
 
+        it("puts the change beside this period's value and each period's name beside its value", () => {
+            const rows = [...tooltip(el)!.shadowRoot!.querySelectorAll(".tooltip-row")];
+            expect(rows[0].querySelector("uaui-delta-badge")).not.toBe(null);
+            expect(rows[1].querySelector("uaui-delta-badge")).toBe(null);
+            expect(rows[1].querySelector(".tooltip-label")?.textContent).toBe(compareRangeLabel);
+        });
+
         it("drops the tooltip when the steps are replaced", async () => {
             el.steps = [...cartSteps];
             await settle(el);
@@ -426,7 +433,7 @@ describe("Feature: conversion funnel", () => {
 
     describe("Scenario: the tooltip fits neither above nor below", () => {
         // One step under a long period name that wraps, so the tooltip is taller than the room on either side.
-        const longLabel = `${currentRangeLabel}, ${currentRangeLabel}, ${currentRangeLabel}, ${currentRangeLabel}`;
+        const longLabel = Array.from({ length: 8 }, () => currentRangeLabel).join(", ");
         const showFirst = async (padding: string) => {
             const el = await render(
                 html`<uaui-funnel
@@ -451,7 +458,7 @@ describe("Feature: conversion funnel", () => {
         });
 
         it("opens on the side with more room, below", async () => {
-            const { tip, host } = await showFirst("24px 18px 120px");
+            const { tip, host } = await showFirst("24px 18px 160px");
             expect([tip.bottom, tip.top > host.top]).toEqual([host.bottom, true]);
         });
     });
