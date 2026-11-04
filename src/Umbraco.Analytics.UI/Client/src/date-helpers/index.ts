@@ -8,6 +8,7 @@ export {
     uauiPreviousYear,
     type UauiDateBucket,
     type UauiDateBucketsOptions,
+    type UauiDatePresetSpan,
     type UauiDateSpan,
     type UauiFormatDateRangeOptions,
     type UauiWeekStart,

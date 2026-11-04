@@ -14,6 +14,12 @@ export type UauiWeekStart = 1 | 2 | 3 | 4 | 5 | 6 | 7;
 /** The two ISO dates every helper reads. A `UauiDateRange` or a `UauiCompare` fits. */
 export type UauiDateSpan = Pick<UauiDateRange, "from" | "to">;
 
+/**
+ * The dates helpers read, plus the `preset` a `UauiDateRange` carries. Pass the saved range to
+ * `uauiPreviousPeriod` or `uauiCompareFor` and a `this-month` range compares with the same days of the previous month.
+ */
+export type UauiDatePresetSpan = Pick<UauiDateRange, "from" | "to" | "preset">;
+
 /** One bucket of a range: the date its chart point is plotted at, and the days of the range inside it. */
 export type UauiDateBucket = {
     /** ISO date: the day itself, the first day of its week (Monday unless `weekStart` says otherwise) or the 1st of its month. Before the range's own start for a first week or month that begins earlier. */
@@ -24,15 +30,19 @@ export type UauiDateBucket = {
 
 /**
  * The dates a built-in preset of `uaui-date-range` gives as of `today` (an ISO date), the same dates the dialog picks:
- * `last-7-days`, `last-30-days`, `last-month` or `last-year`. `undefined` for `custom`, any other id, or a `today` that isn't a real date. Use it to work
+ * `last-7-days`, `last-30-days`, `this-month`, `last-month` or `last-year`. `undefined` for `custom`, any other id, or a `today` that isn't a real date. Use it to work
  * out a saved preset's dates again on a later day, or the default range before the editor opens the dialog.
  */
 export function uauiPresetRange(id: string, today: string): UauiDateSpan | undefined {
     return builtInPresetRange(id, today);
 }
 
-/** The same number of days immediately before `range`, or `undefined` when `range` isn't a valid range (an unreal date, or `to` before `from`). */
-export function uauiPreviousPeriod(range: UauiDateSpan): UauiDateSpan | undefined {
+/**
+ * The same number of days immediately before `range`, or `undefined` when `range` isn't a valid range (an unreal date, or `to` before `from`).
+ * When `range.preset` is `this-month` it is the same days of the previous month instead (1 to 4 Nov gives 1 to 4 Oct),
+ * stopping at that month's last day when it is shorter. Any other `preset`, or none, gives the equal-length window.
+ */
+export function uauiPreviousPeriod(range: UauiDatePresetSpan): UauiDateSpan | undefined {
     return previousPeriodRange(range);
 }
 
@@ -44,8 +54,9 @@ export function uauiPreviousYear(range: UauiDateSpan): UauiDateSpan | undefined 
 /**
  * The comparison `mode` gives for `range`, as the `UauiCompare` that `uaui-date-range` and the chart take.
  * `undefined` for `custom` (the editor picks those dates) or when `range` isn't a valid range.
+ * A `previous-period` of a range whose `preset` is `this-month` is the same days of the previous month, as the dialog gives.
  */
-export function uauiCompareFor(mode: UauiCompare["mode"], range: UauiDateSpan): UauiCompare | undefined {
+export function uauiCompareFor(mode: UauiCompare["mode"], range: UauiDatePresetSpan): UauiCompare | undefined {
     const dates = compareRangeFor(mode, range);
     return dates && { mode, ...dates };
 }

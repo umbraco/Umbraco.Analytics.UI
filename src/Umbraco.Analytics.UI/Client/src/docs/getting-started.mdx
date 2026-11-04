@@ -163,9 +163,9 @@ html`<uaui-time-series-chart .compareLabel=${compare && uauiFormatDateRange(this
 | Function | Gives |
 |---|---|
 | `uauiPresetRange(id, today)` | The dates a built-in preset of `uaui-date-range` gives as of `today`. `undefined` for `custom`, an unknown id, or a `today` that isn't a real date. |
-| `uauiPreviousPeriod(range)` | The same number of days straight before `range`. |
+| `uauiPreviousPeriod(range)` | The same number of days straight before `range`. For a range with `preset: "this-month"`, the same days of the previous month. |
 | `uauiPreviousYear(range)` | The same dates one year earlier. |
-| `uauiCompareFor(mode, range)` | A `UauiCompare` for `previous-period` or `previous-year`. `undefined` for `custom`. |
+| `uauiCompareFor(mode, range)` | A `UauiCompare` for `previous-period` or `previous-year`. `undefined` for `custom`. Pass the saved range, with its `preset`, to match the dialog's month-aligned compare for `this-month`. |
 | `uauiDaysIn(range)` | Every ISO date in `range`, both ends included. |
 | `uauiDateBuckets(range, groupBy, { weekStart })` | `{ start, days }[]` for `day`, `week` or `month`, the same buckets `uaui-group-by` offers. |
 | `uauiFormatDateRange(localize, range, { showYear })` | Text such as "May 25, 2026 to Jun 23, 2026" in the user's culture. |

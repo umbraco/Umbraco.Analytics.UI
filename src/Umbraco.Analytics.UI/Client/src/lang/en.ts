@@ -107,6 +107,7 @@ export default {
         dateRangePreset: "Preset",
         dateRangeLast7Days: "Last 7 days",
         dateRangeLast30Days: "Last 30 days",
+        dateRangeThisMonth: "This month",
         dateRangeLastMonth: "Last month",
         dateRangeLastYear: "Last year",
         dateRangeCustom: "Custom",

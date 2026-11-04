@@ -79,6 +79,31 @@ describe("Feature: pick a comparison range", () => {
         });
     });
 
+    describe("Scenario: comparing This month with the previous period", () => {
+        const pad = (n: number) => String(n).padStart(2, "0");
+        let modal: UauiTestElement;
+        beforeEach(async () => {
+            modal = await openModal(await render());
+            await setField(modal, "compare", true);
+            await setField(modal, "compare-mode", "previous-period");
+            await setField(modal, "preset", "this-month");
+        });
+
+        it("compares with the same days of the previous month", () => {
+            const now = new Date();
+            const previous = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+            const lastDay = new Date(now.getFullYear(), now.getMonth(), 0).getDate();
+            const prefix = `${previous.getFullYear()}-${pad(previous.getMonth() + 1)}`;
+            expect(comparison(modal)).toEqual([`${prefix}-01`, `${prefix}-${pad(Math.min(now.getDate(), lastDay))}`]);
+        });
+
+        it("goes back to the equal-length window once a date is typed", async () => {
+            await setField(modal, "from", "2026-05-25");
+            await setField(modal, "to", "2026-06-23");
+            expect(comparison(modal)).toEqual(["2026-04-25", "2026-05-24"]);
+        });
+    });
+
     describe("Scenario: comparing with the previous year", () => {
         let modal: UauiTestElement;
         beforeEach(async () => {

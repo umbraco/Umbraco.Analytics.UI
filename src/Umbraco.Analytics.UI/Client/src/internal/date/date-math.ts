@@ -56,13 +56,21 @@ export function isoToDate(iso: string | undefined): Date | undefined {
 
 type Range = { from: string; to: string };
 
+/** A range that may say which preset it came from. Only `this-month` changes how its previous period is worked out. */
+type PresetRange = Range & { preset?: string };
+
 /** The ids of the presets the package knows how to calculate. */
-export type UauiBuiltInPresetId = "last-7-days" | "last-30-days" | "last-month" | "last-year";
+export type UauiBuiltInPresetId = "last-7-days" | "last-30-days" | "this-month" | "last-month" | "last-year";
 
 const builtIn: Record<UauiBuiltInPresetId, (today: string) => Range> = {
     // Rolling windows include today.
     "last-7-days": (today) => ({ from: addDays(today, -6), to: today }),
     "last-30-days": (today) => ({ from: addDays(today, -29), to: today }),
+    // The current calendar month so far, from the 1st to today.
+    "this-month": (today) => {
+        const { year, month } = parseIso(today)!;
+        return { from: toIso(year, month, 1), to: today };
+    },
     // The previous calendar month and year, whole.
     "last-month": (today) => {
         const { year, month } = parseIso(today)!;
@@ -94,10 +102,22 @@ function inclusiveDays(range: Range): number | undefined {
     return Math.round(ms / 86_400_000) + 1;
 }
 
-/** The same number of days immediately before `range`. `undefined` when `range` isn't a valid range. */
-export function previousPeriodRange(range: Range): Range | undefined {
+/** `iso` one month earlier, stopping at that month's last day when it is shorter (31 Mar becomes 28 or 29 Feb). */
+function oneMonthBefore(iso: string): string {
+    const { year, month, day } = parseIso(iso)!;
+    const [y, m] = month === 1 ? [year - 1, 12] : [year, month - 1];
+    return toIso(y, m, Math.min(day, daysInMonth(y, m)));
+}
+
+/**
+ * The period before `range`: the same number of days immediately before it, or for a `this-month` range the same days
+ * of the previous month. `undefined` when `range` isn't a valid range.
+ */
+export function previousPeriodRange(range: PresetRange): Range | undefined {
     const days = inclusiveDays(range);
-    return days === undefined ? undefined : { from: addDays(range.from, -days), to: addDays(range.from, -1) };
+    if (days === undefined) return undefined;
+    if (range.preset === "this-month") return { from: oneMonthBefore(range.from), to: oneMonthBefore(range.to) };
+    return { from: addDays(range.from, -days), to: addDays(range.from, -1) };
 }
 
 /** `iso` one year earlier. 29 Feb becomes 28 Feb when the earlier year has no leap day. */
@@ -113,7 +133,7 @@ export function previousYearRange(range: Range): Range | undefined {
 }
 
 /** The dates a compare mode gives for `range`: `undefined` for a custom comparison, or when `range` isn't a valid range. */
-export function compareRangeFor(mode: "previous-period" | "previous-year" | "custom", range: Range): Range | undefined {
+export function compareRangeFor(mode: "previous-period" | "previous-year" | "custom", range: PresetRange): Range | undefined {
     if (mode === "previous-period") return previousPeriodRange(range);
     if (mode === "previous-year") return previousYearRange(range);
     return undefined;
