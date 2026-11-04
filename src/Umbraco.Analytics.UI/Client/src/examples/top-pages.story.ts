@@ -50,14 +50,14 @@ const compareRows = [
 // The column toolbar sits above the column headings, and each of its cells is in a column, so it lines up with it:
 // search in the first column, a total over each share column. The table is in client mode, so the search box
 // filters it with no code: the table reads the `search` event. Only the URL column is `searchable`, so the numbers
-// are not searched. `uaui-stat` works out its change from `current` and `previous`: the product gives it
-// both totals and the value to show, already formatted.
+// are not searched. `uaui-stat` formats its number `value` in the user's culture and works out its change
+// from it and `previous`: the product gives it both totals.
 const renderTopPages = () => html`
     <uui-box headline="Top pages" style="--uui-box-default-padding: 0">
         <uaui-data-table label="Top pages" .columns=${columns} .rows=${rows} .compareRows=${compareRows} row-key="url">
             <uaui-search-field slot="toolbar-start"></uaui-search-field>
-            <uaui-stat slot="toolbar-pageviews" label="Total pageviews" value="272" .current=${272} .previous=${251}></uaui-stat>
-            <uaui-stat slot="toolbar-sessions" label="Total sessions" value="52" .current=${52} .previous=${54}></uaui-stat>
+            <uaui-stat slot="toolbar-pageviews" label="Total pageviews" .value=${272} .previous=${251}></uaui-stat>
+            <uaui-stat slot="toolbar-sessions" label="Total sessions" .value=${52} .previous=${54}></uaui-stat>
         </uaui-data-table>
     </uui-box>
 `;

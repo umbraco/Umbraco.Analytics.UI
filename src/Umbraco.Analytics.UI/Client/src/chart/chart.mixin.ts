@@ -49,7 +49,8 @@ export interface UauiChartMixinInterface<TSeries = unknown> extends UauiLoadStat
     lowerIsBetter: boolean;
 
     /**
-     * How numbers are formatted, e.g. `{ style: "currency", currency: "EUR" }`.
+     * How numbers are formatted, e.g. `{ style: "currency", currency: "EUR" }`, on the axis, in the tooltip and in
+     * the data table. The product picks the currency or unit. Options `Intl` rejects (e.g. a bad currency code) fall back to the default number format.
      */
     valueFormat?: Intl.NumberFormatOptions;
 }
@@ -109,7 +110,8 @@ export const UauiChartMixin = <T extends HTMLElementConstructor<UmbLitElement>>(
         lowerIsBetter = false;
 
         /**
-         * How numbers are formatted, e.g. `{ style: "currency", currency: "EUR" }`.
+         * How numbers are formatted, e.g. `{ style: "currency", currency: "EUR" }`, on the axis, in the tooltip and in
+         * the data table. The product picks the currency or unit. Options `Intl` rejects (e.g. a bad currency code) fall back to the default number format.
          */
         @property({ type: Object, attribute: "value-format" })
         valueFormat?: Intl.NumberFormatOptions;

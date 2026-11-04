@@ -337,7 +337,8 @@ export class UauiKpiTileElement extends UmbLitElement {
     // (undocumented)
     static styles: CSSResultGroup;
     target?: "_blank" | "_parent" | "_self" | "_top";
-    value?: string;
+    value?: number | string;
+    valueFormat?: Intl.NumberFormatOptions;
 }
 
 // @public
@@ -505,7 +506,8 @@ export class UauiStatElement extends UmbLitElement {
     render(): TemplateResult;
     // (undocumented)
     static styles: CSSResultGroup;
-    value?: string;
+    value?: number | string;
+    valueFormat?: Intl.NumberFormatOptions;
 }
 
 // @public
@@ -558,6 +560,7 @@ export interface UauiTableColumnMeta {
     deltaUnit?: UauiDeltaUnit;
     hrefKey?: string;
     lowerIsBetter?: boolean;
+    secondaryKey?: string;
     textKey?: string;
     totalKey?: string;
 }
@@ -650,6 +653,18 @@ export type UauiTableServerState = {
 };
 
 // @public
+export class UauiTableSkeletonCellElement extends UmbLitElement {
+    align: "start" | "end";
+    lines: 1 | 2;
+    // (undocumented)
+    render(): TemplateResult;
+    // (undocumented)
+    static styles: CSSResultGroup;
+    // @internal
+    width: number;
+}
+
+// @public
 export type UauiTableSort = {
     key: string;
     direction: UauiTableSortDirection;
@@ -674,6 +689,8 @@ export class UauiTextCellElement extends UmbLitElement implements UauiTableCellE
     loading: boolean;
     // (undocumented)
     render(): TemplateResult;
+    // (undocumented)
+    static styles: CSSResultGroup;
     value: unknown;
 }
 

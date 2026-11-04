@@ -229,11 +229,12 @@ export class ExampleWorkflowDashboardPageElement extends UmbLitElement {
         filter?.focus();
     }
 
-    /** A duration in the editor's culture: minutes under an hour, hours under two days, else days. */
-    #duration(ms: number) {
+    /** A duration as a stat, formatted in the editor's culture: minutes under an hour, hours under two days, else days. */
+    #durationStat(label: string, ms: number) {
         const minutes = ms / 60_000;
         const [value, unit] = minutes < 60 ? [minutes, "minute"] : minutes < 48 * 60 ? [minutes / 60, "hour"] : [minutes / (24 * 60), "day"];
-        return this.localize.number(value, { style: "unit", unit, unitDisplay: "long", maximumFractionDigits: unit === "minute" ? 0 : 1 });
+        const format: Intl.NumberFormatOptions = { style: "unit", unit, unitDisplay: "long", maximumFractionDigits: unit === "minute" ? 0 : 1 };
+        return html`<uaui-stat label=${label} .value=${value} .valueFormat=${format}></uaui-stat>`;
     }
 
     #renderTile(tile: (typeof tiles)[number]) {
@@ -243,7 +244,8 @@ export class ExampleWorkflowDashboardPageElement extends UmbLitElement {
             label=${tile.label}
             icon=${tile.icon}
             color=${tile.color}
-            .value=${value === undefined ? undefined : this.localize.number(value, COUNT)}
+            .value=${value}
+            .valueFormat=${COUNT}
             ?loading=${this._activityLoading}
             ?error=${this._activityError}
             openable
@@ -260,9 +262,8 @@ export class ExampleWorkflowDashboardPageElement extends UmbLitElement {
             return html`<div class="times-loading" role="progressbar" aria-label=${this.localize.term("general_loading")}><uui-loader-bar></uui-loader-bar></div>`;
         if (!times || times.count === 0) return html`<p class="times-none">No approvals finished in this period.</p>`;
         return html`<div class="times" role="group" aria-label="Approval time">
-            <uaui-stat label="Fastest approval" value=${this.#duration(times.fastest!)}></uaui-stat>
-            <uaui-stat label="Average approval" value=${this.#duration(times.average!)}></uaui-stat>
-            <uaui-stat label="Slowest approval" value=${this.#duration(times.slowest!)}></uaui-stat>
+            ${this.#durationStat("Fastest approval", times.fastest!)} ${this.#durationStat("Average approval", times.average!)}
+            ${this.#durationStat("Slowest approval", times.slowest!)}
         </div>`;
     }
 
@@ -371,7 +372,7 @@ export class ExampleWorkflowDashboardPageElement extends UmbLitElement {
             }
             .kpis {
                 display: grid;
-                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
                 gap: var(--uui-size-space-5);
             }
             .box {
