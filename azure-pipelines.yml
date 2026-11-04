@@ -53,11 +53,8 @@ extends:
     product_name: Umbraco.Analytics.UI
     npm_scope: '@umbraco'
     prerelease: ${{ parameters.prerelease }}
-    # Prerelease tags (e.g. release-19.0.0-rc.1) only go to MyGet, never NuGet.org/npmjs.org
-    ${{ if and(eq(parameters.release, 'auto'), startsWith(variables['Build.SourceBranch'], 'refs/tags/release-'), contains(replace(variables['Build.SourceBranch'], 'refs/tags/release-', ''), '-')) }}:
-      release: skip
-    ${{ else }}:
-      release: ${{ parameters.release }}
+    # Every release-* tag, prereleases (e.g. release-19.0.0-rc.1) included, goes to NuGet.org after approval
+    release: ${{ parameters.release }}
     run_tests: skip # No .NET test projects; client tests run in the ClientTests stage below
     # Client lint, browser tests (Chromium, Firefox, WebKit) and a Storybook build. Prerelease/Release
     # depend on this stage by name, so a failing test or a broken story blocks publishing.
