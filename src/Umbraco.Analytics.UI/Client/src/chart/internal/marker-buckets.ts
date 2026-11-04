@@ -36,7 +36,7 @@ export function bucketMarkers(markers: UauiMarker[], dates: string[], groupBy: U
 }
 
 /** Binary search for the last date that is on or before `day`, or -1 when `day` is before them all. */
-function lastStartOnOrBefore(dates: string[], day: string): number {
+export function lastStartOnOrBefore(dates: string[], day: string): number {
     let low = 0;
     let high = dates.length - 1;
     let found = -1;

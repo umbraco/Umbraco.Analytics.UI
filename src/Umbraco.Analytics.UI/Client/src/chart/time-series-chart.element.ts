@@ -15,6 +15,7 @@ import type { UauiWeekStart } from "../date-helpers/date-helpers.js";
 import { resolveWeekStart } from "../internal/date/date-math.js";
 import { formatIsoDate } from "../internal/date/format-date.js";
 import { getNumberFormat } from "../internal/format/number-format.js";
+import { firstIncompleteIndex } from "./internal/incomplete-index.js";
 import { bucketMarkers, type MarkerBucket } from "./internal/marker-buckets.js";
 import type { UauiMarkerPlacement } from "./internal/markers-plugin.js";
 import { buildChartData } from "./internal/chart-data.js";
@@ -147,6 +148,9 @@ export const UauiTimeSeriesChartElementBase = UauiChartMixin(UmbLitElement);
  * A series' own `kind` (`"line"` or `"bar"`) mixes the two in one chart, on one y-axis: lines are drawn over the bars
  * and never stack; a compare series matched to a line by `id` is its dashed line, and the rest add up into the compare
  * bar. The total counts the bars only.
+ * `incomplete-from` marks the dates from one onward as not final (today is half over, or data arrives late): their line
+ * and bars draw see-through over a light hatched band, and the tooltip and the hidden table name those dates as incomplete.
+ * It is independent of `today`.
  * `today` draws a thin labelled line at today's date, for dates that run past it. `y-scale="log"` spaces the y-axis by
  * powers of ten, bending toward 0 at the bottom so 0 stays on the axis line.
  * `stack="percent"` with `kind="stacked-bar"` or `"area"` is a 100% share view: each date's series as its share of that
@@ -254,6 +258,18 @@ export class UauiTimeSeriesChartElement extends UauiTimeSeriesChartElementBase {
     @property({ type: String })
     today?: string;
 
+    /**
+     * An ISO date ("2026-11-04"): every date from the one that contains it onward is incomplete, because the latest
+     * data isn't final (today is only half over, or data arrives late). The series draw see-through there (lines fade
+     * and their dots go hollow, bars fade), over a light hatched band, so a low last value doesn't read as a crash;
+     * the compare isn't faded. The tooltip and the hidden table name those dates as incomplete. Bucketed as `today`
+     * is, so with `group-by` week or month the week or month that contains it is incomplete. A date after the last
+     * date makes nothing incomplete, and one before the first makes everything. Independent of `today`: set both to
+     * mark today as incomplete, or only this when the unfinished part isn't today.
+     */
+    @property({ type: String, attribute: "incomplete-from" })
+    incompleteFrom?: string;
+
     /** Sets the format of the x-axis labels, and the bucket unit (day, week, month) that compare points are aligned in. The points themselves are not grouped: pass them already grouped, with each bucket at its first day. */
     @property({ type: String, attribute: "group-by" })
     groupBy: UauiGroupBy = "day";
@@ -295,6 +311,8 @@ export class UauiTimeSeriesChartElement extends UauiTimeSeriesChartElementBase {
     #markersFrom?: MarkersFrom;
     /** The index of the date that contains `today`, if any. */
     #todayIndex?: number;
+    /** The index of the first incomplete date, if any. */
+    #incompleteIndex?: number;
     /** The dates of the hidden table and the tooltip, with today's named, and the `#derived` they were made from. */
     #tableDates: string[] = [];
     #tableDatesFrom?: Derived;
@@ -322,14 +340,19 @@ export class UauiTimeSeriesChartElement extends UauiTimeSeriesChartElementBase {
             this.#derived = this.#derive(next);
             this.#chart.invalidate();
         }
-        if (changed.has("kind") || changed.has("stack") || changed.has("lowerIsBetter") || changed.has("yScale") || changed.has("today")) this.#chart.invalidate();
+        if (changed.has("kind") || changed.has("stack") || changed.has("lowerIsBetter") || changed.has("yScale") || changed.has("today") || changed.has("incompleteFrom")) this.#chart.invalidate();
 
         const todayIndex = this.today ? bucketMarkers([{ id: "today", date: this.today, title: "" }], this.#derived.data.labels, this.groupBy)[0]?.index : undefined;
-        if (todayIndex !== this.#todayIndex || this.#tableDatesFrom !== this.#derived) {
+        const incompleteIndex = this.incompleteFrom ? firstIncompleteIndex(this.incompleteFrom, this.#derived.data.labels, this.groupBy) : undefined;
+        if (todayIndex !== this.#todayIndex || incompleteIndex !== this.#incompleteIndex || this.#tableDatesFrom !== this.#derived) {
             this.#todayIndex = todayIndex;
+            this.#incompleteIndex = incompleteIndex;
             this.#tableDatesFrom = this.#derived;
             const { dateLabels } = this.#derived;
-            this.#tableDates = todayIndex === undefined ? dateLabels : dateLabels.map((label, i) => (i === todayIndex ? this.#todayDate(label) : label));
+            this.#tableDates =
+                todayIndex === undefined && incompleteIndex === undefined
+                    ? dateLabels
+                    : dateLabels.map((label, i) => this.#namedDate(label, i === todayIndex, incompleteIndex !== undefined && i >= incompleteIndex));
             this.#chart.invalidate();
         }
 
@@ -421,12 +444,17 @@ export class UauiTimeSeriesChartElement extends UauiTimeSeriesChartElementBase {
         return this.stack === "percent" && (this.kind === "stacked-bar" || this.kind === "area");
     }
 
-    /** A date as the tooltip and the hidden table name it when it is today's. */
-    #todayDate(label: string) {
+    /** A date as the tooltip and the hidden table name it: plain, or as today's and/or incomplete. */
+    #namedDate(label: string, today: boolean, incomplete: boolean) {
         // A week or month isn't today: it contains it.
-        return this.groupBy === "week" || this.groupBy === "month"
-            ? this.localize.term("uauiAnalytics_chartTodayInBucket", label)
-            : this.localize.term("uauiAnalytics_chartTodayDate", label);
+        const bucket = this.groupBy === "week" || this.groupBy === "month";
+        if (today && incomplete)
+            return bucket
+                ? this.localize.term("uauiAnalytics_chartTodayIncompleteInBucket", label)
+                : this.localize.term("uauiAnalytics_chartTodayIncompleteDate", label);
+        if (today)
+            return bucket ? this.localize.term("uauiAnalytics_chartTodayInBucket", label) : this.localize.term("uauiAnalytics_chartTodayDate", label);
+        return incomplete ? this.localize.term("uauiAnalytics_chartIncompleteDate", label) : label;
     }
 
     get #totalText() {
@@ -445,6 +473,7 @@ export class UauiTimeSeriesChartElement extends UauiTimeSeriesChartElementBase {
             colors,
             this.#markerBuckets.map((b) => ({ index: b.index, count: b.markers.length })),
             this.#todayIndex === undefined ? undefined : { index: this.#todayIndex, label: this.localize.term("uauiAnalytics_chartToday") },
+            this.#incompleteIndex,
         );
         this.#warnLogStacked();
         this.#warnShare();
@@ -456,6 +485,7 @@ export class UauiTimeSeriesChartElement extends UauiTimeSeriesChartElementBase {
                 labels: axisLabels,
                 roomAbove: this.today ? TODAY_LABEL_ROOM : 0,
                 colors,
+                incompleteFrom: this.#incompleteIndex,
                 datasets: data.series.map((s, i) => ({ label: s.label, kind: kinds[i], values: this.#bandValues(i) })),
                 yMax: 1,
                 yStep: SHARE_STEP,
@@ -473,6 +503,7 @@ export class UauiTimeSeriesChartElement extends UauiTimeSeriesChartElementBase {
             // jump as the editor moves through date ranges.
             roomAbove: this.today ? TODAY_LABEL_ROOM : 0,
             colors,
+            incompleteFrom: this.#incompleteIndex,
             lowerIsBetter: this.lowerIsBetter,
             datasets: data.series.map((s, i) => ({
                 label: s.label,

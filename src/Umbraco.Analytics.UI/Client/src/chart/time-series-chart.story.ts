@@ -39,6 +39,7 @@ const meta: Meta<UauiTimeSeriesChartElement> = {
         lowerIsBetter: false,
         markers: [],
         today: undefined,
+        incompleteFrom: undefined,
         yScale: "linear",
         groupBy: "day",
         weekStart: 1,
@@ -69,6 +70,7 @@ const meta: Meta<UauiTimeSeriesChartElement> = {
                 .lowerIsBetter=${args.lowerIsBetter}
                 .markers=${args.markers}
                 .today=${args.today}
+                .incompleteFrom=${args.incompleteFrom}
                 .yScale=${args.yScale}
                 .groupBy=${args.groupBy}
                 .weekStart=${args.weekStart}
@@ -231,6 +233,45 @@ export const WorkflowActivity: Story = {
 export const DaysAfterToday: Story = {
     name: "Days after today",
     args: { kind: "bar", series: [workflowActivity[0]], today: workflowToday },
+};
+
+/**
+ * `incomplete-from` marks the latest data as not final: here the last 2 days of 30. The line fades with hollow dots over a
+ * light hatched band, so the low last values don't read as a crash. The tooltip and the hidden table say "(incomplete)".
+ */
+export const IncompleteTail: Story = {
+    name: "Incomplete tail",
+    args: { series: [pageviews], incompleteFrom: "2026-06-22" },
+};
+
+/** The compare line is the previous period, so it is never faded. */
+export const IncompleteWithCompare: Story = {
+    name: "Incomplete tail, compare",
+    args: { series: [pageviews], compareSeries: [pageviewsPrevious], compareLabel: compareRangeLabel, incompleteFrom: "2026-06-22" },
+};
+
+/** Bars at the incomplete dates fade; the hatch covers their slots. */
+export const IncompleteBars: Story = {
+    name: "Incomplete tail, bars",
+    args: { kind: "bar", series: [pageviews], incompleteFrom: "2026-06-22" },
+};
+
+/** Every segment of a stacked bar fades at an incomplete date. */
+export const IncompleteStackedBars: Story = {
+    name: "Incomplete tail, stacked bars",
+    args: { kind: "stacked-bar", series: [returningVisitors, newVisitors], incompleteFrom: "2026-06-22" },
+};
+
+/** With `group-by="week"` the week that contains the date is incomplete, from its first day. */
+export const IncompleteWeeks: Story = {
+    name: "Incomplete tail, weeks",
+    args: { kind: "bar", series: [sundayWeeks], groupBy: "week", weekStart: 7, incompleteFrom: "2026-06-22" },
+};
+
+/** `today` and `incomplete-from` are independent: the today line stays on top of the hatch. */
+export const IncompleteWithToday: Story = {
+    name: "Incomplete tail, with today",
+    args: { series: [pageviews], today: "2026-06-23", incompleteFrom: "2026-06-23" },
 };
 
 /**

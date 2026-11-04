@@ -1,31 +1,35 @@
 import type { Plugin } from "@umbraco/analytics-ui/external/chart.js";
 import type { UauiChartDrawColors } from "./chart-colors.js";
+import { createIncompletePlugin, type UauiIncompleteState } from "./incomplete-plugin.js";
 import { createMarkersPlugin, type UauiMarkerPin, type UauiMarkerPlacement, type UauiMarkersState } from "./markers-plugin.js";
 import { createTodayPlugin, type UauiTodayPin, type UauiTodayState } from "./today-plugin.js";
 
 /**
- * What the time-series chart draws on the plot besides its series, which only a date x-axis has: the marker dots and
- * the today line. Keeps the plugins' state between draws; `plugins` is handed to the renderer, which makes a fresh
+ * What the time-series chart draws on the plot besides its series, which only a date x-axis has: the marker dots, the
+ * today line and the hatch over the incomplete part. Keeps the plugins' state between draws; `plugins` is handed to the renderer, which makes a fresh
  * pair for each Chart.js chart it creates, as plugins are per chart (never registered globally).
  */
 export class UauiTimeSeriesOverlays {
     #markers: UauiMarkersState;
     #today: UauiTodayState = {};
+    #incomplete: UauiIncompleteState = {};
 
     /** `onMarkerLayout` is told where the marker dots are drawn, after every layout in which they moved. */
     constructor(onMarkerLayout: (placements: UauiMarkerPlacement[]) => void) {
         this.#markers = { pins: [], onLayout: onMarkerLayout };
     }
 
-    /** The chart's plugins, in drawing order: the today line, then the markers. */
-    readonly plugins = (): Plugin[] => [createTodayPlugin(this.#today), createMarkersPlugin(this.#markers)];
+    /** The chart's plugins, in drawing order: the incomplete hatch, the today line (so it stays on top), then the markers. */
+    readonly plugins = (): Plugin[] => [createIncompletePlugin(this.#incomplete), createTodayPlugin(this.#today), createMarkersPlugin(this.#markers)];
 
     /** What to draw at the next update of the chart. */
-    set(colors: UauiChartDrawColors, markers: UauiMarkerPin[], today: UauiTodayPin | undefined): void {
+    set(colors: UauiChartDrawColors, markers: UauiMarkerPin[], today: UauiTodayPin | undefined, incompleteFrom?: number): void {
         this.#markers.colors = colors;
         this.#markers.pins = markers;
         this.#today.colors = colors;
         this.#today.pin = today;
+        this.#incomplete.colors = colors;
+        this.#incomplete.from = incompleteFrom;
     }
 
     /** Draws the dot at the `index`th date larger and stronger, or none. Returns whether that changed, so the chart needs a redraw. */
