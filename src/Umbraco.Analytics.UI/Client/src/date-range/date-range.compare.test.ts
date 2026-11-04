@@ -14,6 +14,8 @@ import "./date-range-modal.element.js";
 const value = { from: "2026-05-25", to: "2026-06-23" };
 
 const render = (template = html`<uaui-date-range .value=${value}></uaui-date-range>`) => renderWithModals(template, "uaui-date-range");
+// 31 Mar 2026: February is shorter, so a This month comparison has to stop at 28 Feb.
+const renderOn31Mar = () => render(html`<uaui-date-range today="2026-03-31"></uaui-date-range>`);
 const openModal = async (el: UauiTestElement) => {
     (shadow(el).querySelector("uui-button") as HTMLElement).click();
     await expect.poll(() => deepQuery<UauiTestElement>(document, "uaui-date-range-modal")).not.toBe(null);
@@ -80,27 +82,35 @@ describe("Feature: pick a comparison range", () => {
     });
 
     describe("Scenario: comparing This month with the previous period", () => {
-        const pad = (n: number) => String(n).padStart(2, "0");
         let modal: UauiTestElement;
         beforeEach(async () => {
-            modal = await openModal(await render());
+            modal = await openModal(await renderOn31Mar());
             await setField(modal, "compare", true);
             await setField(modal, "compare-mode", "previous-period");
             await setField(modal, "preset", "this-month");
         });
 
-        it("compares with the same days of the previous month", () => {
-            const now = new Date();
-            const previous = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-            const lastDay = new Date(now.getFullYear(), now.getMonth(), 0).getDate();
-            const prefix = `${previous.getFullYear()}-${pad(previous.getMonth() + 1)}`;
-            expect(comparison(modal)).toEqual([`${prefix}-01`, `${prefix}-${pad(Math.min(now.getDate(), lastDay))}`]);
+        it("compares 1–31 Mar with 1–28 Feb, the same days of a shorter previous month", () => {
+            expect(comparison(modal)).toEqual(["2026-02-01", "2026-02-28"]);
         });
 
         it("goes back to the equal-length window once a date is typed", async () => {
-            await setField(modal, "from", "2026-05-25");
-            await setField(modal, "to", "2026-06-23");
-            expect(comparison(modal)).toEqual(["2026-04-25", "2026-05-24"]);
+            await setField(modal, "from", "2026-03-02");
+            expect(comparison(modal)).toEqual(["2026-01-31", "2026-03-01"]);
+        });
+    });
+
+    describe("Scenario: picking This month before switching Compare on", () => {
+        let modal: UauiTestElement;
+        beforeEach(async () => {
+            modal = await openModal(await renderOn31Mar());
+            await setField(modal, "preset", "this-month");
+            // Switching Compare on picks the previous period by itself, so this covers the toggle on its own.
+            await setField(modal, "compare", true);
+        });
+
+        it("still compares with the same days of the previous month", () => {
+            expect(comparison(modal)).toEqual(["2026-02-01", "2026-02-28"]);
         });
     });
 
