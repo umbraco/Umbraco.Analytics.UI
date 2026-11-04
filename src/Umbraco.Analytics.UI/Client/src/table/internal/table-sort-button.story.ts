@@ -30,5 +30,5 @@ export const Ascending: Story = { args: { active: true } };
 /** The sorted column, descending. */
 export const Descending: Story = { args: { active: true, descending: true } };
 
-/** A column aligned to the end: the label sits on the right. */
+/** A column aligned to the end: the label sits on the right, flush with the column's values, and the symbol goes before it. */
 export const AlignedToEnd: Story = { name: "Aligned to end", args: { active: true, align: "end" } };
