@@ -77,9 +77,13 @@ const builtIn: Record<UauiBuiltInPresetId, (today: string) => Range> = {
     },
 };
 
-/** The dates for a built-in preset as of `today`, or `undefined` for any other id (including "custom"). */
+/**
+ * The dates for a built-in preset as of `today`, or `undefined` for any other id (including "custom") or when `today`
+ * isn't a real date. Only the record's own keys count, so an id such as "toString" is unknown too.
+ */
 export function builtInPresetRange(id: string, today: string): Range | undefined {
-    return id in builtIn ? builtIn[id as UauiBuiltInPresetId](today) : undefined;
+    if (!Object.prototype.hasOwnProperty.call(builtIn, id) || !parseIso(today)) return undefined;
+    return builtIn[id as UauiBuiltInPresetId](today);
 }
 
 /** Whole days from `from` to `to`, both inclusive. `undefined` unless both are real dates with `to` on or after `from`. */

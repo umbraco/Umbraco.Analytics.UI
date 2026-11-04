@@ -1,7 +1,7 @@
 import type { UmbLocalizationController } from "@umbraco-cms/backoffice/localization-api";
 import type { UauiCompare, UauiDateRange } from "../date-range/types.js";
 import type { UauiGroupBy } from "../group-by/group-by.element.js";
-import { compareRangeFor, dateBuckets, daysIn, previousPeriodRange, previousYearRange } from "../internal/date/date-math.js";
+import { builtInPresetRange, compareRangeFor, dateBuckets, daysIn, previousPeriodRange, previousYearRange } from "../internal/date/date-math.js";
 import { displayIsoDate, displayIsoDateWithoutYear } from "../internal/date/format-date.js";
 
 /**
@@ -21,6 +21,15 @@ export type UauiDateBucket = {
     /** ISO dates in order. Only days inside the range, so the first and last bucket can be short. */
     days: string[];
 };
+
+/**
+ * The dates a built-in preset of `uaui-date-range` gives as of `today` (an ISO date), the same dates the dialog picks:
+ * `last-7-days`, `last-30-days`, `last-month` or `last-year`. `undefined` for `custom`, any other id, or a `today` that isn't a real date. Use it to work
+ * out a saved preset's dates again on a later day, or the default range before the editor opens the dialog.
+ */
+export function uauiPresetRange(id: string, today: string): UauiDateSpan | undefined {
+    return builtInPresetRange(id, today);
+}
 
 /** The same number of days immediately before `range`, or `undefined` when `range` isn't a valid range (an unreal date, or `to` before `from`). */
 export function uauiPreviousPeriod(range: UauiDateSpan): UauiDateSpan | undefined {

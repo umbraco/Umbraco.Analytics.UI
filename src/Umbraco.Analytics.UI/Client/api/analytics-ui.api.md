@@ -424,6 +424,9 @@ export type UauiPoint = {
 };
 
 // @public
+export function uauiPresetRange(id: string, today: string): UauiDateSpan | undefined;
+
+// @public
 export function uauiPreviousPeriod(range: UauiDateSpan): UauiDateSpan | undefined;
 
 // @public
