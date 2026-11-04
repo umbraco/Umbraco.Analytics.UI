@@ -137,12 +137,29 @@ describe("Feature: sort by a column", () => {
             expect(header(el, "Views").querySelector("uaui-table-sort-button")!.shadowRoot!.activeElement).toBe(sortButton(el, "Views"));
         });
 
-        it("centres the sort symbol on the label", async () => {
-            const el = await renderElement(html`<uaui-data-table .columns=${nameColumns} .rows=${rows} .sort=${{ key: "views", direction: "asc" }}></uaui-data-table>`, "uaui-data-table");
-            const root = header(el, "Views").querySelector("uaui-table-sort-button")!.shadowRoot!;
-            const label = root.querySelector(".label")!.getBoundingClientRect();
-            const symbol = root.querySelector("uui-symbol-sort")!.getBoundingClientRect();
-            expect(Math.abs(symbol.top + symbol.height / 2 - (label.top + label.height / 2))).toBeLessThanOrEqual(2);
+        it("draws the sort arrow level with the label's capitals", async () => {
+            // Away from the test browser's pointer at the top-left corner: hovering spreads the chevrons apart.
+            const el = await renderElement(
+                html`<div style="margin: 200px 0 0 300px">
+                    <uaui-data-table .columns=${nameColumns} .rows=${rows} .sort=${{ key: "views", direction: "asc" }}></uaui-data-table>
+                </div>`,
+                "uaui-data-table",
+            );
+            const button = header(el, "Views").querySelector("uaui-table-sort-button")!;
+            const symbol = button.shadowRoot!.querySelector("uui-symbol-sort")!;
+            await new Promise((resolve) => setTimeout(resolve, 400)); // the symbol's transitions
+            // The visible chevron, not the symbol's box: UUI draws the chevron off the middle of its box.
+            const visible = [...symbol.shadowRoot!.querySelectorAll("svg")].find((svg) => getComputedStyle(svg).opacity === "1")!;
+            const chevron = visible.querySelector("path")!.getBoundingClientRect();
+            const text = [...button.childNodes].find((n) => n.nodeType === Node.TEXT_NODE && n.textContent!.trim())!;
+            const range = document.createRange();
+            range.selectNodeContents(text);
+            const style = getComputedStyle(button);
+            const context = document.createElement("canvas").getContext("2d")!;
+            context.font = `${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;
+            const capital = context.measureText("H");
+            const capsMiddle = range.getBoundingClientRect().top + capital.fontBoundingBoxAscent - capital.actualBoundingBoxAscent / 2;
+            expect(Math.abs((chevron.top + chevron.bottom) / 2 - capsMiddle)).toBeLessThanOrEqual(1);
         });
 
         it("has no button in a header that isn't sortable", async () => {
