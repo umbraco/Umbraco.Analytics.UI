@@ -30,7 +30,7 @@ type Story = StoryObj<UauiChartLegendElement>;
 /** Lines, one per series. Each entry is a toggle button: pressing it raises `deselected` or `selected`, and the owner sets `selected`. */
 export const Default: Story = {};
 
-/** A hidden series: its entry is struck through with a hollow swatch (a dotted line), and `aria-pressed` is false. */
+/** A hidden series: its entry is struck through in grey with a hollow swatch (a hollow line for lines), and `aria-pressed` is false. */
 export const HiddenSeries: Story = {
     name: "Hidden series",
     args: {

@@ -170,8 +170,8 @@ export class UauiChartLegendElement extends UmbLitElement {
 
             /*
              * The entry looks as it did before it was a button: the padding is cancelled by the margin, so only the hover
-             * tint and the focus ring reach past the text. A hidden series is struck through with a hollow swatch (a
-             * dotted line): shape and text carry it, not colour or opacity alone, so it holds in every theme.
+             * tint and the focus ring reach past the text. A hidden series is struck through in grey with a hollow swatch
+             * (a hollow line for lines): shape and text carry it, not colour or opacity alone, so it holds in every theme.
              */
             .legend-entry {
                 display: inline-flex;
@@ -196,8 +196,9 @@ export class UauiChartLegendElement extends UmbLitElement {
                 outline-offset: 1px;
             }
 
+            /* Grey in either theme, still above 4.5:1 against the surface. */
             .legend-entry[aria-pressed="false"] {
-                color: var(--uui-color-text-alt);
+                color: color-mix(in srgb, var(--uui-color-text) 60%, var(--uui-color-surface));
                 text-decoration: line-through;
             }
 
@@ -207,8 +208,11 @@ export class UauiChartLegendElement extends UmbLitElement {
                 background: none;
             }
 
+            /* A hollow line, like the hollow square of a hidden bar. */
             .legend-entry[aria-pressed="false"] .legend-line {
-                border-top-style: dotted;
+                box-sizing: border-box;
+                height: 5px;
+                border: 1.5px solid var(--swatch);
             }
 
             .legend-line {

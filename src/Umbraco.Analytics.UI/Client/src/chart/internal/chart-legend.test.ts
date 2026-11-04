@@ -38,7 +38,8 @@ describe("Feature: legend entries toggle their series", () => {
             const [shown, hidden] = entryButtons(el);
             expect(getComputedStyle(shown).textDecorationLine).toBe("none");
             expect(getComputedStyle(hidden).textDecorationLine).toBe("line-through");
-            expect(getComputedStyle(hidden.querySelector(".legend-line")!).borderTopStyle).toBe("dotted");
+            expect(getComputedStyle(shown.querySelector(".legend-line")!).borderLeftStyle).toBe("none");
+            expect(getComputedStyle(hidden.querySelector(".legend-line")!).borderLeftStyle).toBe("solid");
         });
 
         it("leaves the layout as it was: the entry's padding is cancelled by its margin", () => {
