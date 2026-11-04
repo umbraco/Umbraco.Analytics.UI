@@ -158,6 +158,27 @@ describe("Feature: conversion funnel", () => {
             expect([b.top - k.top, k.bottom - b.bottom]).toEqual([5, 5]);
         });
 
+        it("joins brackets that sit past the bar to it with a line at the bracket's width", async () => {
+            const el = await render(
+                html`<uaui-funnel
+                    style="width: 560px"
+                    .steps=${[{ id: "a", label: "A", value: 20 }]}
+                    .compareSteps=${[{ id: "a", label: "A", value: 100 }]}></uaui-funnel>`,
+            );
+            const reach = steps(el)[0].querySelector<HTMLElement>(".reach");
+            expect(widthOf(reach)).toBeCloseTo(widthOf(bracket(el, 0)), 0);
+        });
+
+        it("draws no joining line when the bar reaches the brackets", async () => {
+            const el = await render(
+                html`<uaui-funnel
+                    style="width: 560px"
+                    .steps=${[{ id: "a", label: "A", value: 100 }]}
+                    .compareSteps=${[{ id: "a", label: "A", value: 60 }]}></uaui-funnel>`,
+            );
+            expect(steps(el)[0].querySelector(".reach")).toBe(null);
+        });
+
         it("draws no bracket for a compare value of 0", async () => {
             const el = await render(
                 html`<uaui-funnel
