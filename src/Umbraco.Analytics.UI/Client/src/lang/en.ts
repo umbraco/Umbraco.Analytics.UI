@@ -54,6 +54,12 @@ export default {
         chartTodayDate: "{0} (today)",
         // The same for a week or month that contains today, "Nov 2, 2026 (includes today)".
         chartTodayInBucket: "{0} (includes today)",
+        // A date the chart marks incomplete (`incomplete-from`), "Nov 4, 2026 (incomplete)", in the tooltip and the hidden table.
+        chartIncompleteDate: "{0} (incomplete)",
+        // A date that is both today and incomplete, "Nov 4, 2026 (today, incomplete)".
+        chartTodayIncompleteDate: "{0} (today, incomplete)",
+        // The same for a week or month that contains today, "Nov 2, 2026 (includes today, incomplete)".
+        chartTodayIncompleteInBucket: "{0} (includes today, incomplete)",
         // The hidden table's caption when the chart's y-axis is logarithmic.
         chartTableCaptionLog: "Chart data (logarithmic scale)",
         // The hidden table's caption in the share view (stack="percent"), where each cell is chartShareValue.

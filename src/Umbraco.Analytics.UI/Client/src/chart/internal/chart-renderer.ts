@@ -38,6 +38,11 @@ export interface UauiChartModel {
      * (`null`, a date whose total is 0) is left empty rather than bridged.
      */
     share?: boolean;
+    /**
+     * The index of the first incomplete date: the series draw see-through from it on (segments ending at it or after,
+     * hollow points, fainter bars and areas). The compare is not faded. None fades nothing.
+     */
+    incompleteFrom?: number;
 }
 
 /** The x value (date or category) the pointer is on, and where to anchor a tooltip (canvas pixels). */
@@ -113,6 +118,10 @@ export function thinTicks<T extends { value: number }>(ticks: T[], height: numbe
 
 /** Room around the plot, in pixels. A model's `roomAbove` is added at the top (the today label). */
 const PADDING = { top: 8, right: 12, bottom: 0, left: 0 };
+
+/** An incomplete point: a hollow dot a little larger than a complete one, with a thicker border to read hollow. */
+const INCOMPLETE_POINT_RADIUS = 3;
+const INCOMPLETE_POINT_BORDER = 1.5;
 
 const LINE_WIDTH = 2.25;
 const COMPARE_LINE_WIDTH = 1.75;
@@ -334,10 +343,13 @@ export class UauiChartRenderer {
         if (model.share) return this.#shareBandDataset(model, i);
         const { colors } = model;
         const set = model.datasets[i];
-        const gap = model.lowerIsBetter ? { above: colors.gapBad, below: colors.gapGood } : { above: colors.gapGood, below: colors.gapBad };
         const showDots = model.labels.length <= MAX_POINTS_WITH_DOTS;
         const color = colors.series[i];
         const pointRadius = showDots && compareIndex < 0 ? 2 : 0;
+        const from = model.incompleteFrom;
+        const faded = from === undefined ? undefined : colors.incompleteSeries[i];
+        // Only the series line is faded, not its compare line, which is the previous period and complete.
+        const fadedAt = (index: number) => faded !== undefined && from !== undefined && index >= from;
         return {
             type: "line" as const,
             // In a chart with bars: drawn over them, and never stacked with them or another line.
@@ -348,7 +360,16 @@ export class UauiChartRenderer {
             borderColor: color.line,
             backgroundColor: color.fill,
             borderWidth: LINE_WIDTH,
-            clip: lineClip(LINE_WIDTH, pointRadius, POINT_HOVER_RADIUS),
+            clip: lineClip(LINE_WIDTH, faded && pointRadius ? INCOMPLETE_POINT_RADIUS : pointRadius, POINT_HOVER_RADIUS),
+            ...(faded
+                ? {
+                      // A segment is faded when it ends at an incomplete point.
+                      segment: {
+                          borderColor: (ctx: { p1DataIndex: number }) => (fadedAt(ctx.p1DataIndex) ? faded.line : undefined),
+                          backgroundColor: (ctx: { p1DataIndex: number }) => (fadedAt(ctx.p1DataIndex) ? faded.fill : undefined),
+                      },
+                  }
+                : {}),
             borderJoinStyle: "round" as const,
             borderCapStyle: "butt" as const,
             cubicInterpolationMode: "monotone" as const,
@@ -356,16 +377,14 @@ export class UauiChartRenderer {
             stepped: false,
             showLine: true,
             spanGaps: true,
-            fill:
-                compareIndex >= 0
-                    ? { target: model.datasets.length + compareIndex, ...gap }
-                    : model.kind === "area"
-                      ? ("origin" as const)
-                      : false,
-            pointRadius,
+            // A series with a compare line has its gap shaded by the compare line's own fill (see `#compareLineDataset`).
+            fill: compareIndex < 0 && model.kind === "area" ? ("origin" as const) : false,
+            pointRadius:
+                faded && pointRadius ? (ctx: { dataIndex: number }) => (fadedAt(ctx.dataIndex) ? INCOMPLETE_POINT_RADIUS : pointRadius) : pointRadius,
             pointStyle: "circle" as const,
-            pointBackgroundColor: color.line,
-            pointBorderColor: color.line,
+            pointBackgroundColor: faded ? (ctx: { dataIndex: number }) => (fadedAt(ctx.dataIndex) ? colors.surface : color.line) : color.line,
+            pointBorderColor: faded ? (ctx: { dataIndex: number }) => (fadedAt(ctx.dataIndex) ? faded.point : color.line) : color.line,
+            ...(faded ? { pointBorderWidth: (ctx: { dataIndex: number }) => (fadedAt(ctx.dataIndex) ? INCOMPLETE_POINT_BORDER : 1) } : {}),
             pointHoverRadius: POINT_HOVER_RADIUS,
             pointHoverBackgroundColor: colors.surface,
             pointHoverBorderColor: color.line,
@@ -380,6 +399,7 @@ export class UauiChartRenderer {
     #shareBandDataset(model: UauiChartModel, i: number) {
         const { colors } = model;
         const color = colors.series[i];
+        const from = model.incompleteFrom;
         return {
             type: "line" as const,
             stack: "share",
@@ -389,6 +409,13 @@ export class UauiChartRenderer {
             backgroundColor: color.bar,
             borderWidth: 1,
             clip: lineClip(1, 0, POINT_HOVER_RADIUS),
+            ...(from === undefined
+                ? {}
+                : {
+                      segment: {
+                          backgroundColor: (ctx: { p1DataIndex: number }) => (ctx.p1DataIndex >= from ? colors.incompleteSeries[i].bar : undefined),
+                      },
+                  }),
             borderJoinStyle: "round" as const,
             borderCapStyle: "butt" as const,
             cubicInterpolationMode: "default" as const,
@@ -409,6 +436,11 @@ export class UauiChartRenderer {
 
     #compareLineDataset(model: UauiChartModel, i: number, mixed: boolean) {
         const { colors } = model;
+        // The gap between this line and its series is shaded from here, not from the series: Chart.js gives every segment
+        // of a line with `segment` options the line's own `backgroundColor`, which would replace the gap's colours, and the
+        // series' segments are what fade the incomplete part. `above` and `below` are relative to the compare line, so
+        // where it is below its series (the series doing better) is `below`.
+        const gap = model.lowerIsBetter ? { above: colors.gapGood, below: colors.gapBad } : { above: colors.gapBad, below: colors.gapGood };
         return {
             type: "line" as const,
             stack: `compare-line-${i}`,
@@ -427,7 +459,7 @@ export class UauiChartRenderer {
             stepped: false,
             showLine: true,
             spanGaps: true,
-            fill: false,
+            fill: { target: i, ...gap },
             pointRadius: 0,
             pointStyle: "circle" as const,
             pointHoverRadius: POINT_HOVER_RADIUS,
@@ -441,6 +473,8 @@ export class UauiChartRenderer {
     #barDataset(model: UauiChartModel, i: number) {
         const { colors } = model;
         const stacked = model.kind === "stacked-bar";
+        const from = model.incompleteFrom;
+        const color = colors.series[i];
         return {
             type: "bar" as const,
             label: model.datasets[i].label,
@@ -448,7 +482,10 @@ export class UauiChartRenderer {
             order: 0,
             stack: stacked ? "current" : undefined,
             grouped: true,
-            backgroundColor: colors.series[i].bar,
+            backgroundColor:
+                from === undefined
+                    ? color.bar
+                    : (ctx: { dataIndex: number }) => (ctx.dataIndex >= from ? colors.incompleteSeries[i].bar : color.bar),
             // Stacked segments are told apart by a surface-coloured hairline as well as by colour.
             borderColor: colors.surface,
             borderWidth: stacked ? { top: 1, bottom: 1, left: 0, right: 0 } : 0,

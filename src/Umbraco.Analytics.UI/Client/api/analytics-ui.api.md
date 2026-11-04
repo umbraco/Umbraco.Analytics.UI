@@ -709,6 +709,7 @@ export class UauiTimeSeriesChartElement extends UauiTimeSeriesChartElementBase {
     // (undocumented)
     disconnectedCallback(): void;
     groupBy: UauiGroupBy;
+    incompleteFrom?: string;
     kind: UauiChartKind;
     markers: UauiMarker[];
     range?: UauiDateRange;

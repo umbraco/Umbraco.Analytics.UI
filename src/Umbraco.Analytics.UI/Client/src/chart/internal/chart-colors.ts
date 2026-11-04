@@ -18,7 +18,17 @@ export interface UauiChartDrawColors extends UauiChartColors {
     markerHover: string;
     markerLine: string;
     markerLineActive: string;
+    /** The hatch over the incomplete part of a time series chart. */
+    incompleteHatch: string;
+    /** Per series, in the same order as `series`: the colours of its incomplete part (see-through, hollow-point border). */
+    incompleteSeries: { line: string; fill: string; bar: string; point: string }[];
 }
+
+/** How much of a series' colour its incomplete part keeps: lines, their area, bars, and the border of a hollow point. */
+const INCOMPLETE_LINE = 40;
+const INCOMPLETE_FILL = 40;
+const INCOMPLETE_BAR = 35;
+const INCOMPLETE_POINT = 60;
 
 /**
  * Resolves the palette for `host` in its current theme: `uauiChartColors` for the shared part, with `series` in the
@@ -32,9 +42,11 @@ export function resolveChartColors(host: HTMLElement, probe: HTMLElement, keys: 
         probe.style.color = expression;
         return getComputedStyle(probe).color;
     };
+    const series = keys.map((key) => (typeof key === "number" ? shared.series[key - 1] : shared.status[key]));
+    const faded = (color: string, percent: number) => colorOf(`color-mix(in srgb, ${color} ${percent}%, transparent)`);
     return {
         ...shared,
-        series: keys.map((key) => (typeof key === "number" ? shared.series[key - 1] : shared.status[key])),
+        series,
         gapGood: colorOf("var(--uaui-color-gap-positive)"),
         gapBad: colorOf("var(--uaui-color-gap-negative)"),
         hoverLine: colorOf("color-mix(in srgb, var(--uui-color-text) 35%, transparent)"),
@@ -42,6 +54,13 @@ export function resolveChartColors(host: HTMLElement, probe: HTMLElement, keys: 
         markerHover: colorOf("var(--uaui-color-marker-hover)"),
         markerLine: colorOf("color-mix(in srgb, var(--uaui-color-marker) 26%, transparent)"),
         markerLineActive: colorOf("color-mix(in srgb, var(--uaui-color-marker-hover) 60%, transparent)"),
+        incompleteHatch: colorOf("color-mix(in srgb, var(--uui-color-text) 10%, transparent)"),
+        incompleteSeries: series.map((s) => ({
+            line: faded(s.line, INCOMPLETE_LINE),
+            fill: faded(s.fill, INCOMPLETE_FILL),
+            bar: faded(s.bar, INCOMPLETE_BAR),
+            point: faded(s.line, INCOMPLETE_POINT),
+        })),
     };
 }
 

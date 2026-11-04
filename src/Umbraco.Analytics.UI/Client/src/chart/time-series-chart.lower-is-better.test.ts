@@ -32,7 +32,12 @@ const renderChart = (lowerIsBetter: boolean, kind = "line") =>
 
 const tooltip = (el: Element) => shadow(el).querySelector("uaui-chart-tooltip") as HTMLElement;
 const chartOf = (el: Element) => Chart.getChart(shadow(el).querySelector("canvas")!)!;
-const gap = (el: Element) => (chartOf(el).data.datasets[0] as { fill?: unknown }).fill as { above: string; below: string };
+// The gap is shaded by the compare line's fill, which targets its series.
+const gap = (el: Element) => {
+    const fill = (chartOf(el).data.datasets as { fill?: unknown }[]).map((set) => set.fill).find((f) => typeof f === "object");
+    expect(fill).toBeDefined();
+    return fill as { above: string; below: string };
+};
 const hoverDate = async (el: Element, index: number) => {
     const canvas = shadow(el).querySelector("canvas")!;
     const x = chartOf(el).getDatasetMeta(0).data[index].x;
