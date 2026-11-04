@@ -375,8 +375,6 @@ export class ExampleWorkflowDashboardPageElement extends UmbLitElement {
             /* Inset from the footer's edge, as the backoffice's umb-workspace-breadcrumb is. */
             uui-breadcrumbs {
                 margin-inline-start: var(--uui-size-layout-1);
-                min-width: 0;
-                overflow: hidden;
             }
             /* The page-wide controls, in the header's action-menu slot. */
             .actions {

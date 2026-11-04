@@ -38,8 +38,8 @@ const render = (latency?: number, failing = false) => html`
 `;
 
 /**
- * Umbraco AI's Usage dashboard rebuilt from this package: group by and the date range (with compare) in the page
- * header, six KPI tiles with change badges, a stacked usage chart, and a breakdown table by model or profile.
+ * Umbraco AI's Usage dashboard rebuilt from this package: the date range (with compare) in the page header, six KPI
+ * tiles with change badges, a stacked usage chart with its group by, and a breakdown table by model or profile.
  * Everything is wired by the page, which holds the state.
  *
  * - Press a tile (requests, input, output or total tokens) and the chart plots that metric. Success rate and

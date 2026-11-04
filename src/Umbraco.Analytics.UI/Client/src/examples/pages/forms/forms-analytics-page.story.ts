@@ -61,13 +61,14 @@ const render = (latency?: number, failing = false, startRange?: UauiDateRange) =
  * package's rows, series and funnel steps. Compare is a second query for the comparison range, as Forms sends it.
  * Forms answers days; like Forms' own chart, the page adds them up into weeks and months on the client.
  *
- * The overview: group-by and date range (with compare) in the page header; KPI tiles Forms doesn't show today though its
+ * The overview: the date range (with compare) in the page header; KPI tiles Forms doesn't show today though its
  * data has them (entries, unique members, workflow failure rate), each picking the chart's metric; the Submissions
- * chart with entries and, in the danger colour, workflow errors; and the forms overview table (entries, unique
+ * chart, with its own group by, with entries and, in the danger colour, workflow errors; and the forms overview table (entries, unique
  * members, workflows, workflow errors, whether it stores records and is multi-page in status cells, retention days,
  * sources, and the form name linking to the form).
  *
- * A form's analytics, as on the form's Analytics tab: its Submissions chart; Submissions by hour of day, a bar per hour
+ * A form's analytics, as on the form's Analytics tab, with a group by beside the form picker for its two time charts:
+ * its Submissions chart; Submissions by hour of day, a bar per hour
  * (`uaui-category-chart`, the hours labelled in the editor's culture, last period's behind them); the Workflows table (triggered, success,
  * failures, and the failure rate in a status cell: none is positive, under 5% warning, 5% or more danger); a funnel
  * from record states (opened, partially submitted, submitted), an idea the data supports; and Origins by source page,

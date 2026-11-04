@@ -249,7 +249,6 @@ export class ExampleAiUsagePageElement extends UmbLitElement {
         return html`
             <umb-body-layout headline="Usage">
                 <div slot="action-menu" class="actions">
-                    <uaui-group-by .value=${this._groupBy} @change=${this.#onGroupBy}></uaui-group-by>
                     <uaui-date-range today="2026-06-23" .value=${this._range} .compare=${this._compare} @change=${this.#onDateRange}></uaui-date-range>
                 </div>
 
@@ -257,6 +256,7 @@ export class ExampleAiUsagePageElement extends UmbLitElement {
                     ${this.#tiles()}
 
                     <uui-box headline="${metricLabels[this._metric]} over time" headline-variant="h3" style="--uui-box-default-padding: 0">
+                        <uaui-group-by slot="header-actions" .value=${this._groupBy} @change=${this.#onGroupBy}></uaui-group-by>
                         <uaui-time-series-chart
                             kind="stacked-bar"
                             .series=${toSeries(this._metric, usage?.buckets)}
@@ -288,8 +288,9 @@ export class ExampleAiUsagePageElement extends UmbLitElement {
                     </uui-box>
                 </div>
 
+                <!-- Not just "AI": UUI's breadcrumbs fold the last item away when the first is narrower than their "…" button. -->
                 <uui-breadcrumbs slot="footer-info">
-                    <uui-breadcrumb-item href="#">AI</uui-breadcrumb-item>
+                    <uui-breadcrumb-item href="#">Umbraco AI</uui-breadcrumb-item>
                     <uui-breadcrumb-item last-item>Usage</uui-breadcrumb-item>
                 </uui-breadcrumbs>
             </umb-body-layout>
@@ -312,8 +313,6 @@ export class ExampleAiUsagePageElement extends UmbLitElement {
             /* Inset from the footer's edge, as the backoffice's umb-workspace-breadcrumb is. */
             uui-breadcrumbs {
                 margin-inline-start: var(--uui-size-layout-1);
-                min-width: 0;
-                overflow: hidden;
             }
             /* The page-wide controls, in the header's action-menu slot. */
             .actions {

@@ -190,7 +190,6 @@ export class ExampleEngageAnalyticsPageElement extends UmbLitElement {
         return html`
             <umb-body-layout headline=${visitors ? "Visitors" : "Pageviews"}>
                 <div slot="action-menu" class="actions">
-                    <uaui-group-by .value=${this._groupBy} @change=${this.#onGroupByChange}></uaui-group-by>
                     <uaui-date-range
                         .value=${this._range}
                         .compare=${this._compare}
@@ -203,6 +202,7 @@ export class ExampleEngageAnalyticsPageElement extends UmbLitElement {
                         headline=${visitors ? "New and returning visitors over time" : "Pageviews over time"}
                         headline-variant="h3"
                         style="--uui-box-default-padding: 0">
+                        <uaui-group-by slot="header-actions" .value=${this._groupBy} @change=${this.#onGroupByChange}></uaui-group-by>
                         <uaui-time-series-chart
                             .kind=${visitors ? "stacked-bar" : "area"}
                             .series=${this._series}
@@ -244,8 +244,6 @@ export class ExampleEngageAnalyticsPageElement extends UmbLitElement {
             /* Inset from the footer's edge, as the backoffice's umb-workspace-breadcrumb is. */
             uui-breadcrumbs {
                 margin-inline-start: var(--uui-size-layout-1);
-                min-width: 0;
-                overflow: hidden;
             }
             /* The page-wide controls, in the header's action-menu slot. */
             .actions {

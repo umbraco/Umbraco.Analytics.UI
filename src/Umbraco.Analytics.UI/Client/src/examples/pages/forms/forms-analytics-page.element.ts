@@ -272,6 +272,8 @@ export class ExampleFormsAnalyticsPageElement extends UmbLitElement {
     @state() private _range: UauiDateRange = initialRange;
     @state() private _compare?: UauiCompare = uauiCompareFor("previous-period", initialRange);
     @state() private _groupBy: UauiGroupBy = "day";
+    // The form section's two charts have their own group by, beside the form picker, so it sits with the charts it changes.
+    @state() private _formGroupBy: UauiGroupBy = "day";
     @state() private _metric: MetricId = "entries";
     /** The origins chart: entries per page (`"normal"`) or each page's share of the day's entries (`"percent"`). */
     @state() private _originView: UauiChartStack = "normal";
@@ -394,13 +396,13 @@ export class ExampleFormsAnalyticsPageElement extends UmbLitElement {
         this._overviewLoading = false;
     }
 
-    // The form's two charts, which follow the group-by.
+    // The form's two charts, which follow the form section's group by.
     async #loadFormSeries() {
         const request = ++this.#formSeriesRequest;
         this._formSeriesLoading = true;
         this._formSeriesError = false;
         const formId = this._formId;
-        const groupBy = this._groupBy;
+        const groupBy = this._formGroupBy;
         try {
             const [current, compare] = await this.#both(async (range): Promise<FormSeriesAnswers> => {
                 const [submissions, origins] = await Promise.all([
@@ -488,6 +490,10 @@ export class ExampleFormsAnalyticsPageElement extends UmbLitElement {
     #onGroupByChange(e: CustomEvent<{ value: UauiGroupBy }>) {
         this._groupBy = e.detail.value;
         void this.#loadSummary();
+    }
+
+    #onFormGroupByChange(e: CustomEvent<{ value: UauiGroupBy }>) {
+        this._formGroupBy = e.detail.value;
         void this.#loadFormSeries();
     }
 
@@ -555,6 +561,7 @@ export class ExampleFormsAnalyticsPageElement extends UmbLitElement {
         const headline = metric.id === "entries" ? "Submissions" : metric.label;
         const rendered: Record<OverviewBoxId, unknown> = {
             submissions: html`<uui-box headline=${headline} headline-variant="h3" style="--uui-box-default-padding: 0">
+                <uaui-group-by slot="header-actions" .value=${this._groupBy} @change=${this.#onGroupByChange}></uaui-group-by>
                 <uaui-time-series-chart
                     kind="line"
                     .series=${this.#chartSeries(metric, this._summary)}
@@ -640,7 +647,7 @@ export class ExampleFormsAnalyticsPageElement extends UmbLitElement {
                     .range=${this._range}
                     .compare=${this._compare}
                     .compareLabel=${this.#compareLabel()}
-                    .groupBy=${this._groupBy}
+                    .groupBy=${this._formGroupBy}
                     .valueFormat=${COUNT}
                     ?loading=${this._formSeriesLoading}
                     ?error=${this._formSeriesError}
@@ -692,7 +699,7 @@ export class ExampleFormsAnalyticsPageElement extends UmbLitElement {
                     stack=${this._originView}
                     .series=${series && !this.#noEntries(series.submissions) ? formsSeriesBy(series.origins, "pageName", "entries") : []}
                     .range=${this._range}
-                    .groupBy=${this._groupBy}
+                    .groupBy=${this._formGroupBy}
                     .valueFormat=${COUNT}
                     ?loading=${this._formSeriesLoading}
                     ?error=${this._formSeriesError}
@@ -720,7 +727,6 @@ export class ExampleFormsAnalyticsPageElement extends UmbLitElement {
         return html`
             <umb-body-layout headline="Analytics">
                 <div slot="action-menu" class="actions">
-                    <uaui-group-by .value=${this._groupBy} @change=${this.#onGroupByChange}></uaui-group-by>
                     <uaui-date-range today="2026-06-23" .value=${this._range} .compare=${this._compare} @change=${this.#onRangeChange}></uaui-date-range>
                 </div>
 
@@ -736,6 +742,7 @@ export class ExampleFormsAnalyticsPageElement extends UmbLitElement {
                             .options=${FORMS.map((f) => ({ name: f.name, value: f.id, selected: f.id === this._formId }))}
                             .value=${this._formId}
                             @change=${this.#onFormChange}></uui-select>
+                        <uaui-group-by .value=${this._formGroupBy} @change=${this.#onFormGroupByChange}></uaui-group-by>
                     </div>
 
                     ${this.#renderFormBoxes()}
@@ -767,8 +774,6 @@ export class ExampleFormsAnalyticsPageElement extends UmbLitElement {
             /* Inset from the footer's edge, as the backoffice's umb-workspace-breadcrumb is. */
             uui-breadcrumbs {
                 margin-inline-start: var(--uui-size-layout-1);
-                min-width: 0;
-                overflow: hidden;
             }
             /* The page-wide controls, in the header's action-menu slot. */
             .actions {
@@ -781,13 +786,13 @@ export class ExampleFormsAnalyticsPageElement extends UmbLitElement {
             .section {
                 display: flex;
                 align-items: center;
-                justify-content: space-between;
                 gap: var(--uui-size-4);
                 margin-top: var(--uui-size-layout-1);
             }
-            /* UUI's .uui-h3 (written .uui-h3.uui-h3, so a plain h2 rule loses) adds a 24px bottom margin, which pushed the title above the picker's centre. Keep its -2px optical inset. */
+            /* UUI's .uui-h3 (written .uui-h3.uui-h3, so a plain h2 rule loses) adds a 24px bottom margin, which pushed the title above the controls' centre. Keep its -2px optical inset. */
             .section h2.uui-h3 {
                 margin-block: 0;
+                margin-inline-end: auto;
             }
             .kpis {
                 display: grid;
