@@ -4,6 +4,7 @@ import type { UauiDatePreset } from "./types.js";
 export const defaultPresets = (): UauiDatePreset[] => [
     { id: "last-7-days" },
     { id: "last-30-days" },
+    { id: "this-month" },
     { id: "last-month" },
     { id: "last-year" },
     { id: "custom" },

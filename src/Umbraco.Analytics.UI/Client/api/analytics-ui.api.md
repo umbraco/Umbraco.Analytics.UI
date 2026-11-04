@@ -108,7 +108,7 @@ export type UauiCompare = {
 };
 
 // @public
-export function uauiCompareFor(mode: UauiCompare["mode"], range: UauiDateSpan): UauiCompare | undefined;
+export function uauiCompareFor(mode: UauiCompare["mode"], range: UauiDatePresetSpan): UauiCompare | undefined;
 
 // @public
 export class UauiDataTableElement extends UauiDataTableElementBase {
@@ -174,6 +174,9 @@ export type UauiDatePreset = {
         to: string;
     };
 };
+
+// @public
+export type UauiDatePresetSpan = Pick<UauiDateRange, "from" | "to" | "preset">;
 
 // @public
 export type UauiDateRange = {
@@ -424,7 +427,10 @@ export type UauiPoint = {
 };
 
 // @public
-export function uauiPreviousPeriod(range: UauiDateSpan): UauiDateSpan | undefined;
+export function uauiPresetRange(id: string, today: string): UauiDateSpan | undefined;
+
+// @public
+export function uauiPreviousPeriod(range: UauiDatePresetSpan): UauiDateSpan | undefined;
 
 // @public
 export function uauiPreviousYear(range: UauiDateSpan): UauiDateSpan | undefined;

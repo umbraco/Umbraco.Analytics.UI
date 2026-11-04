@@ -5,6 +5,7 @@ import {
     uauiDateBuckets,
     uauiDaysIn,
     uauiFormatDateRange,
+    uauiPresetRange,
     uauiPreviousPeriod,
     uauiPreviousYear,
     type UauiWeekStart,
@@ -17,9 +18,43 @@ const localize = {
 };
 
 describe("Feature: public date helpers", () => {
+    describe("Scenario: the dates of a built-in preset", () => {
+        const today = "2026-11-04";
+        it.each([
+            ["last-7-days", { from: "2026-10-29", to: "2026-11-04" }],
+            ["last-30-days", { from: "2026-10-06", to: "2026-11-04" }],
+            ["this-month", { from: "2026-11-01", to: "2026-11-04" }],
+            ["last-month", { from: "2026-10-01", to: "2026-10-31" }],
+            ["last-year", { from: "2025-01-01", to: "2025-12-31" }],
+        ])("gives the dates of %s as of today", (id, dates) => {
+            expect(uauiPresetRange(id, today)).toEqual(dates);
+        });
+        it("is undefined for custom, which has no dates of its own", () => {
+            expect(uauiPresetRange("custom", today)).toBe(undefined);
+        });
+        it("is undefined for an id the package doesn't know", () => {
+            expect(uauiPresetRange("this-quarter", today)).toBe(undefined);
+        });
+        it("is undefined for an id that only an object's built-in keys have", () => {
+            expect(uauiPresetRange("toString", today)).toBe(undefined);
+        });
+        it("is undefined when today isn't a real date", () => {
+            expect(uauiPresetRange("last-month", "not-a-date")).toBe(undefined);
+        });
+    });
+
     describe("Scenario: the previous period", () => {
         it("is the same number of days straight before the range", () => {
             expect(uauiPreviousPeriod({ from: "2026-05-25", to: "2026-06-23" })).toEqual({ from: "2026-04-25", to: "2026-05-24" });
+        });
+        it("is the same days of the previous month for a this-month range", () => {
+            expect(uauiPreviousPeriod({ from: "2026-11-01", to: "2026-11-04", preset: "this-month" })).toEqual({ from: "2026-10-01", to: "2026-10-04" });
+        });
+        it("is the equal-length window for the same dates with another preset", () => {
+            expect(uauiPreviousPeriod({ from: "2026-11-01", to: "2026-11-04", preset: "custom" })).toEqual({ from: "2026-10-28", to: "2026-10-31" });
+        });
+        it("is the equal-length window for the same dates with no preset", () => {
+            expect(uauiPreviousPeriod({ from: "2026-11-01", to: "2026-11-04" })).toEqual({ from: "2026-10-28", to: "2026-10-31" });
         });
         it("is undefined for a range that isn't valid", () => {
             expect(uauiPreviousPeriod({ from: "2026-06-23", to: "2026-05-25" })).toBe(undefined);
@@ -38,6 +73,27 @@ describe("Feature: public date helpers", () => {
                 mode: "previous-period",
                 from: "2026-04-25",
                 to: "2026-05-24",
+            });
+        });
+        it("gives the same days of the previous month for a this-month range", () => {
+            expect(uauiCompareFor("previous-period", { from: "2026-03-01", to: "2026-03-31", preset: "this-month" })).toEqual({
+                mode: "previous-period",
+                from: "2026-02-01",
+                to: "2026-02-28",
+            });
+        });
+        it("gives the equal-length window when the range has no preset", () => {
+            expect(uauiCompareFor("previous-period", { from: "2026-11-01", to: "2026-11-04" })).toEqual({
+                mode: "previous-period",
+                from: "2026-10-28",
+                to: "2026-10-31",
+            });
+        });
+        it("gives the previous year's dates for a this-month range", () => {
+            expect(uauiCompareFor("previous-year", { from: "2026-11-01", to: "2026-11-04", preset: "this-month" })).toEqual({
+                mode: "previous-year",
+                from: "2025-11-01",
+                to: "2025-11-04",
             });
         });
         it("gives a UauiCompare with the previous year's dates", () => {

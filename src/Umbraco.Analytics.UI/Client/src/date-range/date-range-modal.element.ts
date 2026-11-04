@@ -16,6 +16,7 @@ const CUSTOM = "custom";
 const presetTerms: Record<string, string> = {
     "last-7-days": "uauiAnalytics_dateRangeLast7Days",
     "last-30-days": "uauiAnalytics_dateRangeLast30Days",
+    "this-month": "uauiAnalytics_dateRangeThisMonth",
     "last-month": "uauiAnalytics_dateRangeLastMonth",
     "last-year": "uauiAnalytics_dateRangeLastYear",
     [CUSTOM]: "uauiAnalytics_dateRangeCustom",

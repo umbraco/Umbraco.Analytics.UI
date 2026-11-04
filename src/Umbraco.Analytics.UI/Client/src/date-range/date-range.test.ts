@@ -109,6 +109,32 @@ describe("Feature: pick a date range", () => {
         });
     });
 
+    describe("Scenario: the preset list", () => {
+        it("offers This month between Last 30 days and Last month", async () => {
+            const el = await renderWithModals(html`<uaui-date-range .value=${value}></uaui-date-range>`, "uaui-date-range");
+            const modal = await openModal(el);
+            const options = (field(modal, "preset") as unknown as { options: { name: string; value: string }[] }).options;
+            expect(options.map((o) => o.name)).toEqual(["Last 7 days", "Last 30 days", "This month", "Last month", "Last year", "Custom"]);
+        });
+    });
+
+    describe("Scenario: choosing This month", () => {
+        let modal: UauiTestElement;
+        beforeEach(async () => {
+            const el = await renderWithModals(html`<uaui-date-range .value=${value}></uaui-date-range>`, "uaui-date-range");
+            modal = await openModal(el);
+            await setField(modal, "preset", "this-month");
+        });
+
+        it("fills the start date with the 1st of this month", () => {
+            expect(field(modal, "from").value).toBe(isoDaysFromToday(0).slice(0, 8) + "01");
+        });
+
+        it("fills the end date with today", () => {
+            expect(field(modal, "to").value).toBe(isoDaysFromToday(0));
+        });
+    });
+
     describe("Scenario: editing a date after choosing a preset", () => {
         let modal: UauiTestElement;
         beforeEach(async () => {

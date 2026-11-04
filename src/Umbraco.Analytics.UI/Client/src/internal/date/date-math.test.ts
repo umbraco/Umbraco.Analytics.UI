@@ -39,6 +39,12 @@ describe("Feature: date range maths", () => {
         it("last 30 days includes today", () => {
             expect(builtInPresetRange("last-30-days", "2026-06-23")).toEqual({ from: "2026-05-25", to: "2026-06-23" });
         });
+        it("this month runs from the 1st to today", () => {
+            expect(builtInPresetRange("this-month", "2026-06-23")).toEqual({ from: "2026-06-01", to: "2026-06-23" });
+        });
+        it("this month on the 1st is that one day", () => {
+            expect(builtInPresetRange("this-month", "2026-11-01")).toEqual({ from: "2026-11-01", to: "2026-11-01" });
+        });
         it("last month is the previous calendar month", () => {
             expect(builtInPresetRange("last-month", "2026-06-23")).toEqual({ from: "2026-05-01", to: "2026-05-31" });
         });
@@ -68,6 +74,33 @@ describe("Feature: date range maths", () => {
         });
         it("has no previous period for a half-typed date", () => {
             expect(previousPeriodRange({ from: "", to: "2026-05-25" })).toBeUndefined();
+        });
+        it("keeps the equal-length window for a preset other than this-month", () => {
+            expect(previousPeriodRange({ from: "2026-11-01", to: "2026-11-04", preset: "last-30-days" })).toEqual({ from: "2026-10-28", to: "2026-10-31" });
+        });
+        it("keeps the equal-length window for a custom range, even one that looks like this month", () => {
+            expect(previousPeriodRange({ from: "2026-11-01", to: "2026-11-04", preset: "custom" })).toEqual({ from: "2026-10-28", to: "2026-10-31" });
+        });
+        it("takes the same days of the previous month for this month", () => {
+            expect(previousPeriodRange({ from: "2026-11-01", to: "2026-11-04", preset: "this-month" })).toEqual({ from: "2026-10-01", to: "2026-10-04" });
+        });
+        it("takes the whole previous month for a full month", () => {
+            expect(previousPeriodRange({ from: "2026-05-01", to: "2026-05-30", preset: "this-month" })).toEqual({ from: "2026-04-01", to: "2026-04-30" });
+        });
+        it("stops at the last day of a shorter previous month", () => {
+            expect(previousPeriodRange({ from: "2026-05-01", to: "2026-05-31", preset: "this-month" })).toEqual({ from: "2026-04-01", to: "2026-04-30" });
+        });
+        it("stops at 28 Feb in a common year", () => {
+            expect(previousPeriodRange({ from: "2026-03-01", to: "2026-03-31", preset: "this-month" })).toEqual({ from: "2026-02-01", to: "2026-02-28" });
+        });
+        it("stops at 29 Feb in a leap year", () => {
+            expect(previousPeriodRange({ from: "2028-03-01", to: "2028-03-31", preset: "this-month" })).toEqual({ from: "2028-02-01", to: "2028-02-29" });
+        });
+        it("wraps from January to December of the year before", () => {
+            expect(previousPeriodRange({ from: "2026-01-01", to: "2026-01-15", preset: "this-month" })).toEqual({ from: "2025-12-01", to: "2025-12-15" });
+        });
+        it("has no previous period for an invalid this-month range", () => {
+            expect(previousPeriodRange({ from: "2026-11-04", to: "2026-11-01", preset: "this-month" })).toBeUndefined();
         });
         it("moves both dates back one year for the previous year", () => {
             expect(previousYearRange({ from: "2026-05-25", to: "2026-06-23" })).toEqual({ from: "2025-05-25", to: "2025-06-23" });
@@ -100,6 +133,15 @@ describe("compareRangeFor", () => {
 
     it("gives the previous period", () => {
         expect(compareRangeFor("previous-period", range)).toEqual(previousPeriodRange(range));
+    });
+
+    it("gives the month-aligned previous period for this month", () => {
+        expect(compareRangeFor("previous-period", { from: "2026-11-01", to: "2026-11-04", preset: "this-month" })).toEqual({ from: "2026-10-01", to: "2026-10-04" });
+    });
+
+    it("leaves the previous year alone for this month", () => {
+        const month = { from: "2026-11-01", to: "2026-11-04", preset: "this-month" };
+        expect(compareRangeFor("previous-year", month)).toEqual({ from: "2025-11-01", to: "2025-11-04" });
     });
 
     it("gives the previous year", () => {
