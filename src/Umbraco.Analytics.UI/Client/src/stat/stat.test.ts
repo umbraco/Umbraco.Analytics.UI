@@ -6,12 +6,15 @@ import darkCss from "@umbraco-ui/uui/themes/dark.css?inline";
 import highContrastCss from "@umbraco-ui/uui/themes/high-contrast.css?inline";
 import { render } from "vitest-browser-lit";
 import { axeRun } from "../internal/test/a11y.js";
-import { renderElement, settle, shadow, type UauiTestElement } from "../internal/test/dom.js";
+import { deepText, renderElement, settle, shadow, type UauiTestElement } from "../internal/test/dom.js";
 import type { UauiDeltaBadgeElement } from "../delta-badge/delta-badge.element.js";
 import "./stat.element.js";
 
 const badge = (el: Element) => shadow(el).querySelector("uaui-delta-badge") as UauiDeltaBadgeElement | null;
-const text = (el: Element, selector: string) => shadow(el).querySelector(selector)?.textContent?.trim();
+const text = (el: Element, selector: string) => {
+    const node = shadow(el).querySelector(selector);
+    return node ? deepText(node).trim() : undefined;
+};
 
 describe("Feature: a stat, stacked for the column toolbar or inline for a box header", () => {
     describe("Scenario: label and value", () => {

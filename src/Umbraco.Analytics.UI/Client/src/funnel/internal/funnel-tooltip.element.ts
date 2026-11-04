@@ -5,8 +5,8 @@ import { UauiChartTooltipSurface } from "../../chart/internal/chart-tooltip-surf
 import { UauiFunnelSwatchStyles } from "./funnel-swatch.css.js";
 
 /**
- * The tooltip of a hovered or focused `uaui-funnel` step: its label, this period's value, the compare value with its
- * change, and the step's share of the first step and of the previous one. It draws what it is given and has no
+ * The tooltip of a hovered or focused `uaui-funnel` step: its label, this period's value with its change, the compare
+ * value, each beside its period's name, and the step's share of the first step and of the previous one. It draws what it is given and has no
  * position of its own: the funnel places it. Internal: not exported.
  *
  * @element uaui-funnel-tooltip
@@ -59,17 +59,17 @@ export class UauiFunnelTooltipElement extends UmbLitElement {
                 <span class="swatch" aria-hidden="true"></span>
                 <span class="tooltip-value">${this.value}</span>
                 <span class="tooltip-label">${this.valueLabel}</span>
+                ${this.compare !== undefined && this.change && this.change.previous > 0
+                    ? html`<uaui-delta-badge size="sm" .current=${this.change.current} .previous=${this.change.previous}></uaui-delta-badge>`
+                    : nothing}
             </div>
             ${this.compare === undefined
                 ? nothing
                 : html`<div class="tooltip-row">
                       <span class="swatch swatch-compare" aria-hidden="true"></span>
                       <span class="tooltip-value">${this.compare}</span>
-                      ${this.change && this.change.previous > 0
-                          ? html`<uaui-delta-badge size="sm" .current=${this.change.current} .previous=${this.change.previous}></uaui-delta-badge>`
-                          : nothing}
-                  </div>
-                  <div class="tooltip-sub">${this.compareLabel}</div>`}
+                      <span class="tooltip-label">${this.compareLabel}</span>
+                  </div>`}
             ${this.ofFirst === undefined && this.fromPrevious === undefined
                 ? nothing
                 : html`<div class="tooltip-shares">
@@ -82,8 +82,11 @@ export class UauiFunnelTooltipElement extends UmbLitElement {
         UauiChartTooltipSurface,
         UauiFunnelSwatchStyles,
         css`
+            /* Wider than the chart's tooltip: each period's name sits beside its value, and this period's row also
+               carries the change badge, so a typical date range fits on one line. Longer names still wrap. */
             :host {
                 min-width: 168px;
+                max-width: 340px;
             }
 
             .tooltip-row {
@@ -122,14 +125,6 @@ export class UauiFunnelTooltipElement extends UmbLitElement {
                 --uaui-tint-positive: color-mix(in srgb, var(--uui-palette-jungle-green) var(--_uaui-tooltip-tint), transparent);
                 --uaui-tint-negative: color-mix(in srgb, var(--uui-palette-spanish-pink) var(--_uaui-tooltip-tint), transparent);
                 --uaui-tint-neutral: color-mix(in srgb, var(--uui-palette-white) var(--_uaui-tooltip-tint), transparent);
-            }
-
-            .tooltip-sub {
-                margin-block: -2px 2px;
-                margin-inline-start: calc(14px + var(--uui-size-space-2));
-                font-size: 11px;
-                white-space: nowrap;
-                color: color-mix(in srgb, var(--uui-palette-white) 70%, transparent);
             }
 
             .tooltip-shares {

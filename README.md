@@ -30,6 +30,7 @@ Usage and API are in [Storybook](https://umbraco.github.io/Umbraco.Analytics.UI/
 | `uaui-stat` | One figure with its label and change badge. Stacked over a table column (in its column toolbar), or inline in a box header. |
 | `uaui-text-cell`, `uaui-link-cell`, `uaui-number-cell`, `uaui-percent-cell`, `uaui-share-cell`, `uaui-status-cell`, `uaui-date-cell`, `uaui-progress-cell` | Table cells. Name one in a column's `elementName`, or write your own. |
 | `uaui-table-compare-badge` | The change badge of a table cell: finds the compare row and shows how a value moved. Use it in your own cells. |
+| `uaui-table-skeleton-cell` | The loading placeholder of a table cell, one or two lines. Use it in your own cells. |
 | `uaui-empty-state` | "Nothing to show" message. The chart and table use it too. |
 | `uaui-error-state` | "Could not load" message, with an optional Retry button. The chart and table show it when their `error` is set. The KPI tile shows a dash instead, with no Retry. |
 

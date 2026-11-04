@@ -77,6 +77,7 @@ Each links to its page in Storybook.
 - [`uaui-stat`](https://umbraco.github.io/Umbraco.Analytics.UI/?path=/docs/components-stat--docs)
 - Table cells, [`uaui-text-cell`, `uaui-link-cell`, `uaui-number-cell`, `uaui-percent-cell`, `uaui-share-cell`, `uaui-status-cell`, `uaui-date-cell` and `uaui-progress-cell`](https://umbraco.github.io/Umbraco.Analytics.UI/?path=/docs/components-data-table-cells--docs)
 - [`uaui-table-compare-badge`](https://umbraco.github.io/Umbraco.Analytics.UI/?path=/docs/components-data-table-compare-badge--docs)
+- [`uaui-table-skeleton-cell`](https://umbraco.github.io/Umbraco.Analytics.UI/?path=/docs/components-data-table-skeleton-cell--docs)
 - [`uaui-empty-state`](https://umbraco.github.io/Umbraco.Analytics.UI/?path=/docs/components-empty-state--docs)
 - [`uaui-error-state`](https://umbraco.github.io/Umbraco.Analytics.UI/?path=/docs/components-error-state--docs)
 
