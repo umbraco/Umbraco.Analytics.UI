@@ -580,6 +580,8 @@ export class UauiTableCompareBadgeElement extends UmbLitElement {
     // (undocumented)
     render(): TemplateResult | typeof nothing;
     size: UauiDeltaBadgeSize;
+    // (undocumented)
+    static styles: CSSResultGroup;
     value: unknown;
 }
 

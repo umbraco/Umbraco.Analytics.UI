@@ -1,4 +1,4 @@
-import { customElement, html, nothing, property, state, type TemplateResult } from "@umbraco-cms/backoffice/external/lit";
+import { css, customElement, html, nothing, property, state, type CSSResultGroup, type TemplateResult } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import "../delta-badge/delta-badge.element.js";
 import type { UauiDeltaBadgeSize, UauiDeltaUnit } from "../delta-badge/delta-badge.element.js";
@@ -15,6 +15,10 @@ import type { UauiTableColumn, UauiTableCompareLookup } from "./types.js";
  * Inside a `uaui-data-table` it finds the compare row through the table's `UAUI_TABLE_CONTEXT`. Whether a fall is good
  * comes from the column's `meta.lowerIsBetter`. The change itself is worked out by `uaui-delta-badge`. It shows nothing
  * without a compare value or, for a percent change, when that is 0.
+ *
+ * The element draws no box of its own (`display: contents`): its badge sits in the cell's layout directly, and with
+ * nothing to show it takes no room, so a cell that spaces the badge from its value with a `gap` ends at its value.
+ * Style the badge through inherited properties (e.g. `line-height`); a margin or padding on the element does nothing.
  *
  * The column's `meta.deltaUnit: "points"` shows the change in percentage points instead of a percent change, for rate
  * columns. With points, a column whose `valueFormat.style` is `"percent"` holds fractions, so 0.05 to 0.06 is +1 pp;
@@ -69,6 +73,14 @@ export class UauiTableCompareBadgeElement extends UmbLitElement {
             .unit=${unit}
             ?lower-is-better=${this.column.meta?.lowerIsBetter === true}></uaui-delta-badge>`;
     }
+
+    // No box of its own: an empty badge would otherwise still be an item of the cell's flex row and push the value
+    // away from the column edge by the cell's gap.
+    static override styles: CSSResultGroup = css`
+        :host {
+            display: contents;
+        }
+    `;
 }
 
 declare global {
