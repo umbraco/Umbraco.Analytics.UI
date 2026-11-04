@@ -43,7 +43,8 @@ export class UauiTableSortButtonElement extends UmbLitElement {
 
         button {
             display: inline-flex;
-            align-items: center;
+            /* Baseline, not center: the symbol is placed from the label's baseline (see uui-symbol-sort below). */
+            align-items: baseline;
             justify-content: flex-start;
             gap: var(--uui-size-1);
             width: 100%;
@@ -60,11 +61,22 @@ export class UauiTableSortButtonElement extends UmbLitElement {
         }
 
         /*
-         * The chevron is drawn in the lower half of the symbol's box, and capitals sit above the middle of a line,
-         * so a centred box still reads low next to uppercase labels. Nudge it up to match.
+         * Puts the visible chevron's middle level with the middle of the label's capitals, at any font size and in
+         * any font. uui-symbol-sort draws each chevron in a 24px-tall SVG but positions it in em, so the chevron's
+         * middle sits 12px - 0.8em below the middle of the symbol's 1em box (3.2px at a table header's 11px, none
+         * at 15px); centring the box doesn't move the drawing. With baseline alignment the box's bottom is on the
+         * label's baseline (it has no baseline of its own), so its middle is 0.5em above it and the chevron's
+         * middle is 1.3em - 12px above it. This moves that to half the cap height above the baseline.
+         *
+         * The chevron path (y 9 to 17 of 24) also sits one viewBox unit below the SVG's middle, and the descending
+         * one is the same SVG rotated, so it sits one unit above: 0.0375em (0.9em / 24) either way, taken off here.
          */
         uui-symbol-sort {
-            transform: translateY(-1.5px);
+            transform: translateY(calc(1.3em - 12px - 0.5cap - 0.0375em));
+        }
+
+        uui-symbol-sort[descending] {
+            transform: translateY(calc(1.3em - 12px - 0.5cap + 0.0375em));
         }
 
         :host([align="end"]) button {
