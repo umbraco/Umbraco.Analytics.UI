@@ -272,6 +272,8 @@ export class ExampleFormsAnalyticsPageElement extends UmbLitElement {
     @state() private _range: UauiDateRange = initialRange;
     @state() private _compare?: UauiCompare = uauiCompareFor("previous-period", initialRange);
     @state() private _groupBy: UauiGroupBy = "day";
+    // The form section's two charts have their own group by, beside the form picker, so it sits with the charts it changes.
+    @state() private _formGroupBy: UauiGroupBy = "day";
     @state() private _metric: MetricId = "entries";
     /** The origins chart: entries per page (`"normal"`) or each page's share of the day's entries (`"percent"`). */
     @state() private _originView: UauiChartStack = "normal";
@@ -394,13 +396,13 @@ export class ExampleFormsAnalyticsPageElement extends UmbLitElement {
         this._overviewLoading = false;
     }
 
-    // The form's two charts, which follow the group-by.
+    // The form's two charts, which follow the form section's group by.
     async #loadFormSeries() {
         const request = ++this.#formSeriesRequest;
         this._formSeriesLoading = true;
         this._formSeriesError = false;
         const formId = this._formId;
-        const groupBy = this._groupBy;
+        const groupBy = this._formGroupBy;
         try {
             const [current, compare] = await this.#both(async (range): Promise<FormSeriesAnswers> => {
                 const [submissions, origins] = await Promise.all([
@@ -488,6 +490,10 @@ export class ExampleFormsAnalyticsPageElement extends UmbLitElement {
     #onGroupByChange(e: CustomEvent<{ value: UauiGroupBy }>) {
         this._groupBy = e.detail.value;
         void this.#loadSummary();
+    }
+
+    #onFormGroupByChange(e: CustomEvent<{ value: UauiGroupBy }>) {
+        this._formGroupBy = e.detail.value;
         void this.#loadFormSeries();
     }
 
@@ -555,6 +561,7 @@ export class ExampleFormsAnalyticsPageElement extends UmbLitElement {
         const headline = metric.id === "entries" ? "Submissions" : metric.label;
         const rendered: Record<OverviewBoxId, unknown> = {
             submissions: html`<uui-box headline=${headline} headline-variant="h3" style="--uui-box-default-padding: 0">
+                <uaui-group-by slot="header-actions" .value=${this._groupBy} @change=${this.#onGroupByChange}></uaui-group-by>
                 <uaui-time-series-chart
                     kind="line"
                     .series=${this.#chartSeries(metric, this._summary)}
@@ -640,7 +647,7 @@ export class ExampleFormsAnalyticsPageElement extends UmbLitElement {
                     .range=${this._range}
                     .compare=${this._compare}
                     .compareLabel=${this.#compareLabel()}
-                    .groupBy=${this._groupBy}
+                    .groupBy=${this._formGroupBy}
                     .valueFormat=${COUNT}
                     ?loading=${this._formSeriesLoading}
                     ?error=${this._formSeriesError}
@@ -692,7 +699,7 @@ export class ExampleFormsAnalyticsPageElement extends UmbLitElement {
                     stack=${this._originView}
                     .series=${series && !this.#noEntries(series.submissions) ? formsSeriesBy(series.origins, "pageName", "entries") : []}
                     .range=${this._range}
-                    .groupBy=${this._groupBy}
+                    .groupBy=${this._formGroupBy}
                     .valueFormat=${COUNT}
                     ?loading=${this._formSeriesLoading}
                     ?error=${this._formSeriesError}
@@ -718,59 +725,74 @@ export class ExampleFormsAnalyticsPageElement extends UmbLitElement {
 
     override render() {
         return html`
-            <div class="actions">
-                <h2 class="uui-h3">Analytics</h2>
-                <div class="controls">
-                    <uaui-group-by .value=${this._groupBy} @change=${this.#onGroupByChange}></uaui-group-by>
+            <umb-body-layout headline="Analytics">
+                <div slot="action-menu" class="actions">
                     <uaui-date-range today="2026-06-23" .value=${this._range} .compare=${this._compare} @change=${this.#onRangeChange}></uaui-date-range>
                 </div>
-            </div>
 
-            <div class="kpis">${metrics.map((m) => this.#renderTile(m))}</div>
+                <div class="content">
+                    <div class="kpis">${metrics.map((m) => this.#renderTile(m))}</div>
 
-            ${this.#renderOverviewBoxes()}
+                    ${this.#renderOverviewBoxes()}
 
-            <div class="actions section">
-                <h2 class="uui-h3">Form analytics</h2>
-                <uui-select
-                    label="Form"
-                    .options=${FORMS.map((f) => ({ name: f.name, value: f.id, selected: f.id === this._formId }))}
-                    .value=${this._formId}
-                    @change=${this.#onFormChange}></uui-select>
-            </div>
+                    <div class="section">
+                        <h2 class="uui-h3">Form analytics</h2>
+                        <uui-select
+                            label="Form"
+                            .options=${FORMS.map((f) => ({ name: f.name, value: f.id, selected: f.id === this._formId }))}
+                            .value=${this._formId}
+                            @change=${this.#onFormChange}></uui-select>
+                        <uaui-group-by .value=${this._formGroupBy} @change=${this.#onFormGroupByChange}></uaui-group-by>
+                    </div>
 
-            ${this.#renderFormBoxes()}
+                    ${this.#renderFormBoxes()}
+                </div>
+
+                <uui-breadcrumbs slot="footer-info">
+                    <uui-breadcrumb-item href="#">Forms</uui-breadcrumb-item>
+                    <uui-breadcrumb-item last-item>Analytics</uui-breadcrumb-item>
+                </uui-breadcrumbs>
+            </umb-body-layout>
         `;
     }
 
     static override styles = [
         UmbTextStyles,
         css`
+            /* Fills the space the backoffice gives the view, so umb-body-layout keeps its header and footer in place while the content scrolls. */
             :host {
-                /* The box grids pick one or two columns from the page's own width, not the window's. */
+                display: block;
+                height: 100%;
+            }
+            .content {
+                /* The box grid picks one or two columns from the page's own width, not the window's. */
                 container-type: inline-size;
                 display: flex;
                 flex-direction: column;
                 gap: var(--uui-size-4);
-                padding: var(--uui-size-layout-1);
             }
-            /* UUI's .uui-h3 (written .uui-h3.uui-h3, so a plain h2 rule loses) adds a 24px bottom margin, which pushed the title above the controls' centre. Keep its -2px optical inset. */
-            .actions h2.uui-h3 {
-                margin-block: 0;
+            /* Inset from the footer's edge, as the backoffice's umb-workspace-breadcrumb is. */
+            uui-breadcrumbs {
+                margin-inline-start: var(--uui-size-layout-1);
             }
+            /* The page-wide controls, in the header's action-menu slot. */
             .actions {
                 display: flex;
                 align-items: center;
-                justify-content: space-between;
                 gap: var(--uui-size-4);
+                padding-inline-end: var(--uui-size-layout-1);
             }
-            .actions.section {
-                margin-top: var(--uui-size-layout-1);
-            }
-            .controls {
+            /* The form picker's row, partway down the page. */
+            .section {
                 display: flex;
                 align-items: center;
                 gap: var(--uui-size-4);
+                margin-top: var(--uui-size-layout-1);
+            }
+            /* UUI's .uui-h3 (written .uui-h3.uui-h3, so a plain h2 rule loses) adds a 24px bottom margin, which pushed the title above the controls' centre. Keep its -2px optical inset. */
+            .section h2.uui-h3 {
+                margin-block: 0;
+                margin-inline-end: auto;
             }
             .kpis {
                 display: grid;

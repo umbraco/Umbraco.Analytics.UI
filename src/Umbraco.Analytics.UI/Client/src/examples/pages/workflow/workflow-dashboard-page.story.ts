@@ -3,6 +3,8 @@ import { html, ifDefined } from "@umbraco-cms/backoffice/external/lit";
 import { regionSource, sourceDocs } from "../../../internal/story/source.js";
 import raw from "./workflow-dashboard-page.element.ts?raw";
 import adapterRaw from "./workflow-dashboard-adapter.ts?raw";
+// Registers umb-body-layout, as the backoffice already has. The other pages get it through the modal host.
+import "@umbraco-cms/backoffice/components";
 import "./workflow-dashboard-page.element.js";
 
 const imports = `import { css, customElement, html, ifDefined, nothing, property, state } from "@umbraco-cms/backoffice/external/lit";
@@ -30,13 +32,13 @@ const code = `${regionSource(raw, "page", imports)}\n${regionSource(adapterRaw, 
 
 const meta: Meta = {
     title: "Examples/Pages/Workflow",
-    parameters: { layout: "padded" },
+    parameters: { layout: "fullscreen" },
 };
 
 export default meta;
 
 const render = (latency?: number, failing = false) => html`
-    <example-workflow-dashboard-page latency=${ifDefined(latency)} ?failing=${failing}></example-workflow-dashboard-page>
+    <example-workflow-dashboard-page style="height: 100vh" latency=${ifDefined(latency)} ?failing=${failing}></example-workflow-dashboard-page>
 `;
 
 /**

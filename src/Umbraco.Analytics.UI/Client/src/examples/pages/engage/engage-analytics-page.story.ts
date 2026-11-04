@@ -28,22 +28,22 @@ const code = regionSource(raw, "page", imports);
 
 const meta: Meta = {
     title: "Examples/Pages/Engage",
-    parameters: { layout: "padded" },
+    parameters: { layout: "fullscreen" },
 };
 
 export default meta;
 
 // The host stands in for the backoffice's modal manager, which the date range dialog opens through.
 const render = (view: "pageviews" | "visitors", latency?: number, failing = false) => html`
-    <uaui-test-modal-host>
+    <uaui-test-modal-host style="display: block; height: 100vh">
         <example-engage-analytics-page view=${view} latency=${ifDefined(latency)} ?failing=${failing}></example-engage-analytics-page>
     </uaui-test-modal-host>
 `;
 
 /**
- * Engage > Analytics > Pageviews, rebuilt from this package: group by and date range (with compare) in an actions row
- * at the top, an area chart with compare and markers flowing into an edge-to-edge table with share columns, compare badges,
- * search, a total and paging. Change the group by or the dates and the chart reloads; sort, page and search load the
+ * Engage > Analytics > Pageviews, rebuilt from this package: the date range (with compare) in the page header, and an
+ * area chart with its own group by, compare and markers, flowing into an edge-to-edge table with share columns, compare
+ * badges, search, a total and paging. Change the group by or the dates and the chart reloads; sort, page and search load the
  * table's rows, as a server would. The data is made up. The docs panel shows the page element's own code.
  */
 export const Pageviews: StoryObj = {

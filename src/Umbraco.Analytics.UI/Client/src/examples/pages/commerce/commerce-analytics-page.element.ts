@@ -645,39 +645,52 @@ export class ExampleCommerceAnalyticsPageElement extends UmbLitElement {
 
     override render() {
         return html`
-            <div class="actions">
-                <h2 class="uui-h3">Analytics</h2>
-                <uaui-date-range today="2026-06-23" .value=${this._range} .compare=${this._compare} @change=${this.#onRangeChange}></uaui-date-range>
-            </div>
+            <umb-body-layout headline="Analytics">
+                <div slot="action-menu" class="actions">
+                    <uaui-date-range today="2026-06-23" .value=${this._range} .compare=${this._compare} @change=${this.#onRangeChange}></uaui-date-range>
+                </div>
 
-            ${this.#renderCleanupNotice()}
+                <div class="content">
+                    ${this.#renderCleanupNotice()}
 
-            <div class="kpis">${metrics.map((m) => this.#renderTile(m))}</div>
+                    <div class="kpis">${metrics.map((m) => this.#renderTile(m))}</div>
 
-            ${this.#renderBoxes()}
+                    ${this.#renderBoxes()}
+                </div>
+
+                <uui-breadcrumbs slot="footer-info">
+                    <uui-breadcrumb-item href="#">Blendid</uui-breadcrumb-item>
+                    <uui-breadcrumb-item last-item>Analytics</uui-breadcrumb-item>
+                </uui-breadcrumbs>
+            </umb-body-layout>
         `;
     }
 
     static override styles = [
         UmbTextStyles,
         css`
+            /* Fills the space the backoffice gives the view, so umb-body-layout keeps its header and footer in place while the content scrolls. */
             :host {
+                display: block;
+                height: 100%;
+            }
+            .content {
                 /* The box grid picks one or two columns from the page's own width, not the window's. */
                 container-type: inline-size;
                 display: flex;
                 flex-direction: column;
                 gap: var(--uui-size-4);
-                padding: var(--uui-size-layout-1);
             }
-            /* UUI's .uui-h3 (written .uui-h3.uui-h3, so a plain h2 rule loses) adds a 24px bottom margin, which pushed the title above the controls' centre. Keep its -2px optical inset. */
-            .actions h2.uui-h3 {
-                margin-block: 0;
+            /* Inset from the footer's edge, as the backoffice's umb-workspace-breadcrumb is. */
+            uui-breadcrumbs {
+                margin-inline-start: var(--uui-size-layout-1);
             }
+            /* The page-wide controls, in the header's action-menu slot. */
             .actions {
                 display: flex;
                 align-items: center;
-                justify-content: space-between;
                 gap: var(--uui-size-4);
+                padding-inline-end: var(--uui-size-layout-1);
             }
             .kpis {
                 display: grid;

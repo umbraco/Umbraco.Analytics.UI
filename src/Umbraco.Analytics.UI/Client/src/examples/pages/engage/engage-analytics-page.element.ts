@@ -188,63 +188,69 @@ export class ExampleEngageAnalyticsPageElement extends UmbLitElement {
     override render() {
         const visitors = this.view === "visitors";
         return html`
-            <div class="actions">
-                <h2 class="uui-h3">${visitors ? "Visitors" : "Pageviews"}</h2>
-                <div class="controls">
-                    <uaui-group-by .value=${this._groupBy} @change=${this.#onGroupByChange}></uaui-group-by>
+            <umb-body-layout headline=${visitors ? "Visitors" : "Pageviews"}>
+                <div slot="action-menu" class="actions">
                     <uaui-date-range
                         .value=${this._range}
                         .compare=${this._compare}
                         today="2026-06-29"
                         @change=${this.#onDateRangeChange}></uaui-date-range>
                 </div>
-            </div>
 
-            <uui-box
-                headline=${visitors ? "New and returning visitors over time" : "Pageviews over time"}
-                headline-variant="h3"
-                style="--uui-box-default-padding: 0">
-                <uaui-time-series-chart
-                    .kind=${visitors ? "stacked-bar" : "area"}
-                    .series=${this._series}
-                    .compareSeries=${this._compareSeries}
-                    .range=${this._range}
-                    .compare=${this._compare}
-                    .compareLabel=${this._compare ? uauiFormatDateRange(this.localize, this._compare) : undefined}
-                    .markers=${markers}
-                    .groupBy=${this._groupBy}
-                    ?loading=${this._chartLoading}
-                    ?error=${this._chartError}
-                    retryable
-                    @retry=${() => this.#loadChart()}></uaui-time-series-chart>
-                ${this.#renderTable()}
-            </uui-box>
+                <div class="content">
+                    <uui-box
+                        headline=${visitors ? "New and returning visitors over time" : "Pageviews over time"}
+                        headline-variant="h3"
+                        style="--uui-box-default-padding: 0">
+                        <uaui-group-by slot="header-actions" .value=${this._groupBy} @change=${this.#onGroupByChange}></uaui-group-by>
+                        <uaui-time-series-chart
+                            .kind=${visitors ? "stacked-bar" : "area"}
+                            .series=${this._series}
+                            .compareSeries=${this._compareSeries}
+                            .range=${this._range}
+                            .compare=${this._compare}
+                            .compareLabel=${this._compare ? uauiFormatDateRange(this.localize, this._compare) : undefined}
+                            .markers=${markers}
+                            .groupBy=${this._groupBy}
+                            ?loading=${this._chartLoading}
+                            ?error=${this._chartError}
+                            retryable
+                            @retry=${() => this.#loadChart()}></uaui-time-series-chart>
+                        ${this.#renderTable()}
+                    </uui-box>
+                </div>
+
+                <uui-breadcrumbs slot="footer-info">
+                    <uui-breadcrumb-item href="#">Analytics</uui-breadcrumb-item>
+                    <uui-breadcrumb-item last-item>${visitors ? "Visitors" : "Pageviews"}</uui-breadcrumb-item>
+                </uui-breadcrumbs>
+            </umb-body-layout>
         `;
     }
 
     static override styles = [
         UmbTextStyles,
         css`
+            /* Fills the space the backoffice gives the view, so umb-body-layout keeps its header and footer in place while the content scrolls. */
             :host {
+                display: block;
+                height: 100%;
+            }
+            .content {
                 display: flex;
                 flex-direction: column;
                 gap: var(--uui-size-4);
-                padding: var(--uui-size-layout-1);
             }
-            /* UUI's .uui-h3 (written .uui-h3.uui-h3, so a plain h2 rule loses) adds a 24px bottom margin, which pushed the title above the controls' centre. Keep its -2px optical inset. */
-            .actions h2.uui-h3 {
-                margin-block: 0;
+            /* Inset from the footer's edge, as the backoffice's umb-workspace-breadcrumb is. */
+            uui-breadcrumbs {
+                margin-inline-start: var(--uui-size-layout-1);
             }
-            .controls {
-                display: flex;
-                align-items: center;
-                gap: var(--uui-size-4);
-            }
+            /* The page-wide controls, in the header's action-menu slot. */
             .actions {
                 display: flex;
                 align-items: center;
-                justify-content: space-between;
                 gap: var(--uui-size-4);
+                padding-inline-end: var(--uui-size-layout-1);
             }
         `,
     ];

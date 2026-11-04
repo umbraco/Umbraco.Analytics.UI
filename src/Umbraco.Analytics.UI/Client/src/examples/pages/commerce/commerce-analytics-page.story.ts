@@ -42,21 +42,21 @@ const code = regionSource(raw, "page", imports);
 
 const meta: Meta = {
     title: "Examples/Pages/Commerce",
-    parameters: { layout: "padded" },
+    parameters: { layout: "fullscreen" },
 };
 
 export default meta;
 
 // The host stands in for the backoffice's modal manager, which the date range dialog opens through.
 const render = (latency?: number, failing = false) => html`
-    <uaui-test-modal-host>
+    <uaui-test-modal-host style="display: block; height: 100vh">
         <example-commerce-analytics-page latency=${ifDefined(latency)} ?failing=${failing}></example-commerce-analytics-page>
     </uaui-test-modal-host>
 `;
 
 /**
  * Commerce > Analytics rebuilt from this package, with everything Commerce's dashboard shows today: the date range
- * (with compare) in an actions row; seven KPI tiles (revenue, orders, average order value, cart conversion, abandoned
+ * (with compare) in the page header; seven KPI tiles (revenue, orders, average order value, cart conversion, abandoned
  * cart recovery, repeat customers, applied discounts) that switch the metric of one chart, rates compared in points; a
  * Cart conversion box with `uaui-funnel` and the overall conversion in its header; an Abandoned carts box with a
  * two-step funnel (notified, purchased) and the recovery rate in its header; a notice above the tiles when the range

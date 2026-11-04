@@ -357,22 +357,26 @@ describe("Feature: the Forms analytics page", () => {
         });
     });
 
-    describe("Scenario: group by week", () => {
+    describe("Scenario: group the overview chart by week", () => {
         let page: UauiTestElement;
         let formRows: unknown[];
         beforeEach(async () => {
             page = await renderPage();
             formRows = tableIn(page, "forms").rows;
-            const week = deepQuery<HTMLElement>(shadow(page).querySelector("uaui-group-by")!.shadowRoot!, "[data-value='week']")!;
+            const week = deepQuery<HTMLElement>(box(page, "submissions").querySelector("uaui-group-by")!.shadowRoot!, "[data-value='week']")!;
             week.click();
             await expect.poll(() => ready(page) && chartIn(page, "submissions").groupBy === "week" && chartIn(page, "submissions").series[0].points.length === 5).toBe(true);
         });
 
-        it("asks for weeks and plots one point per week, at its first day, on every chart", () => {
-            for (const chart of charts(page)) {
-                expect(chart.groupBy).toBe("week");
-                expect(chart.series[0].points.map((p) => p.date)).toEqual(["2026-05-25", "2026-06-01", "2026-06-08", "2026-06-15", "2026-06-22"]);
-            }
+        it("asks for weeks and plots one point per week, at its first day", () => {
+            const chart = chartIn(page, "submissions");
+            expect(chart.groupBy).toBe("week");
+            expect(chart.series[0].points.map((p) => p.date)).toEqual(["2026-05-25", "2026-06-01", "2026-06-08", "2026-06-15", "2026-06-22"]);
+        });
+
+        it("leaves the form section's charts by day", () => {
+            expect(chartIn(page, "formSubmissions").groupBy).toBe("day");
+            expect(chartIn(page, "origins").groupBy).toBe("day");
         });
 
         it("adds the days up on the client, so the weeks hold the same entries as the days", async () => {
@@ -383,6 +387,27 @@ describe("Feature: the Forms analytics page", () => {
 
         it("keeps the tables as they were", () => {
             expect(tableIn(page, "forms").rows).toBe(formRows);
+        });
+    });
+
+    describe("Scenario: group the form section's charts by week", () => {
+        let page: UauiTestElement;
+        beforeEach(async () => {
+            page = await renderPage();
+            const week = deepQuery<HTMLElement>(shadow(page).querySelector(".section uaui-group-by")!.shadowRoot!, "[data-value='week']")!;
+            week.click();
+            await expect.poll(() => ready(page) && chartIn(page, "formSubmissions").groupBy === "week" && chartIn(page, "formSubmissions").series[0].points.length === 5).toBe(true);
+        });
+
+        it("plots one point per week, at its first day, on both of the form's charts", () => {
+            for (const chart of [chartIn(page, "formSubmissions"), chartIn(page, "origins")]) {
+                expect(chart.groupBy).toBe("week");
+                expect(chart.series[0].points.map((p) => p.date)).toEqual(["2026-05-25", "2026-06-01", "2026-06-08", "2026-06-15", "2026-06-22"]);
+            }
+        });
+
+        it("leaves the overview chart by day", () => {
+            expect(chartIn(page, "submissions").groupBy).toBe("day");
         });
     });
 
