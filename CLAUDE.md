@@ -31,7 +31,7 @@ Shared backoffice analytics components (Lit + UUI) consumed by Engage, Commerce 
   - Every `release-*` tag, RCs included, is a public release and goes to NuGet.org.
   - Only final versions get a section, so a release's notes list everything in it. When `release/{semver}` is cut, rename `## [Unreleased]` to `## [{semver}] - TBC` (e.g. `## [19.1.0] - TBC`) and add a new empty `## [Unreleased]` above it. Fixes made on the release branch go in that section. In the commit that sets the final version, replace `TBC` with the ISO date (`## [19.1.0] - 2026-11-04`).
   - RCs get no section of their own: an RC's release notes are its final version's section as it stands, so every RC lists everything in the coming release.
-  - Once the pipeline sets `github_release_connection` (umbraco/Umbraco.Build#20), every `release-*` tag gets a GitHub release with these notes (RCs marked pre-release), and one with no section for its version fails.
+  - Every `release-*` tag gets a GitHub release with these notes once it's on NuGet.org (RCs marked pre-release). A tag with no section for its version, or an empty one, fails the build before anything is published.
 - Before finishing: `npm run lint`, `npm test`, `npm run build` (commit any `api/*.api.md` change deliberately).
 - Plan folders: `docs/plans/<feature-slug>/` (devkit feature-* skills). Design references: `docs/design/<name>/`.
 - Packages: NuGet `Umbraco.Analytics.UI`, npm `@umbraco/analytics-ui` (also the import map key). API report: `api/analytics-ui.api.md`.
