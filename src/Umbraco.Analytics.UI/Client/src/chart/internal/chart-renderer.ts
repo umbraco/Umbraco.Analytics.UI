@@ -10,6 +10,7 @@ import {
 } from "@umbraco/analytics-ui/external/chart.js";
 import type { UauiChartKind, UauiSeriesKind } from "../types.js";
 import type { UauiChartDrawColors } from "./chart-colors.js";
+import type { UauiHourTick } from "./hour-ticks.js";
 import "./register.js";
 
 /** What the renderer draws. Our own shape: Chart.js types stay inside `src/chart/internal`. */
@@ -17,6 +18,12 @@ export interface UauiChartModel {
     /** `area` fills the lines; `stacked-bar` stacks the bars. Each dataset says whether it is a line or bars. */
     kind: UauiChartKind;
     labels: string[];
+    /**
+     * The x ticks the owner chooses for an axis this many pixels wide, by index of `labels` (`undefined`: no tick
+     * there), in place of Chart.js's own choice: the axis shows these and no others. A bold tick is drawn in a bold
+     * font. Absent: Chart.js chooses.
+     */
+    xTicks?: (width: number) => (UauiHourTick | undefined)[];
     /** A line's `compare` is drawn as a dashed line, with the gap to `values` shaded. Bars have none. */
     datasets: { label: string; kind: UauiSeriesKind; values: (number | null)[]; compare?: (number | null)[] }[];
     /** When there are bars, one compare bar per x value, drawn behind the current bars. */
@@ -296,7 +303,32 @@ export class UauiChartRenderer {
         // The package's axis look (`uauiChartOptions`, as a product's chart gets it): our font, colours and Chart.js's
         // own values for what we don't style, all set per chart so a product's `Chart.defaults.scale` can't move them.
         const look = uauiChartOptions(this.#host, family, model.colors).scales as { x: CartesianScaleOptions; y: CartesianScaleOptions };
-        scales["x"] = { ...look.x, stacked };
+        const xTicks = model.xTicks;
+        scales["x"] = {
+            ...look.x,
+            stacked,
+            // Set per chart, with our own ticks (thinned in `afterBuildTicks`), so Chart.js mustn't drop or tilt any.
+            ...(xTicks
+                ? (() => {
+                      const xFont = look.x.ticks.font as { weight: string };
+                      let chosen: (UauiHourTick | undefined)[] = [];
+                      return {
+                      ticks: {
+                          ...look.x.ticks,
+                          autoSkip: false,
+                          minRotation: 0,
+                          maxRotation: 0,
+                          callback: (value: unknown) => chosen[Number(value)]?.label ?? "",
+                          font: (ctx: { tick?: { value: number } }) => ({ ...xFont, weight: chosen[ctx.tick?.value ?? -1]?.bold ? "bold" : xFont.weight }),
+                      },
+                      afterBuildTicks: (axis: { ticks: { value: number }[]; width: number }) => {
+                          chosen = xTicks(axis.width);
+                          axis.ticks = axis.ticks.filter((tick) => chosen[tick.value]);
+                      },
+                      };
+                  })()
+                : {}),
+        } as typeof look.x;
         const yTicks = model.yTicks;
         const labelOf = new Map(yTicks?.map((tick) => [tick.value, tick.label]));
         scales["y"] = {

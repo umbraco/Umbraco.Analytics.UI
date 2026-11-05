@@ -34,6 +34,7 @@ import { renderChartFrame, UauiChartFrameStyles } from "./internal/chart-frame.j
 import type { UauiChartRenderer } from "./internal/chart-renderer.js";
 import { colorKeyOf, seriesKindOf } from "./internal/chart-series.js";
 import { chartYAxis, usesLogScale } from "./internal/chart-y-axis.js";
+import { hourTicks, isRepeatedHour } from "./internal/hour-ticks.js";
 import { UauiTimeSeriesOverlays } from "./internal/time-series-overlays.js";
 import { NOW_LABEL_ROOM } from "./internal/now-plugin.js";
 import type { UauiCompare, UauiDateRange } from "../date-range/types.js";
@@ -45,6 +46,9 @@ const axisDateFormat: Record<UauiGroupBy, Intl.DateTimeFormatOptions> = {
     week: { day: "numeric", month: "short" },
     month: { month: "short", year: "numeric" },
 };
+
+/** At hour level, the first hour of each day on the axis. */
+const axisDayFormat: Intl.DateTimeFormatOptions = { weekday: "short", month: "short", day: "numeric" };
 
 const tooltipDateFormat: Record<UauiGroupBy, Intl.DateTimeFormatOptions> = {
     hour: { year: "numeric", month: "short", day: "numeric", hour: "numeric" },
@@ -87,6 +91,8 @@ interface Derived {
     /** How the chart compares, counting every series (hidden or not), so the legend's compare entry stays. */
     legendCompare: { bars: boolean; lines: boolean };
     axisLabels: string[];
+    /** At hour level, the labelled x ticks (by index; `undefined` where there is none). Absent at the other levels. */
+    xTicks?: (width: number) => ReturnType<typeof hourTicks>;
     dateLabels: string[];
     /** Per series, the formatted date of each compare point (empty string where there is none). */
     compareDateLabels: string[][];
@@ -400,14 +406,20 @@ export class UauiTimeSeriesChartElement extends UauiTimeSeriesChartElementBase {
         const bars = kinds.map((k) => k === "bar");
         const axisDate = new Intl.DateTimeFormat(lang, axisDateFormat[groupBy] ?? axisDateFormat.day);
         const tooltipDate = new Intl.DateTimeFormat(lang, tooltipDateFormat[groupBy] ?? tooltipDateFormat.day);
-        const tooltipLabel = (iso: string | null) => (iso ? formatBucketKey(iso, groupBy, tooltipDate) : "");
+        // The two hours that share a wall-clock hour when clocks go back are told apart by their zone.
+        const tooltipZonedDate = groupBy === "hour" ? new Intl.DateTimeFormat(lang, { ...tooltipDateFormat.hour, timeZoneName: "short" }) : undefined;
+        const tooltipLabel = (iso: string | null) =>
+            iso ? formatBucketKey(iso, groupBy, tooltipZonedDate && isRepeatedHour(iso) ? tooltipZonedDate : tooltipDate) : "";
+        const axisDay = new Intl.DateTimeFormat(lang, axisDayFormat);
+        const axisLabels = data.labels.map((d) => formatBucketKey(d, groupBy, axisDate));
         return {
             data,
             shown,
             kinds,
             allKinds,
             legendCompare: { bars: allKinds.includes("bar") && !!full.compareTotal, lines: full.series.some((s, i) => allKinds[i] === "line" && !!s.compare) },
-            axisLabels: data.labels.map((d) => formatBucketKey(d, groupBy, axisDate)),
+            axisLabels,
+            xTicks: groupBy === "hour" ? ((width) => hourTicks(data.labels, axisLabels, axisDay, width)) : undefined,
             dateLabels: data.labels.map(tooltipLabel),
             compareDateLabels: data.series.map((s) => (s.compareLabels ?? []).map(tooltipLabel)),
             // The share view's total counts a value below 0 as 0, as its shares do, so the shares add up to it.
@@ -482,7 +494,7 @@ export class UauiTimeSeriesChartElement extends UauiTimeSeriesChartElementBase {
 
     /** Hands the renderer the chart's model. Called by the chart controller. */
     #draw(renderer: UauiChartRenderer, colors: UauiChartDrawColors) {
-        const { data, kinds, axisLabels, lang } = this.#derived;
+        const { data, kinds, axisLabels, xTicks, lang } = this.#derived;
         const max = maxValue(data, this.kind, kinds.map((k) => k === "bar"));
         this.#overlays.set(
             colors,
@@ -498,6 +510,7 @@ export class UauiTimeSeriesChartElement extends UauiTimeSeriesChartElementBase {
                 kind: this.kind,
                 share: true,
                 labels: axisLabels,
+                xTicks,
                 roomAbove: this.now ? NOW_LABEL_ROOM : 0,
                 colors,
                 incompleteFrom: this.#incompleteIndex,
@@ -514,6 +527,7 @@ export class UauiTimeSeriesChartElement extends UauiTimeSeriesChartElementBase {
         renderer.update({
             kind: this.kind,
             labels: axisLabels,
+            xTicks,
             // Room above the plot for the today label, whether or not today is among the dates, so the plot doesn't
             // jump as the editor moves through date ranges.
             roomAbove: this.now ? NOW_LABEL_ROOM : 0,

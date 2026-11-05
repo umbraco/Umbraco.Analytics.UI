@@ -12,6 +12,8 @@ export const utcHours = (firstUtc: string, count: number) =>
 
 /** The local hours of 5 Nov 2026 in Copenhagen: 23:00Z on the 4th to 22:00Z on the 5th. */
 export const hoursOf5Nov = utcHours("2026-11-04T23:00:00Z", 24);
+/** The 23 local hours of 29 Mar 2026, the day clocks go forward: 1 AM is followed by 3 AM. */
+export const hoursOf29Mar = utcHours("2026-03-28T23:00:00Z", 23);
 /** The local hours of 4 Nov 2026. */
 export const hoursOf4Nov = utcHours("2026-11-03T23:00:00Z", 24);
 /** The 25 local hours of 25 Oct 2026, the day clocks go back. Indexes 2 and 3 are both 2 AM. */
