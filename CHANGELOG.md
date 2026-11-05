@@ -16,4 +16,12 @@ The first release, for Umbraco CMS 19.
 - Filters: `uaui-date-range`, `uaui-group-by`, `uaui-toggle-group` and `uaui-search-field`.
 - States: `uaui-empty-state` and `uaui-error-state`, with `UauiLoadStateMixin` for the same loading, error and empty rules in your own elements.
 - Chart.js, mapped as `@umbraco/analytics-ui/external/chart.js`, so every product on a site shares one copy, with `uauiChartColors`, `uauiChartOptions` and `uauiWatchTheme` to give your own charts the same look.
-- Date helpers for comparison periods and date buckets.
+- Date helpers for comparison periods and time buckets (`uauiTimeBuckets`), and `uauiGroupByOptions`, which gives `uaui-group-by` the options for a range.
+- Hourly charts: `group-by="hour"` on `uaui-time-series-chart` draws one bar per local hour. Offered by `uauiGroupByOptions` for ranges of two days or fewer. `uauiTimeBuckets` gives hour buckets as UTC instants.
+- `now` on `uaui-time-series-chart`: a date or a date and time. Labelled "Now" by hour and "Today" otherwise. `incomplete-from` is also read as a moment.
+- `today` and `yesterday` presets for `uaui-date-range`, not in the default list. Add them to `presets`.
+- A one-day range reads as one date ("Nov 5, 2026").
+
+### Changed
+
+- Breaking, for anyone on a prerelease build: `today` on `uaui-time-series-chart` is now `now`, and `uauiDateBuckets`, `UauiDateBucket` and `UauiDateBucketsOptions` are now `uauiTimeBuckets`, `UauiTimeBucket` and `UauiTimeBucketsOptions`. A bucket also has an `end`.

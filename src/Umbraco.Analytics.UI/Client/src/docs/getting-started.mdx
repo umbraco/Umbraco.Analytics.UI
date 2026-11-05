@@ -116,6 +116,65 @@ Each series is `{ id, label, points: [{ date, value }] }`, with dates as `YYYY-M
 
 For a metric where a fall is good (refund rate, bounce rate, average duration), add `lower-is-better` to the chart, as on `uaui-kpi-tile`. The gap shading against the compare line and the change badges in the tooltip then read a fall as good. It covers every series and the total, since one chart shows one metric.
 
+## Hourly charts
+
+Set `group-by="hour"` to draw one bar per hour. Offer it with `uauiGroupByOptions(range)`: a range of two days or fewer gets `["hour", "day"]`, any other range `["day", "week", "month"]`. Pass the result to `uaui-group-by` as `options`. When the current value isn't in the new list after the range changes, switch to the list's first option. The chart itself draws hourly for any range, so you can break the two-day limit on purpose.
+
+```ts
+import { uauiGroupByOptions, uauiTimeBuckets, type UauiGroupByChangeDetail } from "@umbraco/analytics-ui";
+
+const options = uauiGroupByOptions(range); // ["hour", "day"] for a one or two day range
+if (!options.includes(this._groupBy)) this._groupBy = options[0];
+
+html`<uaui-group-by
+  .options=${options}
+  .value=${this._groupBy}
+  @change=${(e: CustomEvent<UauiGroupByChangeDetail>) => {
+    this._groupBy = e.detail.value;
+    this.#load();
+  }}
+></uaui-group-by>`;
+
+// One query per bucket: `start` and `end` are UTC instants, so send them as they are.
+// A week or month bucket at the edge of the range reaches past it: clip with `days` or the range.
+// Range Nov 5, browser at UTC+1: the first hour starts at local midnight, which is 23:00 UTC the day before.
+const buckets = uauiTimeBuckets(range, "hour"); // [{ start: "2026-11-04T23:00:00.000Z", end: "2026-11-05T00:00:00.000Z", days }, ...]
+```
+
+At hour level:
+
+- A point's `date` is a moment, such as `"2026-11-05T13:00:00Z"`. The chart puts it in the browser's local hour that contains it. A date-time without a zone is local time. A plain date is local midnight.
+- Plot each point at its bucket's `start` from `uauiTimeBuckets`. They are UTC instants, so on the day clocks go back the repeated 2 AM stays two bars.
+- A bucket is the local hour. In a half-hour zone (India, +5:30) an hour counted in UTC straddles two bars.
+- Compare lines up by wall-clock hour: 2 PM sits under 2 PM of the compare period, even when one of the days has 23 or 25 hours.
+- Day, week and month don't change. A date-time there is still cut to the day it starts with.
+- A one-day range reads as one date in `uaui-date-range` and `uauiFormatDateRange` ("Nov 5, 2026"), not "Nov 5, 2026 to Nov 5, 2026".
+
+## Now and incomplete data
+
+Set `now` to draw a labelled line at the current moment. It takes a date or a date and time, read as a moment: a date-time with a zone is that instant, one without is local time, and a plain date is that local day. The line sits in the middle of the bucket that contains it, and no line is drawn when no bucket does. The label says "Now" with `group-by="hour"` and "Today" otherwise. `now` replaces the old `today` property.
+
+`incomplete-from` is read as a moment in the same way. With `group-by="hour"`, everything from the hour that contains it is hatched and faded. Set both to mark the current hour as incomplete.
+
+```ts
+html`<uaui-time-series-chart
+  group-by="hour"
+  .series=${this._series}
+  now=${new Date().toISOString()}
+  incomplete-from=${new Date().toISOString()}
+></uaui-time-series-chart>`;
+```
+
+## Today and yesterday presets
+
+`uaui-date-range` knows the built-in preset ids `today` and `yesterday`, but doesn't list them by default. Add them to `presets` to offer them. A product that applies the switch-to-first-option rule above opens "Today" on hours, because a one-day range gives `["hour", "day"]`.
+
+```ts
+html`<uaui-date-range
+  .presets=${[{ id: "today" }, { id: "yesterday" }, { id: "last-7-days" }, { id: "last-30-days" }, { id: "custom" }]}
+></uaui-date-range>`;
+```
+
 ## A table
 
 Each column names the cell that shows it.
@@ -162,11 +221,12 @@ html`<uaui-time-series-chart .compareLabel=${compare && uauiFormatDateRange(this
 
 | Function | Gives |
 |---|---|
-| `uauiPresetRange(id, today)` | The dates a built-in preset of `uaui-date-range` gives as of `today`. `undefined` for `custom`, an unknown id, or a `today` that isn't a real date. |
+| `uauiPresetRange(id, today)` | The dates a built-in preset of `uaui-date-range` (including `today` and `yesterday`) gives as of `today`. `undefined` for `custom`, an unknown id, or a `today` that isn't a real date. |
 | `uauiPreviousPeriod(range)` | The same number of days straight before `range`. For a range with `preset: "this-month"`, the same days of the previous month. |
 | `uauiPreviousYear(range)` | The same dates one year earlier. |
 | `uauiCompareFor(mode, range)` | A `UauiCompare` for `previous-period` or `previous-year`. `undefined` for `custom`. Pass the saved range, with its `preset`, to match the dialog's month-aligned compare for `this-month`. |
 | `uauiDaysIn(range)` | Every ISO date in `range`, both ends included. |
+| `uauiGroupByOptions(range)` | The `uaui-group-by` options for `range`: `["hour", "day"]` for two days or fewer, otherwise `["day", "week", "month"]`. |
 | `uauiTimeBuckets(range, groupBy, { weekStart })` | `{ start, end, days }[]` for `hour`, `day`, `week` or `month`. `end` is where the next bucket starts. An `hour` bucket's `start` is a UTC instant. |
 | `uauiFormatDateRange(localize, range, { showYear })` | Text such as "May 25, 2026 to Jun 23, 2026" in the user's culture. One date, such as "Nov 5, 2026", when `from` equals `to`. |
 

@@ -42,7 +42,7 @@ export type UauiSeries = {
 /** An event shown on the chart's timeline, such as a campaign launch. */
 export type UauiMarker = {
     id: string;
-    /** ISO date, e.g. "2026-06-11". A date-time is read as the day it starts with, with no timezone shift At hour level (`group-by="hour"`) it is read as a moment, as a point's date is, and the marker lands in the local hour that contains it. */
+    /** ISO date, e.g. "2026-06-11". A date-time is read as the day it starts with, with no timezone shift. At hour level (`group-by="hour"`) it is read as a moment, as a point's date is, and the marker lands in the local hour that contains it. */
     date: string;
     title: string;
     description?: string;
