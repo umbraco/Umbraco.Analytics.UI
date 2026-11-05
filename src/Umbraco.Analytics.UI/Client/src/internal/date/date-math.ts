@@ -2,7 +2,7 @@
 // built from year/month/day parts so a timezone never shifts a day.
 
 import type { UauiWeekStart } from "../../date-helpers/date-helpers.js";
-import { hourOffset, hourStart, nextHour } from "./hour-math.js";
+import { hourOffset, hoursBetween, hourStart, nextHour } from "./hour-math.js";
 
 const pad = (n: number, width = 2) => String(n).padStart(width, "0");
 
@@ -196,17 +196,24 @@ export function bucketEnd(start: string, unit: BucketUnit): string {
     return addDays(start, unit === "week" ? 7 : 1);
 }
 
-/** A bucket of a range: the date its point is plotted at and the days of the range inside it. */
-export type DateBucket = { start: string; days: string[] };
+/** A bucket of a range: the point's date (a UTC instant for `"hour"`), the first day or instant after it, and the days of the range inside it. */
+export type DateBucket = { start: string; end: string; days: string[] };
 
-/** Splits `range` into day, week (from `weekStart`, Monday by default) or month buckets, in order. A bucket at either end holds only the days inside the range. */
+/**
+ * Splits `range` into hour, day, week (from `weekStart`, Monday by default) or month buckets, in order. A bucket at either end holds
+ * only the days inside the range. `"hour"` runs from the range's first local midnight to the midnight after its last day.
+ */
 export function dateBuckets(range: Range, unit: BucketUnit, weekStart?: UauiWeekStart): DateBucket[] {
+    const days = daysIn(range);
+    if (unit === "hour") {
+        return days.length === 0 ? [] : hoursBetween(days[0], addDays(days[days.length - 1], 1)).map(({ start, end, date }) => ({ start, end, days: [date] }));
+    }
     const buckets: DateBucket[] = [];
-    for (const day of daysIn(range)) {
+    for (const day of days) {
         const start = bucketStart(day, unit, weekStart);
         const last = buckets[buckets.length - 1];
         if (last?.start === start) last.days.push(day);
-        else buckets.push({ start, days: [day] });
+        else buckets.push({ start, end: bucketEnd(start, unit), days: [day] });
     }
     return buckets;
 }

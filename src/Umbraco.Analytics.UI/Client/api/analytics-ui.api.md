@@ -138,20 +138,6 @@ export class UauiDataTableElement extends UauiDataTableElementBase {
 export const UauiDataTableElementBase: HTMLElementConstructor<UauiLoadStateMixinInterface> & typeof UmbLitElement;
 
 // @public
-export type UauiDateBucket = {
-    start: string;
-    days: string[];
-};
-
-// @public
-export function uauiDateBuckets(range: UauiDateSpan, groupBy: UauiGroupBy, options?: UauiDateBucketsOptions): UauiDateBucket[];
-
-// @public
-export type UauiDateBucketsOptions = {
-    weekStart?: UauiWeekStart;
-};
-
-// @public
 export class UauiDateCellElement extends UmbLitElement implements UauiTableCellElement {
     column: UauiTableColumn;
     item: Record<string, unknown>;
@@ -701,6 +687,21 @@ export class UauiTextCellElement extends UmbLitElement implements UauiTableCellE
     static styles: CSSResultGroup;
     value: unknown;
 }
+
+// @public
+export type UauiTimeBucket = {
+    start: string;
+    end: string;
+    days: string[];
+};
+
+// @public
+export function uauiTimeBuckets(range: UauiDateSpan, groupBy: UauiGroupBy | "hour", options?: UauiTimeBucketsOptions): UauiTimeBucket[];
+
+// @public
+export type UauiTimeBucketsOptions = {
+    weekStart?: UauiWeekStart;
+};
 
 // @public
 export class UauiTimeSeriesChartElement extends UauiTimeSeriesChartElementBase {

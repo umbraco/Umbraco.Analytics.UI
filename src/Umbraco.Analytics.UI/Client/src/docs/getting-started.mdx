@@ -48,7 +48,7 @@ import "@umbraco/analytics-ui";
 Helpers, types and constants come from the same place:
 
 ```ts
-import { uauiDateBuckets, UAUI_TABLE_CELL, type UauiSeries } from "@umbraco/analytics-ui";
+import { uauiTimeBuckets, UAUI_TABLE_CELL, type UauiSeries } from "@umbraco/analytics-ui";
 ```
 
 In a template, a name that starts with `.`, like `.series`, sets a property. Pass objects and arrays that way.
@@ -112,7 +112,7 @@ render() {
 }
 ```
 
-Each series is `{ id, label, points: [{ date, value }] }`, with dates as `YYYY-MM-DD`. Points are not grouped for you: send one point per bucket, at the bucket's first day. `uauiDateBuckets` (below) gives you those buckets.
+Each series is `{ id, label, points: [{ date, value }] }`, with dates as `YYYY-MM-DD`. Points are not grouped for you: send one point per bucket, at the bucket's first day. `uauiTimeBuckets` (below) gives you those buckets.
 
 For a metric where a fall is good (refund rate, bounce rate, average duration), add `lower-is-better` to the chart, as on `uaui-kpi-tile`. The gap shading against the compare line and the change badges in the tooltip then read a fall as good. It covers every series and the total, since one chart shows one metric.
 
@@ -148,13 +148,13 @@ Replace `rows` and `columns` with new arrays to update the table. Changing them 
 Small functions for the dates around the picker, so each product doesn't write its own. A range is `{ from, to }` in ISO dates: a `UauiDateRange` or a `UauiCompare` fits. A range that isn't valid (an unreal date, or `to` before `from`) gives `undefined`, or an empty list for the day and bucket helpers.
 
 ```ts
-import { uauiCompareFor, uauiDateBuckets, uauiFormatDateRange } from "@umbraco/analytics-ui";
+import { uauiCompareFor, uauiTimeBuckets, uauiFormatDateRange } from "@umbraco/analytics-ui";
 
 const range = { from: "2026-05-25", to: "2026-06-23" };
 const compare = uauiCompareFor("previous-period", range); // { mode, from: "2026-04-25", to: "2026-05-24" }
 
 // One chart point per bucket, plotted at the bucket's `start`.
-const points = uauiDateBuckets(range, "week").map(({ start, days }) => ({ date: start, value: sum(days) }));
+const points = uauiTimeBuckets(range, "week").map(({ start, days }) => ({ date: start, value: sum(days) }));
 
 // The label `uaui-date-range` shows, for the chart's compareLabel. Pass your element's `this.localize`.
 html`<uaui-time-series-chart .compareLabel=${compare && uauiFormatDateRange(this.localize, compare)}></uaui-time-series-chart>`;
@@ -167,10 +167,10 @@ html`<uaui-time-series-chart .compareLabel=${compare && uauiFormatDateRange(this
 | `uauiPreviousYear(range)` | The same dates one year earlier. |
 | `uauiCompareFor(mode, range)` | A `UauiCompare` for `previous-period` or `previous-year`. `undefined` for `custom`. Pass the saved range, with its `preset`, to match the dialog's month-aligned compare for `this-month`. |
 | `uauiDaysIn(range)` | Every ISO date in `range`, both ends included. |
-| `uauiDateBuckets(range, groupBy, { weekStart })` | `{ start, days }[]` for `day`, `week` or `month`, the same buckets `uaui-group-by` offers. |
+| `uauiTimeBuckets(range, groupBy, { weekStart })` | `{ start, end, days }[]` for `hour`, `day`, `week` or `month`. `end` is where the next bucket starts. An `hour` bucket's `start` is a UTC instant. |
 | `uauiFormatDateRange(localize, range, { showYear })` | Text such as "May 25, 2026 to Jun 23, 2026" in the user's culture. |
 
-Weeks start on Monday. For another first day, pass `weekStart` to `uauiDateBuckets` and the same value as `week-start` on the chart. It is 1 (Monday) to 7 (Sunday), like `new Intl.Locale(culture).getWeekInfo().firstDay`. Any other value is read as Monday.
+Weeks start on Monday. For another first day, pass `weekStart` to `uauiTimeBuckets` and the same value as `week-start` on the chart. It is 1 (Monday) to 7 (Sunday), like `new Intl.Locale(culture).getWeekInfo().firstDay`. Any other value is read as Monday.
 
 ## Full pages
 

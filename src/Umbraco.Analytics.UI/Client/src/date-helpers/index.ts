@@ -1,15 +1,15 @@
 export {
     uauiCompareFor,
-    uauiDateBuckets,
     uauiDaysIn,
     uauiFormatDateRange,
     uauiPresetRange,
     uauiPreviousPeriod,
     uauiPreviousYear,
-    type UauiDateBucket,
-    type UauiDateBucketsOptions,
+    uauiTimeBuckets,
     type UauiDatePresetSpan,
     type UauiDateSpan,
     type UauiFormatDateRangeOptions,
+    type UauiTimeBucket,
+    type UauiTimeBucketsOptions,
     type UauiWeekStart,
 } from "./date-helpers.js";

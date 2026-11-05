@@ -1,5 +1,5 @@
 // Sample data for the chart stories: 30 days from 25 May 2026 with a spike on 11 Jun, like the Phase 1 design.
-import { uauiDateBuckets } from "../../date-helpers/index.js";
+import { uauiTimeBuckets } from "../../date-helpers/index.js";
 import type { UauiMarker, UauiSeries } from "../types.js";
 
 const pageviewValues = [
@@ -60,7 +60,7 @@ const sundayWeeksOf = (range: { from: string; to: string }, values: number[], va
     return {
         id: "pageviews",
         label: "Pageviews",
-        points: uauiDateBuckets(range, "week", { weekStart: 7 }).map(({ start, days }) => ({ date: start, value: days.reduce((sum, day) => sum + (valueOn.get(day) ?? 0), 0) })),
+        points: uauiTimeBuckets(range, "week", { weekStart: 7 }).map(({ start, days }) => ({ date: start, value: days.reduce((sum, day) => sum + (valueOn.get(day) ?? 0), 0) })),
     };
 };
 

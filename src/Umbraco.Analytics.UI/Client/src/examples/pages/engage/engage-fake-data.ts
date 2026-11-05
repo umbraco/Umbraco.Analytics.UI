@@ -2,7 +2,7 @@
 // A real product fetches this from its own endpoints; the page element below never knows the difference.
 import type { UauiMarker, UauiSeries } from "../../../chart/types.js";
 import type { UauiColorSlot } from "../../../theme/types.js";
-import { uauiDateBuckets, uauiDaysIn } from "../../../date-helpers/index.js";
+import { uauiTimeBuckets, uauiDaysIn } from "../../../date-helpers/index.js";
 import type { UauiGroupBy } from "../../../group-by/group-by.element.js";
 import type { UauiTableSortDirection } from "../../../table/types.js";
 
@@ -43,7 +43,7 @@ export const markers: UauiMarker[] = [
 
 /** Adds the days up per day, week or month. */
 function series(id: string, label: string, color: UauiColorSlot, range: { from: string; to: string }, groupBy: UauiGroupBy, valueOn: (date: string) => number): UauiSeries {
-    const points = uauiDateBuckets(range, groupBy).map(({ start, days }) => ({ date: start, value: days.reduce((sum, day) => sum + valueOn(day), 0) }));
+    const points = uauiTimeBuckets(range, groupBy).map(({ start, days }) => ({ date: start, value: days.reduce((sum, day) => sum + valueOn(day), 0) }));
     return { id, label, color, points };
 }
 

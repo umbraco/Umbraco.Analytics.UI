@@ -1,7 +1,7 @@
 // A stand-in for the Umbraco AI usage API, for the "Umbraco AI > Usage" page example. Everything is
 // invented and generated from the date, so the same range always gives the same numbers. A real
 // product fetches this over HTTP.
-import { uauiDateBuckets, uauiDaysIn } from "../../../date-helpers/index.js";
+import { uauiTimeBuckets, uauiDaysIn } from "../../../date-helpers/index.js";
 import type { UauiCompare, UauiDateRange } from "../../../date-range/types.js";
 import type { UauiGroupBy } from "../../../group-by/group-by.element.js";
 import type { UauiTableSortDirection } from "../../../table/types.js";
@@ -186,7 +186,7 @@ function profileDay(date: string): UsageTotals[] {
 }
 
 function bucketsFor(range: { from: string; to: string }, groupBy: UauiGroupBy): UsageBucket[] {
-    return uauiDateBuckets(range, groupBy).map(({ start, days }) => ({ date: start, ...days.map(dayTotals).reduce(add, empty()) }));
+    return uauiTimeBuckets(range, groupBy).map(({ start, days }) => ({ date: start, ...days.map(dayTotals).reduce(add, empty()) }));
 }
 
 const sumOf = (buckets: UsageTotals[]) => buckets.reduce(add, empty());

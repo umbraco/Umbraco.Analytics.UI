@@ -36,7 +36,7 @@ import {
 } from "./forms-api.js";`;
 
 const adapterImports = `// forms-analytics-adapter.ts
-import { uauiDateBuckets, type UauiColorSlot, type UauiDateSpan, type UauiFunnelStep, type UauiGroupBy, type UauiSeries, type UauiStatusColor } from "@umbraco/analytics-ui";
+import { uauiTimeBuckets, type UauiColorSlot, type UauiDateSpan, type UauiFunnelStep, type UauiGroupBy, type UauiSeries, type UauiStatusColor } from "@umbraco/analytics-ui";
 import type { FormsAnalyticsResult, FormsColumn } from "./forms-api.js";`;
 
 const code = `${regionSource(raw, "page", imports)}\n${regionSource(adapterRaw, "adapter", adapterImports)}`;

@@ -172,7 +172,7 @@ export const LegendHiddenShare: Story = {
 
 /**
  * Weeks that start on Sunday (`week-start="7"`, the same as `Intl.Locale.getWeekInfo().firstDay` for en-US): the
- * points are the Sundays of `uauiDateBuckets(range, "week", { weekStart: 7 })` and the compare weeks line up on them.
+ * points are the Sundays of `uauiTimeBuckets(range, "week", { weekStart: 7 })` and the compare weeks line up on them.
  */
 export const SundayWeekStart: Story = {
     name: "Sunday week start",

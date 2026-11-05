@@ -1,9 +1,11 @@
 // Hour maths for the hourly chart. Unlike date-math.ts this one uses the browser's time zone on purpose: a bucket is the
 // local hour that contains an instant. An hour is keyed by its UTC instant ("2026-11-05T13:00:00.000Z"), not by local
 // wall-clock text, because on the day clocks go back 2 AM happens twice and the text would merge the two hours. The
-// keys still sort as plain strings. Every function returns `undefined` for bad input, as these run in render paths.
+// keys still sort as plain strings. Every function returns `undefined` (`hoursBetween`: an empty list) for bad input, as these run in render paths.
 
 const HOUR_MS = 3_600_000;
+
+const pad = (n: number, width = 2) => String(n).padStart(width, "0");
 
 // yyyy-mm-dd, optionally followed by a time and optionally by Z or an offset.
 const MOMENT = /^(\d{4})-(\d{2})-(\d{2})(?:T(\d{2}):(\d{2})(?::(\d{2})(?:\.(\d+))?)?(Z|[+-]\d{2}:?\d{2})?)?$/;
@@ -58,4 +60,23 @@ export function wallClockHourOffset(fromDate: string, value: string): number | u
     if (!from || !at) return undefined;
     const days = Math.round((Date.UTC(at.getFullYear(), at.getMonth(), at.getDate()) - Date.UTC(from.getFullYear(), from.getMonth(), from.getDate())) / 86_400_000);
     return days * 24 + at.getHours();
+}
+
+function localDate(moment: Date): string {
+    return `${pad(moment.getFullYear(), 4)}-${pad(moment.getMonth() + 1)}-${pad(moment.getDate())}`;
+}
+
+/**
+ * Every local hour from midnight of `fromDate` up to midnight of `untilDate` (both "yyyy-mm-dd", `untilDate` not included),
+ * each with its UTC start, its end and the one local date it is in. A 23 or 25 hour day gives 23 or 25 hours.
+ * Empty when either date is invalid or `untilDate` isn't after `fromDate`.
+ */
+export function hoursBetween(fromDate: string, untilDate: string): { start: string; end: string; date: string }[] {
+    const [first, until] = [parseMoment(fromDate), parseMoment(untilDate)];
+    const hours: { start: string; end: string; date: string }[] = [];
+    if (!first || !until) return hours;
+    for (let at = first.getTime(); at < until.getTime(); at += HOUR_MS) {
+        hours.push({ start: new Date(at).toISOString(), end: new Date(at + HOUR_MS).toISOString(), date: localDate(new Date(at)) });
+    }
+    return hours;
 }

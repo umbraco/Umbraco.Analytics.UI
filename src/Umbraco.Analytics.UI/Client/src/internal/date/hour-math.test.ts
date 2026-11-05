@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { hourOffset, hourStart, nextHour, parseMoment, wallClockHourOffset } from "./hour-math.js";
+import { hourOffset, hoursBetween, hourStart, nextHour, parseMoment, wallClockHourOffset } from "./hour-math.js";
 import { bucketEnd, bucketOffset, bucketStart } from "./date-math.js";
 
 // The test browser runs in Europe/Copenhagen (vite.config.ts): UTC+1 in winter, UTC+2 in summer.
@@ -105,6 +105,18 @@ describe("Feature: hour maths", () => {
             expect(bucketStart("nope", "hour")).toBe("nope");
             expect(bucketEnd("nope", "hour")).toBe("nope");
             expect(bucketOffset("nope", "2026-11-05T13:00:00Z", "hour")).toBe(undefined);
+        });
+    });
+
+    describe("Scenario: the hours between two dates", () => {
+        it("is empty for an invalid date", () => {
+            expect(hoursBetween("nope", "2026-11-06")).toEqual([]);
+        });
+        it("is empty when the end date is the start date", () => {
+            expect(hoursBetween("2026-11-05", "2026-11-05")).toEqual([]);
+        });
+        it("is empty when the end date is before the start date", () => {
+            expect(hoursBetween("2026-11-05", "2026-11-04")).toEqual([]);
         });
     });
 });
