@@ -11,13 +11,15 @@ import "../../../table/data-table.element.js";
 import "../../../search-field/search-field.element.js";
 import { UAUI_TABLE_CELL } from "../../../table/cells/cell-names.js";
 import type { UauiSeries } from "../../../chart/types.js";
-import { uauiCompareFor, uauiFormatDateRange } from "../../../date-helpers/index.js";
+import { uauiCompareFor, uauiFormatDateRange, uauiGroupByOptions } from "../../../date-helpers/index.js";
 import type { UauiColorSlot } from "../../../theme/types.js";
-import type { UauiCompare, UauiDateRange } from "../../../date-range/types.js";
+import type { UauiCompare, UauiDatePreset, UauiDateRange } from "../../../date-range/types.js";
 import type { UauiGroupBy } from "../../../group-by/group-by.element.js";
 import { UauiTableServerController } from "../../../table/table-server.controller.js";
 import type { UauiTableColumn, UauiTableServerState } from "../../../table/index.js";
 import {
+    CLOCK,
+    CLOCK_DATE,
     getBreakdown,
     getUsage,
     type BreakdownBy,
@@ -39,6 +41,23 @@ const SECONDS: Intl.NumberFormatOptions = { style: "unit", unit: "second", maxim
 // Fixed dates keep the example's data, and its screenshots, the same on every day.
 const initialRange: UauiDateRange = { from: "2026-05-25", to: "2026-06-23" };
 const initialCompare = uauiCompareFor("previous-period", initialRange);
+
+// The clock is fixed too, and owned by the fake API (2:23 PM on this date). A real product reads `new Date()` here and
+// its server counts usage up to its own clock. `now` takes a moment, so an instant is passed.
+const TODAY = CLOCK_DATE;
+const NOW = CLOCK;
+
+// Today and Yesterday are built in but not in the default list: a product that draws hourly bars adds them.
+const presets: UauiDatePreset[] = [
+    { id: "today" },
+    { id: "yesterday" },
+    { id: "last-7-days" },
+    { id: "last-30-days" },
+    { id: "this-month" },
+    { id: "last-month" },
+    { id: "last-year" },
+    { id: "custom" },
+];
 
 const metricLabels: Record<Metric, string> = {
     requests: "Requests",
@@ -102,6 +121,8 @@ export class ExampleAiUsagePageElement extends UmbLitElement {
     @state() private _range: UauiDateRange = initialRange;
     @state() private _compare?: UauiCompare = initialCompare;
     @state() private _groupBy: UauiGroupBy = "day";
+    // Worked out once per range, not on every render.
+    @state() private _groupByOptions: UauiGroupBy[] = uauiGroupByOptions(initialRange);
     @state() private _metric: Metric = "requests";
     @state() private _by: BreakdownBy = "model";
 
@@ -163,6 +184,9 @@ export class ExampleAiUsagePageElement extends UmbLitElement {
     #onDateRange(event: CustomEvent<{ value: UauiDateRange; compare?: UauiCompare }>) {
         this._range = event.detail.value;
         this._compare = event.detail.compare;
+        // Hour is only offered for short ranges. When the chosen option isn't offered any more, take the first one.
+        this._groupByOptions = uauiGroupByOptions(this._range);
+        if (!this._groupByOptions.includes(this._groupBy)) this._groupBy = this._groupByOptions[0];
         this.#loadUsage();
         void this.#breakdown.reload({ resetPage: true });
     }
@@ -171,6 +195,13 @@ export class ExampleAiUsagePageElement extends UmbLitElement {
     #onGroupBy(event: CustomEvent<{ value: UauiGroupBy }>) {
         this._groupBy = event.detail.value;
         this.#loadUsage();
+    }
+
+    // This page marks now, and everything from it onward as incomplete, only at hour level and when the range holds
+    // today. At day, week and month it marks nothing, though the chart could.
+    get #now() {
+        const { from, to } = this._range;
+        return this._groupBy === "hour" && from <= TODAY && TODAY <= to ? NOW : undefined;
     }
 
     // A tile was pressed: the chart plots that metric. Nothing is fetched, the buckets already hold every metric.
@@ -249,14 +280,14 @@ export class ExampleAiUsagePageElement extends UmbLitElement {
         return html`
             <umb-body-layout headline="Usage">
                 <div slot="action-menu" class="actions">
-                    <uaui-date-range today="2026-06-23" .value=${this._range} .compare=${this._compare} @change=${this.#onDateRange}></uaui-date-range>
+                    <uaui-date-range today=${TODAY} .presets=${presets} .value=${this._range} .compare=${this._compare} @change=${this.#onDateRange}></uaui-date-range>
                 </div>
 
                 <div class="content">
                     ${this.#tiles()}
 
                     <uui-box headline="${metricLabels[this._metric]} over time" headline-variant="h3" style="--uui-box-default-padding: 0">
-                        <uaui-group-by slot="header-actions" .value=${this._groupBy} @change=${this.#onGroupBy}></uaui-group-by>
+                        <uaui-group-by slot="header-actions" .options=${this._groupByOptions} .value=${this._groupBy} @change=${this.#onGroupBy}></uaui-group-by>
                         <uaui-time-series-chart
                             kind="stacked-bar"
                             .series=${toSeries(this._metric, usage?.buckets)}
@@ -265,6 +296,8 @@ export class ExampleAiUsagePageElement extends UmbLitElement {
                             .compare=${this._compare}
                             .compareLabel=${this._compare ? uauiFormatDateRange(this.localize, this._compare) : undefined}
                             .groupBy=${this._groupBy}
+                            .now=${this.#now}
+                            .incompleteFrom=${this.#now}
                             ?loading=${this._usageLoading}
                             ?error=${this._usageError}
                             retryable

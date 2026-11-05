@@ -7,7 +7,7 @@ import type { UauiGroupBy } from "../../../group-by/group-by.element.js";
 import type { UauiTableSortDirection } from "../../../table/types.js";
 import { wait } from "../fake-latency.js";
 
-/** What happened in one bucket of time (a day, a week or a month), or in a whole range. */
+/** What happened in one bucket of time (an hour, a day, a week or a month), or in a whole range. */
 export type UsageTotals = {
     requests: number;
     failed: number;
@@ -19,7 +19,7 @@ export type UsageTotals = {
 };
 
 export type UsageBucket = UsageTotals & {
-    /** ISO date: the first day of the bucket. */
+    /** The bucket's start: an ISO date, or a UTC instant for an hour. */
     date: string;
 };
 
@@ -126,8 +126,58 @@ function add(a: UsageTotals, b: UsageTotals): UsageTotals {
 /** Usage started on this day: ranges before it have no requests at all. */
 export const USAGE_STARTED = "2026-01-01";
 
-/** One model on one day. Quieter at weekends, a little busier as the months go by. */
+const scale = (t: UsageTotals, f: number): UsageTotals => ({
+    requests: Math.round(t.requests * f),
+    failed: Math.round(t.failed * f),
+    inputTokens: Math.round(t.inputTokens * f),
+    cachedInputTokens: Math.round(t.cachedInputTokens * f),
+    outputTokens: Math.round(t.outputTokens * f),
+    durationMs: Math.round(t.durationMs * f),
+});
+
+/** The fake server's date today. Usage after the clock hasn't happened yet. */
+export const CLOCK_DATE = "2026-06-23";
+/** The fake server's clock as an instant: 2:23 PM on `CLOCK_DATE` in the browser's time zone. */
+export const CLOCK = new Date(`${CLOCK_DATE}T14:23:00`).toISOString();
+
+/** How busy each local hour is, as a weight: quiet at night, busy from 9 to 5, a lunchtime spike at 1 PM. */
+const hourWeights = [1, 0.5, 0.4, 0.3, 0.3, 0.6, 1.5, 4, 9, 14, 17, 15, 12, 30, 14, 12, 9, 6, 4, 3, 2.5, 2, 1.5, 1];
+
+/**
+ * The weight of each local hour of a day, in order: busyness with a little jitter, times the part of the hour the clock
+ * has reached (1 for a day that is over, 0 for hours still to come). Hours and days both count from it, so they agree.
+ */
+const dayHourCache = new Map<string, { starts: string[]; weights: number[]; share: number }>();
+function dayHours(date: string) {
+    let day = dayHourCache.get(date);
+    if (!day) {
+        const clock = Date.parse(CLOCK);
+        const hours = uauiTimeBuckets({ from: date, to: date }, "hour");
+        const seen = new Map<number, number>();
+        const full = hours.map(({ start }) => {
+            const hour = new Date(start).getHours();
+            const n = seen.get(hour) ?? 0;
+            seen.set(hour, n + 1);
+            return hourWeights[hour] * (0.85 + 0.3 * hash01(`${date}|${hour}|${n}`));
+        });
+        const weights = hours.map(({ start }, i) => full[i] * Math.min(1, Math.max(0, (clock - Date.parse(start)) / 3_600_000)));
+        const total = full.reduce((a, b) => a + b, 0);
+        day = { starts: hours.map((h) => h.start), weights, share: total ? weights.reduce((a, b) => a + b, 0) / total : 1 };
+        dayHourCache.set(date, day);
+    }
+    return day;
+}
+
+/** The part of a day's usage that has happened by the clock: 1 for a past day, 0 for a future one. */
+const happenedShare = (date: string) => (date < CLOCK_DATE ? 1 : date > CLOCK_DATE ? 0 : dayHours(date).share);
+
+/** One model on one day, up to the clock. Quieter at weekends, a little busier as the months go by. */
 function modelDay(model: Model, date: string): UsageTotals {
+    const share = happenedShare(date);
+    return share === 1 ? modelDayInFull(model, date) : scale(modelDayInFull(model, date), share);
+}
+
+function modelDayInFull(model: Model, date: string): UsageTotals {
     if (date < USAGE_STARTED) return empty();
     const weekday = new Date(utc(date)).getUTCDay();
     const weekend = weekday === 0 || weekday === 6 ? 0.45 : 1;
@@ -185,8 +235,36 @@ function profileDay(date: string): UsageTotals[] {
     }));
 }
 
+/** One day's usage as each of its hours' part of it, in whole numbers that add back up to the day. Hours still to come get 0. */
+function hourTotalsOf(date: string): UsageBucket[] {
+    const { starts, weights } = dayHours(date);
+    const sum = weights.reduce((a, b) => a + b, 0);
+    const fractions = weights.map((w) => (sum ? w / sum : 0));
+    const day = dayTotals(date);
+    const cut = (value: number) => split(value, fractions);
+    const [requests, failed, inputTokens, cachedInputTokens, outputTokens, durationMs] = [
+        day.requests,
+        day.failed,
+        day.inputTokens,
+        day.cachedInputTokens,
+        day.outputTokens,
+        day.durationMs,
+    ].map(cut);
+    return starts.map((date, i) => ({
+        date,
+        requests: requests[i],
+        failed: failed[i],
+        inputTokens: inputTokens[i],
+        cachedInputTokens: cachedInputTokens[i],
+        outputTokens: outputTokens[i],
+        durationMs: durationMs[i],
+    }));
+}
+
 function bucketsFor(range: { from: string; to: string }, groupBy: UauiGroupBy): UsageBucket[] {
-    return uauiTimeBuckets(range, groupBy).map(({ start, days }) => ({ date: start, ...days.map(dayTotals).reduce(add, empty()) }));
+    if (groupBy === "hour") return uauiDaysIn(range).flatMap(hourTotalsOf);
+    const buckets = uauiTimeBuckets(range, groupBy);
+    return buckets.map(({ start, days }) => ({ date: start, ...days.map(dayTotals).reduce(add, empty()) }));
 }
 
 const sumOf = (buckets: UsageTotals[]) => buckets.reduce(add, empty());

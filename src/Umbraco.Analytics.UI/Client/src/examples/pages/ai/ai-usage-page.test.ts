@@ -269,23 +269,35 @@ describe("Feature: Umbraco AI usage page", () => {
         });
     });
 
-    // HRS-10 — AI usage example shows Today by hour. Pending until T11 (docs/plans/hourly-buckets/PLAN.md).
+    // HRS-10 — AI usage example shows Today by hour.
     describe("Scenario: Today by hour", () => {
         const pickHour = async (page: UauiTestElement) => {
-            const hour = deepQuery<HTMLElement>(shadow(page).querySelector("uaui-group-by")!.shadowRoot!, "[data-value='hour']")!;
-            hour.click();
+            // Saving the range closes the dialog and then re-offers the options, so wait for Hour to appear.
+            const hourButton = () => deepQuery<HTMLElement>(shadow(page).querySelector("uaui-group-by")!.shadowRoot!, "[data-value='hour']");
+            await expect.poll(hourButton).not.toBe(null);
+            hourButton()!.click();
             await expect.poll(() => chart(page).groupBy).toBe("hour");
             await settle(page);
         };
 
-        it.skip("draws 24 hourly dates", async () => {
+        it("draws 24 hourly dates", async () => {
             const page = await renderPage();
             await saveDateRange(page, { preset: "today" });
             await pickHour(page);
             expect(chart(page).series[0].points).toHaveLength(24);
         });
 
-        it.skip("goes back to day for Last 30 days", async () => {
+        it("counts the same requests at Hour as at Day", async () => {
+            const page = await renderPage();
+            await saveDateRange(page, { preset: "today" });
+            await expect.poll(() => chart(page).series[0].points).toHaveLength(1);
+            await settle(page);
+            const day = tile(page, "Requests").value;
+            await pickHour(page);
+            expect(tile(page, "Requests").value).toBe(day);
+        });
+
+        it("goes back to day for Last 30 days", async () => {
             const page = await renderPage();
             await saveDateRange(page, { preset: "today" });
             await pickHour(page);
