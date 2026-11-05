@@ -94,7 +94,7 @@ CMS packages (`Umbraco.Cms.*`) restore from nuget.org only (see `NuGet.config`).
 
 Versions follow the CMS major (19.x is for CMS 19). Branches: `v19/dev` for development, `v19/main` for releases, work on `v19/topic/<name>`.
 
-Uses the shared `umbraco/Umbraco.Build` pipeline (`azure-pipelines.yml`), run by the [Umbraco.Analytics.UI pipeline](https://dev.azure.com/umbraco/Umbraco%20Extensions/_build?definitionId=820) in the Umbraco Extensions Azure DevOps project. Tag `release-{version}` on the release branch. Prereleases go to MyGet, stable releases to NuGet.org and npm.
+Uses the shared `umbraco/Umbraco.Build` pipeline (`azure-pipelines.yml`), run by the [Umbraco.Analytics.UI pipeline](https://dev.azure.com/umbraco/Umbraco%20Extensions/_build?definitionId=820) in the Umbraco Extensions Azure DevOps project. Tag `release-{version}` on the release branch. Every tagged release, RCs included, goes to MyGet and, after approval, to NuGet.org and npm.
 
 To publish a nightly or prerelease build from any branch: Run pipeline, pick the branch, set **Prerelease** to `nightly` or `prerelease` and **Release** to `skip`. Both packages go to the MyGet `umbraconightly` or `umbracoprereleases` feed (NuGet and npm).
 
