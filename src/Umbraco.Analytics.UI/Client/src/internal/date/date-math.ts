@@ -61,9 +61,15 @@ type Range = { from: string; to: string };
 type PresetRange = Range & { preset?: string };
 
 /** The ids of the presets the package knows how to calculate. */
-export type UauiBuiltInPresetId = "last-7-days" | "last-30-days" | "this-month" | "last-month" | "last-year";
+export type UauiBuiltInPresetId = "today" | "yesterday" | "last-7-days" | "last-30-days" | "this-month" | "last-month" | "last-year";
 
 const builtIn: Record<UauiBuiltInPresetId, (today: string) => Range> = {
+    // One whole local day each, not in the default list.
+    today: (today) => ({ from: today, to: today }),
+    yesterday: (today) => {
+        const day = addDays(today, -1);
+        return { from: day, to: day };
+    },
     // Rolling windows include today.
     "last-7-days": (today) => ({ from: addDays(today, -6), to: today }),
     "last-30-days": (today) => ({ from: addDays(today, -29), to: today }),

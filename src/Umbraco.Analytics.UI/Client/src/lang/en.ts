@@ -111,6 +111,8 @@ export default {
         dateRangeCompareShort: "vs {0}",
         dateRangeModalHeadline: "Date range",
         dateRangePreset: "Preset",
+        dateRangeToday: "Today",
+        dateRangeYesterday: "Yesterday",
         dateRangeLast7Days: "Last 7 days",
         dateRangeLast30Days: "Last 30 days",
         dateRangeThisMonth: "This month",

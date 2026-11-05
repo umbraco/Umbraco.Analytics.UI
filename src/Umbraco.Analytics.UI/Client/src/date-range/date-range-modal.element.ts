@@ -14,6 +14,8 @@ import type { UauiDateRange, UauiDatePreset, UauiDateRangeModalData, UauiDateRan
 const CUSTOM = "custom";
 
 const presetTerms: Record<string, string> = {
+    today: "uauiAnalytics_dateRangeToday",
+    yesterday: "uauiAnalytics_dateRangeYesterday",
     "last-7-days": "uauiAnalytics_dateRangeLast7Days",
     "last-30-days": "uauiAnalytics_dateRangeLast30Days",
     "this-month": "uauiAnalytics_dateRangeThisMonth",

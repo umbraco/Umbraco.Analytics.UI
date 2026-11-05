@@ -39,7 +39,7 @@ export type UauiTimeBucket = {
 
 /**
  * The dates a built-in preset of `uaui-date-range` gives as of `today` (an ISO date), the same dates the dialog picks:
- * `last-7-days`, `last-30-days`, `this-month`, `last-month` or `last-year`. `undefined` for `custom`, any other id, or a `today` that isn't a real date. Use it to work
+ * `today`, `yesterday`, `last-7-days`, `last-30-days`, `this-month`, `last-month` or `last-year`. `undefined` for `custom`, any other id, or a `today` that isn't a real date. Use it to work
  * out a saved preset's dates again on a later day, or the default range before the editor opens the dialog.
  */
 export function uauiPresetRange(id: string, today: string): UauiDateSpan | undefined {
