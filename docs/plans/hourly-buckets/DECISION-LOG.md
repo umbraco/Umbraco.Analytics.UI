@@ -26,3 +26,4 @@
 - **05-11-2026** (T2) `UauiDateBucketsOptions` also renamed, to `UauiTimeBucketsOptions`, to match the function.
 - **05-11-2026** (T2) `uauiTimeBuckets` takes `UauiGroupBy | "hour"` until T6 adds "hour" to `UauiGroupBy`; T6 collapses it.
 - **05-11-2026** (T2) A clipped first or last week or month bucket's `start..end` reaches past the range. The `days` doc tells products to clip their server query with `days` or the range.
+- **05-11-2026** (T5) The Workflow example keeps its own `workflowChartToday` names and server field `today`: they model the server's answer, not the chart property. Only the value passed to the chart moved to `now`.

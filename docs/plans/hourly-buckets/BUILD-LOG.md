@@ -4,3 +4,4 @@
 - **T2** `8e5584d` `uauiTimeBuckets` with `end` and hour buckets; HRS-1 specs on. Review FAIL (missing tests), fixed in one round, then PASS. 143 date tests green; API report changed (needs sign-off).
 - **T3** `207d0af` `today` and `yesterday` built-in presets, off by default; HRS-8 specs on. Review PASS. Full suite 2466 passed, 0 failed; no API report change.
 - **T4** `0355f9b` One-day range reads as one date (helper, button, compare line, accessible name); HRS-9 specs on. Review PASS. 134 date tests green; no API report change.
+- **T5** `3907371` Chart `today` renamed `now` (plugin, stories, tests, examples); HRS-4 AC9 on. Review FAIL (Engage date picker renamed by mistake), fixed in one round, then PASS. 862 chart/example/date-range tests green; API report: `today` out, `now` in.

@@ -26,7 +26,7 @@ Paths are under `src/Umbraco.Analytics.UI/Client/src/`. The time zone in tests i
 
 ## Time series chart
 
-- [ ] **T5** - story: HRS-4 (AC9). Rename the chart's `today` to `now` (attribute `now`), with no behaviour change yet: `chart/internal/today-plugin.ts` becomes `now-plugin.ts`, `TODAY_LABEL_ROOM` becomes `NOW_LABEL_ROOM`, and every story, test and example (`engage`, `workflow`) moves to `now`. `today` is removed, not deprecated.
+- [x] **T5** - story: HRS-4 (AC9). Rename the chart's `today` to `now` (attribute `now`), with no behaviour change yet: `chart/internal/today-plugin.ts` becomes `now-plugin.ts`, `TODAY_LABEL_ROOM` becomes `NOW_LABEL_ROOM`, and every story, test and example (`engage`, `workflow`) moves to `now`. `today` is removed, not deprecated.
   Acceptance: HRS-4 AC9 spec green in `chart/time-series-chart.now.test.ts`. Every existing chart test green with `now` in place of `today`. `npm run check:api` shows `today` out and `now` in.
   depends-on: none. parallel-group: A
 
