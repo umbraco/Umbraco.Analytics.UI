@@ -51,6 +51,12 @@ export default {
         chartComparisonLabel: "Comparison",
         // Drawn over the chart's today line.
         chartToday: "Today",
+        // Drawn over the chart's now line when the chart is by hour.
+        chartNow: "Now",
+        // The hour that is now in the tooltip and the hidden table, "Nov 5, 2026, 2 PM (now)".
+        chartNowDate: "{0} (now)",
+        // The hour that is both now and incomplete, "Nov 5, 2026, 2 PM (now, incomplete)".
+        chartNowIncompleteDate: "{0} (now, incomplete)",
         // Today's date in the tooltip and the hidden table, "Nov 2, 2026 (today)".
         chartTodayDate: "{0} (today)",
         // The same for a week or month that contains today, "Nov 2, 2026 (includes today)".

@@ -16,7 +16,7 @@ import { resolveWeekStart } from "../internal/date/date-math.js";
 import { formatBucketKey } from "../internal/date/format-date.js";
 import { getNumberFormat } from "../internal/format/number-format.js";
 import { firstIncompleteIndex } from "./internal/incomplete-index.js";
-import { bucketMarkers, type MarkerBucket } from "./internal/marker-buckets.js";
+import { bucketIndexOf, bucketMarkers, momentKey, type MarkerBucket } from "./internal/marker-buckets.js";
 import type { UauiMarkerPlacement } from "./internal/markers-plugin.js";
 import { buildChartData } from "./internal/chart-data.js";
 import { maxValue, seriesTotals, shareTotals, shareValues, type UauiChartData } from "./internal/chart-values.js";
@@ -251,23 +251,28 @@ export class UauiTimeSeriesChartElement extends UauiTimeSeriesChartElementBase {
     markers: UauiMarker[] = [];
 
     /**
-     * The current moment, as an ISO date for now ("2026-11-02"), to draw a thin solid line at it labelled "Today", for a
-     * chart whose dates run on past it (reviews due next week). Taken from the product, not the clock, so it is the
-     * editor's day as the product counts it. It is drawn in the date (or the week or month, per `group-by`) that contains
-     * it, and not at all when no date does. The tooltip and the hidden table name that date as today. Dates after it are drawn like any
-     * other: pass a point (0 when there is nothing yet) for each, as the chart's dates are its points' dates.
+     * The current moment, as an ISO date ("2026-11-02") or date-time ("2026-11-02T14:23" or with `Z` or an offset), to draw
+     * a thin solid line at it, for a chart whose dates run on past it (reviews due next week) or one that is part way
+     * through today. Taken from the product, not the clock. It is read as a moment: a `Z` or offset is turned into the
+     * browser's local time first, a date-time without one is local, and a plain date is that local day (midnight at hour
+     * level). The line is drawn in the middle of the bucket that contains it (the hour, day, week or month, per
+     * `group-by`), labelled "Now" by hour and "Today" otherwise, and not at all when no bucket contains it. The tooltip
+     * and the hidden table name that bucket as now (by hour) or today. Dates after it are drawn like any other: pass a
+     * point (0 when there is nothing yet) for each, as the chart's dates are its points' dates.
      */
     @property({ type: String })
     now?: string;
 
     /**
-     * An ISO date ("2026-11-04"): every date from the one that contains it onward is incomplete, because the latest
-     * data isn't final (today is only half over, or data arrives late). The series draw see-through there (lines fade
-     * and their dots go hollow, bars fade), over a light hatched band, so a low last value doesn't read as a crash;
-     * the compare isn't faded. The tooltip and the hidden table name those dates as incomplete. Bucketed as `now`
-     * is, so with `group-by` week or month the week or month that contains it is incomplete. A date after the last
-     * date makes nothing incomplete, and one before the first makes everything. Independent of `now`: set both to
-     * mark today as incomplete, or only this when the unfinished part isn't today.
+     * An ISO date ("2026-11-04") or date-time ("2026-11-04T14:23", or with `Z` or an offset): every date from the one that
+     * contains it onward is incomplete, because the latest data isn't final (today is only half over, or data arrives
+     * late). It is read as a moment, as `now` is: with `group-by` hour everything from the hour that contains it is
+     * incomplete (a plain date means from midnight), and with day, week or month, from the local day, week or month that
+     * contains it. The series draw see-through there (lines fade and their dots go hollow, bars fade), over a light
+     * hatched band, so a low last value doesn't read as a crash; the compare isn't faded. The tooltip and the hidden
+     * table name those dates as incomplete. A moment after the last date makes nothing incomplete, and one before the
+     * first makes everything. Independent of `now`: set both to mark today as incomplete, or only this when the
+     * unfinished part isn't today.
      */
     @property({ type: String, attribute: "incomplete-from" })
     incompleteFrom?: string;
@@ -344,7 +349,9 @@ export class UauiTimeSeriesChartElement extends UauiTimeSeriesChartElementBase {
         }
         if (changed.has("kind") || changed.has("stack") || changed.has("lowerIsBetter") || changed.has("yScale") || changed.has("now") || changed.has("incompleteFrom")) this.#chart.invalidate();
 
-        const nowIndex = this.now ? bucketMarkers([{ id: "today", date: this.now, title: "" }], this.#derived.data.labels, this.groupBy)[0]?.index : undefined;
+        const nowKey = this.now ? momentKey(this.now, this.groupBy) : undefined;
+        const nowAt = nowKey === undefined ? -1 : bucketIndexOf(nowKey, this.#derived.data.labels, this.groupBy);
+        const nowIndex = nowAt < 0 ? undefined : nowAt;
         const incompleteIndex = this.incompleteFrom ? firstIncompleteIndex(this.incompleteFrom, this.#derived.data.labels, this.groupBy) : undefined;
         if (nowIndex !== this.#nowIndex || incompleteIndex !== this.#incompleteIndex || this.#tableDatesFrom !== this.#derived) {
             this.#nowIndex = nowIndex;
@@ -448,6 +455,12 @@ export class UauiTimeSeriesChartElement extends UauiTimeSeriesChartElementBase {
 
     /** A date as the tooltip and the hidden table name it: plain, or as today's and/or incomplete. */
     #namedDate(label: string, today: boolean, incomplete: boolean) {
+        // At hour level the bucket is the hour that is now.
+        if (this.groupBy === "hour") {
+            if (today && incomplete) return this.localize.term("uauiAnalytics_chartNowIncompleteDate", label);
+            if (today) return this.localize.term("uauiAnalytics_chartNowDate", label);
+            return incomplete ? this.localize.term("uauiAnalytics_chartIncompleteDate", label) : label;
+        }
         // A week or month isn't today: it contains it.
         const bucket = this.groupBy === "week" || this.groupBy === "month";
         if (today && incomplete)
@@ -474,7 +487,7 @@ export class UauiTimeSeriesChartElement extends UauiTimeSeriesChartElementBase {
         this.#overlays.set(
             colors,
             this.#markerBuckets.map((b) => ({ index: b.index, count: b.markers.length })),
-            this.#nowIndex === undefined ? undefined : { index: this.#nowIndex, label: this.localize.term("uauiAnalytics_chartToday") },
+            this.#nowIndex === undefined ? undefined : { index: this.#nowIndex, label: this.localize.term(this.groupBy === "hour" ? "uauiAnalytics_chartNow" : "uauiAnalytics_chartToday") },
             this.#incompleteIndex,
         );
         this.#warnLogStacked();

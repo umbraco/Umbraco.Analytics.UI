@@ -12,6 +12,7 @@ import {
     newVisitors,
     pageviews,
     pageviewsByHour,
+    pageviewsSoFarToday,
     pageviewsPrevious,
     pending,
     previousVisitors,
@@ -187,6 +188,15 @@ export const SundayWeekStart: Story = {
 export const ByHour: Story = {
     name: "By hour",
     args: { kind: "bar", groupBy: "hour", series: [pageviewsByHour] },
+};
+
+/**
+ * Today by hour, part way through: `now` and `incomplete-from` are the same moment, 2:23 PM. The line is labelled "Now" in the
+ * 2 PM hour, and that hour and the ones after it (0 so far) fade under the hatch. The tooltip says "(now, incomplete)".
+ */
+export const TodayByHourSoFar: Story = {
+    name: "Today by hour, so far",
+    args: { kind: "bar", groupBy: "hour", series: [pageviewsSoFarToday], now: "2026-11-05T14:23", incompleteFrom: "2026-11-05T14:23" },
 };
 
 /** One bar per date. */

@@ -66,6 +66,12 @@ function localDate(moment: Date): string {
     return `${pad(moment.getFullYear(), 4)}-${pad(moment.getMonth() + 1)}-${pad(moment.getDate())}`;
 }
 
+/** The local date ("yyyy-mm-dd") that contains `value`: a `Z` or offset is converted to the browser's time first. `undefined` when `value` isn't a real date or time. */
+export function localDateOf(value: string | undefined): string | undefined {
+    const moment = parseMoment(value);
+    return moment && localDate(moment);
+}
+
 /**
  * Every local hour from midnight of `fromDate` up to midnight of `untilDate` (both "yyyy-mm-dd", `untilDate` not included),
  * each with its UTC start, its end and the one local date it is in. A 23 or 25 hour day gives 23 or 25 hours.

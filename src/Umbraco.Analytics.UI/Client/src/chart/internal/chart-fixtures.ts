@@ -79,6 +79,12 @@ export const pageviewsByHour: UauiSeries = {
     })),
 };
 
+/** Pageviews for 5 Nov 2026 by hour as of 2:23 PM: the hours after the 2 PM one are 0, and the 2 PM one is part way through. */
+export const pageviewsSoFarToday: UauiSeries = {
+    ...pageviewsByHour,
+    points: pageviewsByHour.points.map((point, hour) => ({ ...point, value: hour > 14 ? 0 : hour === 14 ? Math.round(point.value / 2) : point.value })),
+};
+
 /** Small daily counts for the bar stories (25 May to 23 Jun 2026), like the Phase 1 visitors chart. */
 const returningValues = [1, 0, 1, 0, 1, 0, 0, 2, 1, 0, 1, 0, 0, 2, 0, 1, 1, 0, 0, 2, 0, 0, 1, 0, 1, 0, 1, 0, 0, 1];
 const newVisitorValues = [0, 1, 1, 2, 0, 1, 1, 0, 1, 4, 1, 0, 1, 0, 0, 1, 1, 2, 0, 0, 1, 1, 0, 1, 0, 1, 0, 0, 1, 1];

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { allWhole, buildChartData, maxValue, minPositive, seriesTotals } from "./chart-data.js";
 import { logScale } from "./log-scale.js";
+import { hoursOf5Nov } from "./hourly-fixtures.js";
 import { bucketMarkers } from "./marker-buckets.js";
 import { niceScale } from "./nice-scale.js";
 
@@ -284,5 +285,19 @@ describe("bucketMarkers", () => {
 
     it("reads the date of a timestamp", () => {
         expect(indexes(bucketMarkers([marker("a", "2026-06-11T09:30:00")], days, "day"))).toEqual([[1, ["a"]]]);
+    });
+
+    describe("by hour", () => {
+        it("puts a local date-time in the hour that contains it", () => {
+            expect(indexes(bucketMarkers([marker("a", "2026-11-05T14:23")], hoursOf5Nov, "hour"))).toEqual([[14, ["a"]]]);
+        });
+
+        it("reads a UTC date-time in local time", () => {
+            expect(indexes(bucketMarkers([marker("a", "2026-11-05T13:23:00Z")], hoursOf5Nov, "hour"))).toEqual([[14, ["a"]]]);
+        });
+
+        it("drops a malformed date", () => {
+            expect(bucketMarkers([marker("a", "not a date")], hoursOf5Nov, "hour")).toEqual([]);
+        });
     });
 });
