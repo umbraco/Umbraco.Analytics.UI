@@ -46,7 +46,7 @@ Paths are under `src/Umbraco.Analytics.UI/Client/src/`. The time zone in tests i
   Acceptance: HRS-6 AC1–AC3, AC6, AC7 specs green in `chart/time-series-chart.hour-labels.test.ts`. A screenshot test of the one-day and two-day stories.
   depends-on: T8
 
-- [ ] **T10** - story: HRS-7 (AC1–AC6). `uaui-group-by` gets the "Hour" label (`groupByHour`); its default `options` stay day, week and month (R17). Add `uauiGroupByOptions(range)` to `date-helpers/date-helpers.ts` (R18), exported from `src/index.ts`. Add a "With hour" story.
+- [x] **T10** - story: HRS-7 (AC1–AC6). `uaui-group-by` gets the "Hour" label (`groupByHour`); its default `options` stay day, week and month (R17). Add `uauiGroupByOptions(range)` to `date-helpers/date-helpers.ts` (R18), exported from `src/index.ts`. Add a "With hour" story.
   Acceptance: HRS-7 specs green in `group-by/group-by.hour.test.ts`. axe clean.
   depends-on: T6. parallel-group: B
 
