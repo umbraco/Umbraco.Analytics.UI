@@ -52,7 +52,7 @@ Paths are under `src/Umbraco.Analytics.UI/Client/src/`. The time zone in tests i
 
 ## Shipping
 
-- [ ] **T11** - **wire: hourly view into the AI usage example.** story: HRS-10 (AC1, AC2). `examples/pages/ai/`: add the `today` and `yesterday` presets, pass `uauiGroupByOptions(range)` to the group-by, switch to the first option when the range changes (R19), make hourly fake data with `uauiTimeBuckets`, and set `now` and `incomplete-from` from the clock.
+- [x] **T11** - **wire: hourly view into the AI usage example.** story: HRS-10 (AC1, AC2). `examples/pages/ai/`: add the `today` and `yesterday` presets, pass `uauiGroupByOptions(range)` to the group-by, switch to the first option when the range changes (R19), make hourly fake data with `uauiTimeBuckets`, and set `now` and `incomplete-from` from the clock.
   Acceptance: HRS-10 specs green in `examples/pages/ai/ai-usage-page.test.ts`. In Storybook, the AI usage page shows Today by hour with the now line and hatching, matching `mockups/hourly-chart.png`.
   depends-on: T2, T3, T4, T7, T8, T9, T10
 

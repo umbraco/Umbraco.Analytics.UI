@@ -39,3 +39,6 @@
 - **05-11-2026** (T9) Spec deviation from R29: the repeated hour is named twice in the tooltip and the hidden table, not on the axis. 2 AM (EU) and 1 AM (US) never fall on a 3- or 6-hour grid.
 - **05-11-2026** (T9) Added beyond R28: the step widens 3 → 6 → 12 → 24 hours from the axis width so labels never overlap on a narrow chart. Each label gets a fixed 72px rather than a measured width, to keep the bundle small; worth revisiting if a language's labels are much longer.
 - **05-11-2026** (T9) The date goes on each day's first grid hour (midnight for whole days), so it never crowds the next label on a part day.
+- **05-11-2026** (T11) The AI example's fake server owns a fixed clock (2026-06-23, 2:23 PM local) and cuts today at it everywhere, so Hour and Day give the same totals. The default 30-day view's totals drop slightly, since its last day is now partial.
+- **05-11-2026** (T11) Open for the user: the example marks now and incomplete only at hour level, and on Today its KPI tiles compare the day so far with all of yesterday.
+- **05-11-2026** (T11) Pre-existing: the AI story's copyable imports header lists names the page no longer uses and misses a few it does (`ref`, `UmbTextStyles`, table server types). Left for a separate fix.
