@@ -102,7 +102,7 @@ export function builtInPresetRange(id: string, today: string): Range | undefined
 }
 
 /** Whole days from `from` to `to`, both inclusive. `undefined` unless both are real dates with `to` on or after `from`. */
-function inclusiveDays(range: Range): number | undefined {
+export function inclusiveDays(range: Range): number | undefined {
     const [a, b] = [parseIso(range.from), parseIso(range.to)];
     if (!a || !b || range.to < range.from) return undefined;
     const ms = Date.UTC(b.year, b.month - 1, b.day) - Date.UTC(a.year, a.month - 1, a.day);

@@ -1,7 +1,7 @@
 import type { UmbLocalizationController } from "@umbraco-cms/backoffice/localization-api";
 import type { UauiCompare, UauiDateRange } from "../date-range/types.js";
 import type { UauiGroupBy } from "../group-by/group-by.element.js";
-import { builtInPresetRange, compareRangeFor, dateBuckets, daysIn, previousPeriodRange, previousYearRange } from "../internal/date/date-math.js";
+import { builtInPresetRange, compareRangeFor, dateBuckets, daysIn, inclusiveDays, previousPeriodRange, previousYearRange } from "../internal/date/date-math.js";
 import { displayIsoDate, displayIsoDateWithoutYear } from "../internal/date/format-date.js";
 
 /**
@@ -73,6 +73,16 @@ export function uauiCompareFor(mode: UauiCompare["mode"], range: UauiDatePresetS
 /** Every ISO date from `range.from` to `range.to`, both included. Empty when `range` isn't a valid range. */
 export function uauiDaysIn(range: UauiDateSpan): string[] {
     return daysIn(range);
+}
+
+/**
+ * The group-by options to offer for `range`: hour and day for a range of two days or fewer, otherwise day, week and
+ * month (also when `range` isn't valid). Pass the result to `uaui-group-by`'s `options`. When the current value isn't in
+ * the new list, switch to the list's first option. The chart itself draws hourly for any range.
+ */
+export function uauiGroupByOptions(range: UauiDateSpan): UauiGroupBy[] {
+    const days = inclusiveDays(range);
+    return days !== undefined && days <= 2 ? ["hour", "day"] : ["day", "week", "month"];
 }
 
 /** Options for `uauiTimeBuckets`. */

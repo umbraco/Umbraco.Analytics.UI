@@ -19,7 +19,8 @@ const termKeys: Record<UauiGroupBy, string> = {
 };
 
 /**
- * Switches a chart between daily, weekly and monthly points: a `uaui-toggle-group` control.
+ * Switches a chart between daily, weekly and monthly points: a `uaui-toggle-group` control. Add hourly points
+through `options` (see `uauiGroupByOptions`).
  *
  * Keyboard behaviour is that of `uaui-toggle-group`. Put it in a `uui-box`'s `header-actions` slot.
  *

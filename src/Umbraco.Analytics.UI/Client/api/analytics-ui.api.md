@@ -303,6 +303,9 @@ export class UauiGroupByElement extends UmbLitElement {
 }
 
 // @public
+export function uauiGroupByOptions(range: UauiDateSpan): UauiGroupBy[];
+
+// @public
 export class UauiKpiTileElement extends UmbLitElement {
     color?: UauiStatusColor;
     current?: number;

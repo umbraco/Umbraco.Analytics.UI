@@ -2,6 +2,7 @@ export {
     uauiCompareFor,
     uauiDaysIn,
     uauiFormatDateRange,
+    uauiGroupByOptions,
     uauiPresetRange,
     uauiPreviousPeriod,
     uauiPreviousYear,

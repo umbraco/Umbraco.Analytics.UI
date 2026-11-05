@@ -8,7 +8,7 @@ const meta: Meta<UauiGroupByElement> = {
     component: "uaui-group-by",
     args: { value: "week", options: ["day", "week", "month"] },
     argTypes: {
-        value: { control: "inline-radio", options: ["day", "week", "month"] },
+        value: { control: "inline-radio", options: ["hour", "day", "week", "month"] },
         options: { control: "object" },
     },
     render: (args) =>
@@ -28,11 +28,15 @@ export const Default: Story = {};
 /** A product that can't offer every grouping passes fewer options. */
 export const TwoOptions: Story = { args: { value: "day", options: ["day", "week"] } };
 
+/** A short range (two days or fewer) can group by hour: see `uauiGroupByOptions`. */
+export const WithHour: Story = { args: { value: "hour", options: ["hour", "day"] } };
+
 export const AllStates: Story = {
     render: () => html`<div style="display:flex;flex-direction:column;gap:12px;align-items:flex-start">
         <uaui-group-by value="day"></uaui-group-by>
         <uaui-group-by value="week"></uaui-group-by>
         <uaui-group-by value="month"></uaui-group-by>
         <uaui-group-by value="day" .options=${["day", "week"]}></uaui-group-by>
+        <uaui-group-by value="hour" .options=${["hour", "day"]}></uaui-group-by>
     </div>`,
 };
