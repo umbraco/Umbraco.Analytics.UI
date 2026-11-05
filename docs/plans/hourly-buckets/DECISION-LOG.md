@@ -35,3 +35,7 @@
 - **05-11-2026** (T7) With no range, each side counts from its first point's local day, so 3 PM still sits under 3 PM.
 - **05-11-2026** (T8) A malformed `now` or `incomplete-from` draws nothing at hour level, but at day, week and month it keeps the old fallback (cut to the day as written), so nothing that relied on it changes.
 - **05-11-2026** (T8) Markers at hour level are read as moments and land in their local hour; an unreadable one is dropped. At day level markers still cut to the day as written, as points do (R6), while `now` and `incomplete-from` go through local time.
+- **05-11-2026** (T9) The 3-hour step applies up to 25 dates, not 24, so the 25-hour day clocks go back still counts as one day (PLAN.md T9 had the wrong number).
+- **05-11-2026** (T9) Spec deviation from R29: the repeated hour is named twice in the tooltip and the hidden table, not on the axis. 2 AM (EU) and 1 AM (US) never fall on a 3- or 6-hour grid.
+- **05-11-2026** (T9) Added beyond R28: the step widens 3 → 6 → 12 → 24 hours from the axis width so labels never overlap on a narrow chart. Each label gets a fixed 72px rather than a measured width, to keep the bundle small; worth revisiting if a language's labels are much longer.
+- **05-11-2026** (T9) The date goes on each day's first grid hour (midnight for whole days), so it never crowds the next label on a part day.

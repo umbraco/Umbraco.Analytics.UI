@@ -42,7 +42,7 @@ Paths are under `src/Umbraco.Analytics.UI/Client/src/`. The time zone in tests i
   Acceptance: HRS-4 AC1–AC8 green in `chart/time-series-chart.now.test.ts`, HRS-5 in `chart/time-series-chart.incomplete-hours.test.ts`. `time-series-chart.incomplete.test.ts` and `time-series-chart.isolation.test.ts` green.
   depends-on: T7
 
-- [ ] **T9** - story: HRS-6 (AC1–AC3, AC6, AC7). Hour-level x-axis ticks in `chart/internal/chart-renderer.ts`: one label every 3 hours on up to 24 dates, every 6 above that, and each day's first hour shows `{ weekday: "short", month: "short", day: "numeric" }` in bold (R28). On the day clocks go back, the tooltip for the two repeated hours adds `timeZoneName: "short"` (R29). Ticks are set per chart, no `Chart.defaults` change.
+- [x] **T9** - story: HRS-6 (AC1–AC3, AC6, AC7). Hour-level x-axis ticks in `chart/internal/chart-renderer.ts`: one label every 3 hours on up to 24 dates, every 6 above that, and each day's first hour shows `{ weekday: "short", month: "short", day: "numeric" }` in bold (R28). On the day clocks go back, the tooltip for the two repeated hours adds `timeZoneName: "short"` (R29). Ticks are set per chart, no `Chart.defaults` change.
   Acceptance: HRS-6 AC1–AC3, AC6, AC7 specs green in `chart/time-series-chart.hour-labels.test.ts`. A screenshot test of the one-day and two-day stories.
   depends-on: T8
 
