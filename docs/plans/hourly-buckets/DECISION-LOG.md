@@ -20,3 +20,6 @@
 - **05-11-2026** (plan) The test browser's time zone is pinned to Europe/Copenhagen in `vite.config.ts` (T1), so the clock-change specs (29-03-2026, 25-10-2026) run the same on every machine.
 - **05-11-2026** (plan) HRS-6 AC1 corrected while writing specs: on a one-day range the midnight label shows the date ("Thu, Nov 5"), as SPEC R28 says, not "12 AM".
 - **05-11-2026** (plan review) `uauiTimeBuckets` kept over `uauiGroupBy`: it returns empty time slots and does no grouping of data, and `uauiGroupBy` would read like the built-in `Object.groupBy`.
+- **05-11-2026** (T1) `hourStart` subtracts the local minutes from the instant instead of calling `setMinutes(0)`, which folds the second 2 AM into the first on the day clocks go back. Assumes whole-minute zone offsets, true of every real zone.
+- **05-11-2026** (T1) `nextHour` is a flat +1 hour. Wrong only in Lord Howe's 30-minute DST shift, which was left out.
+- **05-11-2026** (T1) Local text in the DST gap ("2026-03-29T02:30") lands in the 3 AM hour, and in the repeated hour ("2026-10-25T02:30") in the first 2 AM, as every browser engine reads it. Tests record both.
