@@ -38,7 +38,7 @@ Paths are under `src/Umbraco.Analytics.UI/Client/src/`. The time zone in tests i
   Acceptance: HRS-3 specs green in `chart/time-series-chart.hourly-compare.test.ts`. Existing compare tests green.
   depends-on: T6. parallel-group: B
 
-- [ ] **T8** - story: HRS-4 (AC1–AC8), HRS-5 (AC1–AC3). `now` and `incomplete-from` are read as moments at every unit (R11): `marker-buckets.ts` and `incomplete-index.ts` find the hour bucket at hour level. The line's label is `chartNow` "Now" at hour level, `chartToday` otherwise (R13). Tooltip and hidden table use `chartNowDate` "{0} (now)" and `chartNowIncompleteDate` "{0} (now, incomplete)" at hour level (R14). Add the three keys to `lang/en.ts`. Add a "Today by hour, so far" story.
+- [x] **T8** - story: HRS-4 (AC1–AC8), HRS-5 (AC1–AC3). `now` and `incomplete-from` are read as moments at every unit (R11): `marker-buckets.ts` and `incomplete-index.ts` find the hour bucket at hour level. The line's label is `chartNow` "Now" at hour level, `chartToday` otherwise (R13). Tooltip and hidden table use `chartNowDate` "{0} (now)" and `chartNowIncompleteDate` "{0} (now, incomplete)" at hour level (R14). Add the three keys to `lang/en.ts`. Add a "Today by hour, so far" story.
   Acceptance: HRS-4 AC1–AC8 green in `chart/time-series-chart.now.test.ts`, HRS-5 in `chart/time-series-chart.incomplete-hours.test.ts`. `time-series-chart.incomplete.test.ts` and `time-series-chart.isolation.test.ts` green.
   depends-on: T7
 

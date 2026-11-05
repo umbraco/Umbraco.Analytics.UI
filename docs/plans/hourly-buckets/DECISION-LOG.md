@@ -33,3 +33,5 @@
 - **05-11-2026** (T6) The Forms example maps `hour` to its date dimension to satisfy an exhaustive record; the page never offers Hour.
 - **05-11-2026** (T7) On the day clocks go back, the two current 2 AM bars share a wall-clock offset. The compare value goes on the first 2 AM bar only; the second gets none, so the compare isn't counted twice.
 - **05-11-2026** (T7) With no range, each side counts from its first point's local day, so 3 PM still sits under 3 PM.
+- **05-11-2026** (T8) A malformed `now` or `incomplete-from` draws nothing at hour level, but at day, week and month it keeps the old fallback (cut to the day as written), so nothing that relied on it changes.
+- **05-11-2026** (T8) Markers at hour level are read as moments and land in their local hour; an unreadable one is dropped. At day level markers still cut to the day as written, as points do (R6), while `now` and `incomplete-from` go through local time.
