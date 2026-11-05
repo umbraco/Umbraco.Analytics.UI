@@ -1,0 +1,259 @@
+<!doctype html>
+<!-- Hourly buckets mockup. Built from the devkit dashboard starter. Static: the charts are hand-made SVG, not Chart.js. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Mockup: Hourly buckets</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@umbraco-ui/uui@2/dist/themes/light.css">
+<link rel="stylesheet" href="_mockup.css">
+<script type="module" src="_mockup.js"></script>
+<style>
+.muted { color: var(--uui-color-text-alt); }
+.toolbar { display:flex; justify-content:flex-end; margin-bottom: var(--uui-size-layout-1); }
+.range { display:flex; gap:8px; align-items:center; text-align:left; line-height:1.2; }
+.range small { display:block; color: var(--uui-color-text-alt); }
+.legend { display:flex; gap:16px; font-size:12px; margin-top:8px; color: var(--uui-color-text-alt); }
+.legend i { display:inline-block; width:10px; height:10px; margin-right:6px; vertical-align:-1px; border-radius:2px; }
+.legend i.hatch { background: repeating-linear-gradient(45deg, var(--uui-color-border) 0 2px, transparent 2px 5px); }
+.chartwrap { position:relative; }
+.tip { position:absolute; left:30%; top:30px; background: var(--uui-color-surface); border:1px solid var(--uui-color-border); border-radius:6px; padding:8px 10px; font-size:12px; box-shadow: var(--uui-shadow-depth-2); min-width:190px; }
+.tip .row { display:flex; justify-content:space-between; gap:12px; margin-top:4px; }
+.tip i { display:inline-block; width:8px; height:8px; margin-right:6px; border-radius:2px; }
+.toggle { display:inline-flex; border:1px solid var(--uui-color-border-standalone); border-radius: var(--uui-border-radius); overflow:hidden; font-size:13px; }
+.toggle span { padding:4px 12px; }
+.toggle span.on { background: var(--uui-color-selected); color: var(--uui-color-selected-contrast); }
+.select { border:1px solid var(--uui-color-border); border-radius: var(--uui-border-radius); width: 220px; font-size:14px; background: var(--uui-color-surface); }
+.select div { padding:6px 10px; }
+.select .on { background: var(--uui-color-selected); color: var(--uui-color-selected-contrast); }
+.select .new::after { content:"new"; float:right; font-size:11px; color: var(--uui-color-positive-standalone); }
+.select .on.new::after { color: inherit; }
+</style>
+</head>
+<body class="uui-font uui-text">
+<header class="app-header"><span class="logo">Umbraco</span>
+<uui-tab-group class="sections"><uui-tab label="Content">Content</uui-tab><uui-tab label="Settings">Settings</uui-tab><uui-tab label="AI" active>AI</uui-tab></uui-tab-group>
+<div class="apps"><uui-button look="primary" compact label="User"><uui-avatar name="Matt Brailsford"></uui-avatar></uui-button></div></header>
+<div class="section">
+<nav class="section-sidebar"><h3>AI</h3><uui-menu-item label="Usage" active><uui-icon slot="icon" name="icon-chart-curve"></uui-icon></uui-menu-item></nav>
+<main class="section-main"><div class="body-layout"><div class="main"><div class="dashboard">
+<!-- Replace from here -->
+<div class="toolbar"><uui-button look="outline" label="Date range"><span class="range"><uui-icon name="icon-calendar"></uui-icon><span>Nov 5, 2026<small>vs Nov 4, 2026</small></span></span></uui-button></div>
+<div class="dashboard-grid">
+<uui-box headline="Requests: Today, by hour" class="wide">
+<span slot="header-actions" class="toggle" role="group" aria-label="Group by"><span class="on">Hour</span><span>Day</span></span>
+<div class="chartwrap"><svg viewBox="0 0 1000 260" width="100%" role="img" aria-label="chart">
+<defs><pattern id="hatch" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="6" stroke="var(--uui-color-border)" stroke-width="2"/></pattern></defs>
+<line x1="48" y1="230.0" x2="990" y2="230.0" stroke="var(--uui-color-divider)"/>
+<text x="42" y="234.0" font-size="11" text-anchor="end" fill="var(--uui-color-text-alt)">0</text>
+<line x1="48" y1="188.8" x2="990" y2="188.8" stroke="var(--uui-color-divider)"/>
+<text x="42" y="192.8" font-size="11" text-anchor="end" fill="var(--uui-color-text-alt)">50</text>
+<line x1="48" y1="147.6" x2="990" y2="147.6" stroke="var(--uui-color-divider)"/>
+<text x="42" y="151.6" font-size="11" text-anchor="end" fill="var(--uui-color-text-alt)">100</text>
+<line x1="48" y1="106.4" x2="990" y2="106.4" stroke="var(--uui-color-divider)"/>
+<text x="42" y="110.4" font-size="11" text-anchor="end" fill="var(--uui-color-text-alt)">150</text>
+<line x1="48" y1="65.2" x2="990" y2="65.2" stroke="var(--uui-color-divider)"/>
+<text x="42" y="69.2" font-size="11" text-anchor="end" fill="var(--uui-color-text-alt)">200</text>
+<line x1="48" y1="24.0" x2="990" y2="24.0" stroke="var(--uui-color-divider)"/>
+<text x="42" y="28.0" font-size="11" text-anchor="end" fill="var(--uui-color-text-alt)">250</text>
+<rect x="597.5" y="24" width="392.5" height="206" fill="url(#hatch)" opacity=".7"/>
+<rect x="52.7" y="226.7" width="29.8" height="3.3" fill="#b07a4f" opacity=".35"/>
+<rect x="57.8" y="227.5" width="19.6" height="2.5" fill="#3544b1" opacity="1"/>
+<rect x="92.0" y="228.4" width="29.8" height="1.6" fill="#b07a4f" opacity=".35"/>
+<rect x="97.1" y="228.4" width="19.6" height="1.6" fill="#3544b1" opacity="1"/>
+<rect x="131.2" y="228.4" width="29.8" height="1.6" fill="#b07a4f" opacity=".35"/>
+<rect x="136.3" y="229.2" width="19.6" height="0.8" fill="#3544b1" opacity="1"/>
+<rect x="170.5" y="229.2" width="29.8" height="0.8" fill="#b07a4f" opacity=".35"/>
+<rect x="175.6" y="229.2" width="19.6" height="0.8" fill="#3544b1" opacity="1"/>
+<rect x="209.7" y="229.2" width="29.8" height="0.8" fill="#b07a4f" opacity=".35"/>
+<rect x="214.8" y="230.0" width="19.6" height="0.0" fill="#3544b1" opacity="1"/>
+<rect x="249.0" y="227.5" width="29.8" height="2.5" fill="#b07a4f" opacity=".35"/>
+<rect x="254.1" y="228.4" width="19.6" height="1.6" fill="#3544b1" opacity="1"/>
+<rect x="288.2" y="220.9" width="29.8" height="9.1" fill="#b07a4f" opacity=".35"/>
+<rect x="293.3" y="222.6" width="19.6" height="7.4" fill="#3544b1" opacity="1"/>
+<rect x="327.5" y="206.1" width="29.8" height="23.9" fill="#b07a4f" opacity=".35"/>
+<rect x="332.6" y="210.2" width="19.6" height="19.8" fill="#3544b1" opacity="1"/>
+<rect x="366.7" y="187.2" width="29.8" height="42.8" fill="#b07a4f" opacity=".35"/>
+<rect x="371.8" y="190.4" width="19.6" height="39.6" fill="#3544b1" opacity="1"/>
+<rect x="406.0" y="164.1" width="29.8" height="65.9" fill="#b07a4f" opacity=".35"/>
+<rect x="411.1" y="171.5" width="19.6" height="58.5" fill="#3544b1" opacity="1"/>
+<rect x="445.2" y="155.0" width="29.8" height="75.0" fill="#b07a4f" opacity=".35"/>
+<rect x="450.3" y="150.9" width="19.6" height="79.1" fill="#3544b1" opacity="1"/>
+<rect x="484.5" y="160.8" width="29.8" height="69.2" fill="#b07a4f" opacity=".35"/>
+<rect x="489.6" y="157.5" width="19.6" height="72.5" fill="#3544b1" opacity="1"/>
+<rect x="523.7" y="172.3" width="29.8" height="57.7" fill="#b07a4f" opacity=".35"/>
+<rect x="528.8" y="169.0" width="19.6" height="61.0" fill="#3544b1" opacity="1"/>
+<rect x="563.0" y="175.6" width="29.8" height="54.4" fill="#b07a4f" opacity=".35"/>
+<rect x="568.1" y="55.3" width="19.6" height="174.7" fill="#3544b1" opacity="1"/>
+<rect x="602.2" y="170.7" width="29.8" height="59.3" fill="#b07a4f" opacity=".35"/>
+<rect x="607.3" y="179.7" width="19.6" height="50.3" fill="#3544b1" opacity=".35"/>
+<rect x="641.5" y="166.6" width="29.8" height="63.4" fill="#b07a4f" opacity=".35"/>
+<rect x="646.6" y="230.0" width="19.6" height="0.0" fill="#3544b1" opacity=".35"/>
+<rect x="680.7" y="173.1" width="29.8" height="56.9" fill="#b07a4f" opacity=".35"/>
+<rect x="685.8" y="230.0" width="19.6" height="0.0" fill="#3544b1" opacity=".35"/>
+<rect x="720.0" y="182.2" width="29.8" height="47.8" fill="#b07a4f" opacity=".35"/>
+<rect x="725.1" y="230.0" width="19.6" height="0.0" fill="#3544b1" opacity=".35"/>
+<rect x="759.2" y="197.0" width="29.8" height="33.0" fill="#b07a4f" opacity=".35"/>
+<rect x="764.3" y="230.0" width="19.6" height="0.0" fill="#3544b1" opacity=".35"/>
+<rect x="798.5" y="206.9" width="29.8" height="23.1" fill="#b07a4f" opacity=".35"/>
+<rect x="803.6" y="230.0" width="19.6" height="0.0" fill="#3544b1" opacity=".35"/>
+<rect x="837.7" y="214.3" width="29.8" height="15.7" fill="#b07a4f" opacity=".35"/>
+<rect x="842.8" y="230.0" width="19.6" height="0.0" fill="#3544b1" opacity=".35"/>
+<rect x="877.0" y="220.1" width="29.8" height="9.9" fill="#b07a4f" opacity=".35"/>
+<rect x="882.1" y="230.0" width="19.6" height="0.0" fill="#3544b1" opacity=".35"/>
+<rect x="916.2" y="223.4" width="29.8" height="6.6" fill="#b07a4f" opacity=".35"/>
+<rect x="921.3" y="230.0" width="19.6" height="0.0" fill="#3544b1" opacity=".35"/>
+<rect x="955.5" y="225.9" width="29.8" height="4.1" fill="#b07a4f" opacity=".35"/>
+<rect x="960.6" y="230.0" width="19.6" height="0.0" fill="#3544b1" opacity=".35"/>
+<text x="67.6" y="250" font-size="11" text-anchor="middle" fill="var(--uui-color-text-alt)">12 AM</text>
+<text x="185.4" y="250" font-size="11" text-anchor="middle" fill="var(--uui-color-text-alt)">3 AM</text>
+<text x="303.1" y="250" font-size="11" text-anchor="middle" fill="var(--uui-color-text-alt)">6 AM</text>
+<text x="420.9" y="250" font-size="11" text-anchor="middle" fill="var(--uui-color-text-alt)">9 AM</text>
+<text x="538.6" y="250" font-size="11" text-anchor="middle" fill="var(--uui-color-text-alt)">12 PM</text>
+<text x="656.4" y="250" font-size="11" text-anchor="middle" fill="var(--uui-color-text-alt)">3 PM</text>
+<text x="774.1" y="250" font-size="11" text-anchor="middle" fill="var(--uui-color-text-alt)">6 PM</text>
+<text x="891.9" y="250" font-size="11" text-anchor="middle" fill="var(--uui-color-text-alt)">9 PM</text>
+<line x1="617.5" y1="24" x2="617.5" y2="230" stroke="var(--uui-color-text)"/>
+<text x="617.5" y="19" font-size="11" font-weight="700" text-anchor="middle" fill="var(--uui-color-text)">Now</text>
+<line x1="48" y1="230" x2="990" y2="230" stroke="var(--uui-color-border)"/>
+</svg><div class="tip"><strong>Nov 5, 2026, 1 PM</strong>
+<div class="row"><span><i style="background:#3544b1"></i>Requests</span><b>212</b></div>
+<div class="row muted"><span><i style="background:#b07a4f"></i>Nov 4, 2026, 1 PM</span><b>66</b></div></div></div><div class="legend"><span><i style="background:#3544b1"></i>Requests</span><span><i style="background:#b07a4f;opacity:.5"></i>Compared period</span><span><i class="hatch"></i>Incomplete</span></div>
+</uui-box>
+<uui-box headline="Requests: Wed 4 Nov to Thu 5 Nov, by hour (2-day range)" class="wide">
+<span slot="header-actions" class="toggle" role="group" aria-label="Group by"><span class="on">Hour</span><span>Day</span></span>
+<svg viewBox="0 0 1000 260" width="100%" role="img" aria-label="chart">
+<defs><pattern id="hatch" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="6" stroke="var(--uui-color-border)" stroke-width="2"/></pattern></defs>
+<line x1="48" y1="230.0" x2="990" y2="230.0" stroke="var(--uui-color-divider)"/>
+<text x="42" y="234.0" font-size="11" text-anchor="end" fill="var(--uui-color-text-alt)">0</text>
+<line x1="48" y1="188.8" x2="990" y2="188.8" stroke="var(--uui-color-divider)"/>
+<text x="42" y="192.8" font-size="11" text-anchor="end" fill="var(--uui-color-text-alt)">50</text>
+<line x1="48" y1="147.6" x2="990" y2="147.6" stroke="var(--uui-color-divider)"/>
+<text x="42" y="151.6" font-size="11" text-anchor="end" fill="var(--uui-color-text-alt)">100</text>
+<line x1="48" y1="106.4" x2="990" y2="106.4" stroke="var(--uui-color-divider)"/>
+<text x="42" y="110.4" font-size="11" text-anchor="end" fill="var(--uui-color-text-alt)">150</text>
+<line x1="48" y1="65.2" x2="990" y2="65.2" stroke="var(--uui-color-divider)"/>
+<text x="42" y="69.2" font-size="11" text-anchor="end" fill="var(--uui-color-text-alt)">200</text>
+<line x1="48" y1="24.0" x2="990" y2="24.0" stroke="var(--uui-color-divider)"/>
+<text x="42" y="28.0" font-size="11" text-anchor="end" fill="var(--uui-color-text-alt)">250</text>
+<rect x="793.8" y="24" width="196.2" height="206" fill="url(#hatch)" opacity=".7"/>
+<rect x="50.4" y="227.5" width="14.9" height="2.5" fill="#b07a4f" opacity=".35"/>
+<rect x="52.9" y="226.7" width="9.8" height="3.3" fill="#3544b1" opacity="1"/>
+<rect x="70.0" y="228.4" width="14.9" height="1.6" fill="#b07a4f" opacity=".35"/>
+<rect x="72.5" y="228.4" width="9.8" height="1.6" fill="#3544b1" opacity="1"/>
+<rect x="89.6" y="229.2" width="14.9" height="0.8" fill="#b07a4f" opacity=".35"/>
+<rect x="92.2" y="228.4" width="9.8" height="1.6" fill="#3544b1" opacity="1"/>
+<rect x="109.2" y="229.2" width="14.9" height="0.8" fill="#b07a4f" opacity=".35"/>
+<rect x="111.8" y="229.2" width="9.8" height="0.8" fill="#3544b1" opacity="1"/>
+<rect x="128.9" y="229.2" width="14.9" height="0.8" fill="#b07a4f" opacity=".35"/>
+<rect x="131.4" y="229.2" width="9.8" height="0.8" fill="#3544b1" opacity="1"/>
+<rect x="148.5" y="228.4" width="14.9" height="1.6" fill="#b07a4f" opacity=".35"/>
+<rect x="151.0" y="227.5" width="9.8" height="2.5" fill="#3544b1" opacity="1"/>
+<rect x="168.1" y="221.8" width="14.9" height="8.2" fill="#b07a4f" opacity=".35"/>
+<rect x="170.7" y="220.9" width="9.8" height="9.1" fill="#3544b1" opacity="1"/>
+<rect x="187.7" y="208.6" width="14.9" height="21.4" fill="#b07a4f" opacity=".35"/>
+<rect x="190.3" y="206.1" width="9.8" height="23.9" fill="#3544b1" opacity="1"/>
+<rect x="207.4" y="188.8" width="14.9" height="41.2" fill="#b07a4f" opacity=".35"/>
+<rect x="209.9" y="187.2" width="9.8" height="42.8" fill="#3544b1" opacity="1"/>
+<rect x="227.0" y="166.6" width="14.9" height="63.4" fill="#b07a4f" opacity=".35"/>
+<rect x="229.5" y="164.1" width="9.8" height="65.9" fill="#3544b1" opacity="1"/>
+<rect x="246.6" y="160.0" width="14.9" height="70.0" fill="#b07a4f" opacity=".35"/>
+<rect x="249.2" y="155.0" width="9.8" height="75.0" fill="#3544b1" opacity="1"/>
+<rect x="266.2" y="164.1" width="14.9" height="65.9" fill="#b07a4f" opacity=".35"/>
+<rect x="268.8" y="160.8" width="9.8" height="69.2" fill="#3544b1" opacity="1"/>
+<rect x="285.9" y="171.5" width="14.9" height="58.5" fill="#b07a4f" opacity=".35"/>
+<rect x="288.4" y="172.3" width="9.8" height="57.7" fill="#3544b1" opacity="1"/>
+<rect x="305.5" y="173.1" width="14.9" height="56.9" fill="#b07a4f" opacity=".35"/>
+<rect x="308.0" y="175.6" width="9.8" height="54.4" fill="#3544b1" opacity="1"/>
+<rect x="325.1" y="172.3" width="14.9" height="57.7" fill="#b07a4f" opacity=".35"/>
+<rect x="327.7" y="170.7" width="9.8" height="59.3" fill="#3544b1" opacity="1"/>
+<rect x="344.7" y="168.2" width="14.9" height="61.8" fill="#b07a4f" opacity=".35"/>
+<rect x="347.3" y="166.6" width="9.8" height="63.4" fill="#3544b1" opacity="1"/>
+<rect x="364.4" y="175.6" width="14.9" height="54.4" fill="#b07a4f" opacity=".35"/>
+<rect x="366.9" y="173.1" width="9.8" height="56.9" fill="#3544b1" opacity="1"/>
+<rect x="384.0" y="184.7" width="14.9" height="45.3" fill="#b07a4f" opacity=".35"/>
+<rect x="386.5" y="182.2" width="9.8" height="47.8" fill="#3544b1" opacity="1"/>
+<rect x="403.6" y="198.7" width="14.9" height="31.3" fill="#b07a4f" opacity=".35"/>
+<rect x="406.2" y="197.0" width="9.8" height="33.0" fill="#3544b1" opacity="1"/>
+<rect x="423.2" y="208.6" width="14.9" height="21.4" fill="#b07a4f" opacity=".35"/>
+<rect x="425.8" y="206.9" width="9.8" height="23.1" fill="#3544b1" opacity="1"/>
+<rect x="442.9" y="215.2" width="14.9" height="14.8" fill="#b07a4f" opacity=".35"/>
+<rect x="445.4" y="214.3" width="9.8" height="15.7" fill="#3544b1" opacity="1"/>
+<rect x="462.5" y="220.9" width="14.9" height="9.1" fill="#b07a4f" opacity=".35"/>
+<rect x="465.0" y="220.1" width="9.8" height="9.9" fill="#3544b1" opacity="1"/>
+<rect x="482.1" y="224.2" width="14.9" height="5.8" fill="#b07a4f" opacity=".35"/>
+<rect x="484.7" y="223.4" width="9.8" height="6.6" fill="#3544b1" opacity="1"/>
+<rect x="501.7" y="226.7" width="14.9" height="3.3" fill="#b07a4f" opacity=".35"/>
+<rect x="504.3" y="225.9" width="9.8" height="4.1" fill="#3544b1" opacity="1"/>
+<rect x="521.4" y="226.7" width="14.9" height="3.3" fill="#b07a4f" opacity=".35"/>
+<rect x="523.9" y="227.5" width="9.8" height="2.5" fill="#3544b1" opacity="1"/>
+<rect x="541.0" y="228.4" width="14.9" height="1.6" fill="#b07a4f" opacity=".35"/>
+<rect x="543.5" y="228.4" width="9.8" height="1.6" fill="#3544b1" opacity="1"/>
+<rect x="560.6" y="228.4" width="14.9" height="1.6" fill="#b07a4f" opacity=".35"/>
+<rect x="563.2" y="229.2" width="9.8" height="0.8" fill="#3544b1" opacity="1"/>
+<rect x="580.2" y="229.2" width="14.9" height="0.8" fill="#b07a4f" opacity=".35"/>
+<rect x="582.8" y="229.2" width="9.8" height="0.8" fill="#3544b1" opacity="1"/>
+<rect x="599.9" y="229.2" width="14.9" height="0.8" fill="#b07a4f" opacity=".35"/>
+<rect x="602.4" y="230.0" width="9.8" height="0.0" fill="#3544b1" opacity="1"/>
+<rect x="619.5" y="227.5" width="14.9" height="2.5" fill="#b07a4f" opacity=".35"/>
+<rect x="622.0" y="228.4" width="9.8" height="1.6" fill="#3544b1" opacity="1"/>
+<rect x="639.1" y="220.9" width="14.9" height="9.1" fill="#b07a4f" opacity=".35"/>
+<rect x="641.7" y="222.6" width="9.8" height="7.4" fill="#3544b1" opacity="1"/>
+<rect x="658.7" y="206.1" width="14.9" height="23.9" fill="#b07a4f" opacity=".35"/>
+<rect x="661.3" y="210.2" width="9.8" height="19.8" fill="#3544b1" opacity="1"/>
+<rect x="678.4" y="187.2" width="14.9" height="42.8" fill="#b07a4f" opacity=".35"/>
+<rect x="680.9" y="190.4" width="9.8" height="39.6" fill="#3544b1" opacity="1"/>
+<rect x="698.0" y="164.1" width="14.9" height="65.9" fill="#b07a4f" opacity=".35"/>
+<rect x="700.5" y="171.5" width="9.8" height="58.5" fill="#3544b1" opacity="1"/>
+<rect x="717.6" y="155.0" width="14.9" height="75.0" fill="#b07a4f" opacity=".35"/>
+<rect x="720.2" y="150.9" width="9.8" height="79.1" fill="#3544b1" opacity="1"/>
+<rect x="737.2" y="160.8" width="14.9" height="69.2" fill="#b07a4f" opacity=".35"/>
+<rect x="739.8" y="157.5" width="9.8" height="72.5" fill="#3544b1" opacity="1"/>
+<rect x="756.9" y="172.3" width="14.9" height="57.7" fill="#b07a4f" opacity=".35"/>
+<rect x="759.4" y="169.0" width="9.8" height="61.0" fill="#3544b1" opacity="1"/>
+<rect x="776.5" y="175.6" width="14.9" height="54.4" fill="#b07a4f" opacity=".35"/>
+<rect x="779.0" y="55.3" width="9.8" height="174.7" fill="#3544b1" opacity="1"/>
+<rect x="796.1" y="170.7" width="14.9" height="59.3" fill="#b07a4f" opacity=".35"/>
+<rect x="798.7" y="179.7" width="9.8" height="50.3" fill="#3544b1" opacity=".35"/>
+<rect x="815.7" y="166.6" width="14.9" height="63.4" fill="#b07a4f" opacity=".35"/>
+<rect x="818.3" y="230.0" width="9.8" height="0.0" fill="#3544b1" opacity=".35"/>
+<rect x="835.4" y="173.1" width="14.9" height="56.9" fill="#b07a4f" opacity=".35"/>
+<rect x="837.9" y="230.0" width="9.8" height="0.0" fill="#3544b1" opacity=".35"/>
+<rect x="855.0" y="182.2" width="14.9" height="47.8" fill="#b07a4f" opacity=".35"/>
+<rect x="857.5" y="230.0" width="9.8" height="0.0" fill="#3544b1" opacity=".35"/>
+<rect x="874.6" y="197.0" width="14.9" height="33.0" fill="#b07a4f" opacity=".35"/>
+<rect x="877.2" y="230.0" width="9.8" height="0.0" fill="#3544b1" opacity=".35"/>
+<rect x="894.2" y="206.9" width="14.9" height="23.1" fill="#b07a4f" opacity=".35"/>
+<rect x="896.8" y="230.0" width="9.8" height="0.0" fill="#3544b1" opacity=".35"/>
+<rect x="913.9" y="214.3" width="14.9" height="15.7" fill="#b07a4f" opacity=".35"/>
+<rect x="916.4" y="230.0" width="9.8" height="0.0" fill="#3544b1" opacity=".35"/>
+<rect x="933.5" y="220.1" width="14.9" height="9.9" fill="#b07a4f" opacity=".35"/>
+<rect x="936.0" y="230.0" width="9.8" height="0.0" fill="#3544b1" opacity=".35"/>
+<rect x="953.1" y="223.4" width="14.9" height="6.6" fill="#b07a4f" opacity=".35"/>
+<rect x="955.7" y="230.0" width="9.8" height="0.0" fill="#3544b1" opacity=".35"/>
+<rect x="972.7" y="225.9" width="14.9" height="4.1" fill="#b07a4f" opacity=".35"/>
+<rect x="975.3" y="230.0" width="9.8" height="0.0" fill="#3544b1" opacity=".35"/>
+<text x="57.8" y="250" font-size="11" text-anchor="middle" fill="var(--uui-color-text-alt)" font-weight="700">Wed 4 Nov</text>
+<text x="175.6" y="250" font-size="11" text-anchor="middle" fill="var(--uui-color-text-alt)">6 AM</text>
+<text x="293.3" y="250" font-size="11" text-anchor="middle" fill="var(--uui-color-text-alt)">12 PM</text>
+<text x="411.1" y="250" font-size="11" text-anchor="middle" fill="var(--uui-color-text-alt)">6 PM</text>
+<text x="528.8" y="250" font-size="11" text-anchor="middle" fill="var(--uui-color-text-alt)" font-weight="700">Thu 5 Nov</text>
+<text x="646.6" y="250" font-size="11" text-anchor="middle" fill="var(--uui-color-text-alt)">6 AM</text>
+<text x="764.3" y="250" font-size="11" text-anchor="middle" fill="var(--uui-color-text-alt)">12 PM</text>
+<text x="882.1" y="250" font-size="11" text-anchor="middle" fill="var(--uui-color-text-alt)">6 PM</text>
+<line x1="804.5" y1="24" x2="804.5" y2="230" stroke="var(--uui-color-text)"/>
+<text x="804.5" y="19" font-size="11" font-weight="700" text-anchor="middle" fill="var(--uui-color-text)">Now</text>
+<line x1="48" y1="230" x2="990" y2="230" stroke="var(--uui-color-border)"/>
+</svg><div class="legend"><span><i style="background:#3544b1"></i>Requests</span><span><i style="background:#b07a4f;opacity:.5"></i>Compared period</span><span><i class="hatch"></i>Incomplete</span></div>
+</uui-box>
+<uui-box headline="Date range dialog: preset list (open)">
+<div class="select"><div class="on new">Today</div><div class="new">Yesterday</div><div>Last 7 days</div><div>Last 30 days</div><div>This month</div><div>Last month</div><div>Last year</div><div>Custom</div></div>
+<p class="muted">Only when the product adds <code>today</code> and <code>yesterday</code> to its presets.</p>
+</uui-box>
+<uui-box headline="Group by on a 30-day range">
+<span class="toggle" role="group" aria-label="Group by"><span class="on">Day</span><span>Week</span><span>Month</span></span>
+<p class="muted">No Hour option over 2 days.</p>
+</uui-box>
+</div>
+<!-- Replace to here -->
+</div></div></div></main></div>
+</body></html>

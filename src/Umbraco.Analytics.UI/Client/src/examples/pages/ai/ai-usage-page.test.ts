@@ -268,4 +268,29 @@ describe("Feature: Umbraco AI usage page", () => {
             expect(shadow(chart(page)).querySelector("uaui-error-state")).not.toBe(null);
         });
     });
+
+    // HRS-10 — AI usage example shows Today by hour. Pending until T11 (docs/plans/hourly-buckets/PLAN.md).
+    describe("Scenario: Today by hour", () => {
+        const pickHour = async (page: UauiTestElement) => {
+            const hour = deepQuery<HTMLElement>(shadow(page).querySelector("uaui-group-by")!.shadowRoot!, "[data-value='hour']")!;
+            hour.click();
+            await expect.poll(() => chart(page).groupBy).toBe("hour");
+            await settle(page);
+        };
+
+        it.skip("draws 24 hourly dates", async () => {
+            const page = await renderPage();
+            await saveDateRange(page, { preset: "today" });
+            await pickHour(page);
+            expect(chart(page).series[0].points).toHaveLength(24);
+        });
+
+        it.skip("goes back to day for Last 30 days", async () => {
+            const page = await renderPage();
+            await saveDateRange(page, { preset: "today" });
+            await pickHour(page);
+            await saveDateRange(page, { preset: "last-30-days" });
+            await expect.poll(() => chart(page).groupBy).toBe("day");
+        });
+    });
 });
