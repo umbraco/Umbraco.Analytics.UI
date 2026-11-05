@@ -2,6 +2,7 @@
 // built from year/month/day parts so a timezone never shifts a day.
 
 import type { UauiWeekStart } from "../../date-helpers/date-helpers.js";
+import { hourOffset, hourStart, nextHour } from "./hour-math.js";
 
 const pad = (n: number, width = 2) => String(n).padStart(width, "0");
 
@@ -145,8 +146,11 @@ export function daysIn(range: Range): string[] {
     return count === undefined ? [] : Array.from({ length: count }, (_, i) => addDays(range.from, i));
 }
 
-/** How a chart groups its points. The same three values as `UauiGroupBy`. */
-export type BucketUnit = "day" | "week" | "month";
+/**
+ * How a chart groups its points. `"hour"` is the odd one out: it takes and gives UTC instants, not ISO dates, and its
+ * maths lives in hour-math.ts so this file stays free of time zones.
+ */
+export type BucketUnit = "hour" | "day" | "week" | "month";
 
 /** The week start used when none is given, or when the one given is not a whole number from 1 to 7. */
 export const DEFAULT_WEEK_START: UauiWeekStart = 1;
@@ -158,9 +162,10 @@ export function resolveWeekStart(value: unknown): UauiWeekStart {
 
 /**
  * The first day of the bucket an ISO date falls in: the day itself, the first day of its week (Monday unless
- * `weekStart` says otherwise), or the 1st of its month.
+ * `weekStart` says otherwise), or the 1st of its month. For `"hour"`, the UTC instant of the local hour that contains `iso`.
  */
 export function bucketStart(iso: string, unit: BucketUnit, weekStart?: UauiWeekStart): string {
+    if (unit === "hour") return hourStart(iso) ?? iso;
     const parts = parseIso(iso);
     if (!parts || unit === "day") return iso;
     if (unit === "month") return toIso(parts.year, parts.month, 1);
@@ -169,10 +174,11 @@ export function bucketStart(iso: string, unit: BucketUnit, weekStart?: UauiWeekS
 }
 
 /**
- * How many buckets (days, weeks or months) the bucket `iso` falls in is after the bucket `from` falls in; negative when before.
- * `undefined` when either is not a real date.
+ * How many buckets (hours, days, weeks or months) the bucket `iso` falls in is after the bucket `from` falls in; negative when before.
+ * `undefined` when either is not a real date. For `"hour"` both are instants and the count is elapsed hours.
  */
 export function bucketOffset(from: string, iso: string, unit: BucketUnit, weekStart?: UauiWeekStart): number | undefined {
+    if (unit === "hour") return hourOffset(from, iso);
     const [a, b] = [parseIso(bucketStart(from, unit, weekStart)), parseIso(bucketStart(iso, unit, weekStart))];
     if (!a || !b) return undefined;
     if (unit === "month") return (b.year - a.year) * 12 + (b.month - a.month);
@@ -180,8 +186,12 @@ export function bucketOffset(from: string, iso: string, unit: BucketUnit, weekSt
     return unit === "week" ? days / 7 : days;
 }
 
-/** The first day after the bucket that starts on `start`: the next day, the day a week on, or the 1st of the next month. */
+/**
+ * The first day after the bucket that starts on `start`: the next day, the day a week on, or the 1st of the next month.
+ * For `"hour"`, the UTC instant one hour after the hour that starts at `start`.
+ */
 export function bucketEnd(start: string, unit: BucketUnit): string {
+    if (unit === "hour") return nextHour(start) ?? start;
     if (unit === "month") return firstOfNextMonth(start);
     return addDays(start, unit === "week" ? 7 : 1);
 }
