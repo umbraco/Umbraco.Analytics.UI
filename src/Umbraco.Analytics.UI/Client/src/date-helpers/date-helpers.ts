@@ -92,7 +92,7 @@ export type UauiTimeBucketsOptions = {
  * With `"hour"` the buckets run from the range's first local midnight (in the browser's time zone) to the midnight after its
  * last day, so a day the clocks change has 23 or 25 of them. Empty when `range` isn't a valid range.
  */
-export function uauiTimeBuckets(range: UauiDateSpan, groupBy: UauiGroupBy | "hour", options: UauiTimeBucketsOptions = {}): UauiTimeBucket[] {
+export function uauiTimeBuckets(range: UauiDateSpan, groupBy: UauiGroupBy, options: UauiTimeBucketsOptions = {}): UauiTimeBucket[] {
     return dateBuckets(range, groupBy, options.weekStart);
 }
 

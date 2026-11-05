@@ -1,4 +1,4 @@
-// HRS-6 — Hour labels. Pending until T6 (AC4, AC5) and T9 (AC1–AC3, AC6, AC7) (docs/plans/hourly-buckets/PLAN.md).
+// HRS-6 — Hour labels. Pending until T9 (AC1–AC3, AC6, AC7) (docs/plans/hourly-buckets/PLAN.md).
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { page, userEvent } from "vitest/browser";
 import { umbLocalizationManager } from "@umbraco-cms/backoffice/localization-api";
@@ -14,13 +14,21 @@ const hoverHeading = async (el: Element, index: number) => {
 };
 
 describe("Feature: hour labels", () => {
+    const englishBefore = umbLocalizationManager.documentLanguage;
+    beforeEach(() => {
+        umbLocalizationManager.documentLanguage = "en-US";
+    });
+    afterEach(() => {
+        umbLocalizationManager.documentLanguage = englishBefore;
+    });
+
     describe("Scenario: one day", () => {
         it.skip("labels every 3 hours", async () => {
             const el = await hourlyChart({ series: [seriesAt("requests", hoursOf5Nov)] });
             expect(xTickLabels(el)).toEqual(["Thu, Nov 5", "3 AM", "6 AM", "9 AM", "12 PM", "3 PM", "6 PM", "9 PM"]);
         });
 
-        it.skip("shows date and hour in the tooltip", async () => {
+        it("shows date and hour in the tooltip", async () => {
             const el = await hourlyChart({ series: [seriesAt("requests", hoursOf5Nov)] });
             expect(await hoverHeading(el, 13)).toContain("Nov 5, 2026, 1 PM");
         });
@@ -47,7 +55,7 @@ describe("Feature: hour labels", () => {
             umbLocalizationManager.documentLanguage = previousLanguage;
         });
 
-        it.skip("shows 2 PM as 14", async () => {
+        it("shows 2 PM as 14", async () => {
             const el = await hourlyChart({ series: [seriesAt("requests", [hoursOf5Nov[14]])] });
             expect(rowHeaders(el)[0]).toMatch(/\b14\b/);
         });

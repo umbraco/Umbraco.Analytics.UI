@@ -27,6 +27,7 @@ export default {
 
         // Group by
         groupByLabel: "Group by",
+        groupByHour: "Hour",
         groupByDay: "Day",
         groupByWeek: "Week",
         groupByMonth: "Month",

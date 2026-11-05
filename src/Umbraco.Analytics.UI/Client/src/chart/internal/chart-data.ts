@@ -1,13 +1,20 @@
 import type { UauiWeekStart } from "../../date-helpers/date-helpers.js";
 import { bucketOffset, dateOnly, type BucketUnit } from "../../internal/date/date-math.js";
+import { hourStart } from "../../internal/date/hour-math.js";
 import type { UauiSeries } from "../types.js";
 import type { UauiChartData } from "./chart-values.js";
 
 // The generic helpers live in `chart-values.ts`, shared with any chart; re-exported for the existing imports.
 export { allWhole, maxValue, minPositive, seriesTotals, type UauiChartData } from "./chart-values.js";
 
-/** The series with each point's date cut to its calendar day, so a date-time point lands on the day it names. */
-const dayPoints = (s: UauiSeries): UauiSeries => ({ ...s, points: s.points.map((p) => ({ ...p, date: dateOnly(p.date) })) });
+/**
+ * A point's date as its chart key: cut to its calendar day at day, week and month level, so a date-time point lands on the
+ * day it names; the UTC instant of its local hour at hour level. A date that isn't a real date or time is kept as written.
+ */
+const keyOf = (date: string, unit: BucketUnit) => (unit === "hour" ? (hourStart(date) ?? date) : dateOnly(date));
+
+/** The series with each point's date turned into its chart key for `unit`. */
+const keyedPoints = (unit: BucketUnit) => (s: UauiSeries): UauiSeries => ({ ...s, points: s.points.map((p) => ({ ...p, date: keyOf(p.date, unit) })) });
 
 /** The sorted dates of the series' points, each once. */
 const sortedDates = (series: UauiSeries[]) => [...new Set(series.flatMap((s) => s.points.map((p) => p.date)))].sort();
@@ -61,8 +68,8 @@ function compareByOffset(points: UauiSeries["points"], unit: BucketUnit, weekSta
  * series gets its compare values and the compare total adds up every compare series.
  */
 export function buildChartData(rawSeries: UauiSeries[], rawCompareSeries: UauiSeries[] = [], groupBy: BucketUnit = "day", anchors: UauiChartAnchors = {}, weekStart?: UauiWeekStart, lines?: boolean[]): UauiChartData {
-    const series = rawSeries.map(dayPoints);
-    const compareSeries = rawCompareSeries.map(dayPoints);
+    const series = rawSeries.map(keyedPoints(groupBy));
+    const compareSeries = rawCompareSeries.map(keyedPoints(groupBy));
     const dates = sortedDates(series);
     const indexOfOffset = new Map(offsetsOf(dates, groupBy, weekStart, anchors.from ? dateOnly(anchors.from) : undefined).map((offset, i) => [offset, i]));
     const compareStart = anchors.compareFrom ? dateOnly(anchors.compareFrom) : sortedDates(compareSeries)[0];

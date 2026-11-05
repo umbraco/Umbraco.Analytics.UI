@@ -13,7 +13,7 @@ import { UauiChartMixin } from "./chart.mixin.js";
 import type { UauiGroupBy } from "../group-by/group-by.element.js";
 import type { UauiWeekStart } from "../date-helpers/date-helpers.js";
 import { resolveWeekStart } from "../internal/date/date-math.js";
-import { formatIsoDate } from "../internal/date/format-date.js";
+import { formatBucketKey } from "../internal/date/format-date.js";
 import { getNumberFormat } from "../internal/format/number-format.js";
 import { firstIncompleteIndex } from "./internal/incomplete-index.js";
 import { bucketMarkers, type MarkerBucket } from "./internal/marker-buckets.js";
@@ -40,12 +40,14 @@ import type { UauiCompare, UauiDateRange } from "../date-range/types.js";
 import type { UauiChartKind, UauiChartStack, UauiMarker, UauiMarkerClickDetail, UauiSeries, UauiSeriesKind } from "./types.js";
 
 const axisDateFormat: Record<UauiGroupBy, Intl.DateTimeFormatOptions> = {
+    hour: { hour: "numeric" },
     day: { day: "numeric", month: "short" },
     week: { day: "numeric", month: "short" },
     month: { month: "short", year: "numeric" },
 };
 
 const tooltipDateFormat: Record<UauiGroupBy, Intl.DateTimeFormatOptions> = {
+    hour: { year: "numeric", month: "short", day: "numeric", hour: "numeric" },
     day: { day: "numeric", month: "short", year: "numeric" },
     week: { day: "numeric", month: "short", year: "numeric" },
     month: { month: "long", year: "numeric" },
@@ -391,14 +393,14 @@ export class UauiTimeSeriesChartElement extends UauiTimeSeriesChartElementBase {
         const bars = kinds.map((k) => k === "bar");
         const axisDate = new Intl.DateTimeFormat(lang, axisDateFormat[groupBy] ?? axisDateFormat.day);
         const tooltipDate = new Intl.DateTimeFormat(lang, tooltipDateFormat[groupBy] ?? tooltipDateFormat.day);
-        const tooltipLabel = (iso: string | null) => (iso ? formatIsoDate(iso, tooltipDate) : "");
+        const tooltipLabel = (iso: string | null) => (iso ? formatBucketKey(iso, groupBy, tooltipDate) : "");
         return {
             data,
             shown,
             kinds,
             allKinds,
             legendCompare: { bars: allKinds.includes("bar") && !!full.compareTotal, lines: full.series.some((s, i) => allKinds[i] === "line" && !!s.compare) },
-            axisLabels: data.labels.map((d) => formatIsoDate(d, axisDate)),
+            axisLabels: data.labels.map((d) => formatBucketKey(d, groupBy, axisDate)),
             dateLabels: data.labels.map(tooltipLabel),
             compareDateLabels: data.series.map((s) => (s.compareLabels ?? []).map(tooltipLabel)),
             // The share view's total counts a value below 0 as 0, as its shares do, so the shares add up to it.

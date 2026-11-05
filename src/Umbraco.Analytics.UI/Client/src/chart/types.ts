@@ -2,7 +2,12 @@ import type { UauiColorSlot, UauiStatusColor } from "../theme/types.js";
 
 /** One value on one day. Two points of a series on the same date are added, so aggregate rates and averages before passing them. */
 export type UauiPoint = {
-    /** ISO date, e.g. "2026-06-11". A date-time such as "2026-06-11T00:00:00Z" is read as the day it starts with, with no timezone shift. */
+    /**
+ * ISO date, e.g. "2026-06-11". At day, week and month level a date-time such as "2026-06-11T00:00:00Z" is read as the day
+ * it starts with, with no timezone shift. At hour level (`group-by="hour"`) it is read as a moment: with `Z` or an offset
+ * it is that instant, without one it is local time, and a plain date is local midnight. The point lands in the browser's
+ * local hour that contains it.
+ */
     date: string;
     value: number;
 };
@@ -37,7 +42,7 @@ export type UauiSeries = {
 /** An event shown on the chart's timeline, such as a campaign launch. */
 export type UauiMarker = {
     id: string;
-    /** ISO date, e.g. "2026-06-11". A date-time is read as the day it starts with, with no timezone shift. */
+    /** ISO date, e.g. "2026-06-11". A date-time is read as the day it starts with, with no timezone shift At hour level (`group-by="hour"`) it is read as a moment, as a point's date is, and the marker lands in the local hour that contains it. */
     date: string;
     title: string;
     description?: string;

@@ -285,7 +285,7 @@ export type UauiFunnelStep = {
 };
 
 // @public
-export type UauiGroupBy = "day" | "week" | "month";
+export type UauiGroupBy = "hour" | "day" | "week" | "month";
 
 // @public
 export type UauiGroupByChangeDetail = {
@@ -696,7 +696,7 @@ export type UauiTimeBucket = {
 };
 
 // @public
-export function uauiTimeBuckets(range: UauiDateSpan, groupBy: UauiGroupBy | "hour", options?: UauiTimeBucketsOptions): UauiTimeBucket[];
+export function uauiTimeBuckets(range: UauiDateSpan, groupBy: UauiGroupBy, options?: UauiTimeBucketsOptions): UauiTimeBucket[];
 
 // @public
 export type UauiTimeBucketsOptions = {

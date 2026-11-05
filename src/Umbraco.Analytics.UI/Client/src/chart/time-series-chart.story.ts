@@ -11,6 +11,7 @@ import {
     markers,
     newVisitors,
     pageviews,
+    pageviewsByHour,
     pageviewsPrevious,
     pending,
     previousVisitors,
@@ -56,7 +57,7 @@ const meta: Meta<UauiTimeSeriesChartElement> = {
         kind: { control: "inline-radio", options: ["line", "area", "bar", "stacked-bar"] },
         stack: { control: "inline-radio", options: ["normal", "percent"] },
         yScale: { control: "inline-radio", options: ["linear", "log"] },
-        groupBy: { control: "inline-radio", options: ["day", "week", "month"] },
+        groupBy: { control: "inline-radio", options: ["hour", "day", "week", "month"] },
         weekStart: { control: "inline-radio", options: [1, 2, 3, 4, 5, 6, 7], description: "ISO weekday: 1 is Monday, 7 is Sunday" },
     },
     render: (args) =>
@@ -177,6 +178,15 @@ export const LegendHiddenShare: Story = {
 export const SundayWeekStart: Story = {
     name: "Sunday week start",
     args: { groupBy: "week", weekStart: 7, series: [sundayWeeks], compareSeries: [sundayWeeksPrevious], compareLabel: compareRangeLabel },
+};
+
+/**
+ * One bar per local hour, with `group-by="hour"`. The points are the UTC instants of `uauiTimeBuckets(range, "hour")`; any
+ * date-time is read as a moment and put in the browser's hour that contains it. Labels use the editor's culture.
+ */
+export const ByHour: Story = {
+    name: "By hour",
+    args: { kind: "bar", groupBy: "hour", series: [pageviewsByHour] },
 };
 
 /** One bar per date. */
