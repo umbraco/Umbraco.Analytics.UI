@@ -42,3 +42,4 @@
 - **05-11-2026** (T11) The AI example's fake server owns a fixed clock (2026-06-23, 2:23 PM local) and cuts today at it everywhere, so Hour and Day give the same totals. The default 30-day view's totals drop slightly, since its last day is now partial.
 - **05-11-2026** (T11) Open for the user: the example marks now and incomplete only at hour level, and on Today its KPI tiles compare the day so far with all of yesterday.
 - **05-11-2026** (T11) Pre-existing: the AI story's copyable imports header lists names the page no longer uses and misses a few it does (`ref`, `UmbTextStyles`, table server types). Left for a separate fix.
+- **05-11-2026** (feature review) `marker-buckets.ts` renamed `bucket-lookup.ts`, since `now` and `incomplete-from` use it too. ARCHITECTURE.md's file list doesn't yet show this rename or the new `chart/internal/hour-ticks.ts`.
