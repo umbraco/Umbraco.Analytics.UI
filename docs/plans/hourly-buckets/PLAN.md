@@ -56,6 +56,6 @@ Paths are under `src/Umbraco.Analytics.UI/Client/src/`. The time zone in tests i
   Acceptance: HRS-10 specs green in `examples/pages/ai/ai-usage-page.test.ts`. In Storybook, the AI usage page shows Today by hour with the now line and hatching, matching `mockups/hourly-chart.png`.
   depends-on: T2, T3, T4, T7, T8, T9, T10
 
-- [ ] **T12** - story: all. Docs and API: README sections for hourly charts, `now`, `uauiTimeBuckets`, `uauiGroupByOptions` and the two presets. Commit the `api/analytics-ui.api.md` change for sign-off. `npm run lint`, `npm test`, `npm run build`, `npm run check:size`.
+- [x] **T12** - story: all. Docs and API: README sections for hourly charts, `now`, `uauiTimeBuckets`, `uauiGroupByOptions` and the two presets. Commit the `api/analytics-ui.api.md` change for sign-off. `npm run lint`, `npm test`, `npm run build`, `npm run check:size`.
   Acceptance: all four commands pass. The API report diff lists only the changes in ARCHITECTURE's "Public API" line.
   depends-on: T11
