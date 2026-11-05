@@ -1,5 +1,5 @@
 import type { UauiGroupBy } from "../../group-by/group-by.element.js";
-import { bucketLimit, lastStartOnOrBefore, momentKey } from "./marker-buckets.js";
+import { bucketLimit, lastStartOnOrBefore, momentKey } from "./bucket-lookup.js";
 
 /**
  * The index of the first incomplete date (bucket) of the chart's `dates` (ascending ISO dates, each the start of a

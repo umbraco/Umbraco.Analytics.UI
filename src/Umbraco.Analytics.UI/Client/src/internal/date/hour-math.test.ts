@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { hourOffset, hoursBetween, hourStart, nextHour, parseMoment, wallClockHourOffset } from "./hour-math.js";
-import { bucketEnd, bucketOffset, bucketStart } from "./date-math.js";
+import { hoursBetween, hourStart, isRepeatedHour, nextHour, parseMoment, wallClockHourOffset } from "./hour-math.js";
+import { bucketEnd } from "./date-math.js";
+import { hoursOf25Oct } from "../../chart/internal/hourly-fixtures.js";
 
 // The test browser runs in Europe/Copenhagen (vite.config.ts): UTC+1 in winter, UTC+2 in summer.
 describe("Feature: hour maths", () => {
@@ -34,17 +35,10 @@ describe("Feature: hour maths", () => {
         it("ends the hour one hour later", () => {
             expect(nextHour("2026-11-05T13:00:00.000Z")).toBe("2026-11-05T14:00:00.000Z");
         });
-        it("counts elapsed hours between two hours", () => {
-            expect(hourOffset("2026-11-05T13:00:00Z", "2026-11-05T16:20:00Z")).toBe(3);
-        });
-        it("counts negative hours when before", () => {
-            expect(hourOffset("2026-11-05T13:00:00Z", "2026-11-05T11:00:00Z")).toBe(-2);
-        });
         it("counts wall-clock hours from a local date", () => {
             expect(wallClockHourOffset("2026-11-05", "2026-11-06T13:00:00Z")).toBe(38);
         });
         it("returns undefined offsets for invalid input", () => {
-            expect(hourOffset("nope", "2026-11-05T13:00:00Z")).toBe(undefined);
             expect(wallClockHourOffset("2026-11-05", "nope")).toBe(undefined);
         });
     });
@@ -53,9 +47,6 @@ describe("Feature: hour maths", () => {
         it("has no 2 AM: 00:59Z is 1 AM, 01:00Z is already 3 AM", () => {
             expect(hourStart("2026-03-29T00:30:00Z")).toBe("2026-03-29T00:00:00.000Z");
             expect(hourStart("2026-03-29T01:30:00Z")).toBe("2026-03-29T01:00:00.000Z");
-        });
-        it("counts 23 elapsed hours across the day", () => {
-            expect(hourOffset("2026-03-28T23:00:00Z", "2026-03-29T22:00:00Z")).toBe(23);
         });
         it("counts 3 AM as wall-clock hour 3, as on any other day", () => {
             expect(wallClockHourOffset("2026-03-29", "2026-03-29T01:00:00Z")).toBe(3);
@@ -72,10 +63,6 @@ describe("Feature: hour maths", () => {
         });
         it("gives the first 2 AM an end at the second 2 AM", () => {
             expect(nextHour("2026-10-25T00:00:00.000Z")).toBe("2026-10-25T01:00:00.000Z");
-        });
-        it("counts 25 elapsed hours across the day", () => {
-            expect(hourOffset("2026-10-24T22:00:00Z", "2026-10-25T22:00:00Z")).toBe(24);
-            expect(hourOffset("2026-10-24T22:00:00Z", "2026-10-25T23:00:00Z")).toBe(25);
         });
         it("gives both 2 AM hours the same wall-clock hour", () => {
             expect(wallClockHourOffset("2026-10-25", "2026-10-25T00:00:00Z")).toBe(2);
@@ -95,17 +82,21 @@ describe("Feature: hour maths", () => {
         });
     });
 
-    describe("Scenario: bucket helpers route hour", () => {
-        it("starts, ends and offsets an hour bucket", () => {
-            expect(bucketStart("2026-11-05T13:45:00Z", "hour")).toBe("2026-11-05T13:00:00.000Z");
+    describe("Scenario: bucketEnd routes hour", () => {
+        it("ends an hour bucket one hour later", () => {
             expect(bucketEnd("2026-11-05T13:00:00.000Z", "hour")).toBe("2026-11-05T14:00:00.000Z");
-            expect(bucketOffset("2026-11-05T13:00:00Z", "2026-11-05T15:10:00Z", "hour")).toBe(2);
         });
         it("hands back invalid input as it is", () => {
-            expect(bucketStart("nope", "hour")).toBe("nope");
             expect(bucketEnd("nope", "hour")).toBe("nope");
-            expect(bucketOffset("nope", "2026-11-05T13:00:00Z", "hour")).toBe(undefined);
         });
+    });
+
+    // On 25 Oct 2026 (Copenhagen) hours 2 and 3 of the day's 25 are both 2 AM.
+    describe("Scenario: the repeated hour", () => {
+        it("is the first 2 AM", () => expect(isRepeatedHour(hoursOf25Oct[2])).toBe(true));
+        it("is the second 2 AM", () => expect(isRepeatedHour(hoursOf25Oct[3])).toBe(true));
+        it("is not the hour before", () => expect(isRepeatedHour(hoursOf25Oct[1])).toBe(false));
+        it("is not the hour after", () => expect(isRepeatedHour(hoursOf25Oct[4])).toBe(false));
     });
 
     describe("Scenario: the hours between two dates", () => {

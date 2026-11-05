@@ -6,7 +6,7 @@ import { createNowPlugin, type UauiNowPin, type UauiNowState } from "./now-plugi
 
 /**
  * What the time-series chart draws on the plot besides its series, which only a date x-axis has: the marker dots, the
- * today line and the hatch over the incomplete part. Keeps the plugins' state between draws; `plugins` is handed to the renderer, which makes a fresh
+ * now line and the hatch over the incomplete part. Keeps the plugins' state between draws; `plugins` is handed to the renderer, which makes a fresh
  * pair for each Chart.js chart it creates, as plugins are per chart (never registered globally).
  */
 export class UauiTimeSeriesOverlays {
@@ -19,7 +19,7 @@ export class UauiTimeSeriesOverlays {
         this.#markers = { pins: [], onLayout: onMarkerLayout };
     }
 
-    /** The chart's plugins, in drawing order: the incomplete hatch, the today line (so it stays on top), then the markers. */
+    /** The chart's plugins, in drawing order: the incomplete hatch, the now line (so it stays on top), then the markers. */
     readonly plugins = (): Plugin[] => [createIncompletePlugin(this.#incomplete), createNowPlugin(this.#now), createMarkersPlugin(this.#markers)];
 
     /** What to draw at the next update of the chart. */

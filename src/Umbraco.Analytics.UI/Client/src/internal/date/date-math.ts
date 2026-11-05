@@ -2,7 +2,7 @@
 // built from year/month/day parts so a timezone never shifts a day.
 
 import type { UauiWeekStart } from "../../date-helpers/date-helpers.js";
-import { hourOffset, hoursBetween, hourStart, nextHour } from "./hour-math.js";
+import { hoursBetween, nextHour } from "./hour-math.js";
 
 const pad = (n: number, width = 2) => String(n).padStart(width, "0");
 
@@ -168,10 +168,9 @@ export function resolveWeekStart(value: unknown): UauiWeekStart {
 
 /**
  * The first day of the bucket an ISO date falls in: the day itself, the first day of its week (Monday unless
- * `weekStart` says otherwise), or the 1st of its month. For `"hour"`, the UTC instant of the local hour that contains `iso`.
+ * `weekStart` says otherwise), or the 1st of its month. Not for `"hour"`: that is `hourStart`.
  */
 export function bucketStart(iso: string, unit: BucketUnit, weekStart?: UauiWeekStart): string {
-    if (unit === "hour") return hourStart(iso) ?? iso;
     const parts = parseIso(iso);
     if (!parts || unit === "day") return iso;
     if (unit === "month") return toIso(parts.year, parts.month, 1);
@@ -180,11 +179,10 @@ export function bucketStart(iso: string, unit: BucketUnit, weekStart?: UauiWeekS
 }
 
 /**
- * How many buckets (hours, days, weeks or months) the bucket `iso` falls in is after the bucket `from` falls in; negative when before.
- * `undefined` when either is not a real date. For `"hour"` both are instants and the count is elapsed hours.
+ * How many buckets (days, weeks or months) the bucket `iso` falls in is after the bucket `from` falls in; negative when before.
+ * `undefined` when either is not a real date. Not for `"hour"`: that is `wallClockHourOffset`.
  */
 export function bucketOffset(from: string, iso: string, unit: BucketUnit, weekStart?: UauiWeekStart): number | undefined {
-    if (unit === "hour") return hourOffset(from, iso);
     const [a, b] = [parseIso(bucketStart(from, unit, weekStart)), parseIso(bucketStart(iso, unit, weekStart))];
     if (!a || !b) return undefined;
     if (unit === "month") return (b.year - a.year) * 12 + (b.month - a.month);

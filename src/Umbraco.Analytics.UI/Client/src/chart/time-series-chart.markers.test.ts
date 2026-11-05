@@ -7,6 +7,7 @@ import { page, userEvent } from "vitest/browser";
 import { html } from "@umbraco-cms/backoffice/external/lit";
 import darkCss from "@umbraco-ui/uui/themes/dark.css?inline";
 import highContrastCss from "@umbraco-ui/uui/themes/high-contrast.css?inline";
+import { umbLocalizationManager } from "@umbraco-cms/backoffice/localization-api";
 import { render } from "vitest-browser-lit";
 import { axeRun } from "../internal/test/a11y.js";
 import { pressTab } from "../internal/test/keyboard.js";
@@ -75,6 +76,30 @@ describe("Feature: event markers", () => {
 
         screenshotIt("draws a dashed line up from the dot", async () => {
             await expect.element(page.elementLocator(el)).toMatchScreenshot("chart-marker-line-dot");
+        });
+    });
+
+    describe("Scenario: a marker at hour level", () => {
+        // 23:30Z is 00:30 on 6 Nov in Copenhagen.
+        const hourly = [{ id: "pv", label: "Pageviews", points: [{ date: "2026-11-05T22:00:00Z", value: 1 }, { date: "2026-11-05T23:00:00Z", value: 2 }] }];
+        const late = { id: "m5", date: "2026-11-05T23:30:00Z", title: "Deploy" };
+        const previousLanguage = umbLocalizationManager.documentLanguage;
+        let el: UauiTestElement;
+        beforeEach(async () => {
+            umbLocalizationManager.documentLanguage = "en-US";
+            el = await chart([late], "bar", hourly, "hour");
+        });
+        afterEach(() => {
+            umbLocalizationManager.documentLanguage = previousLanguage;
+        });
+
+        it("names the local hour for screen readers", () => {
+            expect(markers(el)[0].getAttribute("aria-label")).toContain("Nov 6, 2026, 12 AM");
+        });
+
+        it("shows the local hour in its tooltip", async () => {
+            await userEvent.hover(page.elementLocator(markers(el)[0]));
+            await expect.poll(() => markerTooltipText(el)).toContain("Nov 6, 2026, 12 AM");
         });
     });
 

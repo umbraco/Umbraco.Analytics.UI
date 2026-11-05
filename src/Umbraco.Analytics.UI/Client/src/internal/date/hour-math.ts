@@ -44,12 +44,6 @@ export function nextHour(start: string | undefined): string | undefined {
     return first === undefined ? undefined : new Date(Date.parse(first) + HOUR_MS).toISOString();
 }
 
-/** Elapsed hours from the hour `from` falls in to the hour `value` falls in; negative when before. `undefined` when either is invalid. */
-export function hourOffset(from: string, value: string): number | undefined {
-    const [a, b] = [hourStart(from), hourStart(value)];
-    return a === undefined || b === undefined ? undefined : (Date.parse(b) - Date.parse(a)) / HOUR_MS;
-}
-
 /**
  * Wall-clock hours from midnight of the local date `fromDate` ("yyyy-mm-dd", or an instant, of which only the local date is used) to the hour `value` falls in: whole local days
  * times 24 plus the local hour. A 23 or 25 hour day still counts 24, so 2 PM lines up with 2 PM on another day.
@@ -85,4 +79,15 @@ export function hoursBetween(fromDate: string, untilDate: string): { start: stri
         hours.push({ start: new Date(at).toISOString(), end: new Date(at + HOUR_MS).toISOString(), date: localDate(new Date(at)) });
     }
     return hours;
+}
+
+/**
+ * Whether the hour that starts at `key` shares its local wall-clock hour with the one before or after it: the two
+ * 2 AMs of the day clocks go back. Their texts only differ by the zone.
+ */
+export function isRepeatedHour(key: string): boolean {
+    const start = parseMoment(key)?.getTime();
+    if (start === undefined) return false;
+    const [before, at, after] = [-HOUR_MS, 0, HOUR_MS].map((offset) => new Date(start + offset));
+    return before.getHours() === at.getHours() || after.getHours() === at.getHours();
 }

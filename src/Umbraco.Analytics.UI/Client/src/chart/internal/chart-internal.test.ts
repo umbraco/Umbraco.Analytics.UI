@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { allWhole, buildChartData, maxValue, minPositive, seriesTotals } from "./chart-data.js";
 import { logScale } from "./log-scale.js";
 import { hoursOf5Nov } from "./hourly-fixtures.js";
-import { bucketMarkers } from "./marker-buckets.js";
+import { bucketMarkers } from "./bucket-lookup.js";
 import { niceScale } from "./nice-scale.js";
 
 describe("logScale", () => {

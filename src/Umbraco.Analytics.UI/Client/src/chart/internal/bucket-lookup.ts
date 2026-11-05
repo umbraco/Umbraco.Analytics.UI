@@ -1,3 +1,4 @@
+// Which bucket of a chart a moment falls in: markers, now and incomplete-from all find theirs here.
 import { bucketEnd, dateOnly } from "../../internal/date/date-math.js";
 import { hourStart, localDateOf } from "../../internal/date/hour-math.js";
 import type { UauiGroupBy } from "../../group-by/group-by.element.js";

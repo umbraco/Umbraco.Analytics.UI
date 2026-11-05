@@ -1,3 +1,5 @@
+import { localDateOf, parseMoment } from "../../internal/date/hour-math.js";
+
 /** One x-axis tick the chart shows at hour level: its text, and whether it is bold (a day's date). */
 export interface UauiHourTick {
     label: string;
@@ -10,8 +12,6 @@ const ONE_DAY_HOURS = 25;
 const STEPS = [3, 6, 12, 24];
 /** The least room a label gets, in pixels: the widest label (the bold date, such as "Wed, Nov 4") at the 11px tick font, and air. Fixed rather than measured to keep the code small. */
 const MIN_LABEL_WIDTH = 72;
-
-const localDay = (date: Date) => date.getFullYear() * 400 + date.getMonth() * 32 + date.getDate();
 
 /**
  * Which hours get an x-axis label on an axis `width` pixels wide, chosen here rather than by Chart.js's auto-skip: the
@@ -28,24 +28,15 @@ export function hourTicks(keys: string[], hourLabels: string[], dateFormat: { fo
     // Widen while the labels would be nearer than MIN_LABEL_WIDTH.
     while (at < STEPS.length - 1 && (width * STEPS[at]) / keys.length < MIN_LABEL_WIDTH) at++;
     const step = STEPS[at];
-    let day: number | undefined;
+    let day: string | undefined;
     return keys.map((key, i) => {
-        const date = new Date(key);
-        if (Number.isNaN(date.getTime()) || date.getHours() % step !== 0) return undefined;
-        const at = localDay(date);
+        const date = parseMoment(key);
+        // A key that isn't a real moment is shown as written, as the tooltip and the table show it.
+        if (!date) return { label: hourLabels[i], bold: false };
+        if (date.getHours() % step !== 0) return undefined;
+        const at = localDateOf(key);
         if (at === day) return { label: hourLabels[i], bold: false };
         day = at;
         return { label: dateFormat.format(date), bold: true };
     });
-}
-
-/**
- * Whether the hour that starts at `key` shares its local wall-clock hour with the one before or after it: the two
- * 2 AMs of the day clocks go back. Their texts only differ by the zone.
- */
-export function isRepeatedHour(key: string): boolean {
-    const start = Date.parse(key);
-    if (Number.isNaN(start)) return false;
-    const [before, at, after] = [-3_600_000, 0, 3_600_000].map((offset) => new Date(start + offset));
-    return before.getHours() === at.getHours() || after.getHours() === at.getHours();
 }

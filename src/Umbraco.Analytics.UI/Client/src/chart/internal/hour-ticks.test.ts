@@ -1,11 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { isRepeatedHour } from "./hour-ticks.js";
-import { hoursOf25Oct } from "./hourly-fixtures.js";
+import { hourTicks } from "./hour-ticks.js";
 
-// On 25 Oct 2026 (Copenhagen) hours 2 and 3 of the day's 25 are both 2 AM.
-describe("Feature: the repeated hour", () => {
-    it("is the first 2 AM", () => expect(isRepeatedHour(hoursOf25Oct[2])).toBe(true));
-    it("is the second 2 AM", () => expect(isRepeatedHour(hoursOf25Oct[3])).toBe(true));
-    it("is not the hour before", () => expect(isRepeatedHour(hoursOf25Oct[1])).toBe(false));
-    it("is not the hour after", () => expect(isRepeatedHour(hoursOf25Oct[4])).toBe(false));
+describe("Feature: hour ticks", () => {
+    it("shows a date that doesn't exist as written, not rolled over to another day", () => {
+        const ticks = hourTicks(["2026-02-30T09:00"], ["2026-02-30T09:00"], new Intl.DateTimeFormat("en"), 800);
+        expect(ticks).toEqual([{ label: "2026-02-30T09:00", bold: false }]);
+    });
 });

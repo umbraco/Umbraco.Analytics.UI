@@ -1,11 +1,13 @@
 import { css, customElement, html, nothing, property, repeat, state, type CSSResultGroup, type PropertyValues, type TemplateResult } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { dateOnly } from "../../internal/date/date-math.js";
-import { formatIsoDate } from "../../internal/date/format-date.js";
+import { hourStart } from "../../internal/date/hour-math.js";
+import type { UauiGroupBy } from "../../group-by/group-by.element.js";
+import { formatBucketKey, formatIsoDate } from "../../internal/date/format-date.js";
 import type { UauiMarker, UauiMarkerClickDetail } from "../types.js";
 import "./chart-marker-tooltip.element.js";
 import type { UauiChartMarkerTooltipElement } from "./chart-marker-tooltip.element.js";
-import type { MarkerBucket } from "./marker-buckets.js";
+import type { MarkerBucket } from "./bucket-lookup.js";
 import type { UauiMarkerPlacement } from "./markers-plugin.js";
 import { clampInside, placeTooltip } from "./place-tooltip.js";
 
@@ -38,9 +40,13 @@ export class UauiChartMarkersElement extends UmbLitElement {
     @property({ attribute: false })
     placements: UauiMarkerPlacement[] = [];
 
-    /** Formats a marker's date. */
+    /** Formats a marker's date, or its hour at hour level. */
     @property({ attribute: false })
     dateFormat: Intl.DateTimeFormat = new Intl.DateTimeFormat();
+
+    /** The chart's grouping: at hour level a marker's text is its local hour, else the date it starts with. */
+    @property({ attribute: false })
+    groupBy: UauiGroupBy = "day";
 
     /** The dots (by date index) the pointer is over and the keyboard is on. Hover wins. */
     @state()
@@ -111,8 +117,9 @@ export class UauiChartMarkersElement extends UmbLitElement {
         });
     }
 
-    /** The marker's date, whatever time of day it carries. */
+    /** The marker's date, whatever time of day it carries; at hour level the local hour that contains it. */
     #dateText(marker: UauiMarker) {
+        if (this.groupBy === "hour") return formatBucketKey(hourStart(marker.date) ?? marker.date, "hour", this.dateFormat);
         return formatIsoDate(dateOnly(marker.date), this.dateFormat);
     }
 

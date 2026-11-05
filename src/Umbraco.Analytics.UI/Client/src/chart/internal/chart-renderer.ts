@@ -34,7 +34,7 @@ export interface UauiChartModel {
     formatTick: (value: number) => string;
     /** Ticks at these heights (from 0 to `yMax`) with these labels, in place of `yStep` and `formatTick`: the log axis. */
     yTicks?: { value: number; label: string }[];
-    /** Extra room above the plot, in pixels, for what the chart's own plugins draw there (the time-series chart's today label). */
+    /** Extra room above the plot, in pixels, for what the chart's own plugins draw there (the time-series chart's now label). */
     roomAbove?: number;
     colors: UauiChartDrawColors;
     /** Line kinds: a series below its compare line is doing better, so the gap shading flips. */
@@ -123,7 +123,7 @@ export function thinTicks<T extends { value: number }>(ticks: T[], height: numbe
     return [ticks[0], ticks[last]];
 }
 
-/** Room around the plot, in pixels. A model's `roomAbove` is added at the top (the today label). */
+/** Room around the plot, in pixels. A model's `roomAbove` is added at the top (the now label). */
 const PADDING = { top: 8, right: 12, bottom: 0, left: 0 };
 
 /** An incomplete point: a hollow dot a little larger than a complete one, with a thicker border to read hollow. */
@@ -141,7 +141,7 @@ const MAX_POINTS_WITH_DOTS = 45;
  * The one place that talks to Chart.js. The element hands it a `UauiChartModel` and listens for hover;
  * the tooltip itself is HTML, drawn by the element. Create it once per canvas and call `update` for
  * every change, including loading toggles: it is only destroyed when the element disconnects.
- * `UauiChartController` owns it. A chart's own drawing (the time-series chart's markers and today line) comes in as
+ * `UauiChartController` owns it. A chart's own drawing (the time-series chart's markers and now line) comes in as
  * per-chart plugins, never registered globally.
  */
 export class UauiChartRenderer {
@@ -297,7 +297,7 @@ export class UauiChartRenderer {
         // Only bars stack: a `stacked-bar` chart whose series are all lines draws them unstacked. Lines also carry a
         // stack key of their own, so they never stack with bars or with each other. The share view stacks everything.
         const stacked = (model.kind === "stacked-bar" && family === "bar") || !!model.share;
-        // Room above the plot for what the chart's own plugins draw there (the today label).
+        // Room above the plot for what the chart's own plugins draw there (the now label).
         chart.options.layout = { padding: { ...PADDING, top: PADDING.top + (model.roomAbove ?? 0) } };
         const scales = chart.options.scales!;
         // The package's axis look (`uauiChartOptions`, as a product's chart gets it): our font, colours and Chart.js's

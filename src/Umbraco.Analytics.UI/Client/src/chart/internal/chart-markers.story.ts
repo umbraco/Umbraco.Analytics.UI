@@ -3,7 +3,7 @@ import { html } from "@umbraco-cms/backoffice/external/lit";
 import { notPublicApi } from "../../internal/story/internal.js";
 import "./chart-markers.element.js";
 import type { UauiChartMarkersElement } from "./chart-markers.element.js";
-import { bucketMarkers } from "./marker-buckets.js";
+import { bucketMarkers } from "./bucket-lookup.js";
 
 const dates = ["2026-06-10", "2026-06-11", "2026-06-12"];
 const dateFormat = new Intl.DateTimeFormat("en", { day: "numeric", month: "short", year: "numeric" });
