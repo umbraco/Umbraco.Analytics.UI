@@ -34,7 +34,7 @@ Paths are under `src/Umbraco.Analytics.UI/Client/src/`. The time zone in tests i
   Acceptance: HRS-2 specs green in `chart/time-series-chart.hourly.test.ts`, and HRS-6 AC4–AC5 in `chart/time-series-chart.hour-labels.test.ts`. Existing chart tests green. axe clean at hour level.
   depends-on: T1, T5
 
-- [ ] **T7** - story: HRS-3 (AC1–AC4). At hour level, compare points line up by wall-clock offset from the start of each range (R7), the repeated hour's compare points add up (R8), and each keeps its own date for the tooltip (R9). Day, week and month keep their current alignment.
+- [x] **T7** - story: HRS-3 (AC1–AC4). At hour level, compare points line up by wall-clock offset from the start of each range (R7), the repeated hour's compare points add up (R8), and each keeps its own date for the tooltip (R9). Day, week and month keep their current alignment.
   Acceptance: HRS-3 specs green in `chart/time-series-chart.hourly-compare.test.ts`. Existing compare tests green.
   depends-on: T6. parallel-group: B
 

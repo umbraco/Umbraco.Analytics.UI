@@ -31,3 +31,5 @@
 - **05-11-2026** (T6) `groupByHour` "Hour" added in T6, not T10: `uaui-group-by`'s label map is exhaustive over `UauiGroupBy`. Default options still day, week, month.
 - **05-11-2026** (T6) An unreadable hour date is kept as written and shown as written, as an unreadable day date already is.
 - **05-11-2026** (T6) The Forms example maps `hour` to its date dimension to satisfy an exhaustive record; the page never offers Hour.
+- **05-11-2026** (T7) On the day clocks go back, the two current 2 AM bars share a wall-clock offset. The compare value goes on the first 2 AM bar only; the second gets none, so the compare isn't counted twice.
+- **05-11-2026** (T7) With no range, each side counts from its first point's local day, so 3 PM still sits under 3 PM.
