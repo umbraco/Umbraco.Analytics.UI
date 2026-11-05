@@ -27,3 +27,7 @@
 - **05-11-2026** (T2) `uauiTimeBuckets` takes `UauiGroupBy | "hour"` until T6 adds "hour" to `UauiGroupBy`; T6 collapses it.
 - **05-11-2026** (T2) A clipped first or last week or month bucket's `start..end` reaches past the range. The `days` doc tells products to clip their server query with `days` or the range.
 - **05-11-2026** (T5) The Workflow example keeps its own `workflowChartToday` names and server field `today`: they model the server's answer, not the chart property. Only the value passed to the chart moved to `now`.
+- **05-11-2026** (T6) HRS-2 AC6's pre-written spec asserted `chart.data.labels` equals `["2026-06-11"]`, but those are formatted axis labels, so it could never pass. Now it asserts the hidden table row `"Jun 11, 2026"`, which keeps the full date.
+- **05-11-2026** (T6) `groupByHour` "Hour" added in T6, not T10: `uaui-group-by`'s label map is exhaustive over `UauiGroupBy`. Default options still day, week, month.
+- **05-11-2026** (T6) An unreadable hour date is kept as written and shown as written, as an unreadable day date already is.
+- **05-11-2026** (T6) The Forms example maps `hour` to its date dimension to satisfy an exhaustive record; the page never offers Hour.
