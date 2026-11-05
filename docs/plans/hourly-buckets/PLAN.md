@@ -16,7 +16,7 @@ Paths are under `src/Umbraco.Analytics.UI/Client/src/`. The time zone in tests i
 
 ## Controls
 
-- [ ] **T3** - story: HRS-8 (AC1–AC7). Add `"today"` and `"yesterday"` to the built-in table and `UauiBuiltInPresetId` in `internal/date/date-math.ts` (not to `defaultPresets`). Add `dateRangeToday` "Today" and `dateRangeYesterday` "Yesterday" to `lang/en.ts`, and map them in the dialog's `presetTerms`. Update the `UauiDatePreset` and `uauiPresetRange` docs.
+- [x] **T3** - story: HRS-8 (AC1–AC7). Add `"today"` and `"yesterday"` to the built-in table and `UauiBuiltInPresetId` in `internal/date/date-math.ts` (not to `defaultPresets`). Add `dateRangeToday` "Today" and `dateRangeYesterday` "Yesterday" to `lang/en.ts`, and map them in the dialog's `presetTerms`. Update the `UauiDatePreset` and `uauiPresetRange` docs.
   Acceptance: HRS-8 specs green in `date-range/date-range.presets-today.test.ts`. Localization tests green.
   depends-on: T1 (both change `date-math.ts`)
 
