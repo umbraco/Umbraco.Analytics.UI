@@ -1,6 +1,6 @@
 import type { UauiWeekStart } from "../../date-helpers/date-helpers.js";
 import { bucketOffset, dateOnly, type BucketUnit } from "../../internal/date/date-math.js";
-import { hourStart } from "../../internal/date/hour-math.js";
+import { hourStart, wallClockHourOffset } from "../../internal/date/hour-math.js";
 import type { UauiSeries } from "../types.js";
 import type { UauiChartData } from "./chart-values.js";
 
@@ -20,11 +20,19 @@ const keyedPoints = (unit: BucketUnit) => (s: UauiSeries): UauiSeries => ({ ...s
 const sortedDates = (series: UauiSeries[]) => [...new Set(series.flatMap((s) => s.points.map((p) => p.date)))].sort();
 
 /**
+ * The bucket number of `date` counted from `anchor`. At hour level it is the wall-clock hour (day x 24 + local hour), so 2 PM
+ * lines up with 2 PM on another day even across a clock change; otherwise whole buckets of `unit`. `undefined` for a date
+ * that isn't real.
+ */
+const offsetFrom = (anchor: string, date: string, unit: BucketUnit, weekStart: UauiWeekStart | undefined) =>
+    unit === "hour" ? wallClockHourOffset(anchor, date) : bucketOffset(anchor, date, unit, weekStart);
+
+/**
  * The bucket number of each date, counted from the bucket of `anchor` (the first date when there is none). A date
  * that isn't a real calendar date takes its position in the list instead.
  */
 function offsetsOf(dates: string[], unit: BucketUnit, weekStart: UauiWeekStart | undefined, anchor = dates[0]): number[] {
-    return dates.map((d, i) => bucketOffset(anchor, d, unit, weekStart) ?? i);
+    return dates.map((d, i) => offsetFrom(anchor, d, unit, weekStart) ?? i);
 }
 
 /** The first day of each side's period, when the product knows it. Without one a side starts at its first point. */
@@ -47,7 +55,7 @@ function compareByOffset(points: UauiSeries["points"], unit: BucketUnit, weekSta
     [...points]
         .sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0))
         .forEach((p) => {
-            const offset = bucketOffset(start, p.date, unit, weekStart) ?? position.get(p.date)!;
+            const offset = offsetFrom(start, p.date, unit, weekStart) ?? position.get(p.date)!;
             const entry = byOffset.get(offset);
             if (entry) entry.value += p.value;
             else byOffset.set(offset, { value: p.value, date: p.date });
@@ -59,7 +67,8 @@ function compareByOffset(points: UauiSeries["points"], unit: BucketUnit, weekSta
  * Lines the series up on one shared list of dates. A date a series has no point for is `null`; points on the
  * same date add up. A compare series is matched to its series by `id`, then by bucket offset: its point in the
  * Nth bucket (`groupBy` unit) from the compare period's start sits under the Nth bucket from the current period's
- * start. A start is `anchors.from` or `anchors.compareFrom` when given, else the first date of that side. Compare
+ * start (at hour level, the Nth wall-clock hour, so 2 PM sits under 2 PM across a clock change; compare points in a repeated
+ * hour add up, and sit under the first of the current side's two). A start is `anchors.from` or `anchors.compareFrom` when given, else the first date of that side. Compare
  * points whose offset has no current date are dropped, and current dates with no compare point stay `null`. Weeks
  * start on `weekStart` (Monday by default).
  *
@@ -71,7 +80,11 @@ export function buildChartData(rawSeries: UauiSeries[], rawCompareSeries: UauiSe
     const series = rawSeries.map(keyedPoints(groupBy));
     const compareSeries = rawCompareSeries.map(keyedPoints(groupBy));
     const dates = sortedDates(series);
-    const indexOfOffset = new Map(offsetsOf(dates, groupBy, weekStart, anchors.from ? dateOnly(anchors.from) : undefined).map((offset, i) => [offset, i]));
+    const indexOfOffset = new Map<number, number>();
+    offsetsOf(dates, groupBy, weekStart, anchors.from ? dateOnly(anchors.from) : undefined).forEach((offset, i) => {
+        // On the day clocks go back two hours share an offset; the compare value goes to the first of them.
+        if (groupBy !== "hour" || !indexOfOffset.has(offset)) indexOfOffset.set(offset, i);
+    });
     const compareStart = anchors.compareFrom ? dateOnly(anchors.compareFrom) : sortedDates(compareSeries)[0];
     const place = (byOffset: Map<number, { value: number; date: string }>) => {
         const values = dates.map(() => null as number | null);

@@ -219,7 +219,7 @@ export class UauiTimeSeriesChartElement extends UauiTimeSeriesChartElementBase {
     /**
      * The period the series cover, as `uaui-date-range` emits it. Optional but recommended with `compare`: compare
      * points are aligned from the start of this range's first bucket. Without it, from the first point of the
-     * series, which misaligns the compare when sparse data omits the period's first days (or weeks, or months).
+     * series (at hour level, that point's local day), which misaligns the compare when sparse data omits the period's first days (or weeks, or months).
      */
     @property({ attribute: false })
     range?: UauiDateRange;

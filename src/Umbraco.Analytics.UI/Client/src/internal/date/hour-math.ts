@@ -51,7 +51,7 @@ export function hourOffset(from: string, value: string): number | undefined {
 }
 
 /**
- * Wall-clock hours from midnight of the local date `fromDate` ("yyyy-mm-dd") to the hour `value` falls in: whole local days
+ * Wall-clock hours from midnight of the local date `fromDate` ("yyyy-mm-dd", or an instant, of which only the local date is used) to the hour `value` falls in: whole local days
  * times 24 plus the local hour. A 23 or 25 hour day still counts 24, so 2 PM lines up with 2 PM on another day.
  * `undefined` when either is invalid.
  */
