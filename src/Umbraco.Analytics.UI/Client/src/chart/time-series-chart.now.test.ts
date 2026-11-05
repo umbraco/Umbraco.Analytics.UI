@@ -66,7 +66,7 @@ describe("Feature: the now line", () => {
             expect(nowRow(el)).toBeUndefined();
         });
 
-        it.skip("has no today property", () => {
+        it("has no today property", () => {
             expect("today" in UauiTimeSeriesChartElement.prototype).toBe(false);
         });
     });

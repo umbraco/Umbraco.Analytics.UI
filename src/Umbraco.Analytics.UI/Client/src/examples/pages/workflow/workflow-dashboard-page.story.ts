@@ -58,7 +58,7 @@ const render = (latency?: number, failing = false) => html`
  *
  * The adapter avoids three bugs of Workflow's own dashboard: "fastest" always showing "-", an average that counted
  * unfinished workflows, and a "Today" label that never showed. Every query sends the editor's time zone, and the
- * charts' days, their `today` and the history's date-times (ISO with offsets) all come from the server in that zone. The data is made up.
+ * charts' days, their `now` and the history's date-times (ISO with offsets) all come from the server in that zone. The data is made up.
  */
 export const Dashboard: StoryObj = {
     render: () => render(),

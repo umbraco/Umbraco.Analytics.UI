@@ -715,6 +715,7 @@ export class UauiTimeSeriesChartElement extends UauiTimeSeriesChartElementBase {
     incompleteFrom?: string;
     kind: UauiChartKind;
     markers: UauiMarker[];
+    now?: string;
     range?: UauiDateRange;
     // (undocumented)
     render(): TemplateResult;
@@ -722,7 +723,6 @@ export class UauiTimeSeriesChartElement extends UauiTimeSeriesChartElementBase {
     stack: UauiChartStack;
     // (undocumented)
     static styles: CSSResultGroup;
-    today?: string;
     // (undocumented)
     protected updated(changed: PropertyValues<this>): void;
     weekStart: UauiWeekStart;

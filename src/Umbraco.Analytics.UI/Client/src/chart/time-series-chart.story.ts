@@ -38,7 +38,7 @@ const meta: Meta<UauiTimeSeriesChartElement> = {
         compareLabel: undefined,
         lowerIsBetter: false,
         markers: [],
-        today: undefined,
+        now: undefined,
         incompleteFrom: undefined,
         yScale: "linear",
         groupBy: "day",
@@ -69,7 +69,7 @@ const meta: Meta<UauiTimeSeriesChartElement> = {
                 .compareLabel=${args.compareLabel}
                 .lowerIsBetter=${args.lowerIsBetter}
                 .markers=${args.markers}
-                .today=${args.today}
+                .now=${args.now}
                 .incompleteFrom=${args.incompleteFrom}
                 .yScale=${args.yScale}
                 .groupBy=${args.groupBy}
@@ -221,18 +221,18 @@ export const StatusColorCompare: Story = {
 
 /**
  * Workflow's approval activity: approved, cancelled and errored as daily bars in their status colours, with pending
- * (a running total) as a line over them (`kind: "line"` on that series). 28 days back and 7 ahead, with `today`
+ * (a running total) as a line over them (`kind: "line"` on that series). 28 days back and 7 ahead, with `now`
  * drawing a labelled line. Try `stacked-bar` (the line doesn't stack) and `log`.
  */
 export const WorkflowActivity: Story = {
     name: "Bars and a line, with today",
-    args: { kind: "bar", series: workflowActivity, today: workflowToday },
+    args: { kind: "bar", series: workflowActivity, now: workflowToday },
 };
 
 /** Days after today: the series has a point (0) for each, and the today line shows where today is. */
 export const DaysAfterToday: Story = {
     name: "Days after today",
-    args: { kind: "bar", series: [workflowActivity[0]], today: workflowToday },
+    args: { kind: "bar", series: [workflowActivity[0]], now: workflowToday },
 };
 
 /**
@@ -268,10 +268,10 @@ export const IncompleteWeeks: Story = {
     args: { kind: "bar", series: [sundayWeeks], groupBy: "week", weekStart: 7, incompleteFrom: "2026-06-22" },
 };
 
-/** `today` and `incomplete-from` are independent: the today line stays on top of the hatch. */
+/** `now` and `incomplete-from` are independent: the today line stays on top of the hatch. */
 export const IncompleteWithToday: Story = {
     name: "Incomplete tail, with today",
-    args: { series: [pageviews], today: "2026-06-23", incompleteFrom: "2026-06-23" },
+    args: { series: [pageviews], now: "2026-06-23", incompleteFrom: "2026-06-23" },
 };
 
 /**
@@ -297,7 +297,7 @@ export const LogScaleManyDecades: Story = {
 /** The Workflow activity chart on a log axis: the few errors stay readable beside the pending total. */
 export const LogScaleMixed: Story = {
     name: "Log scale, bars and a line",
-    args: { kind: "bar", series: workflowActivity, today: workflowToday, yScale: "log" },
+    args: { kind: "bar", series: workflowActivity, now: workflowToday, yScale: "log" },
 };
 
 /**

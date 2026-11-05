@@ -36,7 +36,7 @@ export type HourlyChartOptions = {
     kind?: string;
 };
 
-/** Renders the chart. `now` is set as a property so the spec compiles before T5 renames `today`. */
+/** Renders the chart. `now` is set as a property. */
 export const hourlyChart = ({ series, compareSeries = [], range, compare, groupBy = "hour", now, incompleteFrom, kind = "bar" }: HourlyChartOptions) =>
     renderElement(
         html`<uaui-time-series-chart kind=${kind} group-by=${groupBy} .series=${series} .compareSeries=${compareSeries} .range=${range} .compare=${compare}

@@ -35,7 +35,7 @@ import type { UauiChartRenderer } from "./internal/chart-renderer.js";
 import { colorKeyOf, seriesKindOf } from "./internal/chart-series.js";
 import { chartYAxis, usesLogScale } from "./internal/chart-y-axis.js";
 import { UauiTimeSeriesOverlays } from "./internal/time-series-overlays.js";
-import { TODAY_LABEL_ROOM } from "./internal/today-plugin.js";
+import { NOW_LABEL_ROOM } from "./internal/now-plugin.js";
 import type { UauiCompare, UauiDateRange } from "../date-range/types.js";
 import type { UauiChartKind, UauiChartStack, UauiMarker, UauiMarkerClickDetail, UauiSeries, UauiSeriesKind } from "./types.js";
 
@@ -150,8 +150,8 @@ export const UauiTimeSeriesChartElementBase = UauiChartMixin(UmbLitElement);
  * bar. The total counts the bars only.
  * `incomplete-from` marks the dates from one onward as not final (today is half over, or data arrives late): their line
  * and bars draw see-through over a light hatched band, and the tooltip and the hidden table name those dates as incomplete.
- * It is independent of `today`.
- * `today` draws a thin labelled line at today's date, for dates that run past it. `y-scale="log"` spaces the y-axis by
+ * It is independent of `now`.
+ * `now` draws a thin labelled line at today's date, for dates that run past it. `y-scale="log"` spaces the y-axis by
  * powers of ten, bending toward 0 at the bottom so 0 stays on the axis line.
  * `stack="percent"` with `kind="stacked-bar"` or `"area"` is a 100% share view: each date's series as its share of that
  * date's total, on a 0 to 100% axis, with the share and the value in the tooltip and the hidden table.
@@ -249,22 +249,22 @@ export class UauiTimeSeriesChartElement extends UauiTimeSeriesChartElementBase {
     markers: UauiMarker[] = [];
 
     /**
-     * Today's ISO date ("2026-11-02"), to draw a thin solid line at it labelled "Today", for a chart whose dates run on
-     * past today (reviews due next week). Taken from the product, not the clock, so it is the editor's day as the
-     * product counts it. It is drawn in the date (or the week or month, per `group-by`) that contains it, and not at all
-     * when no date does. The tooltip and the hidden table name that date as today. Dates after today are drawn like any
+     * The current moment, as an ISO date for now ("2026-11-02"), to draw a thin solid line at it labelled "Today", for a
+     * chart whose dates run on past it (reviews due next week). Taken from the product, not the clock, so it is the
+     * editor's day as the product counts it. It is drawn in the date (or the week or month, per `group-by`) that contains
+     * it, and not at all when no date does. The tooltip and the hidden table name that date as today. Dates after it are drawn like any
      * other: pass a point (0 when there is nothing yet) for each, as the chart's dates are its points' dates.
      */
     @property({ type: String })
-    today?: string;
+    now?: string;
 
     /**
      * An ISO date ("2026-11-04"): every date from the one that contains it onward is incomplete, because the latest
      * data isn't final (today is only half over, or data arrives late). The series draw see-through there (lines fade
      * and their dots go hollow, bars fade), over a light hatched band, so a low last value doesn't read as a crash;
-     * the compare isn't faded. The tooltip and the hidden table name those dates as incomplete. Bucketed as `today`
+     * the compare isn't faded. The tooltip and the hidden table name those dates as incomplete. Bucketed as `now`
      * is, so with `group-by` week or month the week or month that contains it is incomplete. A date after the last
-     * date makes nothing incomplete, and one before the first makes everything. Independent of `today`: set both to
+     * date makes nothing incomplete, and one before the first makes everything. Independent of `now`: set both to
      * mark today as incomplete, or only this when the unfinished part isn't today.
      */
     @property({ type: String, attribute: "incomplete-from" })
@@ -309,8 +309,8 @@ export class UauiTimeSeriesChartElement extends UauiTimeSeriesChartElementBase {
     #derivedFrom?: DerivedFrom;
     #markerBuckets: MarkerBucket[] = [];
     #markersFrom?: MarkersFrom;
-    /** The index of the date that contains `today`, if any. */
-    #todayIndex?: number;
+    /** The index of the date that contains `now`, if any. */
+    #nowIndex?: number;
     /** The index of the first incomplete date, if any. */
     #incompleteIndex?: number;
     /** The dates of the hidden table and the tooltip, with today's named, and the `#derived` they were made from. */
@@ -340,19 +340,19 @@ export class UauiTimeSeriesChartElement extends UauiTimeSeriesChartElementBase {
             this.#derived = this.#derive(next);
             this.#chart.invalidate();
         }
-        if (changed.has("kind") || changed.has("stack") || changed.has("lowerIsBetter") || changed.has("yScale") || changed.has("today") || changed.has("incompleteFrom")) this.#chart.invalidate();
+        if (changed.has("kind") || changed.has("stack") || changed.has("lowerIsBetter") || changed.has("yScale") || changed.has("now") || changed.has("incompleteFrom")) this.#chart.invalidate();
 
-        const todayIndex = this.today ? bucketMarkers([{ id: "today", date: this.today, title: "" }], this.#derived.data.labels, this.groupBy)[0]?.index : undefined;
+        const nowIndex = this.now ? bucketMarkers([{ id: "today", date: this.now, title: "" }], this.#derived.data.labels, this.groupBy)[0]?.index : undefined;
         const incompleteIndex = this.incompleteFrom ? firstIncompleteIndex(this.incompleteFrom, this.#derived.data.labels, this.groupBy) : undefined;
-        if (todayIndex !== this.#todayIndex || incompleteIndex !== this.#incompleteIndex || this.#tableDatesFrom !== this.#derived) {
-            this.#todayIndex = todayIndex;
+        if (nowIndex !== this.#nowIndex || incompleteIndex !== this.#incompleteIndex || this.#tableDatesFrom !== this.#derived) {
+            this.#nowIndex = nowIndex;
             this.#incompleteIndex = incompleteIndex;
             this.#tableDatesFrom = this.#derived;
             const { dateLabels } = this.#derived;
             this.#tableDates =
-                todayIndex === undefined && incompleteIndex === undefined
+                nowIndex === undefined && incompleteIndex === undefined
                     ? dateLabels
-                    : dateLabels.map((label, i) => this.#namedDate(label, i === todayIndex, incompleteIndex !== undefined && i >= incompleteIndex));
+                    : dateLabels.map((label, i) => this.#namedDate(label, i === nowIndex, incompleteIndex !== undefined && i >= incompleteIndex));
             this.#chart.invalidate();
         }
 
@@ -472,7 +472,7 @@ export class UauiTimeSeriesChartElement extends UauiTimeSeriesChartElementBase {
         this.#overlays.set(
             colors,
             this.#markerBuckets.map((b) => ({ index: b.index, count: b.markers.length })),
-            this.#todayIndex === undefined ? undefined : { index: this.#todayIndex, label: this.localize.term("uauiAnalytics_chartToday") },
+            this.#nowIndex === undefined ? undefined : { index: this.#nowIndex, label: this.localize.term("uauiAnalytics_chartToday") },
             this.#incompleteIndex,
         );
         this.#warnLogStacked();
@@ -483,7 +483,7 @@ export class UauiTimeSeriesChartElement extends UauiTimeSeriesChartElementBase {
                 kind: this.kind,
                 share: true,
                 labels: axisLabels,
-                roomAbove: this.today ? TODAY_LABEL_ROOM : 0,
+                roomAbove: this.now ? NOW_LABEL_ROOM : 0,
                 colors,
                 incompleteFrom: this.#incompleteIndex,
                 datasets: data.series.map((s, i) => ({ label: s.label, kind: kinds[i], values: this.#bandValues(i) })),
@@ -501,7 +501,7 @@ export class UauiTimeSeriesChartElement extends UauiTimeSeriesChartElementBase {
             labels: axisLabels,
             // Room above the plot for the today label, whether or not today is among the dates, so the plot doesn't
             // jump as the editor moves through date ranges.
-            roomAbove: this.today ? TODAY_LABEL_ROOM : 0,
+            roomAbove: this.now ? NOW_LABEL_ROOM : 0,
             colors,
             incompleteFrom: this.#incompleteIndex,
             lowerIsBetter: this.lowerIsBetter,

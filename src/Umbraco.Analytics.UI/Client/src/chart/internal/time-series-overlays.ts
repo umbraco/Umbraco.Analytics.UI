@@ -2,7 +2,7 @@ import type { Plugin } from "@umbraco/analytics-ui/external/chart.js";
 import type { UauiChartDrawColors } from "./chart-colors.js";
 import { createIncompletePlugin, type UauiIncompleteState } from "./incomplete-plugin.js";
 import { createMarkersPlugin, type UauiMarkerPin, type UauiMarkerPlacement, type UauiMarkersState } from "./markers-plugin.js";
-import { createTodayPlugin, type UauiTodayPin, type UauiTodayState } from "./today-plugin.js";
+import { createNowPlugin, type UauiNowPin, type UauiNowState } from "./now-plugin.js";
 
 /**
  * What the time-series chart draws on the plot besides its series, which only a date x-axis has: the marker dots, the
@@ -11,7 +11,7 @@ import { createTodayPlugin, type UauiTodayPin, type UauiTodayState } from "./tod
  */
 export class UauiTimeSeriesOverlays {
     #markers: UauiMarkersState;
-    #today: UauiTodayState = {};
+    #now: UauiNowState = {};
     #incomplete: UauiIncompleteState = {};
 
     /** `onMarkerLayout` is told where the marker dots are drawn, after every layout in which they moved. */
@@ -20,14 +20,14 @@ export class UauiTimeSeriesOverlays {
     }
 
     /** The chart's plugins, in drawing order: the incomplete hatch, the today line (so it stays on top), then the markers. */
-    readonly plugins = (): Plugin[] => [createIncompletePlugin(this.#incomplete), createTodayPlugin(this.#today), createMarkersPlugin(this.#markers)];
+    readonly plugins = (): Plugin[] => [createIncompletePlugin(this.#incomplete), createNowPlugin(this.#now), createMarkersPlugin(this.#markers)];
 
     /** What to draw at the next update of the chart. */
-    set(colors: UauiChartDrawColors, markers: UauiMarkerPin[], today: UauiTodayPin | undefined, incompleteFrom?: number): void {
+    set(colors: UauiChartDrawColors, markers: UauiMarkerPin[], now: UauiNowPin | undefined, incompleteFrom?: number): void {
         this.#markers.colors = colors;
         this.#markers.pins = markers;
-        this.#today.colors = colors;
-        this.#today.pin = today;
+        this.#now.colors = colors;
+        this.#now.pin = now;
         this.#incomplete.colors = colors;
         this.#incomplete.from = incompleteFrom;
     }

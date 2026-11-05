@@ -30,9 +30,9 @@ const lastPeriod = { id: "pv", label: "Pageviews", points: [
     { date: "2026-05-01", value: 60 }, { date: "2026-05-02", value: 90 }, { date: "2026-05-03", value: 200 },
 ] };
 
-// The four kinds, then (T58) bars with a line series stacked, a log axis, and a today line, then (T59) the share view
+// The four kinds, then (T58) bars with a line series stacked, a log axis, and a now line, then (T59) the share view
 // as stacked bars and as bands.
-const KINDS = ["line", "area", "bar", "stacked-bar", "stacked-bar+line", "bar log", "bar today", "stacked-bar share", "area share"] as const;
+const KINDS = ["line", "area", "bar", "stacked-bar", "stacked-bar+line", "bar log", "bar now", "stacked-bar share", "area share"] as const;
 
 const chart = (variant: string, series: unknown[] = [pageviews, sessions]) => {
     const [kind, extra] = variant.split(" ");
@@ -40,7 +40,7 @@ const chart = (variant: string, series: unknown[] = [pageviews, sessions]) => {
     return renderElement(
         html`<uaui-time-series-chart kind=${mixed ? "stacked-bar" : kind} y-scale=${extra === "log" ? "log" : "linear"}
             stack=${extra === "share" ? "percent" : "normal"}
-            .today=${extra === "today" ? "2026-06-02" : undefined}
+            .now=${extra === "now" ? "2026-06-02" : undefined}
             .series=${mixed ? [pageviews, { ...sessions, kind: "line" }] : series} .compareSeries=${extra === "share" ? [] : [lastPeriod]} style="width:400px"></uaui-time-series-chart>`,
         "uaui-time-series-chart",
     );

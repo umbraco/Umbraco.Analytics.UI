@@ -2,28 +2,28 @@ import type { Plugin } from "@umbraco/analytics-ui/external/chart.js";
 import type { UauiChartDrawColors } from "./chart-colors.js";
 
 /** Where today is on the chart: the index of the date (bucket) that contains it, and the word drawn over its line. */
-export interface UauiTodayPin {
+export interface UauiNowPin {
     index: number;
     label: string;
 }
 
 /** What the plugin draws. The renderer owns it and changes it between draws. */
-export interface UauiTodayState {
-    pin?: UauiTodayPin;
+export interface UauiNowState {
+    pin?: UauiNowPin;
     colors?: UauiChartDrawColors;
 }
 
 /** The room above the plot for the label, in pixels, added to the chart's top padding while there is a today line. */
-export const TODAY_LABEL_ROOM = 16;
+export const NOW_LABEL_ROOM = 16;
 
 /**
  * Draws a thin solid line up the chart at today's date, behind the series, with its label ("Today") above the plot.
  * Solid and unlabelled by a dot, so it can't be taken for a marker (dashed, with a dot that is a button). It is not
  * interactive: the hidden table and the tooltip name today's date instead.
  */
-export function createTodayPlugin(state: UauiTodayState): Plugin {
+export function createNowPlugin(state: UauiNowState): Plugin {
     return {
-        id: "uauiToday",
+        id: "uauiNow",
         beforeDatasetsDraw: (chart) => {
             const { pin, colors } = state;
             if (!pin || !colors) return;

@@ -275,7 +275,7 @@ export class ExampleWorkflowDashboardPageElement extends UmbLitElement {
             <uaui-time-series-chart
                 kind="bar"
                 y-scale=${this._scale}
-                today=${ifDefined(workflowChartToday(this._activity))}
+                now=${ifDefined(workflowChartToday(this._activity))}
                 .series=${workflowSeries(series, [
                     { name: "approved", label: "Approved", color: "positive" },
                     { name: "rejected", label: "Rejected", color: "danger" },
@@ -298,7 +298,7 @@ export class ExampleWorkflowDashboardPageElement extends UmbLitElement {
         return html`<uui-box headline="Content reviews" headline-variant="h3" style="--uui-box-default-padding: 0">
             <uaui-time-series-chart
                 kind="stacked-bar"
-                today=${ifDefined(workflowChartToday(this._reviews))}
+                now=${ifDefined(workflowChartToday(this._reviews))}
                 .series=${workflowSeries(series, [
                     { name: "reviewed", label: "Reviewed", color: "positive" },
                     { name: "overdue", label: "Overdue", color: "danger" },

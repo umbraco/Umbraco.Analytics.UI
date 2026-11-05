@@ -256,7 +256,7 @@ describe("Feature: the Workflow dashboard page", () => {
                 ["pending", "warning", "line"],
             ]);
             expect(chart.series[0].points).toHaveLength(30);
-            expect(chart.today).toBe(WORKFLOW_TODAY);
+            expect(chart.now).toBe(WORKFLOW_TODAY);
             expect(chart.series[0].points[chart.series[0].points.length - 1].date).toBe(WORKFLOW_TODAY);
             expect(chart.yScale).toBe("log");
         });
@@ -294,7 +294,7 @@ describe("Feature: the Workflow dashboard page", () => {
                 ["upcoming", 1],
             ]);
             expect(chart.series[0].points).toHaveLength(30 + 14);
-            expect(chart.today).toBe(WORKFLOW_TODAY);
+            expect(chart.now).toBe(WORKFLOW_TODAY);
             const upcomingBeforeToday = chart.series[2].points.filter((p) => p.date <= WORKFLOW_TODAY && p.value > 0);
             expect(upcomingBeforeToday).toEqual([]);
         });
