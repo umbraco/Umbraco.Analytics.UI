@@ -136,7 +136,6 @@ export class UauiShareCellElement extends UmbLitElement implements UauiTableCell
             .share-top {
                 display: flex;
                 align-items: baseline;
-                gap: 6px;
                 height: var(--_uaui-table-line, 20px);
                 white-space: nowrap;
                 overflow-wrap: normal;
@@ -150,7 +149,13 @@ export class UauiShareCellElement extends UmbLitElement implements UauiTableCell
                 font-weight: 700;
             }
 
+            uaui-table-compare-badge {
+                --_uaui-table-compare-badge-gap: 6px;
+            }
+
+            /* Spaced with margins, not a gap: an empty compare badge then adds no space after the percent. */
             .share-percent {
+                margin-inline-start: 6px;
                 font-size: 12px;
                 color: var(--uui-color-text-alt);
             }

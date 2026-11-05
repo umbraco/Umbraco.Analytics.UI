@@ -19,9 +19,13 @@ const columns: UauiTableColumn[] = [
 const rows = [
     { name: "A", orders: 120, rate: 0.5, visits: 300 },
     { name: "B", orders: 90, rate: 0.4, visits: 100 },
+    { name: "C", orders: 40, rate: 0.2, visits: 50 },
 ];
-// Only row A has a compare row, so row B's cells have nothing to compare.
-const compareRows = [{ name: "A", orders: 100, rate: 0.4, visits: 250 }];
+// Row A has a compare row, row B has none, and row C's compare values are 0: a percent change from 0 is unknown.
+const compareRows = [
+    { name: "A", orders: 100, rate: 0.4, visits: 250 },
+    { name: "C", orders: 0, rate: 0, visits: 0 },
+];
 
 // Away from the top-left corner, where the test pointer rests.
 async function table(compare: unknown[] = compareRows) {
@@ -76,6 +80,25 @@ describe("Feature: an empty compare badge takes no room", () => {
         });
     });
 
+    describe("Scenario: an end-aligned number cell whose compare value is 0", () => {
+        it("draws no delta badge", async () => {
+            const tableCell = cell(await table(), 2, 1);
+            expect(deepQuery(tableCell, "uaui-delta-badge")).toBeNull();
+        });
+
+        it("ends at the cell's content edge, where its header ends", async () => {
+            const tableCell = cell(await table(), 2, 1);
+            expect(textRight(tableCell, ".value")).toBeCloseTo(contentRight(tableCell), 0);
+        });
+    });
+
+    describe("Scenario: an end-aligned share cell whose compare value is 0", () => {
+        it("ends at the cell's content edge, where its header ends", async () => {
+            const tableCell = cell(await table(), 2, 3);
+            expect(textRight(tableCell, ".share-percent")).toBeCloseTo(contentRight(tableCell), 0);
+        });
+    });
+
     describe("Scenario: a table without compare rows", () => {
         it("ends every number at the cell's content edge", async () => {
             const tableCell = cell(await table([]), 0, 1);
@@ -92,6 +115,32 @@ describe("Feature: an empty compare badge takes no room", () => {
             const number = document.createRange();
             number.selectNodeContents(text);
             expect(badgeLeft(tableCell) - number.getBoundingClientRect().right).toBeCloseTo(6, 0);
+        });
+    });
+
+    describe("Scenario: a share cell with a comparison", () => {
+        it("keeps the 6px gap between the percent and its badge", async () => {
+            const tableCell = cell(await table(), 0, 3);
+            expect(badgeLeft(tableCell) - textRight(tableCell, ".share-percent")).toBeCloseTo(6, 0);
+        });
+    });
+
+    describe("Scenario: a product cell that gives the badge its own grid column", () => {
+        it("keeps the empty badge in that column, so the next item stays in its own column", async () => {
+            const host = await renderElement(
+                html`<div style="display: grid; grid-template-columns: 4em 5.5em 1fr">
+                    <span>1</span>
+                    <uaui-table-compare-badge .column=${{ key: "orders", label: "" }} .item=${{}} .value=${1}></uaui-table-compare-badge>
+                    <div class="bar"></div>
+                </div>`,
+                "div",
+            );
+            const badge = host.querySelector("uaui-table-compare-badge")!;
+            await settle(badge);
+            // The bar starts in the third column, after 4em + 5.5em, not in the badge's column.
+            const em = parseFloat(getComputedStyle(host).fontSize);
+            const barLeft = host.querySelector(".bar")!.getBoundingClientRect().left - host.getBoundingClientRect().left;
+            expect(barLeft).toBeCloseTo(9.5 * em, 0);
         });
     });
 
