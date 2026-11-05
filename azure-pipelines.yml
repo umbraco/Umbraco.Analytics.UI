@@ -55,6 +55,10 @@ extends:
     prerelease: ${{ parameters.prerelease }}
     # Every release-* tag, prereleases (e.g. release-19.0.0-rc.1) included, goes to NuGet.org after approval
     release: ${{ parameters.release }}
+    # Once Release has published, a GitHub release on the release-<version> tag with that version's notes from
+    # CHANGELOG.md (an RC uses its final version's section). The build fails if the section is missing or empty.
+    # "umbraco" is the GitHub connection this project already uses to fetch Umbraco.Build.
+    github_release_connection: umbraco
     run_tests: skip # No .NET test projects; client tests run in the ClientTests stage below
     # Client lint, browser tests (Chromium, Firefox, WebKit) and a Storybook build. Prerelease/Release
     # depend on this stage by name, so a failing test or a broken story blocks publishing.
