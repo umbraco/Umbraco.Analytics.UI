@@ -20,7 +20,7 @@ Paths are under `src/Umbraco.Analytics.UI/Client/src/`. The time zone in tests i
   Acceptance: HRS-8 specs green in `date-range/date-range.presets-today.test.ts`. Localization tests green.
   depends-on: T1 (both change `date-math.ts`)
 
-- [ ] **T4** - story: HRS-9 (AC1–AC3). `uauiFormatDateRange` returns the one date when `from` equals `to` (R30). The date range button uses it, so it follows.
+- [x] **T4** - story: HRS-9 (AC1–AC3). `uauiFormatDateRange` returns the one date when `from` equals `to` (R30). The date range button uses it, so it follows.
   Acceptance: HRS-9 specs green in `date-range/date-range.one-day.test.ts`. Existing date range tests green.
   depends-on: none. parallel-group: A
 
