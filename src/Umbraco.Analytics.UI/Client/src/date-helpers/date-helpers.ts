@@ -105,10 +105,12 @@ export type UauiFormatDateRangeOptions = {
 /**
  * A date range as the text `uaui-date-range` shows on its button, such as "May 25, 2026 to Jun 23, 2026": each date
  * in the medium style of the backoffice user's culture, joined by the translated `{0} to {1}` term. Use it for
- * the chart's `compareLabel`. Pass the element's `this.localize`. A date that isn't a real calendar date is shown as it is.
+ * the chart's `compareLabel`. Pass the element's `this.localize`. When `from` equals `to` the text is that one date alone.
+ * A date that isn't a real calendar date is shown as it is.
  */
 export function uauiFormatDateRange(localize: Pick<UmbLocalizationController, "date" | "term">, range: UauiDateSpan, options: UauiFormatDateRangeOptions = {}): string {
     const { from, to } = range;
     const display = options.showYear === false ? displayIsoDateWithoutYear : displayIsoDate;
+    if (from === to) return display(from, localize);
     return localize.term("uauiAnalytics_dateRangeRange", display(from, localize), display(to, localize));
 }

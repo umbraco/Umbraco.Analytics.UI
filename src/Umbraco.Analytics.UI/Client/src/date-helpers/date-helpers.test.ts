@@ -175,5 +175,8 @@ describe("Feature: public date helpers", () => {
         it("leaves the year off when asked", () => {
             expect(uauiFormatDateRange(localize, { from: "2026-05-25", to: "2026-06-23" }, { showYear: false })).toBe("May 25 to Jun 23");
         });
+        it("leaves the year off a one-day range too", () => {
+            expect(uauiFormatDateRange(localize, { from: "2026-11-05", to: "2026-11-05" }, { showYear: false })).toBe("Nov 5");
+        });
     });
 });
