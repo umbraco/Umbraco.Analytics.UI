@@ -1,7 +1,8 @@
-import { customElement, html, nothing, property, state, type TemplateResult } from "@umbraco-cms/backoffice/external/lit";
+import { css, customElement, html, nothing, property, state, type CSSResultGroup, type TemplateResult } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import "../delta-badge/delta-badge.element.js";
 import type { UauiDeltaBadgeSize, UauiDeltaUnit } from "../delta-badge/delta-badge.element.js";
+import { deltaChange } from "../internal/delta/delta-change.js";
 import { deltaScale } from "../internal/delta/delta-scale.js";
 import { asNumber } from "./internal/cell-values.js";
 import { UAUI_TABLE_CONTEXT } from "./table-context.js";
@@ -62,13 +63,25 @@ export class UauiTableCompareBadgeElement extends UmbLitElement {
         // Points are the difference of two percentages: fractions shown as percent (0.05 is 5%) are scaled to them first.
         // A percent change is a ratio, so it needs no scaling.
         const scale = deltaScale(unit, this.column.valueFormat);
+        const current = value * scale;
+        const previous = compare * scale;
+        // Nothing to show (e.g. a percent change from 0): draw no delta badge at all, so the space before it goes too.
+        if (deltaChange(undefined, current, previous, unit) === undefined) return nothing;
         return html`<uaui-delta-badge
             .size=${this.size}
-            .current=${value * scale}
-            .previous=${compare * scale}
+            .current=${current}
+            .previous=${previous}
             .unit=${unit}
             ?lower-is-better=${this.column.meta?.lowerIsBetter === true}></uaui-delta-badge>`;
     }
+
+    // The built-in cells space the badge from their value here, on the drawn badge, not with a flex gap: an empty
+    // badge then adds no space, while the element itself keeps its box for cells that lay it out in a slot.
+    static override styles: CSSResultGroup = css`
+        uaui-delta-badge {
+            margin-inline-start: var(--_uaui-table-compare-badge-gap, 0);
+        }
+    `;
 }
 
 declare global {

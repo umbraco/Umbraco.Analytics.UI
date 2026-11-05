@@ -56,12 +56,12 @@ export class UauiNumberCellElement extends UmbLitElement implements UauiTableCel
         .value {
             display: inline-flex;
             align-items: center;
-            gap: 6px;
             white-space: nowrap;
             height: var(--_uaui-table-line, 20px);
         }
 
         uaui-table-compare-badge {
+            --_uaui-table-compare-badge-gap: 6px;
             line-height: 1.4;
         }
     `;
