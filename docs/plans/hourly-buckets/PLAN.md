@@ -10,7 +10,7 @@ Paths are under `src/Umbraco.Analytics.UI/Client/src/`. The time zone in tests i
   Acceptance: new `internal/date/hour-math.test.ts` green, covering 2026-11-05, 2026-03-29 (23 hours) and 2026-10-25 (25 hours). Existing `date-math.test.ts` still green.
   depends-on: none. parallel-group: A
 
-- [ ] **T2** - story: HRS-1 (AC1–AC7). Rename `uauiDateBuckets` to `uauiTimeBuckets` and `UauiDateBucket` to `UauiTimeBucket` in `date-helpers/date-helpers.ts`, with no deprecated alias (nothing is released). Every bucket gains `end` (R21). With `"hour"`, buckets run from the range's first local midnight to the midnight after its last day, `start`/`end` as UTC instants and `days` the one local date (R20). Update `src/index.ts` exports, every caller in `examples/pages/`, and the README.
+- [x] **T2** - story: HRS-1 (AC1–AC7). Rename `uauiDateBuckets` to `uauiTimeBuckets` and `UauiDateBucket` to `UauiTimeBucket` in `date-helpers/date-helpers.ts`, with no deprecated alias (nothing is released). Every bucket gains `end` (R21). With `"hour"`, buckets run from the range's first local midnight to the midnight after its last day, `start`/`end` as UTC instants and `days` the one local date (R20). Update `src/index.ts` exports, every caller in `examples/pages/`, and the README.
   Acceptance: HRS-1 specs green in `date-helpers/date-helpers.hourly.test.ts`. Existing `date-helpers.test.ts` green after the rename. `npm run check:api` shows the rename and `end`.
   depends-on: T1
 

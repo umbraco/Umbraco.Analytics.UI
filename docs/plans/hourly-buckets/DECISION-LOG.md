@@ -23,3 +23,6 @@
 - **05-11-2026** (T1) `hourStart` subtracts the local minutes from the instant instead of calling `setMinutes(0)`, which folds the second 2 AM into the first on the day clocks go back. Assumes whole-minute zone offsets, true of every real zone.
 - **05-11-2026** (T1) `nextHour` is a flat +1 hour. Wrong only in Lord Howe's 30-minute DST shift, which was left out.
 - **05-11-2026** (T1) Local text in the DST gap ("2026-03-29T02:30") lands in the 3 AM hour, and in the repeated hour ("2026-10-25T02:30") in the first 2 AM, as every browser engine reads it. Tests record both.
+- **05-11-2026** (T2) `UauiDateBucketsOptions` also renamed, to `UauiTimeBucketsOptions`, to match the function.
+- **05-11-2026** (T2) `uauiTimeBuckets` takes `UauiGroupBy | "hour"` until T6 adds "hour" to `UauiGroupBy`; T6 collapses it.
+- **05-11-2026** (T2) A clipped first or last week or month bucket's `start..end` reaches past the range. The `days` doc tells products to clip their server query with `days` or the range.
