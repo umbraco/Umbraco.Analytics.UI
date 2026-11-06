@@ -28,7 +28,7 @@
 
 ## Shipping
 
-- [ ] **T6** - **wire: the line into Storybook and the public API.** story: KTD-5 (AC3). `kpi-tile.story.ts` gets a story per state: with a line, plain note, short number matching the value, badge wrapped below the line, long line cut, loading with a line, error. Update the element's docs page if it lists properties. Run `npm run check:api` and commit the `api/analytics-ui.api.md` change. Add one `### Added` line to `CHANGELOG.md` under `## [Unreleased]`: `uaui-kpi-tile`: `detail`, `detail-value` and `detail-format` show a short line under the value, such as "114.3K cached".
+- [x] **T6** - **wire: the line into Storybook and the public API.** story: KTD-5 (AC3). `kpi-tile.story.ts` gets a story per state: with a line, plain note, short number matching the value, badge wrapped below the line, long line cut, loading with a line, error. Update the element's docs page if it lists properties. Run `npm run check:api` and commit the `api/analytics-ui.api.md` change. Add one `### Added` line to `CHANGELOG.md` under `## [Unreleased]`: `uaui-kpi-tile`: `detail`, `detail-value` and `detail-format` show a short line under the value, such as "114.3K cached".
   Acceptance: Storybook builds and each new story renders as the mockup, checked by eye in light and dark. Story axe checks pass. `npm run lint`, `npm test`, `npm run build` pass.
   depends-on: T5
 
