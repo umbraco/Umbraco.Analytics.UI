@@ -22,7 +22,7 @@ Paths are under `src/Umbraco.Analytics.UI/Client/src/`. The time zone in tests i
 
 ## Tooltip and table
 
-- [ ] **T4** - story: EMP-3 (AC1). The tooltip's hovered slot comes from the mouse's x position on the x scale, not from Chart.js's nearest drawn point, so an empty slot can be hovered (ARCHITECTURE, Decisions). On an empty slot, the tooltip sits at the top of the plot. In `chart/internal/chart-renderer.ts`'s tooltip `external` handler and the `UauiChartHover` it raises.
+- [x] **T4** - story: EMP-3 (AC1). The tooltip's hovered slot comes from the mouse's x position on the x scale, not from Chart.js's nearest drawn point, so an empty slot can be hovered (ARCHITECTURE, Decisions). On an empty slot, the tooltip sits at the top of the plot. In `chart/internal/chart-renderer.ts`'s tooltip `external` handler and the `UauiChartHover` it raises.
   Acceptance: EMP-3 AC1 spec green in `chart/time-series-chart.empty-tooltip.test.ts`. Existing tooltip and hover tests green.
   depends-on: T3
 
