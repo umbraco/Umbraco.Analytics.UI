@@ -9,6 +9,7 @@ import { axeRun } from "../../../internal/test/a11y.js";
 import { renderPageExample, saveDateRange, withTheme } from "../../../internal/test/page-example.js";
 import { deepQuery, deepQueryAll, deepText, settle, shadow, type UauiTestElement } from "../../../internal/test/dom.js";
 import "./ai-usage-page.element.js";
+import { CLOCK } from "./ai-usage-fake-data.js";
 import type { UauiKpiTileElement } from "../../../kpi-tile/kpi-tile.element.js";
 import type { UauiTimeSeriesChartElement } from "../../../chart/time-series-chart.element.js";
 import type { UauiDataTableElement } from "../../../table/data-table.element.js";
@@ -22,6 +23,15 @@ const rowNames = (page: Element) =>
 const press = async (t: UauiKpiTileElement) => {
     await t.updateComplete;
     (t.shadowRoot!.querySelector("button") as HTMLButtonElement).click();
+};
+
+const pickHour = async (page: UauiTestElement) => {
+    // Saving the range closes the dialog and then re-offers the options, so wait for Hour to appear.
+    const hourButton = () => deepQuery<HTMLElement>(shadow(page).querySelector("uaui-group-by")!.shadowRoot!, "[data-value='hour']");
+    await expect.poll(hourButton).not.toBe(null);
+    hourButton()!.click();
+    await expect.poll(() => chart(page).groupBy).toBe("hour");
+    await settle(page);
 };
 
 /** Renders the page and waits until its first load has landed in the tiles, the chart and the table. */
@@ -269,17 +279,42 @@ describe("Feature: Umbraco AI usage page", () => {
         });
     });
 
+    // The unfinished bucket is marked at every group by, whenever the range holds today.
+    describe("Scenario: marking the unfinished part", () => {
+        it("marks it from now at day level when the range holds today", async () => {
+            const page = await renderPage();
+            expect(chart(page).incompleteFrom).toBe(CLOCK);
+        });
+
+        it("marks nothing when the range does not hold today", async () => {
+            const page = await renderPage();
+            await saveDateRange(page, { from: "2026-01-01", to: "2026-01-10" });
+            await expect.poll(() => chart(page).series[0]?.points.length === 10 && !chart(page).loading).toBe(true);
+            expect(chart(page).incompleteFrom).toBeUndefined();
+        });
+
+        it("marks it from now at hour level", async () => {
+            const page = await renderPage();
+            await saveDateRange(page, { preset: "today" });
+            await pickHour(page);
+            expect(chart(page).incompleteFrom).toBe(CLOCK);
+        });
+
+        it("draws no now line at day level", async () => {
+            const page = await renderPage();
+            expect(chart(page).now).toBeUndefined();
+        });
+
+        it("draws the now line at hour level when the range is today", async () => {
+            const page = await renderPage();
+            await saveDateRange(page, { preset: "today" });
+            await pickHour(page);
+            expect(chart(page).now).toBe(CLOCK);
+        });
+    });
+
     // HRS-10 — AI usage example shows Today by hour.
     describe("Scenario: Today by hour", () => {
-        const pickHour = async (page: UauiTestElement) => {
-            // Saving the range closes the dialog and then re-offers the options, so wait for Hour to appear.
-            const hourButton = () => deepQuery<HTMLElement>(shadow(page).querySelector("uaui-group-by")!.shadowRoot!, "[data-value='hour']");
-            await expect.poll(hourButton).not.toBe(null);
-            hourButton()!.click();
-            await expect.poll(() => chart(page).groupBy).toBe("hour");
-            await settle(page);
-        };
-
         it("draws 24 hourly dates", async () => {
             const page = await renderPage();
             await saveDateRange(page, { preset: "today" });

@@ -197,11 +197,16 @@ export class ExampleAiUsagePageElement extends UmbLitElement {
         this.#loadUsage();
     }
 
-    // This page marks now, and everything from it onward as incomplete, only at hour level and when the range holds
-    // today. At day, week and month it marks nothing, though the chart could.
-    get #now() {
+    // Whenever the range holds today, that bucket is unfinished at any group by, so everything from now is marked incomplete.
+    get #incompleteFrom() {
         const { from, to } = this._range;
-        return this._groupBy === "hour" && from <= TODAY && TODAY <= to ? NOW : undefined;
+        return from <= TODAY && TODAY <= to ? NOW : undefined;
+    }
+
+    // The now line only adds something at hour level, where it sits inside the day. At day, week and month it would
+    // point at the same bucket the hatch already marks.
+    get #now() {
+        return this._groupBy === "hour" ? this.#incompleteFrom : undefined;
     }
 
     // A tile was pressed: the chart plots that metric. Nothing is fetched, the buckets already hold every metric.
@@ -297,7 +302,7 @@ export class ExampleAiUsagePageElement extends UmbLitElement {
                             .compareLabel=${this._compare ? uauiFormatDateRange(this.localize, this._compare) : undefined}
                             .groupBy=${this._groupBy}
                             .now=${this.#now}
-                            .incompleteFrom=${this.#now}
+                            .incompleteFrom=${this.#incompleteFrom}
                             ?loading=${this._usageLoading}
                             ?error=${this._usageError}
                             retryable

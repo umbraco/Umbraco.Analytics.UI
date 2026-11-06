@@ -1,4 +1,4 @@
-// T58 — Time-series chart for Workflow: bars and a line in one chart (a series' `kind`), a today line (`today`) for
+// T58 — Time-series chart for Workflow: bars and a line in one chart (a series' `kind`), a now line (`now`) for
 // dates that run past today, and a log y-axis (`y-scale="log"`).
 // Canvas outcomes are read from the Chart.js chart (datasets, scales, element positions) and checked with screenshots.
 import { Chart } from "@umbraco/analytics-ui/external/chart.js";
@@ -281,7 +281,7 @@ describe("Feature: today's line", () => {
     });
 
     describe("Scenario: today isn't among the chart's dates", () => {
-        it("draws no today line and names no date as today", async () => {
+        it("draws no now line and names no date as today", async () => {
             const el = await chart({ kind: "bar", series: [reviews], now: "2026-12-24" });
             expect(rowHeaders(el).some((r) => r.includes("today"))).toBe(false);
         });

@@ -49,7 +49,7 @@ export default {
         chartMarkerSeparator: "; ",
         chartMarkersMore: "+{0} more",
         chartComparisonLabel: "Comparison",
-        // Drawn over the chart's today line.
+        // Drawn over the chart's now line when the chart is by day, week or month.
         chartToday: "Today",
         // Drawn over the chart's now line when the chart is by hour.
         chartNow: "Now",

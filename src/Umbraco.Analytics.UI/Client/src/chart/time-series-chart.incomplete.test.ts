@@ -233,7 +233,7 @@ describe("Feature: marking the incomplete part of a time series chart", () => {
     });
 
     describe("Scenario: the hatched band", () => {
-        it("is a plugin of each chart, before the today line, and never registered globally", async () => {
+        it("is a plugin of each chart, before the now line, and never registered globally", async () => {
             const first = await chart({ incompleteFrom: "2026-11-04", now: "2026-11-04" });
             const second = await chart({ incompleteFrom: "2026-11-04" });
             await settle(first);

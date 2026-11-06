@@ -245,11 +245,11 @@ export const StatusColorCompare: Story = {
  * drawing a labelled line. Try `stacked-bar` (the line doesn't stack) and `log`.
  */
 export const WorkflowActivity: Story = {
-    name: "Bars and a line, with today",
+    name: "Bars and a line, with now",
     args: { kind: "bar", series: workflowActivity, now: workflowToday },
 };
 
-/** Days after today: the series has a point (0) for each, and the today line shows where today is. */
+/** Days after today: the series has a point (0) for each, and the now line shows where today is. */
 export const DaysAfterToday: Story = {
     name: "Days after today",
     args: { kind: "bar", series: [workflowActivity[0]], now: workflowToday },
@@ -288,9 +288,9 @@ export const IncompleteWeeks: Story = {
     args: { kind: "bar", series: [sundayWeeks], groupBy: "week", weekStart: 7, incompleteFrom: "2026-06-22" },
 };
 
-/** `now` and `incomplete-from` are independent: the today line stays on top of the hatch. */
+/** `now` and `incomplete-from` are independent: the now line stays on top of the hatch. */
 export const IncompleteWithToday: Story = {
-    name: "Incomplete tail, with today",
+    name: "Incomplete tail, with now",
     args: { series: [pageviews], now: "2026-06-23", incompleteFrom: "2026-06-23" },
 };
 
