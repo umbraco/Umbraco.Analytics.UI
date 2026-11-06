@@ -8,7 +8,7 @@
   Acceptance: new cases in `src/internal/format/figure.test.ts` (create it if missing): 412000 with `compact: true` gives `{ text: "412K", exact: "412,000" }`; with `notation: "standard"` it stays "412,000"; existing tile and stat compact tests still green.
   depends-on: none. parallel-group: A
 
-- [ ] **T2** - story: KTD-1 (AC1, AC5, AC7, AC9–AC12), KTD-4 (AC6). New internal element `uaui-figure-detail` in `src/internal/figure/figure-detail.element.ts` (ARCHITECTURE, Decisions). Properties only: `pattern?: string`, `figure?: UauiFigureText`. Splits `pattern` at every `{0}` and renders the text parts as text with a `uaui-figure-value` in each gap. No `{0}`: renders the pattern as given. A `{0}` with no `figure`, or an empty pattern: renders nothing. Styles: 13px, weight 400, `--uui-color-text-alt`, `tabular-nums`, one line cut with "…" and a `title` of the full shown text (SPEC R0, R6, R7, R16, R17). Not exported from `src/index.ts`.
+- [x] **T2** - story: KTD-1 (AC1, AC5, AC7, AC9–AC12), KTD-4 (AC6). New internal element `uaui-figure-detail` in `src/internal/figure/figure-detail.element.ts` (ARCHITECTURE, Decisions). Properties only: `pattern?: string`, `figure?: UauiFigureText`. Splits `pattern` at every `{0}` and renders the text parts as text with a `uaui-figure-value` in each gap. No `{0}`: renders the pattern as given. A `{0}` with no `figure`, or an empty pattern: renders nothing. Styles: 13px, weight 400, `--uui-color-text-alt`, `tabular-nums`, one line cut with "…" and a `title` of the full shown text (SPEC R0, R6, R7, R16, R17). Not exported from `src/index.ts`.
   Acceptance: `src/internal/figure/figure-detail.test.ts` green, with an axe check.
   depends-on: none. parallel-group: A
 

@@ -12,3 +12,5 @@
 - **06-11-2026** (plan) Layout measuring (T4) comes after the line renders (T3), so the formatting rules can be tested on a plain row first; the skeleton height (T5) waits for T4 because it is sized from the final layout.
 - **06-11-2026** (plan) Added the AI usage example's cached-tokens line (T7) as the real-use check, since its fake data already has `cachedInputTokens`.
 - **06-11-2026** (T1) `compact: false` is the same as leaving the option out; only `true` forces short.
+- **06-11-2026** (T2) Text styles sit on the element's host; the clipping and `title` sit on an inner span, as `uaui-table-secondary-line` does. The title is the shown text ("114K cached"), not the exact amount, which the number keeps as its own hover title.
+- **06-11-2026** (T2) Open for the user: the line's `title` may reach screen readers as a description, repeating "114K cached" after the exact "114,300 cached". axe passes; worth a VoiceOver check at T6.
