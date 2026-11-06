@@ -263,7 +263,7 @@ export class UauiKpiTileElement extends UmbLitElement {
         this.#observed = [];
     }
 
-    protected override updated(changed: PropertyValues): void {
+    protected override updated(changed: PropertyValues<this>): void {
         super.updated(changed);
         this.#syncWrap();
     }

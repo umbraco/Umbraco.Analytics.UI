@@ -323,6 +323,8 @@ export function uauiGroupByOptions(range: UauiDateSpan): UauiGroupBy[];
 // @public
 export class UauiKpiTileElement extends UmbLitElement {
     color?: UauiStatusColor;
+    // (undocumented)
+    connectedCallback(): void;
     current?: number;
     delta?: number;
     deltaUnit: UauiDeltaUnit;
@@ -330,6 +332,8 @@ export class UauiKpiTileElement extends UmbLitElement {
     detail?: string;
     detailFormat?: Intl.NumberFormatOptions;
     detailValue?: number;
+    // (undocumented)
+    disconnectedCallback(): void;
     error: boolean;
     href?: string;
     icon?: string;
@@ -347,6 +351,8 @@ export class UauiKpiTileElement extends UmbLitElement {
     // (undocumented)
     static styles: CSSResultGroup;
     target?: "_blank" | "_parent" | "_self" | "_top";
+    // (undocumented)
+    protected updated(changed: PropertyValues<this>): void;
     value?: number | string;
     valueFormat?: Intl.NumberFormatOptions;
 }

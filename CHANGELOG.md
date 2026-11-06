@@ -11,6 +11,7 @@ The first release, for Umbraco CMS 19.
 ### Added
 
 - KPI tiles and figures: `uaui-kpi-tile`, `uaui-stat` and `uaui-delta-badge`.
+- `uaui-kpi-tile`: `detail`, `detail-value` and `detail-format` show a short line under the value, such as "114,300 cached". `{0}` in `detail` is replaced with `detail-value`, formatted like the value.
 - Charts: `uaui-time-series-chart`, `uaui-category-chart` and `uaui-funnel`.
 - Tables: `uaui-data-table` with sorting, search and paging (client or server mode), ready-made cells, and `uaui-table-compare-badge` and `uaui-table-skeleton-cell` for your own cells.
 - Filters: `uaui-date-range`, `uaui-group-by`, `uaui-toggle-group` and `uaui-search-field`.
