@@ -1,4 +1,4 @@
-import { css, customElement, html, ifDefined, nothing, property, type CSSResultGroup, type TemplateResult } from "@umbraco-cms/backoffice/external/lit";
+import { css, customElement, html, ifDefined, nothing, property, type CSSResultGroup, type LitElement, type TemplateResult } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { getLoadingMode, isBusy } from "../internal/loading/index.js";
 import { UauiVisuallyHiddenStyles } from "../internal/a11y/visually-hidden.css.js";
@@ -10,6 +10,8 @@ import type { UauiStatusColor } from "../theme/types.js";
 import type { UauiDeltaUnit } from "../delta-badge/delta-badge.element.js";
 import "../delta-badge/delta-badge.element.js";
 import "../internal/figure/figure-value.element.js";
+import { UauiWrapController } from "../internal/layout/wrap.controller.js";
+import { hasFigureDetail } from "../internal/figure/figure-detail.element.js";
 
 /**
  * A headline number as a card: an icon in a pink square, a label, the value and an optional change badge.
@@ -39,6 +41,12 @@ import "../internal/figure/figure-value.element.js";
  * shows a neutral badge. Instead of `delta` you can give the two numbers, `current` and `previous`, and the badge
  * works out the change, as `uaui-delta-badge` does. `current` defaults to a number `value`, so then `previous` is
  * enough, on the value's scale (fractions for points with a percent `valueFormat`). `delta` wins when both are set.
+ *
+ * Give `detail` to add a quieter second line under the value, e.g. a part of the total ("114,300 cached"). `detail` is the
+ * text, already translated by the product, with `{0}` where the number goes; `detailValue` is that number, formatted like
+ * the value (or with `detailFormat`). The text is shown as text, never HTML, and only `{0}` is filled. When the value is
+ * shown compact, the line's number is too. A pattern with `{0}` but no finite `detailValue`, no `detail`, no `value`, `error` and
+ * `no-data` show no line. While `loading` with a `value` the line stays.
  *
  * @element uaui-kpi-tile
  * @fires selected - A selectable, unselected tile was pressed. Cancelable: cancel it to keep the tile unselected.
@@ -71,6 +79,25 @@ export class UauiKpiTileElement extends UmbLitElement {
      */
     @property({ type: Object, attribute: "value-format" })
     valueFormat?: Intl.NumberFormatOptions;
+
+    /**
+     * The text of a second line under the value, already translated by the product (e.g. `this.localize.term(...)`),
+     * with `{0}` where `detailValue` goes, e.g. `{0} cached`. Only `{0}` is filled; other placeholders stay as typed. It
+     * is shown as text, never HTML. With no `{0}` it is a plain note. Unset or empty shows no line, and so does a tile with no `value`.
+     */
+    @property({ type: String })
+    detail?: string;
+
+    /** The number for the `{0}` in `detail`. Not a finite number shows no line when `detail` has a `{0}`. */
+    @property({ type: Number, attribute: "detail-value" })
+    detailValue?: number;
+
+    /**
+     * How `detailValue` is formatted, as `valueFormat`. Defaults to `valueFormat`. The number is shown compact when the
+     * value is, or when it is 1,000,000 or more, unless this sets `notation`.
+     */
+    @property({ type: Object, attribute: "detail-format" })
+    detailFormat?: Intl.NumberFormatOptions;
 
     /**
      * The range has no data. Shows a dash with the hidden text "No data for this period" in place of the value, and no
@@ -174,11 +201,30 @@ export class UauiKpiTileElement extends UmbLitElement {
     @property({ type: Boolean })
     deselectable = true;
 
+    // Whether the badge no longer fits beside the value, so a tile with a line puts it below the line. Only a tile with
+    // a line and a badge has a layout to choose; any other is the plain flex row, which wraps by itself.
+    #wrap = new UauiWrapController(this, () => {
+        const row = this.renderRoot?.querySelector<HTMLElement>(".row.has-detail");
+        const value = row?.querySelector<HTMLElement>(".value");
+        const badge = row?.querySelector<HTMLElement>("uaui-delta-badge");
+        if (!row || !value || !badge) return null;
+        return { row, first: value, second: badge, settle: [value.querySelector<LitElement>("uaui-figure-value"), badge as LitElement] };
+    });
+
     #formatter = new UauiFigureFormatter();
+    // A separate instance for the line: the formatter keeps one set of formats, and the line's options differ.
+    #detailFormatter = new UauiFigureFormatter();
 
     // The text to show (and the exact amount behind a compact one), or undefined for no value. The formatter is built on first use and kept per language and options.
     get #shown(): UauiFigureText | undefined {
         return this.#formatter.figure(this.value, this.localize.lang(), this.valueFormat);
+    }
+
+    // The line's number, short whenever the value is (an `exact` means the value was shortened) unless the line's format sets a notation.
+    #detailFigure(shown: UauiFigureText | undefined): UauiFigureText | undefined {
+        return this.#detailFormatter.figure(this.detailValue, this.localize.lang(), this.detailFormat ?? this.valueFormat, {
+            compact: shown?.exact !== undefined,
+        });
     }
 
     // The badge's two numbers: `current` and `previous`, or a number `value` and `previous` on its scale.
@@ -211,6 +257,9 @@ export class UauiKpiTileElement extends UmbLitElement {
         const hasValue = shown !== undefined;
         const mode = getLoadingMode(this.loading, hasValue || this.noData, this.error);
         const busy = isBusy(this.loading, this.error);
+        // No line when the tile shows no value (a part of nothing reads wrong) or when the line would draw nothing.
+        const detailFigure = this.#detailFigure(shown);
+        const showDetail = hasValue && !this.error && !this.noData && hasFigureDetail(this.detail, detailFigure);
 
         const content = html`${this.icon
                 ? html`<span class="icon" aria-hidden="true"><uui-icon name=${this.icon}></uui-icon></span>`
@@ -221,7 +270,7 @@ export class UauiKpiTileElement extends UmbLitElement {
                       html`<span class="visually-hidden">${this.label}</span><uaui-skeleton></uaui-skeleton>`
                     : html`<span class="body">
                           <span class="label">${this.label}</span>
-                          <span class="row">
+                          <span class=${showDetail ? (this.#wrap.wrapped ? "row has-detail wrapped" : "row has-detail") : "row"}>
                               ${this.error || this.noData
                                   ? html`<span class="value no-data"
                                         ><span aria-hidden="true">—</span
@@ -230,6 +279,9 @@ export class UauiKpiTileElement extends UmbLitElement {
                                   : hasValue
                                     ? html`<span class="value"><uaui-figure-value .figure=${shown}></uaui-figure-value></span>`
                                     : nothing}
+                              ${showDetail
+                                  ? html`<uaui-figure-detail class="detail" .pattern=${this.detail} .figure=${detailFigure}></uaui-figure-detail>`
+                                  : nothing}
                               ${this.error || this.noData || !this.#hasChange(figures)
                                   ? nothing
                                   : html`<uaui-delta-badge
@@ -247,11 +299,13 @@ export class UauiKpiTileElement extends UmbLitElement {
     }
 
     #tile(content: TemplateResult): TemplateResult {
+        // Marks a tile asked for a line, so its skeleton can reserve the room for it in CSS.
+        const hasDetail = this.detail ? " reserve-detail" : "";
         // A native button gives Enter and Space for free, and both arrive as one click.
         if (this.selectable) {
             return html`<button
                 type="button"
-                class="tile selectable"
+                class="tile selectable${hasDetail}"
                 aria-pressed=${this.selected ? "true" : "false"}
                 @click=${this.#toggle}>
                 ${content}<span class="select-border" aria-hidden="true"></span>
@@ -260,13 +314,28 @@ export class UauiKpiTileElement extends UmbLitElement {
         const href = safeHref(this.href);
         if (href) {
             const rel = this.rel || (this.target === "_blank" ? "noopener noreferrer" : undefined);
-            return html`<a class="tile open" href=${href} target=${ifDefined(this.target || undefined)} rel=${ifDefined(rel)}>${content}</a>`;
+            return html`<a class="tile open${hasDetail}" href=${href} target=${ifDefined(this.target || undefined)} rel=${ifDefined(rel)}>${content}</a>`;
         }
         return this.openable
-            ? html`<button type="button" class="tile open" @click=${this.#open}>${content}</button>`
-            : html`<div class="tile">${content}</div>`;
+            ? html`<button type="button" class="tile open${hasDetail}" @click=${this.#open}>${content}</button>`
+            : html`<div class="tile${hasDetail}">${content}</div>`;
     }
 
+    // Notes on the CSS below (kept out of the template so they don't ship in the bundle):
+    // - --_uaui-kpi-value-size on .tile is the value's size, set once: 24px from a 240px tile, stepping down smoothly to
+    //   18px at 180px. The skeleton heights read it too, so they follow the value down.
+    // - .value's font-size is a backup for a very long number, stepping down with the tile.
+    // - .row.has-detail is a grid. The value and badge fit on one line: the badge beside the value, the line below both.
+    //   They don't (the tile measures it, see "wrapped"): the value, the line, then the badge. The value and the badge stay
+    //   max-content wide in both, so what the tile measures doesn't change with the layout it picks.
+    // - .tile.reserve-detail: with a line the skeleton is the height of a loaded tile with it, so the tile doesn't jump.
+    //   From the top: the label (12px * 1.3), 5px, the value row, 5px, the line (13px * 1.3). The row is the value
+    //   (1.1 * its font size) or the badge (24px) if taller: 26.4px at 24px, 24px at the 20px the value steps down to in a
+    //   200px cell. This is the wide layout, the badge beside the value; a tile whose badge wraps below the value is taller
+    //   still and grows to fit it. The narrow block sets the wrapped height.
+    // - The narrow .tile.reserve-detail rule reserves the wrapped layout, loaded or not: label (12px * 1.3), 5px, the
+    //   value (1.1 * its font size), 5px, the line (13px * 1.3), 5px, the badge's 3px margin and its 24px. It comes after
+    //   the wide rule with the same specificity, so it wins.
     static override styles: CSSResultGroup = [
         UauiPaletteStyles,
         UauiVisuallyHiddenStyles,
@@ -298,6 +367,7 @@ export class UauiKpiTileElement extends UmbLitElement {
             }
 
             .tile {
+                --_uaui-kpi-value-size: clamp(18px, 10cqi, 24px);
                 box-sizing: border-box;
                 height: 100%;
                 display: flex;
@@ -469,10 +539,41 @@ export class UauiKpiTileElement extends UmbLitElement {
                 gap: 8px 10px;
             }
 
+            .row.has-detail {
+                display: grid;
+                grid-template-columns: auto minmax(0, 1fr);
+                grid-template-areas: "value badge" "detail detail";
+                justify-content: start;
+                align-items: center;
+                gap: 5px 10px;
+            }
+
+            .row.has-detail.wrapped {
+                grid-template-columns: auto;
+                grid-template-areas: "value" "detail" "badge";
+            }
+
+            .row.has-detail .value {
+                grid-area: value;
+                width: max-content;
+            }
+
+            .row.has-detail .detail {
+                grid-area: detail;
+            }
+
+            .row.has-detail uaui-delta-badge {
+                grid-area: badge;
+                justify-self: start;
+            }
+
+            .row.has-detail.wrapped uaui-delta-badge {
+                margin-top: 3px;
+            }
+
             .value {
                 display: block;
-                /* Backup for a very long number: 24px from a 240px tile, stepping down smoothly to 18px at 180px. */
-                font-size: clamp(18px, 10cqi, 24px);
+                font-size: var(--_uaui-kpi-value-size);
                 font-weight: 700;
                 line-height: 1.1;
                 white-space: nowrap;
@@ -499,6 +600,16 @@ export class UauiKpiTileElement extends UmbLitElement {
                     align-self: stretch;
                     /* Top-aligned, so labels line up across a row when one tile's badge wraps and another's doesn't. */
                     justify-content: flex-start;
+                }
+            }
+
+            .tile.reserve-detail {
+                --_uaui-skeleton-height: calc(12px * 1.3 + 5px + max(24px, 1.1 * var(--_uaui-kpi-value-size)) + 5px + 13px * 1.3);
+            }
+
+            @container (width < 240px) {
+                .tile.reserve-detail {
+                    --_uaui-skeleton-height: calc(12px * 1.3 + 5px + 1.1 * var(--_uaui-kpi-value-size) + 5px + 13px * 1.3 + 5px + 3px + 24px);
                 }
             }
 

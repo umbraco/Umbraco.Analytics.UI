@@ -1,0 +1,94 @@
+<!doctype html>
+<!-- KPI tile second line mockup. Built from the devkit dashboard starter. Tile CSS copied from src/kpi-tile/kpi-tile.element.ts,
+     badge from src/delta-badge/delta-badge.element.ts, skeleton from src/internal/loading/skeleton.element.ts. Harness is the
+     newest look it supports (Umbraco 18); CMS 19 uses the same UUI 2. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Mockup: KPI tile second line</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@umbraco-ui/uui@2/dist/themes/light.css">
+<link rel="stylesheet" href="_mockup.css">
+<script type="module" src="_mockup.js"></script>
+<style>
+:root { --pos-bg:#d8f2e1; --pos-fg:#1e6b3a; --neg-bg:#fbe2e2; --neg-fg:#a4262c; --neu-bg:#ececf0; }
+h4.caption { margin: 18px 0 8px; font-size: 13px; color: var(--uui-color-text-alt); font-weight: 600; }
+.grid { display:grid; gap:16px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+.grid.two { grid-template-columns: repeat(2, 1fr); }
+.narrow { display:grid; gap:12px; grid-template-columns: repeat(4, 200px); }
+.tile { box-sizing:border-box; height:100%; display:flex; align-items:center; gap:14px; padding:16px 20px; background: var(--uui-color-surface);
+  border:1px solid var(--uui-color-border); border-radius: var(--uui-border-radius-3); box-shadow: 0 1px 3px rgba(0,0,0,.06); }
+.narrow .tile { flex-direction:column; align-items:flex-start; gap:12px; }
+.icon { flex:0 0 auto; display:inline-flex; align-items:center; justify-content:center; width:48px; height:48px; border-radius:9px;
+  background:#f5c1bc; color:#1b264f; font-size:20px; }
+.content { flex:1; min-width:0; min-height:48px; display:flex; flex-direction:column; justify-content:center; }
+.narrow .content { flex:0 0 auto; align-self:stretch; justify-content:flex-start; min-height:76px; }
+.body { display:flex; flex-direction:column; gap:5px; }
+.label { font-size:12px; font-weight:600; line-height:1.3; color: var(--uui-color-text-alt); text-transform:uppercase; letter-spacing:.4px; }
+.row { display:flex; flex-wrap:wrap; align-items:flex-start; gap:8px 10px; }
+/* NEW: with a line, the row is a grid. Value and badge fit on one line: badge beside the value, line below both.
+   They don't fit: value, line, then badge, so the value and line stay together. The tile measures which applies. */
+.row.has-detail { display:grid; grid-template-columns:auto auto; justify-content:start; align-items:center; gap:5px 10px;
+  grid-template-areas:"value badge" "detail detail"; }
+.row.has-detail.wrapped { grid-template-columns:auto; grid-template-areas:"value" "detail" "badge"; }
+.row.has-detail .value { grid-area:value; } .row.has-detail .detail { grid-area:detail; } .row.has-detail .badge { grid-area:badge; justify-self:start; }
+.row.has-detail.wrapped .badge { margin-top:3px; }
+.value { font-size:24px; font-weight:700; line-height:1.1; white-space:nowrap; color: var(--uui-color-text); }
+.narrow .value { font-size:20px; }
+.no-data { color: var(--uui-color-text-alt); }
+/* NEW: the second line. */
+.detail { font-size:13px; line-height:1.3; color: var(--uui-color-text-alt); font-variant-numeric: tabular-nums; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.badge { display:inline-flex; align-items:center; gap:4px; padding:4px 8px; border-radius:3px; font-size:13px; font-weight:700; white-space:nowrap; }
+.pos { background:var(--pos-bg); color:var(--pos-fg); } .neg { background:var(--neg-bg); color:var(--neg-fg); }
+.skel { width:100%; height:69px; border-radius: var(--uui-border-radius); background: var(--neu-bg); }
+.narrow .skel { height:131px; }
+.note { font-size:12px; color: var(--uui-color-text-alt); margin-top:6px; }
+</style>
+</head>
+<body class="uui-font uui-text">
+<header class="app-header"><span class="logo">Umbraco</span>
+<uui-tab-group class="sections"><uui-tab label="Content">Content</uui-tab><uui-tab label="Settings">Settings</uui-tab><uui-tab label="AI" active>AI</uui-tab></uui-tab-group>
+<div class="apps"><uui-button look="primary" compact label="User"><uui-avatar name="Matt Brailsford"></uui-avatar></uui-button></div></header>
+<div class="section">
+<nav class="section-sidebar"><h3>AI</h3><uui-menu-item label="Usage" active><uui-icon slot="icon" name="icon-chart-curve"></uui-icon></uui-menu-item></nav>
+<main class="section-main"><div class="body-layout"><div class="main"><div class="dashboard">
+<!-- Replace from here -->
+<h4 class="caption">Wide tiles (240px and up): value and badge fit on one line, so the badge stays beside the value and the line goes under both</h4>
+<div class="grid two">
+  <div class="tile"><span class="icon"><uui-icon name="icon-download-alt"></uui-icon></span><span class="content"><span class="body">
+    <span class="label">Input tokens</span><span class="row has-detail"><span class="value">134.8K</span><span class="detail">114.3K cached</span><span class="badge pos">▲ 18.7%</span></span></span></span></div>
+  <div class="tile"><span class="icon"><uui-icon name="icon-out"></uui-icon></span><span class="content"><span class="body">
+    <span class="label">Output tokens</span><span class="row"><span class="value">21.4K</span><span class="badge neg">▼ 4.2%</span></span></span></span></div>
+  <div class="tile"><span class="icon"><uui-icon name="icon-coin-euro"></uui-icon></span><span class="content"><span class="body">
+    <span class="label">Cost</span><span class="row has-detail"><span class="value">€12.40</span><span class="detail">Estimated</span></span></span></span></div>
+  <div class="tile"><span class="icon"><uui-icon name="icon-chat"></uui-icon></span><span class="content"><span class="body">
+    <span class="label">Requests</span><span class="row has-detail"><span class="value">1.28M</span><span class="detail">412K from agents</span><span class="badge pos">▲ 3.1%</span></span></span></span></div>
+</div>
+<p class="note">"Cost" shows a plain note (no <code>{0}</code>). "Requests" passes 1,280,000 and 412,000: the value shortens on its own, so the line shortens too. "Output tokens" has no line and keeps its height; the grid stretches it to the row.</p>
+
+<h4 class="caption">Narrow tiles (under 240px): value and badge don't fit on one line, so the badge goes below the line and the value and line stay together</h4>
+<div class="narrow">
+  <div class="tile"><span class="icon"><uui-icon name="icon-download-alt"></uui-icon></span><span class="content"><span class="body">
+    <span class="label">Input tokens</span><span class="row has-detail wrapped"><span class="value">134.8K</span><span class="detail">114.3K cached</span><span class="badge pos">▲ 18.7%</span></span></span></span></div>
+  <div class="tile"><span class="icon"><uui-icon name="icon-out"></uui-icon></span><span class="content"><span class="body">
+    <span class="label">Output tokens</span><span class="row"><span class="value">21.4K</span><span class="badge neg">▼ 4.2%</span></span></span></span></div>
+  <div class="tile"><span class="icon"><uui-icon name="icon-download-alt"></uui-icon></span><span class="content"><span class="body">
+    <span class="label">Input tokens</span><span class="row has-detail wrapped"><span class="value">1,348,200</span><span class="detail">1,143,000 cached by provi…</span></span></span></span></div>
+  <div class="tile"><span class="icon"><uui-icon name="icon-download-alt"></uui-icon></span><span class="content"><span class="skel"></span></span></div>
+</div>
+<p class="note">Third tile: a long line is cut with "…" and the full text shows on hover. Last tile: loading, with the line set, so the placeholder is the height of a loaded tile with its line.</p>
+
+<h4 class="caption">Other states</h4>
+<div class="grid">
+  <div class="tile"><span class="icon"><uui-icon name="icon-download-alt"></uui-icon></span><span class="content"><span class="skel"></span></span></div>
+  <div class="tile"><span class="icon"><uui-icon name="icon-download-alt"></uui-icon></span><span class="content"><span class="body">
+    <span class="label">Input tokens</span><span class="row"><span class="value no-data">—</span></span></span></span></div>
+  <div class="tile"><span class="icon"><uui-icon name="icon-download-alt"></uui-icon></span><span class="content"><span class="body">
+    <span class="label">Input tokens</span><span class="row"><span class="value no-data">—</span></span></span></span></div>
+  <div class="tile"><span class="icon"><uui-icon name="icon-download-alt"></uui-icon></span><span class="content"><span class="body">
+    <span class="label">Input tokens</span><span class="row"><span class="value">134.8K</span><span class="badge pos">▲ 18.7%</span></span></span></span></div>
+</div>
+<p class="note">Left to right: first load (placeholder sized for the line); error and no data (dash, no badge, no line); a number pattern with no number yet (no line).</p>
+<!-- Replace to here -->
+</div></div></div></main></div>
+</body>
+</html>

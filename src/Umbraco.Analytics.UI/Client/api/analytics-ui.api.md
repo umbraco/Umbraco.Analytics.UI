@@ -327,6 +327,9 @@ export class UauiKpiTileElement extends UmbLitElement {
     delta?: number;
     deltaUnit: UauiDeltaUnit;
     deselectable: boolean;
+    detail?: string;
+    detailFormat?: Intl.NumberFormatOptions;
+    detailValue?: number;
     error: boolean;
     href?: string;
     icon?: string;

@@ -16,6 +16,9 @@ const meta: Meta<UauiKpiTileElement> = {
         icon: "icon-coins",
         delta: 18.7,
         deltaUnit: "percent",
+        detail: undefined,
+        detailValue: undefined,
+        detailFormat: undefined,
         lowerIsBetter: false,
         loading: false,
         noData: false,
@@ -41,6 +44,9 @@ const meta: Meta<UauiKpiTileElement> = {
                 .current=${args.current}
                 .previous=${args.previous}
                 .deltaUnit=${args.deltaUnit}
+                .detail=${args.detail}
+                .detailValue=${args.detailValue}
+                .detailFormat=${args.detailFormat}
                 .lowerIsBetter=${args.lowerIsBetter}
                 .loading=${args.loading}
                 .noData=${args.noData}
@@ -129,6 +135,89 @@ export const NoData: Story = { args: { value: undefined, delta: undefined, noDat
 export const LoadFailed: Story = { args: { error: true, selectable: true } };
 
 export const NoDelta: Story = { args: { label: "Orders", value: 26, valueFormat: undefined, icon: "icon-inbox", delta: undefined } };
+
+// The default render is 240px, where the badge wraps under the value; these stories are wider so the line sits under both.
+const detailTile = (args: Story["args"] & object, width: number) =>
+    html`<div style="width: ${width}px">
+        <uaui-kpi-tile
+            .label=${args.label}
+            .value=${args.value}
+            .icon=${args.icon}
+            .delta=${args.delta}
+            .detail=${args.detail}
+            .detailValue=${args.detailValue}></uaui-kpi-tile>
+    </div>`;
+
+const TOKENS: Story["args"] = { label: "Input tokens", value: 134800, valueFormat: undefined, icon: "icon-chart-curve", delta: 18.7 };
+
+/**
+ * A quieter second line under the value, for a part of the total. `detail` is the text with `{0}` where the number goes,
+ * already translated by the product; `detailValue` is the number, formatted like the value (or with `detailFormat`).
+ * A value under 1,000,000 is not shortened.
+ */
+export const WithDetail: Story = {
+    name: "With detail",
+    args: { ...TOKENS, detail: "{0} cached", detailValue: 114300 },
+    render: (args) => detailTile(args, 320),
+};
+
+/** A `detail` with no `{0}` is shown as given, with no `detailValue`: a plain note. */
+export const DetailNote: Story = {
+    name: "Detail, plain note",
+    args: { label: "Cost", value: 12.4, valueFormat: EUR, icon: "icon-coins", delta: undefined, detail: "Estimated" },
+};
+
+/** When the value is shown short (1,000,000 or more), the line's number is short too, even under 1,000,000: "412K from agents". The exact amount is its hover title and what screen readers read. */
+export const DetailShortNumber: Story = {
+    name: "Detail, short number",
+    args: { label: "Requests", value: 1280000, valueFormat: undefined, icon: "icon-chart-curve", delta: 18.7, detail: "{0} from agents", detailValue: 412000 },
+};
+
+/** When the value and the badge don't fit on one line, they stack in that order: value, line, then badge. Shown in a 180px cell. */
+export const DetailBadgeWrapped: Story = {
+    name: "Detail, badge wrapped",
+    render: () =>
+        html`<div style="width: 180px">
+            <uaui-kpi-tile label="Input tokens" .value=${134800} icon="icon-chart-curve" .delta=${18.7} detail="{0} cached" .detailValue=${114300}></uaui-kpi-tile>
+        </div>`,
+};
+
+/** A line too long for the tile is cut with "…", with the full text as its hover title. */
+export const DetailLong: Story = {
+    name: "Detail, long line",
+    args: { ...TOKENS, detail: "{0} served from the prompt cache across all agents and models", detailValue: 114300 },
+    render: (args) => detailTile(args, 320),
+};
+
+/** First load with a `detail` set: the skeleton is the height of a loaded tile with its line. */
+export const DetailLoading: Story = {
+    name: "Detail, loading",
+    args: { ...TOKENS, value: undefined, delta: undefined, loading: true, detail: "{0} cached", detailValue: 114300 },
+};
+
+/** Reloading with a value already shown: the value and the line stay, the tile is marked busy. */
+export const DetailReloading: Story = {
+    name: "Detail, reloading",
+    args: { ...TOKENS, loading: true, detail: "{0} cached", detailValue: 114300 },
+};
+
+/** The load failed: no line, only the dash, even though `detail` is set. */
+export const DetailError: Story = {
+    name: "Detail, error",
+    args: { ...TOKENS, error: true, detail: "{0} cached", detailValue: 114300 },
+};
+
+/** A row of tiles where some have a line. Tiles in one grid row keep the same height. */
+export const RowWithDetail: Story = {
+    name: "Row with detail",
+    render: () =>
+        html`<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; max-width: 1000px">
+            <uaui-kpi-tile label="Input tokens" .value=${134800} icon="icon-chart-curve" .delta=${18.7} detail="{0} cached" .detailValue=${114300}></uaui-kpi-tile>
+            <uaui-kpi-tile label="Requests" .value=${1280000} icon="icon-chart-curve" .delta=${8.1} detail="{0} from agents" .detailValue=${412000}></uaui-kpi-tile>
+            <uaui-kpi-tile label="Cost" .value=${12.4} .valueFormat=${EUR} icon="icon-coins" detail="Estimated"></uaui-kpi-tile>
+            <uaui-kpi-tile label="Errors" .value=${26} icon="icon-alert" .delta=${-3.2}></uaui-kpi-tile>
+        </div>`,
+};
 
 /** First load: a skeleton the size of a loaded tile. */
 export const Loading: Story = { args: { value: undefined, loading: true } };
