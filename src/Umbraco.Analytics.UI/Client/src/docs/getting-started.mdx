@@ -121,7 +121,7 @@ For a metric where a fall is good (refund rate, bounce rate, average duration), 
 Set `group-by="hour"` to draw one bar per hour. Offer it with `uauiGroupByOptions(range)`: a range of two days or fewer gets `["hour", "day"]`, any other range `["day", "week", "month"]`. Pass the result to `uaui-group-by` as `options`. When the current value isn't in the new list after the range changes, switch to the list's first option. The chart itself draws hourly for any range, so you can break the two-day limit on purpose.
 
 ```ts
-import { uauiGroupByOptions, uauiBucketsFor, type UauiGroupByChangeDetail } from "@umbraco/analytics-ui";
+import { uauiBucketsFor, uauiGroupByOptions, type UauiGroupByChangeDetail } from "@umbraco/analytics-ui";
 
 const options = uauiGroupByOptions(range); // ["hour", "day"] for a one or two day range
 if (!options.includes(this._groupBy)) this._groupBy = options[0];
@@ -207,7 +207,7 @@ Replace `rows` and `columns` with new arrays to update the table. Changing them 
 Small functions for the dates around the picker, so each product doesn't write its own. A range is `{ from, to }` in ISO dates: a `UauiDateRange` or a `UauiCompare` fits. A range that isn't valid (an unreal date, or `to` before `from`) gives `undefined`, or an empty list for the day and bucket helpers.
 
 ```ts
-import { uauiCompareFor, uauiBucketsFor, uauiFormatDateRange } from "@umbraco/analytics-ui";
+import { uauiBucketsFor, uauiCompareFor, uauiFormatDateRange } from "@umbraco/analytics-ui";
 
 const range = { from: "2026-05-25", to: "2026-06-23" };
 const compare = uauiCompareFor("previous-period", range); // { mode, from: "2026-04-25", to: "2026-05-24" }

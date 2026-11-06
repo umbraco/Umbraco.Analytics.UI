@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 import type { UauiCompare } from "../date-range/types.js";
 import {
-    uauiCompareFor,
     uauiBucketsFor,
+    uauiCompareFor,
     uauiDaysIn,
     uauiFormatDateRange,
     uauiPresetRange,
