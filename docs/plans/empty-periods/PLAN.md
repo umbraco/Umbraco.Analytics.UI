@@ -16,7 +16,7 @@ Paths are under `src/Umbraco.Analytics.UI/Client/src/`. The time zone in tests i
 
 ## Drawing
 
-- [ ] **T3** - story: EMP-2 (AC1–AC5). In `chart/internal/chart-renderer.ts`, the series line (`#lineDataset`) and the compare line (`#compareLineDataset`) set `spanGaps: false` (SPEC R5). A value whose neighbours on both sides are `null` (or the chart's edge) gets a dot of radius 2, even when `showDots` is off or the line has a compare line, through a scriptable `pointRadius` (SPEC R6). No new plugin, no `Chart.defaults` change.
+- [x] **T3** - story: EMP-2 (AC1–AC5). In `chart/internal/chart-renderer.ts`, the series line (`#lineDataset`) and the compare line (`#compareLineDataset`) set `spanGaps: false` (SPEC R5). A value whose neighbours on both sides are `null` (or the chart's edge) gets a dot of radius 2, even when `showDots` is off or the line has a compare line, through a scriptable `pointRadius` (SPEC R6). No new plugin, no `Chart.defaults` change.
   Acceptance: EMP-2 specs green in `chart/time-series-chart.empty-lines.test.ts`. `time-series-chart.isolation.test.ts` and the existing screenshot tests green (update a screenshot only where a gap is now drawn, and say which in the commit).
   depends-on: T1. parallel-group: B
 
