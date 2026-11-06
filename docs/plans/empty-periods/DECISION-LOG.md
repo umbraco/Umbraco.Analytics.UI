@@ -1,0 +1,11 @@
+# Decision log: Empty periods in the time series chart
+
+- **06-11-2026** User: fill the x-axis from `range` rather than add `value: null` to `UauiPoint`. Leaving a point out already means "no value"; `null` can be added later without breaking anything, but not taken back.
+- **06-11-2026** User: products send 0 for counts themselves. The chart can't tell a count from a rate, so it never fills with 0.
+- **06-11-2026** User approved the brief's guesses: no `range` keeps today's axis, points outside `range` still show, compare lines, area fills and bars leave empty periods blank, a new short "No data" key, markers on empty periods show, and the Commerce example stops showing 0% rates.
+- **06-11-2026** (design) Slots are built in `buildChartData` from the internal `dateBuckets` (the code behind `uauiBucketsFor`), with each bucket start run through the chart's own `keyOf`. At hour level that makes a clock-change day's 23 or 25 slots match the points' keys, which closes the brief's hour-level unknown.
+- **06-11-2026** (design) Lines move to `spanGaps: false`, as the share view already is. A lone value gets a dot even when dots are off, or it would draw nothing.
+- **06-11-2026** (design) The hovered slot comes from the x position: Chart.js's index mode skips null points, so an empty slot could not be hovered otherwise.
+- **06-11-2026** User approved the design's guesses: hover by x position, points not snapped to bucket starts, every line breaks at a missing value (no bridging setting), the tooltip lists every series with "No data" for an empty one, and one `uauiAnalytics_chartNoData` key for tooltip and table (compare cells too).
+- **06-11-2026** (plan) Correction: the Commerce example already leaves a rate out when there is nothing to divide by (`rateOf` in `commerce-analytics-page.element.ts`); the `rate()` that returns 0 only feeds range totals, which the tiles guard with `no-data`. So no example data changes. BRIEF, SPEC R13, ARCHITECTURE and EMP-6 now check that the Commerce chart shows the days before the store opened as empty.
+- **06-11-2026** (plan) T1 (slots) blocks every other task: they all need empty slots to exist. T3 and T4 run in order because both change `chart-renderer.ts`; T5 follows T4 because the tooltip can only say "No data" once an empty slot can be hovered.
