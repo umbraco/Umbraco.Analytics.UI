@@ -22,7 +22,8 @@ export interface UauiChartTooltipRow {
     color: UauiSeriesColorKey;
     /** Draws a square in the bar colour (`true`) or a dot (`false`) for this row. Defaults to the tooltip's `bars`. */
     bar?: boolean;
-    value: number;
+    /** The series' value. `null` when it has none at the hovered x value: the row reads "No data", with no compare change. */
+    value: number | null;
     /**
      * The share view: the value's share (0 to 1) of the hovered x value's total, shown first, with `value` after it.
      * `null` when there is no share to show (the total is 0): the row shows `value` alone. Left out outside the share view.
@@ -53,7 +54,7 @@ export class UauiChartTooltipElement extends UmbLitElement {
     @property({ type: String })
     heading = "";
 
-    /** The rows to list: only series with a point at the hovered x value. */
+    /** The rows to list: one per series, a series with no point reading "No data". */
     @property({ attribute: false })
     rows: UauiChartTooltipRow[] = [];
 
@@ -111,20 +112,23 @@ export class UauiChartTooltipElement extends UmbLitElement {
     get #shownRows(): { rows: UauiChartTooltipRow[]; more: number } {
         const max = Math.max(Math.floor(this.maxRows) || TOOLTIP_MAX_ROWS, 2);
         if (this.rows.length <= max) return { rows: this.rows, more: 0 };
-        const size = (row: UauiChartTooltipRow) => row.share ?? row.value;
-        const largest = new Set([...this.rows].sort((a, b) => size(b) - size(a)).slice(0, max - 1));
+        // A row with no value is the smallest.
+        const size = (row: UauiChartTooltipRow) => row.share ?? row.value ?? Number.NEGATIVE_INFINITY;
+        const largest = new Set([...this.rows].sort((a, b) => (size(a) < size(b) ? 1 : size(a) > size(b) ? -1 : 0)).slice(0, max - 1));
         const rows = this.rows.filter((row) => largest.has(row));
         return { rows, more: this.rows.length - rows.length };
     }
 
     #renderRow(row: UauiChartTooltipRow) {
         const bar = row.bar ?? this.bars;
-        const share = row.share ?? undefined;
+        const share = row.value === null ? undefined : (row.share ?? undefined);
         return html`<div class="tooltip-row tooltip-series">
                 <span class=${bar ? "swatch swatch-square" : "swatch"} style="--swatch: var(--uaui-color-${bar ? "bar" : "series"}-${row.color})"></span>
-                <span class="tooltip-value">${share === undefined ? this.#format(row.value) : this.#formatShare(share)}</span>
+                ${row.value === null
+                    ? html`<span class="tooltip-value tooltip-no-data">${this.localize.term("uauiAnalytics_chartNoData")}</span>`
+                    : html`<span class="tooltip-value">${share === undefined ? this.#format(row.value) : this.#formatShare(share)}</span>`}
                 ${row.label === undefined ? nothing : html`<span class="tooltip-label">${row.label}</span>`}
-                ${share === undefined ? nothing : html`<span class="tooltip-amount">${this.#format(row.value)}</span>`}
+                ${share === undefined || row.value === null ? nothing : html`<span class="tooltip-amount">${this.#format(row.value)}</span>`}
             </div>
             ${row.compare ? this.#renderCompare(row.compare, bar) : nothing}`;
     }
@@ -226,6 +230,12 @@ export class UauiChartTooltipElement extends UmbLitElement {
                 padding-left: calc(8px + var(--uui-size-space-2));
                 font-size: 12px;
                 color: color-mix(in srgb, var(--uui-palette-white) 82%, transparent);
+            }
+
+            /* No value: plain weight and muted, so it reads as an absence beside the bold values. */
+            .tooltip-no-data {
+                font-weight: 400;
+                color: color-mix(in srgb, var(--uui-palette-white) 70%, transparent);
             }
 
             .tooltip-label {

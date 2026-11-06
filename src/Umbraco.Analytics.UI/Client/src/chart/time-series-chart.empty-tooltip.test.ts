@@ -89,7 +89,7 @@ describe("Feature: the tooltip says no data", () => {
             await hoverSlot(el, "Oct 26");
         });
 
-        it.skip('reads "No data" in the Success rate row', () => {
+        it('reads "No data" in the Success rate row', () => {
             // One series: its row has no label.
             expect(tooltipRows(el)).toEqual([["", "No data"]]);
         });
@@ -102,7 +102,7 @@ describe("Feature: the tooltip says no data", () => {
             await hoverSlot(el, "Oct 26");
         });
 
-        it.skip("shows the compare value 95.2", () => {
+        it("shows the compare value 95.2", () => {
             expect(text(deepQuery(tooltip(el).shadowRoot!, ".tooltip-compare .tooltip-value"))).toBe("95.2");
         });
     });
@@ -134,7 +134,7 @@ describe("Feature: the tooltip says no data", () => {
             await hoverSlot(el, "Oct 26");
         });
 
-        it.skip('has a Succeeded row reading 40 and a Failed row reading "No data"', () => {
+        it('has a Succeeded row reading 40 and a Failed row reading "No data"', () => {
             expect(tooltipRows(el)).toEqual([
                 ["Succeeded", "40"],
                 ["Failed", "No data"],
@@ -150,7 +150,7 @@ describe("Feature: the tooltip says no data", () => {
                 await hoverSlot(el, "Oct 26");
             });
 
-            it.skip("has no change badge in the series row", () => {
+            it("has no change badge in the series row", () => {
                 expect(deepQuery(tooltip(el).shadowRoot!, "uaui-delta-badge")).toBeNull();
             });
         });
@@ -168,7 +168,7 @@ describe("Feature: the tooltip says no data", () => {
                 await hoverSlot(el, "Oct 26");
             });
 
-            it.skip("has no total row", () => {
+            it("has no total row", () => {
                 expect(deepQuery(tooltip(el).shadowRoot!, ".tooltip-total")).toBeNull();
             });
         });
@@ -190,7 +190,7 @@ describe("Feature: the hidden table says no data", () => {
             el = await chart({ series: [successRate] });
         });
 
-        it.skip('reads "No data" in the series\' cell for 2026-10-26', () => {
+        it('reads "No data" in the series\' cell for 2026-10-26', () => {
             expect(bodyRows(el)[2].slice(1)).toEqual(["No data"]);
         });
     });
@@ -206,7 +206,7 @@ describe("Feature: the hidden table says no data", () => {
             });
         });
 
-        it.skip('reads "No data" in the compare cell for 2026-10-26', () => {
+        it('reads "No data" in the compare cell for 2026-10-26', () => {
             expect(bodyRows(el)[2].slice(1)).toEqual(["96.5", "No data"]);
         });
     });

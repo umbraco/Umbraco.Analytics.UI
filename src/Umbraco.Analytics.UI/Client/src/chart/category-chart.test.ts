@@ -224,7 +224,7 @@ describe("Feature: category chart", () => {
                     .series=${[{ id: "a", label: "A", points: [{ category: "mobile", value: 2 }, { category: "mobile", value: 3 }, { category: "watch", value: 9 }, { category: "desktop", value: 1 }] }]}
                     style="width:400px"></uaui-category-chart>`,
             );
-            expect([0, 1, 2].map((row) => rowCells(el, row))).toEqual([["Mobile", "5"], ["Tablet", ""], ["Desktop", "1"]]);
+            expect([0, 1, 2].map((row) => rowCells(el, row))).toEqual([["Mobile", "5"], ["Tablet", "No data"], ["Desktop", "1"]]);
         });
 
         it("draws bars for a kind it doesn't know", async () => {

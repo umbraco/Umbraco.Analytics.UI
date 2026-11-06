@@ -595,7 +595,7 @@ export class UauiTimeSeriesChartElement extends UauiTimeSeriesChartElementBase {
             );
     }
 
-    /** One row per series with a point at the hovered date, and for the bar kinds the total and the compare total. */
+    /** One row per shown series ("No data" where it has no point at the hovered date), and for the bar kinds the total and the compare total. */
     #renderTooltip() {
         const hover = this.#chart.hover;
         const { data, shown, kinds, dateLabels, compareDateLabels, compareTotalDateLabels, totals, shares, numberFormat, shareFormat } = this.#derived;
@@ -604,20 +604,17 @@ export class UauiTimeSeriesChartElement extends UauiTimeSeriesChartElementBase {
         const { index } = hover;
         // The share view draws bands and segments in the bar colours, so its swatches are squares.
         const bars = this.#barCount > 0 || !!shares;
-        const rows = data.series.flatMap((s, i): UauiChartTooltipRow[] => {
+        const rows = data.series.map((s, i): UauiChartTooltipRow => {
             const value = s.values[index];
-            if (value === null) return [];
             const compare = s.compare?.[index];
-            return [
-                {
-                    color: colorKeyOf(this.series[shown[i]], shown[i]),
-                    bar: !!shares || kinds[i] === "bar",
-                    value,
-                    label: this.series.length > 1 ? s.label : undefined,
-                    ...(shares ? { share: shares[i][index] } : {}),
-                    compare: compare === null || compare === undefined ? undefined : { value: compare, label: compareDateLabels[i][index], current: value },
-                },
-            ];
+            return {
+                color: colorKeyOf(this.series[shown[i]], shown[i]),
+                bar: !!shares || kinds[i] === "bar",
+                value,
+                label: this.series.length > 1 ? s.label : undefined,
+                ...(shares ? { share: shares[i][index] } : {}),
+                compare: compare === null || compare === undefined ? undefined : { value: compare, label: compareDateLabels[i][index], current: value },
+            };
         });
         // The share view lists the rows as the stack draws them, top segment or band first (the last series).
         if (shares) rows.reverse();

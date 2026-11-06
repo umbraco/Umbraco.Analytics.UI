@@ -100,6 +100,15 @@ describe("Feature: many series stay readable", () => {
             expect(deepQuery(tooltip(el).shadowRoot!, ".tooltip-more")!.textContent!.trim()).toBe("+4 more");
         });
 
+        it("leaves the rows with no data under +N more, even next to a value below 0", async () => {
+            // Page 1 is below 0 on 2 Jun and Pages 8 to 11 have no point: the rows with no data are still the smallest.
+            const sparse = pages.map((p, i) => ({ ...p, points: i === 0 ? p.points.map((pt, n) => (n === 1 ? { ...pt, value: -5 } : pt)) : i >= 7 ? p.points.filter((pt) => pt.date !== dates[1]) : p.points }));
+            const sparseEl = await chart(sparse);
+            await hoverDate(sparseEl, 1);
+            const labels = deepQueryAll<HTMLElement>(tooltip(sparseEl).shadowRoot!, ".tooltip-series .tooltip-label").map((l) => l.textContent!.trim());
+            expect(labels).toEqual(["Page 1", "Page 2", "Page 3", "Page 4", "Page 5", "Page 6", "Page 7"]);
+        });
+
         it("keeps every series in the hidden table", () => {
             const head = [...deepQuery<HTMLTableElement>(shadow(el), "table")!.tHead!.rows[0].cells].map((c) => c.textContent!.trim());
             expect(head).toEqual(["Date", ...pages.map((p) => p.label)]);
