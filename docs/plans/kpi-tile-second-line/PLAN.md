@@ -4,7 +4,7 @@
 
 ## Core
 
-- [ ] **T1** - story: KTD-2 (groundwork for AC1–AC5). `UauiFigureFormatter.figure()` in `src/internal/format/figure.ts` takes an optional `{ compact?: boolean }`: `compact: true` shows the number short at any size (same 3 significant digits, `exact` set), unless `valueFormat` sets `notation`. Without it, today's 1,000,000 rule is unchanged (ARCHITECTURE, Decisions: the formatter decides "short like the value"). Keep it internal.
+- [x] **T1** - story: KTD-2 (groundwork for AC1–AC5). `UauiFigureFormatter.figure()` in `src/internal/format/figure.ts` takes an optional `{ compact?: boolean }`: `compact: true` shows the number short at any size (same 3 significant digits, `exact` set), unless `valueFormat` sets `notation`. Without it, today's 1,000,000 rule is unchanged (ARCHITECTURE, Decisions: the formatter decides "short like the value"). Keep it internal.
   Acceptance: new cases in `src/internal/format/figure.test.ts` (create it if missing): 412000 with `compact: true` gives `{ text: "412K", exact: "412,000" }`; with `notation: "standard"` it stays "412,000"; existing tile and stat compact tests still green.
   depends-on: none. parallel-group: A
 

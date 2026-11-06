@@ -11,3 +11,4 @@
 - **06-11-2026** User approved SPEC.md and ARCHITECTURE.md with their guesses: names `detail`/`detail-value`/`detail-format`, internal `uaui-figure-detail`, product passes the translated pattern, 13px grey line, "…" with hover title, only `{0}` filled.
 - **06-11-2026** (plan) Layout measuring (T4) comes after the line renders (T3), so the formatting rules can be tested on a plain row first; the skeleton height (T5) waits for T4 because it is sized from the final layout.
 - **06-11-2026** (plan) Added the AI usage example's cached-tokens line (T7) as the real-use check, since its fake data already has `cachedInputTokens`.
+- **06-11-2026** (T1) `compact: false` is the same as leaving the option out; only `true` forces short.
