@@ -6,7 +6,7 @@ Paths are under `src/Umbraco.Analytics.UI/Client/src/`. The time zone in tests i
 
 ## Slots
 
-- [ ] **T1** - story: EMP-1 (AC1–AC8). In `chart/internal/chart-data.ts`, `UauiChartAnchors` gains `to`. When the anchors have both `from` and `to`, `buildChartData` builds its date list from the internal `dateBuckets({ from, to }, groupBy, weekStart)` (in `internal/date/date-math.ts`), each bucket's `start` run through the file's own `keyOf`, merged with the points' dates (each once, sorted). Without both, the list is the points' dates as today (SPEC R1–R4; ARCHITECTURE, Decisions). Points are not moved to their bucket's start. In `chart/time-series-chart.element.ts`, `#derive` passes `to: range?.to` beside `from`.
+- [x] **T1** - story: EMP-1 (AC1–AC8). In `chart/internal/chart-data.ts`, `UauiChartAnchors` gains `to`. When the anchors have both `from` and `to`, `buildChartData` builds its date list from the internal `dateBuckets({ from, to }, groupBy, weekStart)` (in `internal/date/date-math.ts`), each bucket's `start` run through the file's own `keyOf`, merged with the points' dates (each once, sorted). Without both, the list is the points' dates as today (SPEC R1–R4; ARCHITECTURE, Decisions). Points are not moved to their bucket's start. In `chart/time-series-chart.element.ts`, `#derive` passes `to: range?.to` beside `from`.
   Acceptance: EMP-1 specs green in `chart/time-series-chart.empty-slots.test.ts`. Existing `chart/internal/chart-data.test.ts`, compare and hourly chart tests green.
   depends-on: none
 
