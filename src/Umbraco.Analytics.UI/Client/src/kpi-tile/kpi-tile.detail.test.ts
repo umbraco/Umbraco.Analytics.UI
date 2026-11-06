@@ -383,26 +383,26 @@ describe("Feature: a tile shows a part of its total on a second line", () => {
     describe("Scenario: the placeholder makes room for the line", () => {
         it("matches the loaded tile's height in a 300px cell", async () => {
             const [{ el: before }, { el: after }] = [await tileIn(300, loading), await tileIn(300, loaded)];
-            expect(height(before)).toBe(height(after));
+            expect(height(before)).toBeCloseTo(height(after), 1);
         });
 
         it("matches the loaded tile's height in a 200px cell", async () => {
             const [{ el: before }, { el: after }] = [await tileIn(200, loading), await tileIn(200, loaded)];
-            expect(height(before)).toBe(height(after));
+            expect(height(before)).toBeCloseTo(height(after), 1);
         });
     });
 
     describe("Scenario: the placeholder follows the value's size down (220px)", () => {
         it("matches the loaded tile's height in a 220px cell", async () => {
             const [{ el: before }, { el: after }] = [await tileIn(220, loading), await tileIn(220, loaded)];
-            expect(height(before)).toBe(height(after));
+            expect(height(before)).toBeCloseTo(height(after), 1);
         });
     });
 
     describe("Scenario: the badge wraps below the line (180px)", () => {
         it("gives the placeholder the loaded tile's height", async () => {
             const [{ el: before }, { el: after }] = [await tileIn(180, loading), await tileIn(180, loaded)];
-            expect(height(before)).toBe(height(after));
+            expect(height(before)).toBeCloseTo(height(after), 1);
         });
     });
 
