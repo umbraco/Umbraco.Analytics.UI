@@ -99,6 +99,16 @@ const lineClip = (borderWidth: number, pointRadius: number, pointHoverRadius: nu
     return { top: 0, bottom: 0, left: side, right: side };
 };
 
+/** The dot a value gets when it stands alone: a line can't draw it as a segment, so it would otherwise not show. */
+const ISOLATED_POINT_RADIUS = 2;
+
+/** The indexes of the values with no value on either side (a `null` or the chart's edge), which a line draws as no segment. */
+const isolatedIndexes = (values: readonly (number | null)[]) =>
+    new Set(values.flatMap((value, i) => (value !== null && values[i - 1] == null && values[i + 1] == null ? [i] : [])));
+
+/** Whether a lone value is at either end of the line, the only places Chart.js measures a dot's overflow. */
+const isolatedAtEnds = (isolated: ReadonlySet<number>, length: number) => isolated.has(0) || isolated.has(length - 1);
+
 /** The least room a y tick label gets, in pixels: the 11px tick font and a little air. */
 const MIN_TICK_SPACING = 18;
 
@@ -127,7 +137,7 @@ export function thinTicks<T extends { value: number }>(ticks: T[], height: numbe
 const PADDING = { top: 8, right: 12, bottom: 0, left: 0 };
 
 /** An incomplete point: a hollow dot a little larger than a complete one, with a thicker border to read hollow. */
-const INCOMPLETE_POINT_RADIUS = 3;
+export const INCOMPLETE_POINT_RADIUS = 3;
 const INCOMPLETE_POINT_BORDER = 1.5;
 
 const LINE_WIDTH = 2.25;
@@ -378,6 +388,8 @@ export class UauiChartRenderer {
         const showDots = model.labels.length <= MAX_POINTS_WITH_DOTS;
         const color = colors.series[i];
         const pointRadius = showDots && compareIndex < 0 ? 2 : 0;
+        const isolated = isolatedIndexes(set.values);
+        const loneAtEnd = isolatedAtEnds(isolated, set.values.length);
         const from = model.incompleteFrom;
         const faded = from === undefined ? undefined : colors.incompleteSeries[i];
         // Only the series line is faded, not its compare line, which is the previous period and complete.
@@ -392,7 +404,11 @@ export class UauiChartRenderer {
             borderColor: color.line,
             backgroundColor: color.fill,
             borderWidth: LINE_WIDTH,
-            clip: lineClip(LINE_WIDTH, faded && pointRadius ? INCOMPLETE_POINT_RADIUS : pointRadius, POINT_HOVER_RADIUS),
+            clip: lineClip(
+                LINE_WIDTH,
+                faded && (pointRadius || loneAtEnd) ? INCOMPLETE_POINT_RADIUS : Math.max(pointRadius, loneAtEnd ? ISOLATED_POINT_RADIUS : 0),
+                POINT_HOVER_RADIUS,
+            ),
             ...(faded
                 ? {
                       // A segment is faded when it ends at an incomplete point.
@@ -408,15 +424,21 @@ export class UauiChartRenderer {
             tension: 0,
             stepped: false,
             showLine: true,
-            spanGaps: true,
+            // A date with no value breaks the line (and an area's fill) rather than bridging it.
+            spanGaps: false,
             // A series with a compare line has its gap shaded by the compare line's own fill (see `#compareLineDataset`).
             fill: compareIndex < 0 && model.kind === "area" ? ("origin" as const) : false,
             pointRadius:
-                faded && pointRadius ? (ctx: { dataIndex: number }) => (fadedAt(ctx.dataIndex) ? INCOMPLETE_POINT_RADIUS : pointRadius) : pointRadius,
+                faded || isolated.size
+                    ? (ctx: { dataIndex: number }) => {
+                          const radius = isolated.has(ctx.dataIndex) ? Math.max(pointRadius, ISOLATED_POINT_RADIUS) : pointRadius;
+                          return faded && radius && fadedAt(ctx.dataIndex) ? INCOMPLETE_POINT_RADIUS : radius;
+                      }
+                    : pointRadius,
             pointStyle: "circle" as const,
             pointBackgroundColor: faded ? (ctx: { dataIndex: number }) => (fadedAt(ctx.dataIndex) ? colors.surface : color.line) : color.line,
             pointBorderColor: faded ? (ctx: { dataIndex: number }) => (fadedAt(ctx.dataIndex) ? faded.point : color.line) : color.line,
-            ...(faded ? { pointBorderWidth: (ctx: { dataIndex: number }) => (fadedAt(ctx.dataIndex) ? INCOMPLETE_POINT_BORDER : 1) } : {}),
+            pointBorderWidth: faded ? (ctx: { dataIndex: number }) => (fadedAt(ctx.dataIndex) ? INCOMPLETE_POINT_BORDER : 1) : LINE_WIDTH,
             pointHoverRadius: POINT_HOVER_RADIUS,
             pointHoverBackgroundColor: colors.surface,
             pointHoverBorderColor: color.line,
@@ -472,17 +494,19 @@ export class UauiChartRenderer {
         // of a line with `segment` options the line's own `backgroundColor`, which would replace the gap's colours, and the
         // series' segments are what fade the incomplete part. `above` and `below` are relative to the compare line, so
         // where it is below its series (the series doing better) is `below`.
+        const values = model.datasets[i].compare!;
+        const isolated = isolatedIndexes(values);
         const gap = model.lowerIsBetter ? { above: colors.gapGood, below: colors.gapBad } : { above: colors.gapBad, below: colors.gapGood };
         return {
             type: "line" as const,
             stack: `compare-line-${i}`,
             ...(mixed ? { order: -1 } : {}),
             label: model.datasets[i].label,
-            data: model.datasets[i].compare!,
+            data: values,
             borderColor: colors.compare,
             backgroundColor: colors.compare,
             borderWidth: COMPARE_LINE_WIDTH,
-            clip: lineClip(COMPARE_LINE_WIDTH, 0, POINT_HOVER_RADIUS),
+            clip: lineClip(COMPARE_LINE_WIDTH, isolatedAtEnds(isolated, values.length) ? ISOLATED_POINT_RADIUS : 0, POINT_HOVER_RADIUS),
             borderDash: [5, 4],
             borderJoinStyle: "round" as const,
             borderCapStyle: "butt" as const,
@@ -490,10 +514,15 @@ export class UauiChartRenderer {
             tension: 0,
             stepped: false,
             showLine: true,
-            spanGaps: true,
+            spanGaps: false,
             fill: { target: i, ...gap },
-            pointRadius: 0,
+            pointRadius: (ctx: { dataIndex: number }) => (isolated.has(ctx.dataIndex) ? ISOLATED_POINT_RADIUS : 0),
             pointStyle: "circle" as const,
+            // Set here, not left to `Chart.defaults.elements.point`, as a lone value now draws a dot. The border is the line's
+            // width, which is what Chart.js falls back to.
+            pointBackgroundColor: colors.compare,
+            pointBorderColor: colors.compare,
+            pointBorderWidth: COMPARE_LINE_WIDTH,
             pointHoverRadius: POINT_HOVER_RADIUS,
             pointHoverBackgroundColor: colors.surface,
             pointHoverBorderColor: colors.compare,
