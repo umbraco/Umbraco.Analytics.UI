@@ -5,6 +5,11 @@ import "./figure-value.element.js";
 
 const PLACEHOLDER = "{0}";
 
+/** Whether the line draws anything: a non-empty pattern that either has no `{0}` or has a figure for it. */
+export function hasFigureDetail(pattern: string | undefined, figure: UauiFigureText | undefined): boolean {
+    return !!pattern && (!pattern.includes(PLACEHOLDER) || !!figure);
+}
+
 /**
  * The line under a `uaui-kpi-tile`'s value. `pattern` is split at every `{0}`; the text parts are drawn as plain text
  * (never HTML) and each gap gets the `figure` as a `uaui-figure-value`. A pattern with no `{0}` is drawn as given. A
@@ -26,10 +31,9 @@ export class UauiFigureDetailElement extends UmbLitElement {
 
     override render(): TemplateResult | typeof nothing {
         const pattern = this.pattern;
-        if (!pattern) return nothing;
-        const parts = pattern.split(PLACEHOLDER);
         const figure = this.figure;
-        if (parts.length > 1 && !figure) return nothing;
+        if (!pattern || !hasFigureDetail(pattern, figure)) return nothing;
+        const parts = pattern.split(PLACEHOLDER);
         const shown = figure ? parts.join(figure.text) : pattern;
         return html`<span class="line" title=${shown}
             >${parts.map((part, index) => html`${index > 0 ? html`<uaui-figure-value .figure=${figure}></uaui-figure-value>` : nothing}${part}`)}</span

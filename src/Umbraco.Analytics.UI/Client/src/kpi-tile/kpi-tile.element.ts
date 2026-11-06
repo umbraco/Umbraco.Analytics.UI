@@ -10,6 +10,7 @@ import type { UauiStatusColor } from "../theme/types.js";
 import type { UauiDeltaUnit } from "../delta-badge/delta-badge.element.js";
 import "../delta-badge/delta-badge.element.js";
 import "../internal/figure/figure-value.element.js";
+import { hasFigureDetail } from "../internal/figure/figure-detail.element.js";
 
 /**
  * A headline number as a card: an icon in a pink square, a label, the value and an optional change badge.
@@ -39,6 +40,12 @@ import "../internal/figure/figure-value.element.js";
  * shows a neutral badge. Instead of `delta` you can give the two numbers, `current` and `previous`, and the badge
  * works out the change, as `uaui-delta-badge` does. `current` defaults to a number `value`, so then `previous` is
  * enough, on the value's scale (fractions for points with a percent `valueFormat`). `delta` wins when both are set.
+ *
+ * Give `detail` to add a quieter second line under the value, e.g. a part of the total ("114,300 cached"). `detail` is the
+ * text, already translated by the product, with `{0}` where the number goes; `detailValue` is that number, formatted like
+ * the value (or with `detailFormat`). The text is shown as text, never HTML, and only `{0}` is filled. When the value is
+ * shown compact, the line's number is too. A pattern with `{0}` but no finite `detailValue`, no `detail`, `error` and
+ * `no-data` show no line. While `loading` with a `value` the line stays.
  *
  * @element uaui-kpi-tile
  * @fires selected - A selectable, unselected tile was pressed. Cancelable: cancel it to keep the tile unselected.
@@ -71,6 +78,25 @@ export class UauiKpiTileElement extends UmbLitElement {
      */
     @property({ type: Object, attribute: "value-format" })
     valueFormat?: Intl.NumberFormatOptions;
+
+    /**
+     * The text of a second line under the value, already translated by the product (e.g. `this.localize.term(...)`),
+     * with `{0}` where `detailValue` goes, e.g. `{0} cached`. Only `{0}` is filled; other placeholders stay as typed. It
+     * is shown as text, never HTML. With no `{0}` it is a plain note. Unset or empty shows no line.
+     */
+    @property({ type: String })
+    detail?: string;
+
+    /** The number for the `{0}` in `detail`. Not a finite number shows no line when `detail` has a `{0}`. */
+    @property({ type: Number, attribute: "detail-value" })
+    detailValue?: number;
+
+    /**
+     * How `detailValue` is formatted, as `valueFormat`. Defaults to `valueFormat`. The number is shown compact when the
+     * value is, or when it is 1,000,000 or more, unless this sets `notation`.
+     */
+    @property({ type: Object, attribute: "detail-format" })
+    detailFormat?: Intl.NumberFormatOptions;
 
     /**
      * The range has no data. Shows a dash with the hidden text "No data for this period" in place of the value, and no
@@ -175,10 +201,19 @@ export class UauiKpiTileElement extends UmbLitElement {
     deselectable = true;
 
     #formatter = new UauiFigureFormatter();
+    // A separate instance for the line: the formatter keeps one set of formats, and the line's options differ.
+    #detailFormatter = new UauiFigureFormatter();
 
     // The text to show (and the exact amount behind a compact one), or undefined for no value. The formatter is built on first use and kept per language and options.
     get #shown(): UauiFigureText | undefined {
         return this.#formatter.figure(this.value, this.localize.lang(), this.valueFormat);
+    }
+
+    // The line's number, short whenever the value is (an `exact` means the value was shortened) unless the line's format sets a notation.
+    #detailFigure(shown: UauiFigureText | undefined): UauiFigureText | undefined {
+        return this.#detailFormatter.figure(this.detailValue, this.localize.lang(), this.detailFormat ?? this.valueFormat, {
+            compact: shown?.exact !== undefined,
+        });
     }
 
     // The badge's two numbers: `current` and `previous`, or a number `value` and `previous` on its scale.
@@ -211,6 +246,9 @@ export class UauiKpiTileElement extends UmbLitElement {
         const hasValue = shown !== undefined;
         const mode = getLoadingMode(this.loading, hasValue || this.noData, this.error);
         const busy = isBusy(this.loading, this.error);
+        // No line when the tile shows no value (a part of nothing reads wrong) or when the line would draw nothing.
+        const detailFigure = this.#detailFigure(shown);
+        const showDetail = hasValue && !this.error && !this.noData && hasFigureDetail(this.detail, detailFigure);
 
         const content = html`${this.icon
                 ? html`<span class="icon" aria-hidden="true"><uui-icon name=${this.icon}></uui-icon></span>`
@@ -230,6 +268,9 @@ export class UauiKpiTileElement extends UmbLitElement {
                                   : hasValue
                                     ? html`<span class="value"><uaui-figure-value .figure=${shown}></uaui-figure-value></span>`
                                     : nothing}
+                              ${showDetail
+                                  ? html`<uaui-figure-detail class="detail" .pattern=${this.detail} .figure=${detailFigure}></uaui-figure-detail>`
+                                  : nothing}
                               ${this.error || this.noData || !this.#hasChange(figures)
                                   ? nothing
                                   : html`<uaui-delta-badge
@@ -467,6 +508,11 @@ export class UauiKpiTileElement extends UmbLitElement {
                 flex-wrap: wrap;
                 align-items: center;
                 gap: 8px 10px;
+            }
+
+            /* The line is a full-width item of the row, so it sits below the value, and the badge wraps below it. */
+            .detail {
+                flex: 1 1 100%;
             }
 
             .value {
