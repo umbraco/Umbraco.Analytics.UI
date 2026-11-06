@@ -1,8 +1,8 @@
 // EMP-6 — Commerce example shows empty days.
 // The store opened on 1 Jan 2026 (STORE_OPENED): before it a rate has nothing to divide by, and a count is 0.
-import { Chart } from "@umbraco/analytics-ui/external/chart.js";
 import { beforeEach, describe, expect, it } from "vitest";
 import { html } from "@umbraco-cms/backoffice/external/lit";
+import { chartOf } from "../../../internal/test/chart.js";
 import { renderPageExample } from "../../../internal/test/page-example.js";
 import { settle, shadow, type UauiTestElement } from "../../../internal/test/dom.js";
 import type { UauiDateRange } from "../../../date-range/types.js";
@@ -13,7 +13,6 @@ import "./commerce-analytics-page.element.js";
 const aroundOpening: UauiDateRange = { from: "2025-12-25", to: "2026-01-07" };
 
 const chart = (page: Element) => shadow(page).querySelector("uaui-time-series-chart") as UauiTimeSeriesChartElement;
-const chartOf = (page: Element) => Chart.getChart(shadow(chart(page)).querySelector("canvas")!)!;
 const tile = (page: Element, label: string) => [...shadow(page).querySelectorAll<UauiKpiTileElement>("uaui-kpi-tile")].find((t) => t.label === label)!;
 
 /** Renders the page, picks `aroundOpening` (as Save in the date range dialog does) and the metric, and waits for the chart. */
@@ -38,7 +37,7 @@ describe("Feature: the Commerce example shows empty days", () => {
         });
 
         it("has 14 slots", () => {
-            expect(chartOf(page).data.labels).toHaveLength(14);
+            expect(chartOf(chart(page)).data.labels).toHaveLength(14);
         });
     });
 
@@ -49,7 +48,7 @@ describe("Feature: the Commerce example shows empty days", () => {
         });
 
         it("has no value in the slots 2025-12-25 to 2025-12-31", () => {
-            expect(chartOf(page).data.datasets[0].data.slice(0, 7)).toEqual([null, null, null, null, null, null, null]);
+            expect(chartOf(chart(page)).data.datasets[0].data.slice(0, 7)).toEqual([null, null, null, null, null, null, null]);
         });
     });
 
@@ -61,7 +60,7 @@ describe("Feature: the Commerce example shows empty days", () => {
             });
 
             it("has 0 in the slot of 2025-12-25", () => {
-                expect(chartOf(page).data.datasets[0].data[0]).toBe(0);
+                expect(chartOf(chart(page)).data.datasets[0].data[0]).toBe(0);
             });
         });
     });

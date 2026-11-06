@@ -1,10 +1,9 @@
 // EMP-5 — Marks on empty periods.
 // Markers are read from their HTML buttons, "now" and the unfinished part from the hidden table's row headers, and
 // compare points from the Chart.js compare line's data.
-import { Chart } from "@umbraco/analytics-ui/external/chart.js";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import { html } from "@umbraco-cms/backoffice/external/lit";
-import { umbLocalizationManager } from "@umbraco-cms/backoffice/localization-api";
+import { chartOf, seriesOn, useEnglishDates } from "../internal/test/chart.js";
 import { deepQuery, deepQueryAll, renderElement, settle, shadow, type UauiTestElement } from "../internal/test/dom.js";
 import type { UauiCompare, UauiDateRange } from "../date-range/types.js";
 import type { UauiMarker, UauiSeries } from "./types.js";
@@ -12,7 +11,6 @@ import "./time-series-chart.element.js";
 
 const range: UauiDateRange = { from: "2026-10-24", to: "2026-10-30" };
 const compare: UauiCompare = { mode: "custom", from: "2026-10-17", to: "2026-10-23" };
-const seriesOn = (dates: string[], value = 90): UauiSeries => ({ id: "rate", label: "Success rate", points: dates.map((date) => ({ date, value })) });
 // Every day of the range but the 26th.
 const allBut26 = seriesOn(["2026-10-24", "2026-10-25", "2026-10-27", "2026-10-28", "2026-10-29", "2026-10-30"]);
 
@@ -27,7 +25,6 @@ const chart = async ({ series, compareSeries = [], compare, markers = [], now, i
     return el;
 };
 
-const chartOf = (el: Element) => Chart.getChart(shadow(el).querySelector("canvas")!)!;
 /** The x of the middle of a slot, on the canvas, by its x-axis label ("Oct 26"). */
 const slotX = (el: Element, label: string) => chartOf(el).scales["x"].getPixelForValue(chartOf(el).data.labels!.indexOf(label));
 // The buttons over the marker dots live in the shadow root of the chart's `uaui-chart-markers`.
@@ -39,13 +36,7 @@ const markerX = (el: Element, i: number) => {
 const rowHeaders = (el: Element) => [...deepQuery<HTMLTableElement>(shadow(el), "table")!.querySelectorAll("tbody th")].map((th) => th.textContent!.trim());
 
 describe("Feature: marks on empty periods", () => {
-    const previousLanguage = umbLocalizationManager.documentLanguage;
-    beforeEach(() => {
-        umbLocalizationManager.documentLanguage = "en-US";
-    });
-    afterEach(() => {
-        umbLocalizationManager.documentLanguage = previousLanguage;
-    });
+    useEnglishDates();
 
     describe("Scenario: a marker on an empty day", () => {
         let el: UauiTestElement;
