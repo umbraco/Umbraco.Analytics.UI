@@ -30,7 +30,7 @@ Paths are under `src/Umbraco.Analytics.UI/Client/src/`. The time zone in tests i
   Acceptance: EMP-3 AC2–AC6 and EMP-4 AC1–AC2 specs green in `chart/time-series-chart.empty-tooltip.test.ts`. Localization tests green (no unused or missing key). Existing tooltip and table tests green.
   depends-on: T4
 
-- [ ] **T6** - story: EMP-4 (AC3). A "Empty periods" story in `chart/time-series-chart.story.ts`: a 14-day success rate chart with `range`, four empty days and a lone value, plus a compare series, matching `docs/plans/empty-periods/mockups/empty-periods-chart.png`. Axe in light and dark mode.
+- [x] **T6** - story: EMP-4 (AC3). A "Empty periods" story in `chart/time-series-chart.story.ts`: a 14-day success rate chart with `range`, four empty days and a lone value, plus a compare series, matching `docs/plans/empty-periods/mockups/empty-periods-chart.png`. Axe in light and dark mode.
   Acceptance: EMP-4 AC3 spec green in `chart/time-series-chart.empty-tooltip.test.ts`. The story renders in Storybook in light and dark mode and matches the mockup.
   depends-on: T3, T5
 
