@@ -1,5 +1,5 @@
 import type { UauiWeekStart } from "../../date-helpers/date-helpers.js";
-import { bucketOffset, dateOnly, type BucketUnit } from "../../internal/date/date-math.js";
+import { bucketOffset, dateBuckets, dateOnly, type BucketUnit } from "../../internal/date/date-math.js";
 import { hourStart, wallClockHourOffset } from "../../internal/date/hour-math.js";
 import type { UauiSeries } from "../types.js";
 import type { UauiChartData } from "./chart-values.js";
@@ -35,10 +35,23 @@ function offsetsOf(dates: string[], unit: BucketUnit, weekStart: UauiWeekStart |
     return dates.map((d, i) => offsetFrom(anchor, d, unit, weekStart) ?? i);
 }
 
-/** The first day of each side's period, when the product knows it. Without one a side starts at its first point. */
+/**
+ * The first day of each side's period, when the product knows it. Without one a side starts at its first point.
+ * `from` and `to` together are the current period: every bucket of it gets a slot, even with no point.
+ */
 export interface UauiChartAnchors {
     from?: string;
+    to?: string;
     compareFrom?: string;
+}
+
+/** The sorted dates of the points and, given a period, the key of each of its buckets; an invalid period adds none. */
+function datesWithSlots(series: UauiSeries[], unit: BucketUnit, weekStart: UauiWeekStart | undefined, anchors: UauiChartAnchors): string[] {
+    const dates = new Set(sortedDates(series));
+    if (anchors.from && anchors.to) {
+        for (const bucket of dateBuckets({ from: anchors.from, to: anchors.to }, unit, weekStart)) dates.add(keyOf(bucket.start, unit));
+    }
+    return [...dates].sort();
 }
 
 /** Points on the same date add up, whichever series the rule is applied to. */
@@ -75,11 +88,15 @@ function compareByOffset(points: UauiSeries["points"], unit: BucketUnit, weekSta
  * `lines` says, per series, which are drawn as lines (the rest as bars). Given, only a line series gets its compare
  * values, and the compare total adds up every compare series that isn't matched to a line series. Left out, every
  * series gets its compare values and the compare total adds up every compare series.
+ *
+ * With `anchors.from` and `anchors.to`, the dates are also one per bucket of that period (the first of a week or month
+ * bucket can be before `from`), so a bucket with no point is an empty slot, its values `null`. Points are not moved to
+ * their bucket's start, and one outside the period keeps its own date. Without both, the dates are the points' dates.
  */
 export function buildChartData(rawSeries: UauiSeries[], rawCompareSeries: UauiSeries[] = [], groupBy: BucketUnit = "day", anchors: UauiChartAnchors = {}, weekStart?: UauiWeekStart, lines?: boolean[]): UauiChartData {
     const series = rawSeries.map(keyedPoints(groupBy));
     const compareSeries = rawCompareSeries.map(keyedPoints(groupBy));
-    const dates = sortedDates(series);
+    const dates = datesWithSlots(series, groupBy, weekStart, anchors);
     const indexOfOffset = new Map<number, number>();
     offsetsOf(dates, groupBy, weekStart, anchors.from ? dateOnly(anchors.from) : undefined).forEach((offset, i) => {
         // On the day clocks go back two hours share an offset; the compare value goes to the first of them.

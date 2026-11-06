@@ -400,7 +400,7 @@ export class UauiTimeSeriesChartElement extends UauiTimeSeriesChartElementBase {
         const allKinds = series.map((s) => (share ? seriesKindOf({}, kind) : seriesKindOf(s, kind)));
         const lines = allKinds.map((k) => k === "line");
         const build = (compareOf: UauiSeries[]) =>
-            buildChartData(series, share ? [] : compareOf, groupBy, { from: range?.from, compareFrom: compare?.from }, weekStart, lines);
+            buildChartData(series, share ? [] : compareOf, groupBy, { from: range?.from, to: range?.to, compareFrom: compare?.from }, weekStart, lines);
         const full = build(compareSeries);
         const { data, shown } = visibleData(full, series.map((s) => s.id), hidden, () => build(compareSeries.filter((c) => !hidden.has(c.id))));
         const kinds = shown.map((i) => allKinds[i]);

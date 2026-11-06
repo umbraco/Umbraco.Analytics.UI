@@ -40,7 +40,7 @@ describe("Feature: every period gets a slot", () => {
             el = await chart({ series: [seriesOn(["2026-10-25", "2026-10-28"])], range: { from: "2026-10-24", to: "2026-10-30" } });
         });
 
-        it.skip("has one slot per day, 2026-10-24 to 2026-10-30", () => {
+        it("has one slot per day, 2026-10-24 to 2026-10-30", () => {
             expect(slots(el)).toEqual(["Oct 24", "Oct 25", "Oct 26", "Oct 27", "Oct 28", "Oct 29", "Oct 30"]);
         });
     });
@@ -51,7 +51,7 @@ describe("Feature: every period gets a slot", () => {
             el = await chart({ series: [seriesOn(["2026-10-12"])], range: { from: "2026-10-01", to: "2026-10-31" }, groupBy: "week", weekStart: 1 });
         });
 
-        it.skip("has one slot per Monday week the range touches", () => {
+        it("has one slot per Monday week the range touches", () => {
             expect(slots(el)).toEqual(["Sep 28", "Oct 5", "Oct 12", "Oct 19", "Oct 26"]);
         });
     });
@@ -62,7 +62,7 @@ describe("Feature: every period gets a slot", () => {
             el = await chart({ series: [seriesOn(["2026-02-01"])], range: { from: "2026-01-15", to: "2026-04-10" }, groupBy: "month" });
         });
 
-        it.skip("has one slot per month the range touches", () => {
+        it("has one slot per month the range touches", () => {
             expect(slots(el)).toEqual(["Jan 2026", "Feb 2026", "Mar 2026", "Apr 2026"]);
         });
     });
@@ -73,7 +73,7 @@ describe("Feature: every period gets a slot", () => {
             el = await chart({ series: [seriesOn(["2026-11-05T09:00", "2026-11-05T14:00"])], range: { from: "2026-11-05", to: "2026-11-05" }, groupBy: "hour" });
         });
 
-        it.skip("has 24 slots", () => {
+        it("has 24 slots", () => {
             expect(slots(el)).toHaveLength(24);
         });
     });
@@ -84,7 +84,7 @@ describe("Feature: every period gets a slot", () => {
             el = await chart({ series: [seriesOn(["2026-10-25", "2026-10-28"])] });
         });
 
-        it.skip("has a slot for each point's date only", () => {
+        it("has a slot for each point's date only", () => {
             expect(slots(el)).toEqual(["Oct 25", "Oct 28"]);
         });
     });
@@ -96,7 +96,7 @@ describe("Feature: every period gets a slot", () => {
                 el = await chart({ series: [seriesOn(["2026-10-25", "2026-10-29"])], range: { from: "2026-10-24", to: "2026-10-26" } });
             });
 
-            it.skip("has the range's days and the outside point's day, in date order", () => {
+            it("has the range's days and the outside point's day, in date order", () => {
                 expect(slots(el)).toEqual(["Oct 24", "Oct 25", "Oct 26", "Oct 29"]);
             });
         });
@@ -107,7 +107,7 @@ describe("Feature: every period gets a slot", () => {
                 el = await chart({ series: [seriesOn(["2026-03-29T12:00"])], range: { from: "2026-03-29", to: "2026-03-29" }, groupBy: "hour" });
             });
 
-            it.skip("has 23 slots", () => {
+            it("has 23 slots", () => {
                 expect(slots(el)).toHaveLength(23);
             });
         });
@@ -118,7 +118,7 @@ describe("Feature: every period gets a slot", () => {
                 el = await chart({ series: [seriesOn(["2026-10-25T12:00"])], range: { from: "2026-10-25", to: "2026-10-25" }, groupBy: "hour" });
             });
 
-            it.skip("has 25 slots", () => {
+            it("has 25 slots", () => {
                 expect(slots(el)).toHaveLength(25);
             });
         });
