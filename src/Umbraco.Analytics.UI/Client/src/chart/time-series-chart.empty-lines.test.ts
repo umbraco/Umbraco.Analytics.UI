@@ -35,6 +35,11 @@ const radiusOn = (el: Element, label: string, datasetIndex = 0) => {
     const index = chartOf(el).data.labels!.indexOf(label);
     return (chartOf(el).getDatasetMeta(datasetIndex).data[index].options as { radius: number }).radius;
 };
+/** The dot rim width Chart.js resolved for the series' point in a slot, by its x-axis label. */
+const borderOn = (el: Element, label: string) => {
+    const index = chartOf(el).data.labels!.indexOf(label);
+    return (chartOf(el).getDatasetMeta(0).data[index].options as { borderWidth: number }).borderWidth;
+};
 /** Every day of the 60 but 30 Sep and 2 Oct, so 1 Oct stands alone. */
 const aroundLone1Oct = sixtyDayDates.filter((d) => d !== "2026-09-30" && d !== "2026-10-02");
 /** The 60 days before, 3 Jul to 31 Aug 2026, as the compare period; `aroundLone1OctBefore` has its slots for 30 Sep and 2 Oct empty. */
@@ -128,6 +133,15 @@ describe("Feature: lines break at empty periods", () => {
         it("draws a lone value in the incomplete range with the incomplete dot", async () => {
             const el = await chart({ range: sixtyDays, incompleteFrom: "2026-09-30", series: [seriesOn(aroundLone1Oct)] });
             expect(radiusOn(el, "Oct 1")).toBe(INCOMPLETE_POINT_RADIUS);
+        });
+    });
+
+    describe("Scenario: a complete dot on a series with an unfinished part", () => {
+        it("has the rim width it has on a series with none", async () => {
+            const dates = ["2026-10-24", "2026-10-25", "2026-10-26"];
+            const faded = await chart({ incompleteFrom: "2026-10-26", series: [seriesOn(dates)] });
+            const plain = await chart({ series: [seriesOn(dates)] });
+            expect(borderOn(faded, "Oct 24")).toBe(borderOn(plain, "Oct 24"));
         });
     });
 

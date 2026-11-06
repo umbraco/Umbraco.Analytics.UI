@@ -457,7 +457,7 @@ export class UauiChartRenderer {
             pointStyle: "circle" as const,
             pointBackgroundColor: faded ? (ctx: { dataIndex: number }) => (fadedAt(ctx.dataIndex) ? colors.surface : color.line) : color.line,
             pointBorderColor: faded ? (ctx: { dataIndex: number }) => (fadedAt(ctx.dataIndex) ? faded.point : color.line) : color.line,
-            pointBorderWidth: faded ? (ctx: { dataIndex: number }) => (fadedAt(ctx.dataIndex) ? INCOMPLETE_POINT_BORDER : 1) : LINE_WIDTH,
+            pointBorderWidth: faded ? (ctx: { dataIndex: number }) => (fadedAt(ctx.dataIndex) ? INCOMPLETE_POINT_BORDER : LINE_WIDTH) : LINE_WIDTH,
             pointHoverRadius: POINT_HOVER_RADIUS,
             pointHoverBackgroundColor: colors.surface,
             pointHoverBorderColor: color.line,
