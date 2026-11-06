@@ -22,7 +22,7 @@
   Acceptance: KTD-4 and KTD-3 AC6 specs green. `kpi-tile.narrow.test.ts` green unchanged.
   depends-on: T3
 
-- [ ] **T5** - story: KTD-6 (AC1, AC2). When `detail` is set, the skeleton's `--_uaui-skeleton-height` (wide and inside the `< 240px` container query) grows to a loaded tile with its line, measured from the T4 layout: on narrow tiles that's the wrapped layout with the badge (R13). Without `detail`, today's 48px and 76px stay.
+- [x] **T5** - story: KTD-6 (AC1, AC2). When `detail` is set, the skeleton's `--_uaui-skeleton-height` (wide and inside the `< 240px` container query) grows to a loaded tile with its line, measured from the T4 layout: on narrow tiles that's the wrapped layout with the badge (R13). Without `detail`, today's 48px and 76px stay.
   Acceptance: KTD-6 AC1 and AC2 specs green.
   depends-on: T4
 
