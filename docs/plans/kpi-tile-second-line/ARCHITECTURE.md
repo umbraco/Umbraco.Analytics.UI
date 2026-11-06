@@ -11,7 +11,7 @@
 - **`detail-value` is a number only**, not number or string like `value`. A product with its own text puts it all in `detail`.
 - **The number is drawn by `uaui-figure-value`**, as the value is. So a short number ("114K") has its exact amount on hover and for screen readers, with no new code.
 - **The formatter decides "short like the value"**, not the tile. `UauiFigureFormatter` gets a way to format a number short on request, so the rule lives next to the 1,000,000 rule it extends.
-- **The tile measures the real layout**, not a width breakpoint or a fixed number. A `ResizeObserver` on the row, value and badge reads their rendered widths and checks value + gap + badge against the row's width: the same test the browser uses to wrap a line. It runs again on resize and whenever the value, badge or font changes. Only tiles with a line are measured.
+- **The tile measures the real layout**, not a width breakpoint or a fixed number. A `ResizeObserver` on the row, value and badge reads their rendered widths and checks value + gap + badge against the row's width: the same test the browser uses to wrap a line. It runs again on resize and whenever the value, badge or font changes. Only tiles with both a line and a badge are measured. The measuring lives in an internal controller, `src/internal/layout/wrap.controller.ts`, modelled on the table's scroll-overflow controller, so `uaui-stat` can reuse it.
 - **The DOM order is value, line, badge**, and CSS grid places the badge beside the value when it fits. Screen readers then hear the value and its part together.
 - **The skeleton reserves the line only when `detail` is set**, so tiles without a line keep their height (brief).
 
@@ -24,6 +24,7 @@ src/Umbraco.Analytics.UI/Client/
 ├─ src/internal/format/figure.ts                 # formats a number short on request
 ├─ src/internal/figure/figure-detail.element.ts  # NEW: the line; splits the pattern at {0}
 ├─ src/internal/figure/figure-detail.test.ts     # NEW
+├─ src/internal/layout/wrap.controller.ts        # NEW: measures whether value and badge fit on one line
 ├─ src/kpi-tile/kpi-tile.element.ts              # detail, detailValue, detailFormat; skeleton height
 ├─ src/kpi-tile/kpi-tile.detail.test.ts          # NEW: tile with the line, incl. axe
 ├─ src/kpi-tile/kpi-tile.story.ts                # a story per state of the line

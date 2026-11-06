@@ -1,4 +1,4 @@
-import { css, customElement, html, ifDefined, nothing, property, state, type CSSResultGroup, type LitElement, type PropertyValues, type TemplateResult } from "@umbraco-cms/backoffice/external/lit";
+import { css, customElement, html, ifDefined, nothing, property, type CSSResultGroup, type LitElement, type TemplateResult } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { getLoadingMode, isBusy } from "../internal/loading/index.js";
 import { UauiVisuallyHiddenStyles } from "../internal/a11y/visually-hidden.css.js";
@@ -10,6 +10,7 @@ import type { UauiStatusColor } from "../theme/types.js";
 import type { UauiDeltaUnit } from "../delta-badge/delta-badge.element.js";
 import "../delta-badge/delta-badge.element.js";
 import "../internal/figure/figure-value.element.js";
+import { UauiWrapController } from "../internal/layout/wrap.controller.js";
 import { hasFigureDetail } from "../internal/figure/figure-detail.element.js";
 
 /**
@@ -44,7 +45,7 @@ import { hasFigureDetail } from "../internal/figure/figure-detail.element.js";
  * Give `detail` to add a quieter second line under the value, e.g. a part of the total ("114,300 cached"). `detail` is the
  * text, already translated by the product, with `{0}` where the number goes; `detailValue` is that number, formatted like
  * the value (or with `detailFormat`). The text is shown as text, never HTML, and only `{0}` is filled. When the value is
- * shown compact, the line's number is too. A pattern with `{0}` but no finite `detailValue`, no `detail`, `error` and
+ * shown compact, the line's number is too. A pattern with `{0}` but no finite `detailValue`, no `detail`, no `value`, `error` and
  * `no-data` show no line. While `loading` with a `value` the line stays.
  *
  * @element uaui-kpi-tile
@@ -82,7 +83,7 @@ export class UauiKpiTileElement extends UmbLitElement {
     /**
      * The text of a second line under the value, already translated by the product (e.g. `this.localize.term(...)`),
      * with `{0}` where `detailValue` goes, e.g. `{0} cached`. Only `{0}` is filled; other placeholders stay as typed. It
-     * is shown as text, never HTML. With no `{0}` it is a plain note. Unset or empty shows no line.
+     * is shown as text, never HTML. With no `{0}` it is a plain note. Unset or empty shows no line, and so does a tile with no `value`.
      */
     @property({ type: String })
     detail?: string;
@@ -200,14 +201,15 @@ export class UauiKpiTileElement extends UmbLitElement {
     @property({ type: Boolean })
     deselectable = true;
 
-    // Whether the badge no longer fits beside the value, so a tile with a line puts it below the line. Measured from the
-    // rendered widths, since the browser can't tell a grid to wrap.
-    @state()
-    private _wrapped = false;
-
-    #observer?: ResizeObserver;
-    #observed: Element[] = [];
-    #frame = 0;
+    // Whether the badge no longer fits beside the value, so a tile with a line puts it below the line. Only a tile with
+    // a line and a badge has a layout to choose; any other is the plain flex row, which wraps by itself.
+    #wrap = new UauiWrapController(this, () => {
+        const row = this.renderRoot?.querySelector<HTMLElement>(".row.has-detail");
+        const value = row?.querySelector<HTMLElement>(".value");
+        const badge = row?.querySelector<HTMLElement>("uaui-delta-badge");
+        if (!row || !value || !badge) return null;
+        return { row, first: value, second: badge, settle: [value.querySelector<LitElement>("uaui-figure-value"), badge as LitElement] };
+    });
 
     #formatter = new UauiFigureFormatter();
     // A separate instance for the line: the formatter keeps one set of formats, and the line's options differ.
@@ -249,66 +251,6 @@ export class UauiKpiTileElement extends UmbLitElement {
         return Number.isFinite(deltaChange(this.delta, figures.current, figures.previous, this.deltaUnit));
     }
 
-    override connectedCallback(): void {
-        super.connectedCallback();
-        // A reconnect: the size may have changed while detached, and updated() doesn't run until something changes.
-        if (this.hasUpdated) this.#syncWrap();
-    }
-
-    override disconnectedCallback(): void {
-        super.disconnectedCallback();
-        cancelAnimationFrame(this.#frame);
-        this.#observer?.disconnect();
-        this.#observer = undefined;
-        this.#observed = [];
-    }
-
-    protected override updated(changed: PropertyValues<this>): void {
-        super.updated(changed);
-        this.#syncWrap();
-    }
-
-    // Only a tile with a line and a badge has a layout to choose; any other is the plain flex row, which wraps by itself.
-    #syncWrap(): void {
-        const row = this.renderRoot.querySelector<HTMLElement>(".row.has-detail");
-        const value = row?.querySelector<HTMLElement>(".value");
-        const badge = row?.querySelector<HTMLElement>("uaui-delta-badge");
-        if (!row || !value || !badge) {
-            this.#observer?.disconnect();
-            this.#observed = [];
-            if (this._wrapped) this._wrapped = false;
-            return;
-        }
-        const targets = [row, value, badge];
-        // Measured next frame: a change of layout moves the row's height, and measuring inside the callback would make the
-        // browser report a ResizeObserver loop.
-        if (!this.#observer) this.#observer = new ResizeObserver(() => this.#measureSoon());
-        if (targets.length !== this.#observed.length || targets.some((node, index) => node !== this.#observed[index])) {
-            this.#observer.disconnect();
-            targets.forEach((node) => this.#observer!.observe(node));
-            this.#observed = targets;
-        }
-        // The value and the badge draw their text a microtask after this tile does, so their widths are only real then.
-        const parts = [value.querySelector<LitElement>("uaui-figure-value"), badge as LitElement];
-        void Promise.all(parts.map((part) => part?.updateComplete)).then(() => this.#measure());
-    }
-
-    // During a live resize, one frame paints in the old layout before the next-frame measurement lands.
-    #measureSoon(): void {
-        cancelAnimationFrame(this.#frame);
-        this.#frame = requestAnimationFrame(() => this.#measure());
-    }
-
-    // The browser's own wrap test: the value, the gap and the badge against the row. The value and the badge are
-    // max-content wide in both layouts, so the answer doesn't depend on the layout it picks.
-    #measure(): void {
-        const [row, value, badge] = this.#observed;
-        if (!row?.isConnected) return;
-        const gap = parseFloat(getComputedStyle(row).columnGap) || 0;
-        const wrapped = value.getBoundingClientRect().width + gap + badge.getBoundingClientRect().width > row.getBoundingClientRect().width;
-        if (wrapped !== this._wrapped) this._wrapped = wrapped;
-    }
-
     override render(): TemplateResult {
         const shown = this.#shown;
         const figures = this.#figures;
@@ -328,7 +270,7 @@ export class UauiKpiTileElement extends UmbLitElement {
                       html`<span class="visually-hidden">${this.label}</span><uaui-skeleton></uaui-skeleton>`
                     : html`<span class="body">
                           <span class="label">${this.label}</span>
-                          <span class=${showDetail ? (this._wrapped ? "row has-detail wrapped" : "row has-detail") : "row"}>
+                          <span class=${showDetail ? (this.#wrap.wrapped ? "row has-detail wrapped" : "row has-detail") : "row"}>
                               ${this.error || this.noData
                                   ? html`<span class="value no-data"
                                         ><span aria-hidden="true">—</span
@@ -358,7 +300,7 @@ export class UauiKpiTileElement extends UmbLitElement {
 
     #tile(content: TemplateResult): TemplateResult {
         // Marks a tile asked for a line, so its skeleton can reserve the room for it in CSS.
-        const hasDetail = this.detail ? " has-detail" : "";
+        const hasDetail = this.detail ? " reserve-detail" : "";
         // A native button gives Enter and Space for free, and both arrive as one click.
         if (this.selectable) {
             return html`<button
@@ -657,7 +599,7 @@ export class UauiKpiTileElement extends UmbLitElement {
                or the badge (24px) if taller: 26.4px at 24px, 24px at the 20px the value steps down to in a 200px cell. This
                is the wide layout, the badge beside the value; a tile whose badge wraps below the value is taller still and
                grows to fit it. The narrow block above sets the wrapped height. */
-            .tile.has-detail {
+            .tile.reserve-detail {
                 --_uaui-skeleton-height: calc(12px * 1.3 + 5px + max(24px, 1.1 * var(--_uaui-kpi-value-size)) + 5px + 13px * 1.3);
             }
 
@@ -665,7 +607,7 @@ export class UauiKpiTileElement extends UmbLitElement {
                (1.1 * its font size), 5px, the line (13px * 1.3), 5px, the badge's 3px margin and its 24px. After the wide rule
                above, with the same specificity, so it wins. */
             @container (width < 240px) {
-                .tile.has-detail {
+                .tile.reserve-detail {
                     --_uaui-skeleton-height: calc(12px * 1.3 + 5px + 1.1 * var(--_uaui-kpi-value-size) + 5px + 13px * 1.3 + 5px + 3px + 24px);
                 }
             }

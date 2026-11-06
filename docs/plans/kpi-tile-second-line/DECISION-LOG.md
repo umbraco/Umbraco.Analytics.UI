@@ -20,3 +20,4 @@
 - **06-11-2026** (T4) The tile measures on the next animation frame after a resize, so during a live resize one frame paints in the old layout.
 - **06-11-2026** (T5) The room for the line is reserved whenever `detail` is set, even when the line is hidden (error, no data, no number). That avoids a jump between loading and error; such a wide tile is about 21px taller than one without `detail`.
 - **06-11-2026** (T6) The line's `title` stays: Chrome's accessibility tree gives a link tile no description, only the span itself carries it. Not checked with NVDA or VoiceOver. The API report also lists the tile's `connectedCallback`, `disconnectedCallback` and `updated`, as it does for other elements.
+- **06-11-2026** (feature review) The layout measuring moved out of the tile into an internal wrap controller (single responsibility, reusable by `uaui-stat`). The tile's `.tile` class for reserved skeleton room is `reserve-detail`; `.row.has-detail` means a line is shown.
