@@ -36,6 +36,6 @@ Paths are under `src/Umbraco.Analytics.UI/Client/src/`. The time zone in tests i
 
 ## Shipping
 
-- [ ] **T7** - story: EMP-6 (AC1–AC3). No example data changes (SPEC R13). Add the CHANGELOG line under `## [Unreleased]`, `### Changed` (SPEC R10).
+- [x] **T7** - story: EMP-6 (AC1–AC3). No example data changes (SPEC R13). Add the CHANGELOG line under `## [Unreleased]`, `### Changed` (SPEC R10).
   Acceptance: EMP-6 specs green in `examples/pages/commerce/commerce-analytics-page.empty-days.test.ts`. `npm run check:api` shows no change. `npm run lint`, `npm test`, `npm run build` and `npm run check:size` pass.
   depends-on: T1. parallel-group: B
