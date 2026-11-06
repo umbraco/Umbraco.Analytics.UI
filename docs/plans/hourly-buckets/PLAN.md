@@ -10,7 +10,7 @@ Paths are under `src/Umbraco.Analytics.UI/Client/src/`. The time zone in tests i
   Acceptance: new `internal/date/hour-math.test.ts` green, covering 2026-11-05, 2026-03-29 (23 hours) and 2026-10-25 (25 hours). Existing `date-math.test.ts` still green.
   depends-on: none. parallel-group: A
 
-- [x] **T2** - story: HRS-1 (AC1–AC7). Rename `uauiDateBuckets` to `uauiTimeBuckets` and `UauiDateBucket` to `UauiTimeBucket` in `date-helpers/date-helpers.ts`, with no deprecated alias (nothing is released). Every bucket gains `end` (R21). With `"hour"`, buckets run from the range's first local midnight to the midnight after its last day, `start`/`end` as UTC instants and `days` the one local date (R20). Update `src/index.ts` exports, every caller in `examples/pages/`, and the README.
+- [x] **T2** - story: HRS-1 (AC1–AC7). Rename `uauiDateBuckets` to `uauiBucketsFor` and `UauiDateBucket` to `UauiBucket` in `date-helpers/date-helpers.ts`, with no deprecated alias (nothing is released). Every bucket gains `end` (R21). With `"hour"`, buckets run from the range's first local midnight to the midnight after its last day, `start`/`end` as UTC instants and `days` the one local date (R20). Update `src/index.ts` exports, every caller in `examples/pages/`, and the README.
   Acceptance: HRS-1 specs green in `date-helpers/date-helpers.hourly.test.ts`. Existing `date-helpers.test.ts` green after the rename. `npm run check:api` shows the rename and `end`.
   depends-on: T1
 
@@ -52,10 +52,10 @@ Paths are under `src/Umbraco.Analytics.UI/Client/src/`. The time zone in tests i
 
 ## Shipping
 
-- [x] **T11** - **wire: hourly view into the AI usage example.** story: HRS-10 (AC1, AC2). `examples/pages/ai/`: add the `today` and `yesterday` presets, pass `uauiGroupByOptions(range)` to the group-by, switch to the first option when the range changes (R19), make hourly fake data with `uauiTimeBuckets`, and set `now` and `incomplete-from` from the clock.
+- [x] **T11** - **wire: hourly view into the AI usage example.** story: HRS-10 (AC1, AC2). `examples/pages/ai/`: add the `today` and `yesterday` presets, pass `uauiGroupByOptions(range)` to the group-by, switch to the first option when the range changes (R19), make hourly fake data with `uauiBucketsFor`, and set `now` and `incomplete-from` from the clock.
   Acceptance: HRS-10 specs green in `examples/pages/ai/ai-usage-page.test.ts`. In Storybook, the AI usage page shows Today by hour with the now line and hatching, matching `mockups/hourly-chart.png`.
   depends-on: T2, T3, T4, T7, T8, T9, T10
 
-- [x] **T12** - story: all. Docs and API: README sections for hourly charts, `now`, `uauiTimeBuckets`, `uauiGroupByOptions` and the two presets. Commit the `api/analytics-ui.api.md` change for sign-off. `npm run lint`, `npm test`, `npm run build`, `npm run check:size`.
+- [x] **T12** - story: all. Docs and API: README sections for hourly charts, `now`, `uauiBucketsFor`, `uauiGroupByOptions` and the two presets. Commit the `api/analytics-ui.api.md` change for sign-off. `npm run lint`, `npm test`, `npm run build`, `npm run check:size`.
   Acceptance: all four commands pass. The API report diff lists only the changes in ARCHITECTURE's "Public API" line.
   depends-on: T11

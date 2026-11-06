@@ -1,5 +1,5 @@
 import type { UauiCategory, UauiCategorySeries, UauiSeries } from "../../../chart/types.js";
-import { uauiTimeBuckets, type UauiDateSpan } from "../../../date-helpers/index.js";
+import { uauiBucketsFor, type UauiDateSpan } from "../../../date-helpers/index.js";
 import type { UauiGroupBy } from "../../../group-by/group-by.element.js";
 import type { UauiFunnelStep } from "../../../funnel/types.js";
 import type { UauiColorSlot, UauiStatusColor } from "../../../theme/types.js";
@@ -121,7 +121,7 @@ export function formsBucketed(result: FormsAnalyticsResult, range: UauiDateSpan,
     const at = result.columns.indexOf("date");
     if (at < 0 || groupBy === "day") return result;
     const bucketOf = new Map<string, string>();
-    for (const bucket of uauiTimeBuckets(range, groupBy)) for (const day of bucket.days) bucketOf.set(day, bucket.start);
+    for (const bucket of uauiBucketsFor(range, groupBy)) for (const day of bucket.days) bucketOf.set(day, bucket.start);
     const buckets = new Map<string, FormsAnalyticsResult["rows"][number]>();
     for (const row of result.rows) {
         const start = bucketOf.get(dayOf(row[at]));

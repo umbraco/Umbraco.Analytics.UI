@@ -24,7 +24,7 @@ export type UauiDatePresetSpan = Pick<UauiDateRange, "from" | "to" | "preset">;
  * One bucket of a range, a slot of `uaui-time-series-chart`: where its chart point is plotted, where the slot ends, and the days of the range inside it.
  * Send `start` to `end` to your server to get the bucket's data.
  */
-export type UauiTimeBucket = {
+export type UauiBucket = {
     /**
      * Where the bucket's point is plotted. For day, week and month an ISO date: the day itself, the first day of its week (Monday unless
      * `weekStart` says otherwise) or the 1st of its month; before the range's own start for a first week or month that begins earlier.
@@ -85,8 +85,8 @@ export function uauiGroupByOptions(range: UauiDateSpan): UauiGroupBy[] {
     return days !== undefined && days <= 2 ? ["hour", "day"] : ["day", "week", "month"];
 }
 
-/** Options for `uauiTimeBuckets`. */
-export type UauiTimeBucketsOptions = {
+/** Options for `uauiBucketsFor`. */
+export type UauiBucketsForOptions = {
     /**
      * The day weeks start on, as an ISO weekday number: 1 is Monday up to 7 for Sunday, the same as
      * `Intl.Locale.prototype.getWeekInfo().firstDay`, so the editor's culture can be passed straight through:
@@ -102,7 +102,7 @@ export type UauiTimeBucketsOptions = {
  * With `"hour"` the buckets run from the range's first local midnight (in the browser's time zone) to the midnight after its
  * last day, so a day the clocks change has 23 or 25 of them. Empty when `range` isn't a valid range.
  */
-export function uauiTimeBuckets(range: UauiDateSpan, groupBy: UauiGroupBy, options: UauiTimeBucketsOptions = {}): UauiTimeBucket[] {
+export function uauiBucketsFor(range: UauiDateSpan, groupBy: UauiGroupBy, options: UauiBucketsForOptions = {}): UauiBucket[] {
     return dateBuckets(range, groupBy, options.weekStart);
 }
 

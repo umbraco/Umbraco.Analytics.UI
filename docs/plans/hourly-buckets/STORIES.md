@@ -6,7 +6,7 @@ Every criterion runs with the browser's time zone pinned to `Europe/Copenhagen` 
 
 **Foundation**
 
-- [HRS-1](#hrs-1-time-buckets-for-a-range) Time buckets for a range, 7 criteria
+- [HRS-1](#hrs-1-buckets-for-a-range) Buckets for a range, 7 criteria
 
 **Time series chart**
 
@@ -41,7 +41,7 @@ Every criterion runs with the browser's time zone pinned to `Europe/Copenhagen` 
 
 ---
 
-## HRS-1: Time buckets for a range
+## HRS-1: Buckets for a range
 
 As a product developer,
 I want the hours of a range as UTC start and end times,
@@ -50,39 +50,39 @@ so that I can ask my server for hourly counts that match the editor's local hour
 ```
 AC1 — One day by hour
   Given the range 2026-11-05 to 2026-11-05
-  When  I call uauiTimeBuckets(range, "hour")
+  When  I call uauiBucketsFor(range, "hour")
   Then  it returns 24 buckets
 
 AC2 — Each hour starts at a UTC instant
   Given the range 2026-11-05 to 2026-11-05
-  When  I call uauiTimeBuckets(range, "hour")
+  When  I call uauiBucketsFor(range, "hour")
   Then  the first bucket's start is "2026-11-04T23:00:00.000Z" and its end is "2026-11-05T00:00:00.000Z"
 
 AC3 — Each hour names its local day
   Given the range 2026-11-05 to 2026-11-05
-  When  I call uauiTimeBuckets(range, "hour")
+  When  I call uauiBucketsFor(range, "hour")
   Then  every bucket's days is ["2026-11-05"]
 
 AC4 — Day buckets gain an end
   Given the range 2026-11-01 to 2026-11-03
-  When  I call uauiTimeBuckets(range, "day")
+  When  I call uauiBucketsFor(range, "day")
   Then  the first bucket's end is "2026-11-02"
 
 AC5 — Month buckets end on the 1st of the next month
   Given the range 2026-01-15 to 2026-02-10
-  When  I call uauiTimeBuckets(range, "month")
+  When  I call uauiBucketsFor(range, "month")
   Then  the first bucket's end is "2026-02-01"
 
 Sad path
 
 AC6 — The day clocks go forward
   Given the range 2026-03-29 to 2026-03-29
-  When  I call uauiTimeBuckets(range, "hour")
+  When  I call uauiBucketsFor(range, "hour")
   Then  it returns 23 buckets
 
 AC7 — The day clocks go back
   Given the range 2026-10-25 to 2026-10-25
-  When  I call uauiTimeBuckets(range, "hour")
+  When  I call uauiBucketsFor(range, "hour")
   Then  it returns 25 buckets
 ```
 

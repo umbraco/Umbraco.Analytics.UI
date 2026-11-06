@@ -292,7 +292,7 @@ export class UauiTimeSeriesChartElement extends UauiTimeSeriesChartElementBase {
      * The day weeks start on when `groupBy` is `week`, as an ISO weekday number: 1 is Monday up to 7 for Sunday, the same
      * as `Intl.Locale.prototype.getWeekInfo().firstDay`, so the editor's culture can be passed straight through:
      * `new Intl.Locale(culture).getWeekInfo().firstDay`. It decides which week a compare point falls in, so give
-     * `uauiTimeBuckets` the same value. Defaults to 1 (Monday). A value that isn't a whole number from 1 to 7 is read as Monday.
+     * `uauiBucketsFor` the same value. Defaults to 1 (Monday). A value that isn't a whole number from 1 to 7 is read as Monday.
      * If it doesn't match how the product bucketed its points, the compare line can shift by a week when one period starts on the week-start day.
      */
     @property({ type: Number, attribute: "week-start" })

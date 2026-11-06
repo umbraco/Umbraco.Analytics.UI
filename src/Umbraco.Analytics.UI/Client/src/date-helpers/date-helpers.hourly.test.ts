@@ -1,46 +1,46 @@
-// HRS-1 — Time buckets for a range. Runs with the browser's time zone pinned to Europe/Copenhagen.
+// HRS-1 — Buckets for a range. Runs with the browser's time zone pinned to Europe/Copenhagen.
 import { describe, expect, it } from "vitest";
-import { uauiTimeBuckets } from "./index.js";
+import { uauiBucketsFor } from "./index.js";
 
-describe("Feature: time buckets for a range", () => {
+describe("Feature: buckets for a range", () => {
     describe("Scenario: one day by hour", () => {
         const range = { from: "2026-11-05", to: "2026-11-05" };
 
         it("returns 24 buckets", () => {
-            expect(uauiTimeBuckets(range, "hour")).toHaveLength(24);
+            expect(uauiBucketsFor(range, "hour")).toHaveLength(24);
         });
 
         it("starts the first hour at local midnight, as a UTC instant", () => {
-            expect(uauiTimeBuckets(range, "hour")[0]).toMatchObject({ start: "2026-11-04T23:00:00.000Z", end: "2026-11-05T00:00:00.000Z" });
+            expect(uauiBucketsFor(range, "hour")[0]).toMatchObject({ start: "2026-11-04T23:00:00.000Z", end: "2026-11-05T00:00:00.000Z" });
         });
 
         it("names the local day of every hour", () => {
-            expect(new Set(uauiTimeBuckets(range, "hour").map((b) => b.days.join()))).toEqual(new Set(["2026-11-05"]));
+            expect(new Set(uauiBucketsFor(range, "hour").map((b) => b.days.join()))).toEqual(new Set(["2026-11-05"]));
         });
     });
 
     describe("Scenario: day and month buckets gain an end", () => {
         it("ends a day bucket on the next day", () => {
-            expect(uauiTimeBuckets({ from: "2026-11-01", to: "2026-11-03" }, "day")[0].end).toBe("2026-11-02");
+            expect(uauiBucketsFor({ from: "2026-11-01", to: "2026-11-03" }, "day")[0].end).toBe("2026-11-02");
         });
 
         it("ends a month bucket on the 1st of the next month", () => {
-            expect(uauiTimeBuckets({ from: "2026-01-15", to: "2026-02-10" }, "month")[0].end).toBe("2026-02-01");
+            expect(uauiBucketsFor({ from: "2026-01-15", to: "2026-02-10" }, "month")[0].end).toBe("2026-02-01");
         });
     });
 
     describe("Scenario: sad path, days the clocks change", () => {
         it("returns 23 buckets on the day clocks go forward", () => {
-            expect(uauiTimeBuckets({ from: "2026-03-29", to: "2026-03-29" }, "hour")).toHaveLength(23);
+            expect(uauiBucketsFor({ from: "2026-03-29", to: "2026-03-29" }, "hour")).toHaveLength(23);
         });
 
         it("returns 25 buckets on the day clocks go back", () => {
-            expect(uauiTimeBuckets({ from: "2026-10-25", to: "2026-10-25" }, "hour")).toHaveLength(25);
+            expect(uauiBucketsFor({ from: "2026-10-25", to: "2026-10-25" }, "hour")).toHaveLength(25);
         });
     });
 
     describe("Scenario: two days by hour", () => {
-        const buckets = uauiTimeBuckets({ from: "2026-11-05", to: "2026-11-06" }, "hour");
+        const buckets = uauiBucketsFor({ from: "2026-11-05", to: "2026-11-06" }, "hour");
 
         it("returns 48 buckets", () => {
             expect(buckets).toHaveLength(48);
@@ -56,7 +56,7 @@ describe("Feature: time buckets for a range", () => {
     });
 
     describe("Scenario: a clipped first week", () => {
-        const first = uauiTimeBuckets({ from: "2026-11-04", to: "2026-11-20" }, "week", { weekStart: 1 })[0];
+        const first = uauiBucketsFor({ from: "2026-11-04", to: "2026-11-20" }, "week", { weekStart: 1 })[0];
 
         it("starts on the week's first day, before the range", () => {
             expect(first.start).toBe("2026-11-02");

@@ -174,7 +174,7 @@ export const LegendHiddenShare: Story = {
 
 /**
  * Weeks that start on Sunday (`week-start="7"`, the same as `Intl.Locale.getWeekInfo().firstDay` for en-US): the
- * points are the Sundays of `uauiTimeBuckets(range, "week", { weekStart: 7 })` and the compare weeks line up on them.
+ * points are the Sundays of `uauiBucketsFor(range, "week", { weekStart: 7 })` and the compare weeks line up on them.
  */
 export const SundayWeekStart: Story = {
     name: "Sunday week start",
@@ -182,7 +182,7 @@ export const SundayWeekStart: Story = {
 };
 
 /**
- * One bar per local hour, with `group-by="hour"`. The points are the UTC instants of `uauiTimeBuckets(range, "hour")`; any
+ * One bar per local hour, with `group-by="hour"`. The points are the UTC instants of `uauiBucketsFor(range, "hour")`; any
  * date-time is read as a moment and put in the browser's hour that contains it. Labels use the editor's culture.
  */
 export const ByHour: Story = {

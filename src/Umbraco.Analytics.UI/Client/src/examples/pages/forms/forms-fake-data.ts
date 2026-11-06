@@ -3,7 +3,7 @@
 // The shapes follow Forms' Management API (Umbraco.Forms.Web/Api/ManagementApi/Analytics): every endpoint is a POST
 // that takes an `AnalyticsQueryGet` and answers an `AnalyticsQueryResult`, a table of `columns` and `rows`, with
 // paging fields and `uniqueMembers`. Values are raw (counts, booleans, ISO date-times); the page formats them.
-import { uauiTimeBuckets } from "../../../date-helpers/index.js";
+import { uauiBucketsFor } from "../../../date-helpers/index.js";
 import type { UauiDateRange } from "../../../date-range/types.js";
 import type { UauiGroupBy } from "../../../group-by/group-by.element.js";
 import { wait } from "../fake-latency.js";
@@ -236,7 +236,7 @@ const rangeOf = (query: FormsAnalyticsQuery): UauiDateRange => ({ from: query.st
 function bucketsOf(query: FormsAnalyticsQuery) {
     const dimension = query.dimensions[0];
     const groupBy: UauiGroupBy = dimension === "week" ? "week" : dimension === "month" ? "month" : "day";
-    return uauiTimeBuckets(rangeOf(query), groupBy);
+    return uauiBucketsFor(rangeOf(query), groupBy);
 }
 
 /** Forms answers dates as .NET `DateTime`s, serialized without a zone: "2026-06-01T00:00:00". */
@@ -336,7 +336,7 @@ function entriesByHourOn(form: Form, date: string): number[] {
 export async function postSubmissionsByHour(query: FormsAnalyticsQuery, options: FakeApiOptions = {}): Promise<FormsAnalyticsResult> {
     await respond(options, "submissions by hour");
     const forms = formsFor(query);
-    const days = uauiTimeBuckets(rangeOf(query), "day").map((b) => b.start);
+    const days = uauiBucketsFor(rangeOf(query), "day").map((b) => b.start);
     const totals = Array.from({ length: 24 }, () => 0);
     for (const form of forms) for (const d of days) entriesByHourOn(form, d).forEach((count, h) => (totals[h] += count));
     const rows = totals.flatMap((entries, hour) => (entries ? [[hour, entries]] : []));
@@ -347,7 +347,7 @@ export async function postSubmissionsByHour(query: FormsAnalyticsQuery, options:
 export async function postOverview(query: FormsAnalyticsQuery, options: FakeApiOptions = {}): Promise<FormsAnalyticsResult> {
     await respond(options, "forms overview");
     const columns: FormsColumn[] = [...query.dimensions, ...query.metrics];
-    const days = uauiTimeBuckets(rangeOf(query), "day").map((b) => b.start);
+    const days = uauiBucketsFor(rangeOf(query), "day").map((b) => b.start);
     let allMembers: number[] = [];
     const rows = FORMS.map((form) => {
         const entriesByDay = days.map((d) => entriesOn(form, d));
@@ -379,7 +379,7 @@ export async function postWorkflows(query: FormsAnalyticsQuery, options: FakeApi
     const form = FORMS.find((f) => f.id === query.formId);
     if (!form) throw new Error("A form identifier is required for the workflows overview.");
     const columns: FormsColumn[] = [...query.dimensions, ...query.metrics];
-    const days = uauiTimeBuckets(rangeOf(query), "day").map((b) => b.start);
+    const days = uauiBucketsFor(rangeOf(query), "day").map((b) => b.start);
     const rows = form.workflows.map((w) => {
         const triggered = days.reduce((sum, d) => sum + entriesOn(form, d), 0);
         const failures = days.reduce((sum, d) => sum + failuresOn(w, d, entriesOn(form, d)), 0);
@@ -397,7 +397,7 @@ export async function postOrigins(query: FormsAnalyticsQuery, options: FakeApiOp
     await respond(options, "origins");
     const form = FORMS.find((f) => f.id === query.formId);
     if (!form) throw new Error("A form identifier is required for the origins.");
-    const days = uauiTimeBuckets(rangeOf(query), "day").map((b) => b.start);
+    const days = uauiBucketsFor(rangeOf(query), "day").map((b) => b.start);
     const rows = days.flatMap((d) => form.pages.map((p) => [dateTime(d), p.name, pageEntriesOn(form, p, d, entriesOn(form, d))]));
     return result(["date", "pageName", query.metrics[0]], rows, { ...query, page: 1, pageSize: 9999 }, 0);
 }
@@ -408,7 +408,7 @@ export async function postOriginsOverview(query: FormsAnalyticsQuery, options: F
     const form = FORMS.find((f) => f.id === query.formId);
     if (!form) throw new Error("A form identifier is required for the origins overview.");
     const columns: FormsColumn[] = [...query.dimensions, ...query.metrics];
-    const days = uauiTimeBuckets(rangeOf(query), "day").map((b) => b.start);
+    const days = uauiBucketsFor(rangeOf(query), "day").map((b) => b.start);
     const rows = form.pages.map((p) => {
         const perDay = days.map((d) => pageEntriesOn(form, p, d, entriesOn(form, d)));
         const entries = perDay.reduce((a, b) => a + b, 0);
@@ -433,7 +433,7 @@ export async function postRecordStates(query: FormsAnalyticsQuery, options: Fake
     await respond(options, "record states");
     const form = FORMS.find((f) => f.id === query.formId);
     if (!form) throw new Error("A form identifier is required for the record states.");
-    const days = uauiTimeBuckets(rangeOf(query), "day").map((b) => b.start);
+    const days = uauiBucketsFor(rangeOf(query), "day").map((b) => b.start);
     const submitted = days.reduce((sum, d) => sum + entriesOn(form, d), 0);
     const opened = Math.round(submitted / form.completion);
     const partial = Math.round(submitted + (opened - submitted) * 0.45);

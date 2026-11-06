@@ -34,6 +34,21 @@ export const UAUI_TABLE_CELL: {
 export const UAUI_TABLE_CONTEXT: UmbContextToken<UauiTableContext, UauiTableContext>;
 
 // @public
+export type UauiBucket = {
+    start: string;
+    end: string;
+    days: string[];
+};
+
+// @public
+export function uauiBucketsFor(range: UauiDateSpan, groupBy: UauiGroupBy, options?: UauiBucketsForOptions): UauiBucket[];
+
+// @public
+export type UauiBucketsForOptions = {
+    weekStart?: UauiWeekStart;
+};
+
+// @public
 export type UauiCategory = {
     id: string;
     label: string;
@@ -690,21 +705,6 @@ export class UauiTextCellElement extends UmbLitElement implements UauiTableCellE
     static styles: CSSResultGroup;
     value: unknown;
 }
-
-// @public
-export type UauiTimeBucket = {
-    start: string;
-    end: string;
-    days: string[];
-};
-
-// @public
-export function uauiTimeBuckets(range: UauiDateSpan, groupBy: UauiGroupBy, options?: UauiTimeBucketsOptions): UauiTimeBucket[];
-
-// @public
-export type UauiTimeBucketsOptions = {
-    weekStart?: UauiWeekStart;
-};
 
 // @public
 export class UauiTimeSeriesChartElement extends UauiTimeSeriesChartElementBase {

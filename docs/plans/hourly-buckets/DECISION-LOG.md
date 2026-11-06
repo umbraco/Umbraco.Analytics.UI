@@ -43,3 +43,4 @@
 - **05-11-2026** (T11) Open for the user: the example marks now and incomplete only at hour level, and on Today its KPI tiles compare the day so far with all of yesterday.
 - **05-11-2026** (T11) Pre-existing: the AI story's copyable imports header lists names the page no longer uses and misses a few it does (`ref`, `UmbTextStyles`, table server types). Left for a separate fix.
 - **05-11-2026** (feature review) `marker-buckets.ts` renamed `bucket-lookup.ts`, since `now` and `incomplete-from` use it too. ARCHITECTURE.md's file list doesn't yet show this rename or the new `chart/internal/hour-ticks.ts`.
+- **06-11-2026** Renamed `uauiTimeBuckets` to `uauiBucketsFor` (types `UauiBucket`, `UauiBucketsForOptions`). User decision: matches `uauiCompareFor` and reads naturally with the group-by argument.

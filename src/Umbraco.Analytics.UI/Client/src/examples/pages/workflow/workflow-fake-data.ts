@@ -34,7 +34,7 @@ export type WorkflowChartSeries<TName extends string> = { name: TName; data: Wor
 
 /**
  * What every chart answer has: its series, and `today`, the editor's current day in the same frame as `x` (the
- * server's clock, read in the query's time zone). The client never works today out from its own clock, so the today
+ * server's clock, read in the query's time zone). The client never works today out from its own clock, so the now
  * line always lands on one of the answer's days.
  */
 export type WorkflowChartResponse<TName extends string> = { series: WorkflowChartSeries<TName>[]; today: number };

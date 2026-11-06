@@ -7,7 +7,7 @@
 ## Decisions
 
 - **The editor's time zone is the browser's**, the same one the date picker already uses for "today". No time zone setting on the chart.
-- **`uauiDateBuckets` is renamed `uauiTimeBuckets(range, groupBy)`** (type `UauiTimeBucket`): it slices a range of time into the time series chart's slots, and an hour slot isn't a date. A plain rename, as nothing is released. With `"hour"`, each bucket's `start` is a UTC instant. Every bucket also gains an `end` (the next bucket's start), so a product sends `start..end` to its server without working it out.
+- **`uauiDateBuckets` is renamed `uauiBucketsFor(range, groupBy)`** (type `UauiBucket`): it slices a range of time into the time series chart's slots, and an hour slot isn't a date. A plain rename, as nothing is released. With `"hour"`, each bucket's `start` is a UTC instant. Every bucket also gains an `end` (the next bucket's start), so a product sends `start..end` to its server without working it out.
 - **Hour handling goes in a new `internal/date/hour-math.ts`**, not into `date-math.ts`, which keeps its "no time zone ever" rule.
 - **Hours are UTC instants inside the chart** (`"2026-11-05T13:00:00.000Z"`), not local wall-clock text (`"2026-11-05T14:00"`). On the day clocks go back, 2 AM happens twice. Wall-clock text would merge those two hours into one bar. UTC instants still sort as plain text, so the rest of the chart (sorting, marker lookup, incomplete index) keeps working on strings. These keys are never shown: labels are formatted in local time with `Intl` ("2 PM", "Nov 5, 2026, 1 PM"; SPEC R26 to R29).
 - **The bucket is the local hour that contains the instant**, worked out with `Date`'s local getters. A half-hour zone (India, +5:30) gets local hours too. A product that counts by UTC hour there gets bars that straddle two local hours. That is the product's call, and the spec says so.
@@ -40,7 +40,7 @@ chart/
 group-by/
   group-by.element.ts       UauiGroupBy gains "hour"; its label
 date-helpers/
-  date-helpers.ts           uauiDateBuckets renamed uauiTimeBuckets, with "hour" and bucket end; uauiGroupByOptions
+  date-helpers.ts           uauiDateBuckets renamed uauiBucketsFor, with "hour" and bucket end; uauiGroupByOptions
 date-range/
   types.ts                  docs: today and yesterday are built-in ids
   date-range-modal.element.ts   labels for the two new presets
@@ -50,7 +50,7 @@ examples/pages/ai/          Today preset, Hour option, hourly fake data
 examples/pages/engage/, workflow/   today= becomes now=
 ```
 
-- **Public API:** `api/analytics-ui.api.md` changes: `now` in, `today` out on the chart; `"hour"` in `UauiGroupBy`; `uauiDateBuckets` renamed `uauiTimeBuckets` (and `UauiDateBucket` to `UauiTimeBucket`), with `end`; `uauiGroupByOptions`; the two preset ids. Needs reviewer sign-off.
+- **Public API:** `api/analytics-ui.api.md` changes: `now` in, `today` out on the chart; `"hour"` in `UauiGroupBy`; `uauiDateBuckets` renamed `uauiBucketsFor` (and `UauiDateBucket` to `UauiBucket`), with `end`; `uauiGroupByOptions`; the two preset ids. Needs reviewer sign-off.
 - **Stories and tests:** every story and test that sets the chart's `today` moves to `now`.
 
 Not touched: `uaui-category-chart` (no time order), the date picker's own `today` (a plain date presets count from), the server side (this package has no API), Chart.js setup (no new plugins, no global changes; the now line is still a per-chart plugin).

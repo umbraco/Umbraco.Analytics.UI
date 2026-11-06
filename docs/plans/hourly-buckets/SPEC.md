@@ -35,7 +35,7 @@ None. This package draws only.
 - **R19** When the range changes and the chosen option isn't in the new list, the product switches to the list's first option. The control doesn't do it, since it doesn't know the range.
 
 **Buckets helper**
-- **R20** `uauiTimeBuckets(range, "hour")` (renamed from `uauiDateBuckets`) returns one bucket per local hour from the range's first midnight to the midnight after its last day. `start` is the hour's start as a UTC instant (`"2026-11-05T13:00:00.000Z"`), `end` the next hour's start, and `days` the one local date it's in.
+- **R20** `uauiBucketsFor(range, "hour")` (renamed from `uauiDateBuckets`) returns one bucket per local hour from the range's first midnight to the midnight after its last day. `start` is the hour's start as a UTC instant (`"2026-11-05T13:00:00.000Z"`), `end` the next hour's start, and `days` the one local date it's in.
 - **R21** Every bucket, at every unit, has `end`: the first day after it for day, week and month (`"2026-11-06"`), the next instant for hour.
 
 **Presets**

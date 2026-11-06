@@ -34,7 +34,7 @@ Usage and API are in [Storybook](https://umbraco.github.io/Umbraco.Analytics.UI/
 | `uaui-empty-state` | "Nothing to show" message. The chart and table use it too. |
 | `uaui-error-state` | "Could not load" message, with an optional Retry button. The chart and table show it when their `error` is set. The KPI tile shows a dash instead, with no Retry. |
 
-Also public: `UauiLoadStateMixin` (the loading, error and empty settings the charts, funnel and table share, with the error > loading > empty rule and the `retry` event), `UauiChartMixin` (built on it: the settings both charts share, such as `series`, `y-scale` and `value-format`), `UAUI_TABLE_CELL` (the cell element names), `UAUI_TABLE_CONTEXT` (what a custom cell reads from its table), `UauiPaletteStyles` (the colour palette for your own elements), `UauiTableServerController` (runs a table in `server` mode) and the date helpers `uauiPresetRange`, `uauiPreviousPeriod`, `uauiPreviousYear`, `uauiCompareFor`, `uauiDaysIn`, `uauiTimeBuckets`, `uauiGroupByOptions` and `uauiFormatDateRange`.
+Also public: `UauiLoadStateMixin` (the loading, error and empty settings the charts, funnel and table share, with the error > loading > empty rule and the `retry` event), `UauiChartMixin` (built on it: the settings both charts share, such as `series`, `y-scale` and `value-format`), `UAUI_TABLE_CELL` (the cell element names), `UAUI_TABLE_CONTEXT` (what a custom cell reads from its table), `UauiPaletteStyles` (the colour palette for your own elements), `UauiTableServerController` (runs a table in `server` mode) and the date helpers `uauiPresetRange`, `uauiPreviousPeriod`, `uauiPreviousYear`, `uauiCompareFor`, `uauiDaysIn`, `uauiBucketsFor`, `uauiGroupByOptions` and `uauiFormatDateRange`.
 
 ## Packages
 
