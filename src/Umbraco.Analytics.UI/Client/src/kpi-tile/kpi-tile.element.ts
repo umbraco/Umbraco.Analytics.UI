@@ -321,6 +321,21 @@ export class UauiKpiTileElement extends UmbLitElement {
             : html`<div class="tile${hasDetail}">${content}</div>`;
     }
 
+    // Notes on the CSS below (kept out of the template so they don't ship in the bundle):
+    // - --_uaui-kpi-value-size on .tile is the value's size, set once: 24px from a 240px tile, stepping down smoothly to
+    //   18px at 180px. The skeleton heights read it too, so they follow the value down.
+    // - .value's font-size is a backup for a very long number, stepping down with the tile.
+    // - .row.has-detail is a grid. The value and badge fit on one line: the badge beside the value, the line below both.
+    //   They don't (the tile measures it, see "wrapped"): the value, the line, then the badge. The value and the badge stay
+    //   max-content wide in both, so what the tile measures doesn't change with the layout it picks.
+    // - .tile.reserve-detail: with a line the skeleton is the height of a loaded tile with it, so the tile doesn't jump.
+    //   From the top: the label (12px * 1.3), 5px, the value row, 5px, the line (13px * 1.3). The row is the value
+    //   (1.1 * its font size) or the badge (24px) if taller: 26.4px at 24px, 24px at the 20px the value steps down to in a
+    //   200px cell. This is the wide layout, the badge beside the value; a tile whose badge wraps below the value is taller
+    //   still and grows to fit it. The narrow block sets the wrapped height.
+    // - The narrow .tile.reserve-detail rule reserves the wrapped layout, loaded or not: label (12px * 1.3), 5px, the
+    //   value (1.1 * its font size), 5px, the line (13px * 1.3), 5px, the badge's 3px margin and its 24px. It comes after
+    //   the wide rule with the same specificity, so it wins.
     static override styles: CSSResultGroup = [
         UauiPaletteStyles,
         UauiVisuallyHiddenStyles,
@@ -352,8 +367,6 @@ export class UauiKpiTileElement extends UmbLitElement {
             }
 
             .tile {
-                /* The value's size, set once: 24px from a 240px tile, stepping down smoothly to 18px at 180px. The skeleton
-                   heights read it too, so they follow the value down. */
                 --_uaui-kpi-value-size: clamp(18px, 10cqi, 24px);
                 box-sizing: border-box;
                 height: 100%;
@@ -526,9 +539,6 @@ export class UauiKpiTileElement extends UmbLitElement {
                 gap: 8px 10px;
             }
 
-            /* With a line the row is a grid. The value and badge fit on one line: the badge beside the value, the line below
-               both. They don't (the tile measures it): the value, the line, then the badge. The value and the badge stay
-               max-content wide in both, so what the tile measures doesn't change with the layout it picks. */
             .row.has-detail {
                 display: grid;
                 grid-template-columns: auto minmax(0, 1fr);
@@ -563,7 +573,6 @@ export class UauiKpiTileElement extends UmbLitElement {
 
             .value {
                 display: block;
-                /* Backup for a very long number, stepping down with the tile (see --_uaui-kpi-value-size). */
                 font-size: var(--_uaui-kpi-value-size);
                 font-weight: 700;
                 line-height: 1.1;
@@ -594,18 +603,10 @@ export class UauiKpiTileElement extends UmbLitElement {
                 }
             }
 
-            /* With a line the skeleton is the height of a loaded tile with it, so the tile doesn't jump. From the top: the
-               label (12px * 1.3), 5px, the value row, 5px, the line (13px * 1.3). The row is the value (1.1 * its font size)
-               or the badge (24px) if taller: 26.4px at 24px, 24px at the 20px the value steps down to in a 200px cell. This
-               is the wide layout, the badge beside the value; a tile whose badge wraps below the value is taller still and
-               grows to fit it. The narrow block above sets the wrapped height. */
             .tile.reserve-detail {
                 --_uaui-skeleton-height: calc(12px * 1.3 + 5px + max(24px, 1.1 * var(--_uaui-kpi-value-size)) + 5px + 13px * 1.3);
             }
 
-            /* A narrow tile with a line reserves the wrapped layout, loaded or not: label (12px * 1.3), 5px, the value
-               (1.1 * its font size), 5px, the line (13px * 1.3), 5px, the badge's 3px margin and its 24px. After the wide rule
-               above, with the same specificity, so it wins. */
             @container (width < 240px) {
                 .tile.reserve-detail {
                     --_uaui-skeleton-height: calc(12px * 1.3 + 5px + 1.1 * var(--_uaui-kpi-value-size) + 5px + 13px * 1.3 + 5px + 3px + 24px);
