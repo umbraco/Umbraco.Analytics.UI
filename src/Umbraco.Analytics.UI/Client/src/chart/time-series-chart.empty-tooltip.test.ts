@@ -1,14 +1,13 @@
 // EMP-3 — The tooltip says no data. EMP-4 — The hidden table says no data.
 // An empty slot is hovered by its x position on the x scale: it has no drawn point to hover.
 /// <reference types="vite/client" />
-import { Chart } from "@umbraco/analytics-ui/external/chart.js";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import { page, userEvent } from "vitest/browser";
 import { html } from "@umbraco-cms/backoffice/external/lit";
-import { umbLocalizationManager } from "@umbraco-cms/backoffice/localization-api";
 import darkCss from "@umbraco-ui/uui/themes/dark.css?inline";
 import { axeRun } from "../internal/test/a11y.js";
 import { withTheme } from "../internal/test/page-example.js";
+import { chartOf, useEnglishDates } from "../internal/test/chart.js";
 import { deepQuery, deepQueryAll, renderElement, settle, shadow, type UauiTestElement } from "../internal/test/dom.js";
 import type { UauiCompare, UauiDateRange } from "../date-range/types.js";
 import type { UauiSeries } from "./types.js";
@@ -40,7 +39,6 @@ const chart = async ({ kind = "line", series, compareSeries = [], compare }: Opt
     return el;
 };
 
-const chartOf = (el: Element) => Chart.getChart(shadow(el).querySelector("canvas")!)!;
 const tooltip = (el: Element) => shadow(el).querySelector("uaui-chart-tooltip") as HTMLElement;
 /** Hovers a slot, by its x-axis label ("Oct 26"), at its x on the x scale, halfway up the canvas, and waits for the tooltip. */
 const hoverSlot = async (el: Element, label: string) => {
@@ -62,13 +60,7 @@ const hiddenTable = (el: Element) => deepQuery<HTMLTableElement>(shadow(el), "ta
 const bodyRows = (el: Element) => [...hiddenTable(el).tBodies[0].rows].map((row) => [...row.cells].map((cell) => cell.textContent!.trim()));
 
 describe("Feature: the tooltip says no data", () => {
-    const previousLanguage = umbLocalizationManager.documentLanguage;
-    beforeEach(() => {
-        umbLocalizationManager.documentLanguage = "en-US";
-    });
-    afterEach(() => {
-        umbLocalizationManager.documentLanguage = previousLanguage;
-    });
+    useEnglishDates();
 
     describe("Scenario: an empty period can be hovered", () => {
         let el: UauiTestElement;
@@ -92,6 +84,16 @@ describe("Feature: the tooltip says no data", () => {
         it('reads "No data" in the Success rate row', () => {
             // One series: its row has no label.
             expect(tooltipRows(el)).toEqual([["", "No data"]]);
+        });
+    });
+
+    describe("Scenario: the chart updates under a hovered empty slot", () => {
+        it("moves the tooltip to the new value's height without the pointer moving", async () => {
+            const el = (await chart({ series: [successRate] })) as UauiTestElement & { series: UauiSeries[] };
+            await hoverSlot(el, "Oct 26");
+            const emptyTop = tooltip(el).style.top;
+            el.series = [seriesOf("rate", "Success rate", { ...on(allBut26, 96.5), "2026-10-26": 42 })];
+            await expect.poll(() => tooltip(el).style.top).not.toBe(emptyTop);
         });
     });
 
@@ -176,13 +178,7 @@ describe("Feature: the tooltip says no data", () => {
 });
 
 describe("Feature: the hidden table says no data", () => {
-    const previousLanguage = umbLocalizationManager.documentLanguage;
-    beforeEach(() => {
-        umbLocalizationManager.documentLanguage = "en-US";
-    });
-    afterEach(() => {
-        umbLocalizationManager.documentLanguage = previousLanguage;
-    });
+    useEnglishDates();
 
     describe("Scenario: an empty value cell", () => {
         let el: UauiTestElement;

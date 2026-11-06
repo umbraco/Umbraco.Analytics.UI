@@ -1,6 +1,11 @@
 import type { UauiColorSlot, UauiStatusColor } from "../theme/types.js";
 
-/** One value on one day. Two points of a series on the same date are added, so aggregate rates and averages before passing them. */
+/**
+ * One value for one period: a day or an hour, or at week and month level the period's start (as `uauiBucketsFor` returns). Two points
+ * of a series on the same date are added, so aggregate rates and averages before passing them. Points are never moved:
+ * a week or month point dated mid-period gets a slot of its own beside the period's. A period with no value is left out
+ * (rates, averages); counts send 0.
+ */
 export type UauiPoint = {
     /**
  * ISO date, e.g. "2026-06-11". At day, week and month level a date-time such as "2026-06-11T00:00:00Z" is read as the day

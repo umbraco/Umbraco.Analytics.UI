@@ -1,11 +1,10 @@
 // EMP-1 — Every period gets a slot.
 // The slots are the chart's x-axis dates, read from the Chart.js chart's labels (formatted for en-US: "Oct 24" by day
 // and week, "Jan 2026" by month).
-import { Chart } from "@umbraco/analytics-ui/external/chart.js";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import { html } from "@umbraco-cms/backoffice/external/lit";
-import { umbLocalizationManager } from "@umbraco-cms/backoffice/localization-api";
-import { renderElement, settle, shadow, type UauiTestElement } from "../internal/test/dom.js";
+import { chartOf, useEnglishDates } from "../internal/test/chart.js";
+import { renderElement, settle, type UauiTestElement } from "../internal/test/dom.js";
 import type { UauiDateRange } from "../date-range/types.js";
 import type { UauiSeries } from "./types.js";
 import "./time-series-chart.element.js";
@@ -23,16 +22,10 @@ const chart = async ({ series, range, groupBy = "day", weekStart = 1 }: Options)
     return el;
 };
 
-const slots = (el: Element) => Chart.getChart(shadow(el).querySelector("canvas")!)!.data.labels;
+const slots = (el: Element) => chartOf(el).data.labels;
 
 describe("Feature: every period gets a slot", () => {
-    const previousLanguage = umbLocalizationManager.documentLanguage;
-    beforeEach(() => {
-        umbLocalizationManager.documentLanguage = "en-US";
-    });
-    afterEach(() => {
-        umbLocalizationManager.documentLanguage = previousLanguage;
-    });
+    useEnglishDates();
 
     describe("Scenario: every day of the range", () => {
         let el: UauiTestElement;
