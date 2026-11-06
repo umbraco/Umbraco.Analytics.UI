@@ -37,7 +37,7 @@ describe("Feature: the Commerce example shows empty days", () => {
             page = await renderPage("Cart conversion");
         });
 
-        it.skip("has 14 slots", () => {
+        it("has 14 slots", () => {
             expect(chartOf(page).data.labels).toHaveLength(14);
         });
     });
@@ -48,7 +48,7 @@ describe("Feature: the Commerce example shows empty days", () => {
             page = await renderPage("Cart conversion");
         });
 
-        it.skip("has no value in the slots 2025-12-25 to 2025-12-31", () => {
+        it("has no value in the slots 2025-12-25 to 2025-12-31", () => {
             expect(chartOf(page).data.datasets[0].data.slice(0, 7)).toEqual([null, null, null, null, null, null, null]);
         });
     });
@@ -60,7 +60,7 @@ describe("Feature: the Commerce example shows empty days", () => {
                 page = await renderPage("Orders");
             });
 
-            it.skip("has 0 in the slot of 2025-12-25", () => {
+            it("has 0 in the slot of 2025-12-25", () => {
                 expect(chartOf(page).data.datasets[0].data[0]).toBe(0);
             });
         });
