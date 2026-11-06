@@ -227,6 +227,7 @@ export class UauiTimeSeriesChartElement extends UauiTimeSeriesChartElementBase {
      * The period the series cover, as `uaui-date-range` emits it. Optional but recommended with `compare`: compare
      * points are aligned from the start of this range's first bucket. Without it, from the first point of the
      * series (at hour level, that point's local day), which misaligns the compare when sparse data omits the period's first days (or weeks, or months).
+     * At week and month level, date each point at its period's start (see `UauiPoint`).
      */
     @property({ attribute: false })
     range?: UauiDateRange;
@@ -284,7 +285,7 @@ export class UauiTimeSeriesChartElement extends UauiTimeSeriesChartElementBase {
     @property({ type: String, attribute: "incomplete-from" })
     incompleteFrom?: string;
 
-    /** Sets the format of the x-axis labels, and the bucket unit (day, week, month) that compare points are aligned in. The points themselves are not grouped: pass them already grouped, with each bucket at its first day. */
+    /** Sets the format of the x-axis labels, and the bucket unit (day, week, month) that compare points are aligned in. The points themselves are not grouped: pass them already grouped, each dated at its bucket's start (see `UauiPoint`). */
     @property({ type: String, attribute: "group-by" })
     groupBy: UauiGroupBy = "day";
 
