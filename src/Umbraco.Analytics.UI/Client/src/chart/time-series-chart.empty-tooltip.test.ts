@@ -215,11 +215,11 @@ describe("Feature: the hidden table says no data", () => {
         describe("Scenario: accessible in both themes", () => {
             const audit = (themeCss?: string) => withTheme(themeCss, async () => axeRun(await chart({ series: [successRate], compareSeries: [previousRate], compare })));
 
-            it.skip("has no axe violations in the light theme", async () => {
+            it("has no axe violations in the light theme", async () => {
                 expect(await audit()).toHaveNoViolations();
             });
 
-            it.skip("has no axe violations in the dark theme", async () => {
+            it("has no axe violations in the dark theme", async () => {
                 expect(await audit(darkCss)).toHaveNoViolations();
             });
         });
