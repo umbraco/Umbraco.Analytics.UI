@@ -22,10 +22,10 @@ const reviews = seriesOf("reviews", [4, 6, 5, 7, 2]);
 const approvals = seriesOf("approvals", [1, 2, 2, 1, 1]);
 const previous = seriesOf("reviews", [3, 4, 4, 5, 5], ["2026-10-01", "2026-10-02", "2026-10-03", "2026-10-04", "2026-10-05"]);
 
-type Options = { kind?: string; series?: UauiSeries[]; compare?: UauiSeries[]; today?: string; incompleteFrom?: string; groupBy?: string; height?: string; lowerIsBetter?: boolean };
-const chart = ({ kind = "line", series = [reviews], compare, today, incompleteFrom, groupBy = "day", height, lowerIsBetter }: Options = {}) =>
+type Options = { kind?: string; series?: UauiSeries[]; compare?: UauiSeries[]; now?: string; incompleteFrom?: string; groupBy?: string; height?: string; lowerIsBetter?: boolean };
+const chart = ({ kind = "line", series = [reviews], compare, now, incompleteFrom, groupBy = "day", height, lowerIsBetter }: Options = {}) =>
     renderElement(
-        html`<uaui-time-series-chart kind=${kind} group-by=${groupBy} .lowerIsBetter=${lowerIsBetter ?? false} .today=${today} .incompleteFrom=${incompleteFrom} .series=${series}
+        html`<uaui-time-series-chart kind=${kind} group-by=${groupBy} .lowerIsBetter=${lowerIsBetter ?? false} .now=${now} .incompleteFrom=${incompleteFrom} .series=${series}
             .compareSeries=${compare ?? []} style="width:400px${height ? `; --uaui-chart-height: ${height}` : ""}"></uaui-time-series-chart>`,
         "uaui-time-series-chart",
     );
@@ -233,13 +233,13 @@ describe("Feature: marking the incomplete part of a time series chart", () => {
     });
 
     describe("Scenario: the hatched band", () => {
-        it("is a plugin of each chart, before the today line, and never registered globally", async () => {
-            const first = await chart({ incompleteFrom: "2026-11-04", today: "2026-11-04" });
+        it("is a plugin of each chart, before the now line, and never registered globally", async () => {
+            const first = await chart({ incompleteFrom: "2026-11-04", now: "2026-11-04" });
             const second = await chart({ incompleteFrom: "2026-11-04" });
             await settle(first);
             await settle(second);
             expect(pluginIds(first).indexOf("uauiIncomplete")).toBeGreaterThan(-1);
-            expect(pluginIds(first).indexOf("uauiIncomplete")).toBeLessThan(pluginIds(first).indexOf("uauiToday"));
+            expect(pluginIds(first).indexOf("uauiIncomplete")).toBeLessThan(pluginIds(first).indexOf("uauiNow"));
             const instance = (el: Element) => (chartOf(el).config as unknown as { plugins: { id: string }[] }).plugins.find((p) => p.id === "uauiIncomplete");
             expect(instance(first)).not.toBe(instance(second));
             expect(Object.keys((Chart.registry.plugins as unknown as { items: object }).items)).not.toContain("uauiIncomplete");
@@ -289,7 +289,7 @@ describe("Feature: marking the incomplete part of a time series chart", () => {
         });
 
         it("names a date that is today and incomplete with one phrase", async () => {
-            const el = await chart({ today: "2026-11-04", incompleteFrom: "2026-11-04" });
+            const el = await chart({ now: "2026-11-04", incompleteFrom: "2026-11-04" });
             await settle(el);
             const rows = rowHeaders(el);
             expect(rows[3]).toMatch(/\(today, incomplete\)$/);
@@ -298,13 +298,13 @@ describe("Feature: marking the incomplete part of a time series chart", () => {
         });
 
         it("names today when only today is set", async () => {
-            const el = await chart({ today: "2026-11-04" });
+            const el = await chart({ now: "2026-11-04" });
             await settle(el);
             expect(rowHeaders(el)[3]).toMatch(/\(today\)$/);
         });
 
         it("names a week that contains today and is incomplete with one phrase", async () => {
-            const el = await chart({ kind: "bar", groupBy: "week", series: [seriesOf("reviews", [3, 4, 5], weeks)], today: "2026-11-04", incompleteFrom: "2026-11-04" });
+            const el = await chart({ kind: "bar", groupBy: "week", series: [seriesOf("reviews", [3, 4, 5], weeks)], now: "2026-11-04", incompleteFrom: "2026-11-04" });
             await settle(el);
             const rows = rowHeaders(el);
             expect(rows[1]).toMatch(/\(includes today, incomplete\)$/);
@@ -314,7 +314,7 @@ describe("Feature: marking the incomplete part of a time series chart", () => {
 
     describe("Scenario: accessibility", () => {
         it("has no accessibility violations", async () => {
-            const el = await chart({ kind: "bar", series: [reviews, approvals], compare: [previous], today: "2026-11-04", incompleteFrom: "2026-11-04" });
+            const el = await chart({ kind: "bar", series: [reviews, approvals], compare: [previous], now: "2026-11-04", incompleteFrom: "2026-11-04" });
             await settle(el);
             expect(await axeRun(el)).toHaveNoViolations();
         });

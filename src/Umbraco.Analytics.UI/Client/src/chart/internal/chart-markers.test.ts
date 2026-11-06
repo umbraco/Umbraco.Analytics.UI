@@ -9,7 +9,7 @@ import { axeRun } from "../../internal/test/a11y.js";
 import { deepText, nextEvent, recordEvents, renderElement, shadow, type UauiTestElement } from "../../internal/test/dom.js";
 import type { UauiMarker } from "../types.js";
 import "./chart-markers.element.js";
-import { bucketMarkers } from "./marker-buckets.js";
+import { bucketMarkers } from "./bucket-lookup.js";
 
 const dates = ["2026-06-10", "2026-06-11", "2026-06-12"];
 const dateFormat = new Intl.DateTimeFormat("en", { day: "numeric", month: "short", year: "numeric" });

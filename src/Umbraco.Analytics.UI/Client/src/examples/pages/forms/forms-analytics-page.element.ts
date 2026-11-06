@@ -62,7 +62,8 @@ const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
  * can't be added up (one member who submits on two days of a week is one member that week), so for them the page asks
  * the server for the bucket: `week` and `month` are proposed dimensions (see `ProposedColumn`).
  */
-const membersDimension: Record<UauiGroupBy, FormsColumn> = { day: "date", week: "week", month: "month" };
+// Forms has no hourly dimension and this page doesn't offer "Hour", so `hour` only completes the record.
+const membersDimension: Record<UauiGroupBy, FormsColumn> = { hour: "date", day: "date", week: "week", month: "month" };
 
 /**
  * A Forms query for one range. Forms sends local wall-clock date-times (`yyyy-MM-ddTHH:mm:ss`) with the time zone,

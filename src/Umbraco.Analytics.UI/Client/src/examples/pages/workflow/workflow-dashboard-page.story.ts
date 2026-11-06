@@ -50,7 +50,7 @@ const render = (latency?: number, failing = false) => html`
  * Status tiles in their status colours (approved, pending, rejected, cancelled) each open the history filtered by
  * their status (`openable`; a product with a separate history view would give each tile an `href` instead). The
  * approval activity chart draws approved, rejected and cancelled as daily bars and pending (waiting at the end of each
- * day) as a line over them, with a today line and a log or linear y-axis: Workflow's daily counts are mostly 0 or a
+ * day) as a line over them, with a now line and a log or linear y-axis: Workflow's daily counts are mostly 0 or a
  * few, beside a larger pending total. Above it, the fastest, average and slowest approval time. The content review
  * chart stacks the reviews due each day: reviewed and overdue up to today, upcoming for the two weeks after it. The
  * history table has a status filter, the approval steps done in a progress cell ("2 of 3") and the status in a
@@ -58,7 +58,7 @@ const render = (latency?: number, failing = false) => html`
  *
  * The adapter avoids three bugs of Workflow's own dashboard: "fastest" always showing "-", an average that counted
  * unfinished workflows, and a "Today" label that never showed. Every query sends the editor's time zone, and the
- * charts' days, their `today` and the history's date-times (ISO with offsets) all come from the server in that zone. The data is made up.
+ * charts' days, their `now` and the history's date-times (ISO with offsets) all come from the server in that zone. The data is made up.
  */
 export const Dashboard: StoryObj = {
     render: () => render(),

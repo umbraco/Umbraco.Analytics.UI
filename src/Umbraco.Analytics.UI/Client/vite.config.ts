@@ -56,7 +56,8 @@ export default defineConfig({
         expect: { poll: { timeout: 5_000 } },
         browser: {
             enabled: true,
-            provider: playwright(),
+            // Hour tests need a time zone with DST and a fixed locale, whatever machine runs them.
+            provider: playwright({ contextOptions: { timezoneId: "Europe/Copenhagen", locale: "en-US" } }),
             instances: browserInstances,
             headless: true,
         },

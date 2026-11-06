@@ -27,6 +27,7 @@ export default {
 
         // Group by
         groupByLabel: "Group by",
+        groupByHour: "Hour",
         groupByDay: "Day",
         groupByWeek: "Week",
         groupByMonth: "Month",
@@ -48,8 +49,14 @@ export default {
         chartMarkerSeparator: "; ",
         chartMarkersMore: "+{0} more",
         chartComparisonLabel: "Comparison",
-        // Drawn over the chart's today line.
+        // Drawn over the chart's now line when the chart is by day, week or month.
         chartToday: "Today",
+        // Drawn over the chart's now line when the chart is by hour.
+        chartNow: "Now",
+        // The hour that is now in the tooltip and the hidden table, "Nov 5, 2026, 2 PM (now)".
+        chartNowDate: "{0} (now)",
+        // The hour that is both now and incomplete, "Nov 5, 2026, 2 PM (now, incomplete)".
+        chartNowIncompleteDate: "{0} (now, incomplete)",
         // Today's date in the tooltip and the hidden table, "Nov 2, 2026 (today)".
         chartTodayDate: "{0} (today)",
         // The same for a week or month that contains today, "Nov 2, 2026 (includes today)".
@@ -111,6 +118,8 @@ export default {
         dateRangeCompareShort: "vs {0}",
         dateRangeModalHeadline: "Date range",
         dateRangePreset: "Preset",
+        dateRangeToday: "Today",
+        dateRangeYesterday: "Yesterday",
         dateRangeLast7Days: "Last 7 days",
         dateRangeLast30Days: "Last 30 days",
         dateRangeThisMonth: "This month",

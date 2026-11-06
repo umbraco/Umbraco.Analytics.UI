@@ -1,0 +1,47 @@
+# Decision log
+
+- **05-11-2026** Settled in chat and posted on [#38](https://github.com/umbraco/Umbraco.Analytics.UI/issues/38#issuecomment-6666053010) before the brief, so the interview only covered what was still open.
+- **05-11-2026** Hourly bars live in `uaui-time-series-chart`, not `uaui-category-chart`. Category bars have no order in time, and adding "incomplete from this category" would make it half a time chart.
+- **05-11-2026** Ranges stay whole days. A rolling "last 24 hours" was dropped, because it would change the date picker's range type for every product.
+- **05-11-2026** "Hour" is offered only for ranges of 2 days or less. 7 days (168 bars) was too many.
+- **05-11-2026** The chart's `today` becomes `now`, taking a date or a date and time. The chart picks the wording ("Today" or "Now") from group-by. One setting, not two, so there's no "which one wins". Dropped, not deprecated, since nothing is released.
+- **05-11-2026** `today` and `yesterday` become built-in date presets, but not defaults. Products showing hourly bars add them.
+- **05-11-2026** Brief approved. Confirmed: Commerce or Engage will use hourly bars too; the `now` rename and the presets ship with the hourly bars in one release; no minute bars.
+- **05-11-2026** (design) Hours are UTC instants inside the chart, not local wall-clock text, because wall-clock text merges the repeated hour on the day clocks go back.
+- **05-11-2026** (design) Day, week and month keep cutting date-times to the day. Converting them would move a `T00:00:00Z` day point to the day before for editors west of UTC.
+- **05-11-2026** (design) Compare at hour level lines up by wall-clock hour, not elapsed hours, so 2 PM sits under 2 PM yesterday across clock changes.
+- **05-11-2026** (design) The 2-day "Hour" limit lives in a `uauiGroupByOptions(range)` helper, not in `uaui-group-by`, which has no range. The chart itself draws hourly for any range.
+- **05-11-2026** (design) One mockup in the plan folder, as the devkit asks. The v1 plan used Storybook instead; this feature changes one chart's look, so a single page was cheap and shows the axis and "Now" choices before any code.
+- **05-11-2026** (design review) `uauiDateBuckets` renamed `uauiTimeBuckets` (agreed in review; "data buckets" was too generic, as they hold no data), since an hour bucket isn't a date. `uauiGroupByBuckets` was rejected in review: it names the control, not what comes back.
+- **05-11-2026** Architecture and spec approved in review, with all 9 guesses as written (time zone from the browser, hour and day for short ranges, `now` as a moment, 3h or 6h labels, one date for a one-day range, zone name on the repeated hour, now line mid-bar).
+- **05-11-2026** (plan) The `today` to `now` rename (T5) goes first among the chart tasks, with no behaviour change, so every later chart spec uses `now` and the team's rename lands early.
+- **05-11-2026** (plan) Chart tasks T5 to T9 run one after another, as in v1, because they all change `uaui-time-series-chart`. T10 (group-by) can run beside T7.
+- **05-11-2026** (plan) T3 waits for T1: both change `internal/date/date-math.ts`.
+- **05-11-2026** (plan) The test browser's time zone is pinned to Europe/Copenhagen in `vite.config.ts` (T1), so the clock-change specs (29-03-2026, 25-10-2026) run the same on every machine.
+- **05-11-2026** (plan) HRS-6 AC1 corrected while writing specs: on a one-day range the midnight label shows the date ("Thu, Nov 5"), as SPEC R28 says, not "12 AM".
+- **05-11-2026** (plan review) `uauiTimeBuckets` kept over `uauiGroupBy`: it returns empty time slots and does no grouping of data, and `uauiGroupBy` would read like the built-in `Object.groupBy`.
+- **05-11-2026** (T1) `hourStart` subtracts the local minutes from the instant instead of calling `setMinutes(0)`, which folds the second 2 AM into the first on the day clocks go back. Assumes whole-minute zone offsets, true of every real zone.
+- **05-11-2026** (T1) `nextHour` is a flat +1 hour. Wrong only in Lord Howe's 30-minute DST shift, which was left out.
+- **05-11-2026** (T1) Local text in the DST gap ("2026-03-29T02:30") lands in the 3 AM hour, and in the repeated hour ("2026-10-25T02:30") in the first 2 AM, as every browser engine reads it. Tests record both.
+- **05-11-2026** (T2) `UauiDateBucketsOptions` also renamed, to `UauiTimeBucketsOptions`, to match the function.
+- **05-11-2026** (T2) `uauiTimeBuckets` takes `UauiGroupBy | "hour"` until T6 adds "hour" to `UauiGroupBy`; T6 collapses it.
+- **05-11-2026** (T2) A clipped first or last week or month bucket's `start..end` reaches past the range. The `days` doc tells products to clip their server query with `days` or the range.
+- **05-11-2026** (T5) The Workflow example keeps its own `workflowChartToday` names and server field `today`: they model the server's answer, not the chart property. Only the value passed to the chart moved to `now`.
+- **05-11-2026** (T6) HRS-2 AC6's pre-written spec asserted `chart.data.labels` equals `["2026-06-11"]`, but those are formatted axis labels, so it could never pass. Now it asserts the hidden table row `"Jun 11, 2026"`, which keeps the full date.
+- **05-11-2026** (T6) `groupByHour` "Hour" added in T6, not T10: `uaui-group-by`'s label map is exhaustive over `UauiGroupBy`. Default options still day, week, month.
+- **05-11-2026** (T6) An unreadable hour date is kept as written and shown as written, as an unreadable day date already is.
+- **05-11-2026** (T6) The Forms example maps `hour` to its date dimension to satisfy an exhaustive record; the page never offers Hour.
+- **05-11-2026** (T7) On the day clocks go back, the two current 2 AM bars share a wall-clock offset. The compare value goes on the first 2 AM bar only; the second gets none, so the compare isn't counted twice.
+- **05-11-2026** (T7) With no range, each side counts from its first point's local day, so 3 PM still sits under 3 PM.
+- **05-11-2026** (T8) A malformed `now` or `incomplete-from` draws nothing at hour level, but at day, week and month it keeps the old fallback (cut to the day as written), so nothing that relied on it changes.
+- **05-11-2026** (T8) Markers at hour level are read as moments and land in their local hour; an unreadable one is dropped. At day level markers still cut to the day as written, as points do (R6), while `now` and `incomplete-from` go through local time.
+- **05-11-2026** (T9) The 3-hour step applies up to 25 dates, not 24, so the 25-hour day clocks go back still counts as one day (PLAN.md T9 had the wrong number).
+- **05-11-2026** (T9) Spec deviation from R29: the repeated hour is named twice in the tooltip and the hidden table, not on the axis. 2 AM (EU) and 1 AM (US) never fall on a 3- or 6-hour grid.
+- **05-11-2026** (T9) Added beyond R28: the step widens 3 → 6 → 12 → 24 hours from the axis width so labels never overlap on a narrow chart. Each label gets a fixed 72px rather than a measured width, to keep the bundle small; worth revisiting if a language's labels are much longer.
+- **05-11-2026** (T9) The date goes on each day's first grid hour (midnight for whole days), so it never crowds the next label on a part day.
+- **05-11-2026** (T11) The AI example's fake server owns a fixed clock (2026-06-23, 2:23 PM local) and cuts today at it everywhere, so Hour and Day give the same totals. The default 30-day view's totals drop slightly, since its last day is now partial.
+- **05-11-2026** (T11) Open for the user: the example marks now and incomplete only at hour level, and on Today its KPI tiles compare the day so far with all of yesterday.
+- **05-11-2026** (T11) Pre-existing: the AI story's copyable imports header lists names the page no longer uses and misses a few it does (`ref`, `UmbTextStyles`, table server types). Left for a separate fix.
+- **05-11-2026** (feature review) `marker-buckets.ts` renamed `bucket-lookup.ts`, since `now` and `incomplete-from` use it too. ARCHITECTURE.md's file list doesn't yet show this rename or the new `chart/internal/hour-ticks.ts`.
+- **06-11-2026** Renamed `uauiTimeBuckets` to `uauiBucketsFor` (types `UauiBucket`, `UauiBucketsForOptions`). User decision: matches `uauiCompareFor` and reads naturally with the group-by argument.
+- **06-11-2026** User decision: the AI example marks the bucket holding now as unfinished at day, week and month too, not just by hour. The now line stays hour-only: at day level it would sit on the bucket the hatch already marks.

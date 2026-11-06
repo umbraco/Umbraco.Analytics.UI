@@ -1,7 +1,7 @@
 import type { UmbLocalizationController } from "@umbraco-cms/backoffice/localization-api";
 import type { UauiCompare, UauiDateRange } from "../date-range/types.js";
 import type { UauiGroupBy } from "../group-by/group-by.element.js";
-import { builtInPresetRange, compareRangeFor, dateBuckets, daysIn, previousPeriodRange, previousYearRange } from "../internal/date/date-math.js";
+import { builtInPresetRange, compareRangeFor, dateBuckets, daysIn, inclusiveDays, previousPeriodRange, previousYearRange } from "../internal/date/date-math.js";
 import { displayIsoDate, displayIsoDateWithoutYear } from "../internal/date/format-date.js";
 
 /**
@@ -20,17 +20,26 @@ export type UauiDateSpan = Pick<UauiDateRange, "from" | "to">;
  */
 export type UauiDatePresetSpan = Pick<UauiDateRange, "from" | "to" | "preset">;
 
-/** One bucket of a range: the date its chart point is plotted at, and the days of the range inside it. */
-export type UauiDateBucket = {
-    /** ISO date: the day itself, the first day of its week (Monday unless `weekStart` says otherwise) or the 1st of its month. Before the range's own start for a first week or month that begins earlier. */
+/**
+ * One bucket of a range, a slot of `uaui-time-series-chart`: where its chart point is plotted, where the slot ends, and the days of the range inside it.
+ * Send `start` to `end` to your server to get the bucket's data.
+ */
+export type UauiBucket = {
+    /**
+     * Where the bucket's point is plotted. For day, week and month an ISO date: the day itself, the first day of its week (Monday unless
+     * `weekStart` says otherwise) or the 1st of its month; before the range's own start for a first week or month that begins earlier.
+     * For `"hour"` a UTC instant such as `"2026-11-05T13:00:00.000Z"`, the start of a local hour.
+     */
     start: string;
-    /** ISO dates in order. Only days inside the range, so the first and last bucket can be short. */
+    /** Where the next bucket starts, in the same form as `start`: the first day after the bucket (the next day, the day a week on, or the 1st of the next month), or the instant one hour on. `end` is not part of the bucket. */
+    end: string;
+    /** ISO dates in order. Only days inside the range, so the first and last bucket can be short. A first or last week or month bucket can reach past the range (`start` before it, `end` after it), so clip a server query with `days` or the range, not just `start` to `end`. For `"hour"` the one local date the hour is in. */
     days: string[];
 };
 
 /**
  * The dates a built-in preset of `uaui-date-range` gives as of `today` (an ISO date), the same dates the dialog picks:
- * `last-7-days`, `last-30-days`, `this-month`, `last-month` or `last-year`. `undefined` for `custom`, any other id, or a `today` that isn't a real date. Use it to work
+ * `today`, `yesterday`, `last-7-days`, `last-30-days`, `this-month`, `last-month` or `last-year`. `undefined` for `custom`, any other id, or a `today` that isn't a real date. Use it to work
  * out a saved preset's dates again on a later day, or the default range before the editor opens the dialog.
  */
 export function uauiPresetRange(id: string, today: string): UauiDateSpan | undefined {
@@ -66,8 +75,18 @@ export function uauiDaysIn(range: UauiDateSpan): string[] {
     return daysIn(range);
 }
 
-/** Options for `uauiDateBuckets`. */
-export type UauiDateBucketsOptions = {
+/**
+ * The group-by options to offer for `range`: hour and day for a range of two days or fewer, otherwise day, week and
+ * month (also when `range` isn't valid). Pass the result to `uaui-group-by`'s `options`. When the current value isn't in
+ * the new list, switch to the list's first option. The chart itself draws hourly for any range.
+ */
+export function uauiGroupByOptions(range: UauiDateSpan): UauiGroupBy[] {
+    const days = inclusiveDays(range);
+    return days !== undefined && days <= 2 ? ["hour", "day"] : ["day", "week", "month"];
+}
+
+/** Options for `uauiBucketsFor`. */
+export type UauiBucketsForOptions = {
     /**
      * The day weeks start on, as an ISO weekday number: 1 is Monday up to 7 for Sunday, the same as
      * `Intl.Locale.prototype.getWeekInfo().firstDay`, so the editor's culture can be passed straight through:
@@ -78,11 +97,12 @@ export type UauiDateBucketsOptions = {
 };
 
 /**
- * Splits `range` into the buckets `uaui-group-by` offers, in order: one per day, per week (seven days from the
- * `weekStart` day, Monday by default) or per month. Plot each at its `start`, as `uaui-time-series-chart` expects its
- * points' dates. Empty when `range` isn't a valid range.
+ * Splits `range` into the buckets of a time series, in order: one per hour, day, week (seven days from the `weekStart`
+ * day, Monday by default) or month. Plot each at its `start`, as `uaui-time-series-chart` expects its points' dates.
+ * With `"hour"` the buckets run from the range's first local midnight (in the browser's time zone) to the midnight after its
+ * last day, so a day the clocks change has 23 or 25 of them. Empty when `range` isn't a valid range.
  */
-export function uauiDateBuckets(range: UauiDateSpan, groupBy: UauiGroupBy, options: UauiDateBucketsOptions = {}): UauiDateBucket[] {
+export function uauiBucketsFor(range: UauiDateSpan, groupBy: UauiGroupBy, options: UauiBucketsForOptions = {}): UauiBucket[] {
     return dateBuckets(range, groupBy, options.weekStart);
 }
 
@@ -95,10 +115,12 @@ export type UauiFormatDateRangeOptions = {
 /**
  * A date range as the text `uaui-date-range` shows on its button, such as "May 25, 2026 to Jun 23, 2026": each date
  * in the medium style of the backoffice user's culture, joined by the translated `{0} to {1}` term. Use it for
- * the chart's `compareLabel`. Pass the element's `this.localize`. A date that isn't a real calendar date is shown as it is.
+ * the chart's `compareLabel`. Pass the element's `this.localize`. When `from` equals `to` the text is that one date alone.
+ * A date that isn't a real calendar date is shown as it is.
  */
 export function uauiFormatDateRange(localize: Pick<UmbLocalizationController, "date" | "term">, range: UauiDateSpan, options: UauiFormatDateRangeOptions = {}): string {
     const { from, to } = range;
     const display = options.showYear === false ? displayIsoDateWithoutYear : displayIsoDate;
+    if (from === to) return display(from, localize);
     return localize.term("uauiAnalytics_dateRangeRange", display(from, localize), display(to, localize));
 }

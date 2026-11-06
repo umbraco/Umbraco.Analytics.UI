@@ -3,8 +3,8 @@ import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import "../toggle-group/toggle-group.element.js";
 import type { UauiToggleGroupChangeDetail } from "../toggle-group/toggle-group.element.js";
 
-/** How a chart groups its points: one per day, week or month. */
-export type UauiGroupBy = "day" | "week" | "month";
+/** How a chart groups its points: one per hour, day, week or month. */
+export type UauiGroupBy = "hour" | "day" | "week" | "month";
 
 /** The detail of the `change` event of `uaui-group-by`: the option the editor picked. */
 export type UauiGroupByChangeDetail = { value: UauiGroupBy };
@@ -12,13 +12,15 @@ export type UauiGroupByChangeDetail = { value: UauiGroupBy };
 const allOptions = (): UauiGroupBy[] => ["day", "week", "month"];
 
 const termKeys: Record<UauiGroupBy, string> = {
+    hour: "uauiAnalytics_groupByHour",
     day: "uauiAnalytics_groupByDay",
     week: "uauiAnalytics_groupByWeek",
     month: "uauiAnalytics_groupByMonth",
 };
 
 /**
- * Switches a chart between daily, weekly and monthly points: a `uaui-toggle-group` control.
+ * Switches a chart between daily, weekly and monthly points: a `uaui-toggle-group` control. Add hourly points
+through `options` (see `uauiGroupByOptions`).
  *
  * Keyboard behaviour is that of `uaui-toggle-group`. Put it in a `uui-box`'s `header-actions` slot.
  *

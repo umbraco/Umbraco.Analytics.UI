@@ -17,8 +17,8 @@ export type UauiCompare = {
 };
 
 /**
- * A choice in the date range dialog's preset list. The built-in ids are `last-7-days`, `last-30-days`,
- * `this-month`, `last-month` and `last-year`: they get their dates and a translated label from the package. Any other id
+ * A choice in the date range dialog's preset list. The built-in ids are `today`, `yesterday`, `last-7-days`, `last-30-days`,
+ * `this-month`, `last-month` and `last-year`: they get their dates and a translated label from the package. `today` and `yesterday` are not in the default list: add them to `presets` to offer them. Any other id
  * needs its own `range` and `label`. `custom` is always offered last and has no dates of its own.
  */
 export type UauiDatePreset = {

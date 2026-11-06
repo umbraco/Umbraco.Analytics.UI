@@ -10,6 +10,7 @@ import {
 } from "@umbraco/analytics-ui/external/chart.js";
 import type { UauiChartKind, UauiSeriesKind } from "../types.js";
 import type { UauiChartDrawColors } from "./chart-colors.js";
+import type { UauiHourTick } from "./hour-ticks.js";
 import "./register.js";
 
 /** What the renderer draws. Our own shape: Chart.js types stay inside `src/chart/internal`. */
@@ -17,6 +18,12 @@ export interface UauiChartModel {
     /** `area` fills the lines; `stacked-bar` stacks the bars. Each dataset says whether it is a line or bars. */
     kind: UauiChartKind;
     labels: string[];
+    /**
+     * The x ticks the owner chooses for an axis this many pixels wide, by index of `labels` (`undefined`: no tick
+     * there), in place of Chart.js's own choice: the axis shows these and no others. A bold tick is drawn in a bold
+     * font. Absent: Chart.js chooses.
+     */
+    xTicks?: (width: number) => (UauiHourTick | undefined)[];
     /** A line's `compare` is drawn as a dashed line, with the gap to `values` shaded. Bars have none. */
     datasets: { label: string; kind: UauiSeriesKind; values: (number | null)[]; compare?: (number | null)[] }[];
     /** When there are bars, one compare bar per x value, drawn behind the current bars. */
@@ -27,7 +34,7 @@ export interface UauiChartModel {
     formatTick: (value: number) => string;
     /** Ticks at these heights (from 0 to `yMax`) with these labels, in place of `yStep` and `formatTick`: the log axis. */
     yTicks?: { value: number; label: string }[];
-    /** Extra room above the plot, in pixels, for what the chart's own plugins draw there (the time-series chart's today label). */
+    /** Extra room above the plot, in pixels, for what the chart's own plugins draw there (the time-series chart's now label). */
     roomAbove?: number;
     colors: UauiChartDrawColors;
     /** Line kinds: a series below its compare line is doing better, so the gap shading flips. */
@@ -116,7 +123,7 @@ export function thinTicks<T extends { value: number }>(ticks: T[], height: numbe
     return [ticks[0], ticks[last]];
 }
 
-/** Room around the plot, in pixels. A model's `roomAbove` is added at the top (the today label). */
+/** Room around the plot, in pixels. A model's `roomAbove` is added at the top (the now label). */
 const PADDING = { top: 8, right: 12, bottom: 0, left: 0 };
 
 /** An incomplete point: a hollow dot a little larger than a complete one, with a thicker border to read hollow. */
@@ -134,7 +141,7 @@ const MAX_POINTS_WITH_DOTS = 45;
  * The one place that talks to Chart.js. The element hands it a `UauiChartModel` and listens for hover;
  * the tooltip itself is HTML, drawn by the element. Create it once per canvas and call `update` for
  * every change, including loading toggles: it is only destroyed when the element disconnects.
- * `UauiChartController` owns it. A chart's own drawing (the time-series chart's markers and today line) comes in as
+ * `UauiChartController` owns it. A chart's own drawing (the time-series chart's markers and now line) comes in as
  * per-chart plugins, never registered globally.
  */
 export class UauiChartRenderer {
@@ -290,13 +297,38 @@ export class UauiChartRenderer {
         // Only bars stack: a `stacked-bar` chart whose series are all lines draws them unstacked. Lines also carry a
         // stack key of their own, so they never stack with bars or with each other. The share view stacks everything.
         const stacked = (model.kind === "stacked-bar" && family === "bar") || !!model.share;
-        // Room above the plot for what the chart's own plugins draw there (the today label).
+        // Room above the plot for what the chart's own plugins draw there (the now label).
         chart.options.layout = { padding: { ...PADDING, top: PADDING.top + (model.roomAbove ?? 0) } };
         const scales = chart.options.scales!;
         // The package's axis look (`uauiChartOptions`, as a product's chart gets it): our font, colours and Chart.js's
         // own values for what we don't style, all set per chart so a product's `Chart.defaults.scale` can't move them.
         const look = uauiChartOptions(this.#host, family, model.colors).scales as { x: CartesianScaleOptions; y: CartesianScaleOptions };
-        scales["x"] = { ...look.x, stacked };
+        const xTicks = model.xTicks;
+        scales["x"] = {
+            ...look.x,
+            stacked,
+            // Set per chart, with our own ticks (thinned in `afterBuildTicks`), so Chart.js mustn't drop or tilt any.
+            ...(xTicks
+                ? (() => {
+                      const xFont = look.x.ticks.font as { weight: string };
+                      let chosen: (UauiHourTick | undefined)[] = [];
+                      return {
+                      ticks: {
+                          ...look.x.ticks,
+                          autoSkip: false,
+                          minRotation: 0,
+                          maxRotation: 0,
+                          callback: (value: unknown) => chosen[Number(value)]?.label ?? "",
+                          font: (ctx: { tick?: { value: number } }) => ({ ...xFont, weight: chosen[ctx.tick?.value ?? -1]?.bold ? "bold" : xFont.weight }),
+                      },
+                      afterBuildTicks: (axis: { ticks: { value: number }[]; width: number }) => {
+                          chosen = xTicks(axis.width);
+                          axis.ticks = axis.ticks.filter((tick) => chosen[tick.value]);
+                      },
+                      };
+                  })()
+                : {}),
+        } as typeof look.x;
         const yTicks = model.yTicks;
         const labelOf = new Map(yTicks?.map((tick) => [tick.value, tick.label]));
         scales["y"] = {

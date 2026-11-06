@@ -34,6 +34,21 @@ export const UAUI_TABLE_CELL: {
 export const UAUI_TABLE_CONTEXT: UmbContextToken<UauiTableContext, UauiTableContext>;
 
 // @public
+export type UauiBucket = {
+    start: string;
+    end: string;
+    days: string[];
+};
+
+// @public
+export function uauiBucketsFor(range: UauiDateSpan, groupBy: UauiGroupBy, options?: UauiBucketsForOptions): UauiBucket[];
+
+// @public
+export type UauiBucketsForOptions = {
+    weekStart?: UauiWeekStart;
+};
+
+// @public
 export type UauiCategory = {
     id: string;
     label: string;
@@ -136,20 +151,6 @@ export class UauiDataTableElement extends UauiDataTableElementBase {
 
 // @public
 export const UauiDataTableElementBase: HTMLElementConstructor<UauiLoadStateMixinInterface> & typeof UmbLitElement;
-
-// @public
-export type UauiDateBucket = {
-    start: string;
-    days: string[];
-};
-
-// @public
-export function uauiDateBuckets(range: UauiDateSpan, groupBy: UauiGroupBy, options?: UauiDateBucketsOptions): UauiDateBucket[];
-
-// @public
-export type UauiDateBucketsOptions = {
-    weekStart?: UauiWeekStart;
-};
 
 // @public
 export class UauiDateCellElement extends UmbLitElement implements UauiTableCellElement {
@@ -299,7 +300,7 @@ export type UauiFunnelStep = {
 };
 
 // @public
-export type UauiGroupBy = "day" | "week" | "month";
+export type UauiGroupBy = "hour" | "day" | "week" | "month";
 
 // @public
 export type UauiGroupByChangeDetail = {
@@ -315,6 +316,9 @@ export class UauiGroupByElement extends UmbLitElement {
     static styles: CSSResultGroup;
     value: UauiGroupBy;
 }
+
+// @public
+export function uauiGroupByOptions(range: UauiDateSpan): UauiGroupBy[];
 
 // @public
 export class UauiKpiTileElement extends UmbLitElement {
@@ -714,6 +718,7 @@ export class UauiTimeSeriesChartElement extends UauiTimeSeriesChartElementBase {
     incompleteFrom?: string;
     kind: UauiChartKind;
     markers: UauiMarker[];
+    now?: string;
     range?: UauiDateRange;
     // (undocumented)
     render(): TemplateResult;
@@ -721,7 +726,6 @@ export class UauiTimeSeriesChartElement extends UauiTimeSeriesChartElementBase {
     stack: UauiChartStack;
     // (undocumented)
     static styles: CSSResultGroup;
-    today?: string;
     // (undocumented)
     protected updated(changed: PropertyValues<this>): void;
     weekStart: UauiWeekStart;

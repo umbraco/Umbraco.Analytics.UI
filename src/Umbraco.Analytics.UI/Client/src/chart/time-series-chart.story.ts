@@ -11,6 +11,8 @@ import {
     markers,
     newVisitors,
     pageviews,
+    pageviewsByHour,
+    pageviewsSoFarToday,
     pageviewsPrevious,
     pending,
     previousVisitors,
@@ -38,7 +40,7 @@ const meta: Meta<UauiTimeSeriesChartElement> = {
         compareLabel: undefined,
         lowerIsBetter: false,
         markers: [],
-        today: undefined,
+        now: undefined,
         incompleteFrom: undefined,
         yScale: "linear",
         groupBy: "day",
@@ -56,7 +58,7 @@ const meta: Meta<UauiTimeSeriesChartElement> = {
         kind: { control: "inline-radio", options: ["line", "area", "bar", "stacked-bar"] },
         stack: { control: "inline-radio", options: ["normal", "percent"] },
         yScale: { control: "inline-radio", options: ["linear", "log"] },
-        groupBy: { control: "inline-radio", options: ["day", "week", "month"] },
+        groupBy: { control: "inline-radio", options: ["hour", "day", "week", "month"] },
         weekStart: { control: "inline-radio", options: [1, 2, 3, 4, 5, 6, 7], description: "ISO weekday: 1 is Monday, 7 is Sunday" },
     },
     render: (args) =>
@@ -69,7 +71,7 @@ const meta: Meta<UauiTimeSeriesChartElement> = {
                 .compareLabel=${args.compareLabel}
                 .lowerIsBetter=${args.lowerIsBetter}
                 .markers=${args.markers}
-                .today=${args.today}
+                .now=${args.now}
                 .incompleteFrom=${args.incompleteFrom}
                 .yScale=${args.yScale}
                 .groupBy=${args.groupBy}
@@ -172,11 +174,29 @@ export const LegendHiddenShare: Story = {
 
 /**
  * Weeks that start on Sunday (`week-start="7"`, the same as `Intl.Locale.getWeekInfo().firstDay` for en-US): the
- * points are the Sundays of `uauiDateBuckets(range, "week", { weekStart: 7 })` and the compare weeks line up on them.
+ * points are the Sundays of `uauiBucketsFor(range, "week", { weekStart: 7 })` and the compare weeks line up on them.
  */
 export const SundayWeekStart: Story = {
     name: "Sunday week start",
     args: { groupBy: "week", weekStart: 7, series: [sundayWeeks], compareSeries: [sundayWeeksPrevious], compareLabel: compareRangeLabel },
+};
+
+/**
+ * One bar per local hour, with `group-by="hour"`. The points are the UTC instants of `uauiBucketsFor(range, "hour")`; any
+ * date-time is read as a moment and put in the browser's hour that contains it. Labels use the editor's culture.
+ */
+export const ByHour: Story = {
+    name: "By hour",
+    args: { kind: "bar", groupBy: "hour", series: [pageviewsByHour] },
+};
+
+/**
+ * Today by hour, part way through: `now` and `incomplete-from` are the same moment, 2:23 PM. The line is labelled "Now" in the
+ * 2 PM hour, and that hour and the ones after it (0 so far) fade under the hatch. The tooltip says "(now, incomplete)".
+ */
+export const TodayByHourSoFar: Story = {
+    name: "Today by hour, so far",
+    args: { kind: "bar", groupBy: "hour", series: [pageviewsSoFarToday], now: "2026-11-05T14:23", incompleteFrom: "2026-11-05T14:23" },
 };
 
 /** One bar per date. */
@@ -221,18 +241,18 @@ export const StatusColorCompare: Story = {
 
 /**
  * Workflow's approval activity: approved, cancelled and errored as daily bars in their status colours, with pending
- * (a running total) as a line over them (`kind: "line"` on that series). 28 days back and 7 ahead, with `today`
+ * (a running total) as a line over them (`kind: "line"` on that series). 28 days back and 7 ahead, with `now`
  * drawing a labelled line. Try `stacked-bar` (the line doesn't stack) and `log`.
  */
 export const WorkflowActivity: Story = {
-    name: "Bars and a line, with today",
-    args: { kind: "bar", series: workflowActivity, today: workflowToday },
+    name: "Bars and a line, with now",
+    args: { kind: "bar", series: workflowActivity, now: workflowToday },
 };
 
-/** Days after today: the series has a point (0) for each, and the today line shows where today is. */
+/** Days after today: the series has a point (0) for each, and the now line shows where today is. */
 export const DaysAfterToday: Story = {
     name: "Days after today",
-    args: { kind: "bar", series: [workflowActivity[0]], today: workflowToday },
+    args: { kind: "bar", series: [workflowActivity[0]], now: workflowToday },
 };
 
 /**
@@ -268,10 +288,10 @@ export const IncompleteWeeks: Story = {
     args: { kind: "bar", series: [sundayWeeks], groupBy: "week", weekStart: 7, incompleteFrom: "2026-06-22" },
 };
 
-/** `today` and `incomplete-from` are independent: the today line stays on top of the hatch. */
+/** `now` and `incomplete-from` are independent: the now line stays on top of the hatch. */
 export const IncompleteWithToday: Story = {
-    name: "Incomplete tail, with today",
-    args: { series: [pageviews], today: "2026-06-23", incompleteFrom: "2026-06-23" },
+    name: "Incomplete tail, with now",
+    args: { series: [pageviews], now: "2026-06-23", incompleteFrom: "2026-06-23" },
 };
 
 /**
@@ -297,7 +317,7 @@ export const LogScaleManyDecades: Story = {
 /** The Workflow activity chart on a log axis: the few errors stay readable beside the pending total. */
 export const LogScaleMixed: Story = {
     name: "Log scale, bars and a line",
-    args: { kind: "bar", series: workflowActivity, today: workflowToday, yScale: "log" },
+    args: { kind: "bar", series: workflowActivity, now: workflowToday, yScale: "log" },
 };
 
 /**

@@ -9,8 +9,11 @@ const imports = `import { css, customElement, html, property, state } from "@umb
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import {
     UAUI_TABLE_CELL,
+    uauiCompareFor,
     uauiFormatDateRange,
+    uauiGroupByOptions,
     type UauiCompare,
+    type UauiDatePreset,
     type UauiDateRange,
     type UauiGroupBy,
     type UauiSeries,
@@ -21,7 +24,8 @@ import {
     type UauiTableSortChangeDetail,
 } from "@umbraco/analytics-ui";
 // Your API client: getUsage, getBreakdown and their types. In this story they are a fake, generated from the date.
-import { getBreakdown, getUsage, type BreakdownBy, type BreakdownResult, type BreakdownSortKey, type UsageBucket, type UsageResult, type UsageTotals } from "./usage-api.js";`;
+// CLOCK and CLOCK_DATE are the fake's fixed "now" and "today": a real product uses new Date() for both instead.
+import { CLOCK, CLOCK_DATE, getBreakdown, getUsage, type BreakdownBy, type BreakdownResult, type BreakdownSortKey, type UsageBucket, type UsageResult, type UsageTotals } from "./usage-api.js";`;
 
 const code = regionSource(raw, "page", imports);
 

@@ -13,10 +13,11 @@ import { UauiChartMixin } from "./chart.mixin.js";
 import type { UauiGroupBy } from "../group-by/group-by.element.js";
 import type { UauiWeekStart } from "../date-helpers/date-helpers.js";
 import { resolveWeekStart } from "../internal/date/date-math.js";
-import { formatIsoDate } from "../internal/date/format-date.js";
+import { formatBucketKey } from "../internal/date/format-date.js";
+import { isRepeatedHour } from "../internal/date/hour-math.js";
 import { getNumberFormat } from "../internal/format/number-format.js";
 import { firstIncompleteIndex } from "./internal/incomplete-index.js";
-import { bucketMarkers, type MarkerBucket } from "./internal/marker-buckets.js";
+import { bucketIndexOf, bucketMarkers, momentKey, type MarkerBucket } from "./internal/bucket-lookup.js";
 import type { UauiMarkerPlacement } from "./internal/markers-plugin.js";
 import { buildChartData } from "./internal/chart-data.js";
 import { maxValue, seriesTotals, shareTotals, shareValues, type UauiChartData } from "./internal/chart-values.js";
@@ -34,18 +35,24 @@ import { renderChartFrame, UauiChartFrameStyles } from "./internal/chart-frame.j
 import type { UauiChartRenderer } from "./internal/chart-renderer.js";
 import { colorKeyOf, seriesKindOf } from "./internal/chart-series.js";
 import { chartYAxis, usesLogScale } from "./internal/chart-y-axis.js";
+import { hourTicks } from "./internal/hour-ticks.js";
 import { UauiTimeSeriesOverlays } from "./internal/time-series-overlays.js";
-import { TODAY_LABEL_ROOM } from "./internal/today-plugin.js";
+import { NOW_LABEL_ROOM } from "./internal/now-plugin.js";
 import type { UauiCompare, UauiDateRange } from "../date-range/types.js";
 import type { UauiChartKind, UauiChartStack, UauiMarker, UauiMarkerClickDetail, UauiSeries, UauiSeriesKind } from "./types.js";
 
 const axisDateFormat: Record<UauiGroupBy, Intl.DateTimeFormatOptions> = {
+    hour: { hour: "numeric" },
     day: { day: "numeric", month: "short" },
     week: { day: "numeric", month: "short" },
     month: { month: "short", year: "numeric" },
 };
 
+/** At hour level, the first hour of each day on the axis. */
+const axisDayFormat: Intl.DateTimeFormatOptions = { weekday: "short", month: "short", day: "numeric" };
+
 const tooltipDateFormat: Record<UauiGroupBy, Intl.DateTimeFormatOptions> = {
+    hour: { year: "numeric", month: "short", day: "numeric", hour: "numeric" },
     day: { day: "numeric", month: "short", year: "numeric" },
     week: { day: "numeric", month: "short", year: "numeric" },
     month: { month: "long", year: "numeric" },
@@ -85,6 +92,8 @@ interface Derived {
     /** How the chart compares, counting every series (hidden or not), so the legend's compare entry stays. */
     legendCompare: { bars: boolean; lines: boolean };
     axisLabels: string[];
+    /** At hour level, the labelled x ticks (by index; `undefined` where there is none). Absent at the other levels. */
+    xTicks?: (width: number) => ReturnType<typeof hourTicks>;
     dateLabels: string[];
     /** Per series, the formatted date of each compare point (empty string where there is none). */
     compareDateLabels: string[][];
@@ -100,7 +109,7 @@ interface Derived {
     numberFormat: Intl.NumberFormat;
     /** Formats a share: "42.5%". */
     shareFormat: Intl.NumberFormat;
-    /** A marker's own date, whichever bucket it is drawn in. */
+    /** A marker's own date (and hour, at hour level), whichever bucket it is drawn in. */
     markerDate: Intl.DateTimeFormat;
     lang: string;
 }
@@ -150,8 +159,8 @@ export const UauiTimeSeriesChartElementBase = UauiChartMixin(UmbLitElement);
  * bar. The total counts the bars only.
  * `incomplete-from` marks the dates from one onward as not final (today is half over, or data arrives late): their line
  * and bars draw see-through over a light hatched band, and the tooltip and the hidden table name those dates as incomplete.
- * It is independent of `today`.
- * `today` draws a thin labelled line at today's date, for dates that run past it. `y-scale="log"` spaces the y-axis by
+ * It is independent of `now`.
+ * `now` draws a thin labelled line at the date that contains it (at hour level, the hour), for dates that run past it. `y-scale="log"` spaces the y-axis by
  * powers of ten, bending toward 0 at the bottom so 0 stays on the axis line.
  * `stack="percent"` with `kind="stacked-bar"` or `"area"` is a 100% share view: each date's series as its share of that
  * date's total, on a 0 to 100% axis, with the share and the value in the tooltip and the hidden table.
@@ -217,7 +226,7 @@ export class UauiTimeSeriesChartElement extends UauiTimeSeriesChartElementBase {
     /**
      * The period the series cover, as `uaui-date-range` emits it. Optional but recommended with `compare`: compare
      * points are aligned from the start of this range's first bucket. Without it, from the first point of the
-     * series, which misaligns the compare when sparse data omits the period's first days (or weeks, or months).
+     * series (at hour level, that point's local day), which misaligns the compare when sparse data omits the period's first days (or weeks, or months).
      */
     @property({ attribute: false })
     range?: UauiDateRange;
@@ -249,23 +258,28 @@ export class UauiTimeSeriesChartElement extends UauiTimeSeriesChartElementBase {
     markers: UauiMarker[] = [];
 
     /**
-     * Today's ISO date ("2026-11-02"), to draw a thin solid line at it labelled "Today", for a chart whose dates run on
-     * past today (reviews due next week). Taken from the product, not the clock, so it is the editor's day as the
-     * product counts it. It is drawn in the date (or the week or month, per `group-by`) that contains it, and not at all
-     * when no date does. The tooltip and the hidden table name that date as today. Dates after today are drawn like any
-     * other: pass a point (0 when there is nothing yet) for each, as the chart's dates are its points' dates.
+     * The current moment, as an ISO date ("2026-11-02") or date-time ("2026-11-02T14:23" or with `Z` or an offset), to draw
+     * a thin solid line at it, for a chart whose dates run on past it (reviews due next week) or one that is part way
+     * through today. Taken from the product, not the clock. It is read as a moment: a `Z` or offset is turned into the
+     * browser's local time first, a date-time without one is local, and a plain date is that local day (midnight at hour
+     * level). The line is drawn in the middle of the bucket that contains it (the hour, day, week or month, per
+     * `group-by`), labelled "Now" by hour and "Today" otherwise, and not at all when no bucket contains it. The tooltip
+     * and the hidden table name that bucket as now (by hour) or today. Dates after it are drawn like any other: pass a
+     * point (0 when there is nothing yet) for each, as the chart's dates are its points' dates.
      */
     @property({ type: String })
-    today?: string;
+    now?: string;
 
     /**
-     * An ISO date ("2026-11-04"): every date from the one that contains it onward is incomplete, because the latest
-     * data isn't final (today is only half over, or data arrives late). The series draw see-through there (lines fade
-     * and their dots go hollow, bars fade), over a light hatched band, so a low last value doesn't read as a crash;
-     * the compare isn't faded. The tooltip and the hidden table name those dates as incomplete. Bucketed as `today`
-     * is, so with `group-by` week or month the week or month that contains it is incomplete. A date after the last
-     * date makes nothing incomplete, and one before the first makes everything. Independent of `today`: set both to
-     * mark today as incomplete, or only this when the unfinished part isn't today.
+     * An ISO date ("2026-11-04") or date-time ("2026-11-04T14:23", or with `Z` or an offset): every date from the one that
+     * contains it onward is incomplete, because the latest data isn't final (today is only half over, or data arrives
+     * late). It is read as a moment, as `now` is: with `group-by` hour everything from the hour that contains it is
+     * incomplete (a plain date means from midnight), and with day, week or month, from the local day, week or month that
+     * contains it. The series draw see-through there (lines fade and their dots go hollow, bars fade), over a light
+     * hatched band, so a low last value doesn't read as a crash; the compare isn't faded. The tooltip and the hidden
+     * table name those dates as incomplete. A moment after the last date makes nothing incomplete, and one before the
+     * first makes everything. Independent of `now`: set both to mark today as incomplete, or only this when the
+     * unfinished part isn't today.
      */
     @property({ type: String, attribute: "incomplete-from" })
     incompleteFrom?: string;
@@ -278,7 +292,7 @@ export class UauiTimeSeriesChartElement extends UauiTimeSeriesChartElementBase {
      * The day weeks start on when `groupBy` is `week`, as an ISO weekday number: 1 is Monday up to 7 for Sunday, the same
      * as `Intl.Locale.prototype.getWeekInfo().firstDay`, so the editor's culture can be passed straight through:
      * `new Intl.Locale(culture).getWeekInfo().firstDay`. It decides which week a compare point falls in, so give
-     * `uauiDateBuckets` the same value. Defaults to 1 (Monday). A value that isn't a whole number from 1 to 7 is read as Monday.
+     * `uauiBucketsFor` the same value. Defaults to 1 (Monday). A value that isn't a whole number from 1 to 7 is read as Monday.
      * If it doesn't match how the product bucketed its points, the compare line can shift by a week when one period starts on the week-start day.
      */
     @property({ type: Number, attribute: "week-start" })
@@ -299,7 +313,7 @@ export class UauiTimeSeriesChartElement extends UauiTimeSeriesChartElementBase {
         draw: (renderer, colors) => this.#draw(renderer, colors),
         plugins: () => this.#overlays.plugins(),
     });
-    /** The marker dots and the today line: what only a date x-axis draws. */
+    /** The marker dots and the now line: what only a date x-axis draws. */
     #overlays = new UauiTimeSeriesOverlays((placements) => {
         this._markerPlacements = placements;
     });
@@ -309,11 +323,11 @@ export class UauiTimeSeriesChartElement extends UauiTimeSeriesChartElementBase {
     #derivedFrom?: DerivedFrom;
     #markerBuckets: MarkerBucket[] = [];
     #markersFrom?: MarkersFrom;
-    /** The index of the date that contains `today`, if any. */
-    #todayIndex?: number;
+    /** The index of the date that contains `now`, if any. */
+    #nowIndex?: number;
     /** The index of the first incomplete date, if any. */
     #incompleteIndex?: number;
-    /** The dates of the hidden table and the tooltip, with today's named, and the `#derived` they were made from. */
+    /** The dates of the hidden table and the tooltip, with the now date named, and the `#derived` they were made from. */
     #tableDates: string[] = [];
     #tableDatesFrom?: Derived;
 
@@ -340,19 +354,21 @@ export class UauiTimeSeriesChartElement extends UauiTimeSeriesChartElementBase {
             this.#derived = this.#derive(next);
             this.#chart.invalidate();
         }
-        if (changed.has("kind") || changed.has("stack") || changed.has("lowerIsBetter") || changed.has("yScale") || changed.has("today") || changed.has("incompleteFrom")) this.#chart.invalidate();
+        if (changed.has("kind") || changed.has("stack") || changed.has("lowerIsBetter") || changed.has("yScale") || changed.has("now") || changed.has("incompleteFrom")) this.#chart.invalidate();
 
-        const todayIndex = this.today ? bucketMarkers([{ id: "today", date: this.today, title: "" }], this.#derived.data.labels, this.groupBy)[0]?.index : undefined;
+        const nowKey = this.now ? momentKey(this.now, this.groupBy) : undefined;
+        const nowAt = nowKey === undefined ? -1 : bucketIndexOf(nowKey, this.#derived.data.labels, this.groupBy);
+        const nowIndex = nowAt < 0 ? undefined : nowAt;
         const incompleteIndex = this.incompleteFrom ? firstIncompleteIndex(this.incompleteFrom, this.#derived.data.labels, this.groupBy) : undefined;
-        if (todayIndex !== this.#todayIndex || incompleteIndex !== this.#incompleteIndex || this.#tableDatesFrom !== this.#derived) {
-            this.#todayIndex = todayIndex;
+        if (nowIndex !== this.#nowIndex || incompleteIndex !== this.#incompleteIndex || this.#tableDatesFrom !== this.#derived) {
+            this.#nowIndex = nowIndex;
             this.#incompleteIndex = incompleteIndex;
             this.#tableDatesFrom = this.#derived;
             const { dateLabels } = this.#derived;
             this.#tableDates =
-                todayIndex === undefined && incompleteIndex === undefined
+                nowIndex === undefined && incompleteIndex === undefined
                     ? dateLabels
-                    : dateLabels.map((label, i) => this.#namedDate(label, i === todayIndex, incompleteIndex !== undefined && i >= incompleteIndex));
+                    : dateLabels.map((label, i) => this.#namedDate(label, i === nowIndex, incompleteIndex !== undefined && i >= incompleteIndex));
             this.#chart.invalidate();
         }
 
@@ -391,14 +407,20 @@ export class UauiTimeSeriesChartElement extends UauiTimeSeriesChartElementBase {
         const bars = kinds.map((k) => k === "bar");
         const axisDate = new Intl.DateTimeFormat(lang, axisDateFormat[groupBy] ?? axisDateFormat.day);
         const tooltipDate = new Intl.DateTimeFormat(lang, tooltipDateFormat[groupBy] ?? tooltipDateFormat.day);
-        const tooltipLabel = (iso: string | null) => (iso ? formatIsoDate(iso, tooltipDate) : "");
+        // The two hours that share a wall-clock hour when clocks go back are told apart by their zone.
+        const tooltipZonedDate = groupBy === "hour" ? new Intl.DateTimeFormat(lang, { ...tooltipDateFormat.hour, timeZoneName: "short" }) : undefined;
+        const tooltipLabel = (iso: string | null) =>
+            iso ? formatBucketKey(iso, groupBy, tooltipZonedDate && isRepeatedHour(iso) ? tooltipZonedDate : tooltipDate) : "";
+        const axisDay = new Intl.DateTimeFormat(lang, axisDayFormat);
+        const axisLabels = data.labels.map((d) => formatBucketKey(d, groupBy, axisDate));
         return {
             data,
             shown,
             kinds,
             allKinds,
             legendCompare: { bars: allKinds.includes("bar") && !!full.compareTotal, lines: full.series.some((s, i) => allKinds[i] === "line" && !!s.compare) },
-            axisLabels: data.labels.map((d) => formatIsoDate(d, axisDate)),
+            axisLabels,
+            xTicks: groupBy === "hour" ? ((width) => hourTicks(data.labels, axisLabels, axisDay, width)) : undefined,
             dateLabels: data.labels.map(tooltipLabel),
             compareDateLabels: data.series.map((s) => (s.compareLabels ?? []).map(tooltipLabel)),
             // The share view's total counts a value below 0 as 0, as its shares do, so the shares add up to it.
@@ -407,7 +429,7 @@ export class UauiTimeSeriesChartElement extends UauiTimeSeriesChartElementBase {
             shares: share ? shareValues(data) : undefined,
             numberFormat: getNumberFormat(lang, valueFormat),
             shareFormat: getNumberFormat(lang, SHARE_FORMAT),
-            markerDate: new Intl.DateTimeFormat(lang, tooltipDateFormat.day),
+            markerDate: groupBy === "hour" ? tooltipDate : new Intl.DateTimeFormat(lang, tooltipDateFormat.day),
             lang,
         };
     }
@@ -444,15 +466,21 @@ export class UauiTimeSeriesChartElement extends UauiTimeSeriesChartElementBase {
         return this.stack === "percent" && (this.kind === "stacked-bar" || this.kind === "area");
     }
 
-    /** A date as the tooltip and the hidden table name it: plain, or as today's and/or incomplete. */
-    #namedDate(label: string, today: boolean, incomplete: boolean) {
+    /** A date as the tooltip and the hidden table name it: plain, or named as now and/or incomplete. */
+    #namedDate(label: string, isNow: boolean, incomplete: boolean) {
+        // At hour level the bucket is the hour that is now.
+        if (this.groupBy === "hour") {
+            if (isNow && incomplete) return this.localize.term("uauiAnalytics_chartNowIncompleteDate", label);
+            if (isNow) return this.localize.term("uauiAnalytics_chartNowDate", label);
+            return incomplete ? this.localize.term("uauiAnalytics_chartIncompleteDate", label) : label;
+        }
         // A week or month isn't today: it contains it.
         const bucket = this.groupBy === "week" || this.groupBy === "month";
-        if (today && incomplete)
+        if (isNow && incomplete)
             return bucket
                 ? this.localize.term("uauiAnalytics_chartTodayIncompleteInBucket", label)
                 : this.localize.term("uauiAnalytics_chartTodayIncompleteDate", label);
-        if (today)
+        if (isNow)
             return bucket ? this.localize.term("uauiAnalytics_chartTodayInBucket", label) : this.localize.term("uauiAnalytics_chartTodayDate", label);
         return incomplete ? this.localize.term("uauiAnalytics_chartIncompleteDate", label) : label;
     }
@@ -467,12 +495,12 @@ export class UauiTimeSeriesChartElement extends UauiTimeSeriesChartElementBase {
 
     /** Hands the renderer the chart's model. Called by the chart controller. */
     #draw(renderer: UauiChartRenderer, colors: UauiChartDrawColors) {
-        const { data, kinds, axisLabels, lang } = this.#derived;
+        const { data, kinds, axisLabels, xTicks, lang } = this.#derived;
         const max = maxValue(data, this.kind, kinds.map((k) => k === "bar"));
         this.#overlays.set(
             colors,
             this.#markerBuckets.map((b) => ({ index: b.index, count: b.markers.length })),
-            this.#todayIndex === undefined ? undefined : { index: this.#todayIndex, label: this.localize.term("uauiAnalytics_chartToday") },
+            this.#nowIndex === undefined ? undefined : { index: this.#nowIndex, label: this.localize.term(this.groupBy === "hour" ? "uauiAnalytics_chartNow" : "uauiAnalytics_chartToday") },
             this.#incompleteIndex,
         );
         this.#warnLogStacked();
@@ -483,7 +511,8 @@ export class UauiTimeSeriesChartElement extends UauiTimeSeriesChartElementBase {
                 kind: this.kind,
                 share: true,
                 labels: axisLabels,
-                roomAbove: this.today ? TODAY_LABEL_ROOM : 0,
+                xTicks,
+                roomAbove: this.now ? NOW_LABEL_ROOM : 0,
                 colors,
                 incompleteFrom: this.#incompleteIndex,
                 datasets: data.series.map((s, i) => ({ label: s.label, kind: kinds[i], values: this.#bandValues(i) })),
@@ -499,9 +528,10 @@ export class UauiTimeSeriesChartElement extends UauiTimeSeriesChartElementBase {
         renderer.update({
             kind: this.kind,
             labels: axisLabels,
-            // Room above the plot for the today label, whether or not today is among the dates, so the plot doesn't
+            xTicks,
+            // Room above the plot for the now label, whether or not now is among the dates, so the plot doesn't
             // jump as the editor moves through date ranges.
-            roomAbove: this.today ? TODAY_LABEL_ROOM : 0,
+            roomAbove: this.now ? NOW_LABEL_ROOM : 0,
             colors,
             incompleteFrom: this.#incompleteIndex,
             lowerIsBetter: this.lowerIsBetter,
@@ -626,6 +656,7 @@ export class UauiTimeSeriesChartElement extends UauiTimeSeriesChartElementBase {
             .buckets=${this.#markerBuckets}
             .placements=${this._markerPlacements}
             .dateFormat=${this.#derived.markerDate}
+            .groupBy=${this.groupBy}
             @active-change=${this.#onActiveMarker}
             @marker-click=${this.#onMarkerClick}></uaui-chart-markers>`;
     }

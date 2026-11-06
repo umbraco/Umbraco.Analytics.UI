@@ -1,4 +1,4 @@
-// T58 — Time-series chart for Workflow: bars and a line in one chart (a series' `kind`), a today line (`today`) for
+// T58 — Time-series chart for Workflow: bars and a line in one chart (a series' `kind`), a now line (`now`) for
 // dates that run past today, and a log y-axis (`y-scale="log"`).
 // Canvas outcomes are read from the Chart.js chart (datasets, scales, element positions) and checked with screenshots.
 import { Chart } from "@umbraco/analytics-ui/external/chart.js";
@@ -35,10 +35,10 @@ const previousApproved = seriesOf("approved", "Approved", [4, 4, 4, 4], {}, prev
 const previousErrored = seriesOf("errored", "Errored", [1, 1, 1, 1], {}, previousDates);
 const previousPending = seriesOf("pending", "Pending", [8, 9, 9, 12], {}, previousDates);
 
-type ChartOptions = { kind?: string; series?: UauiSeries[]; compare?: UauiSeries[]; today?: string; yScale?: string; groupBy?: string; height?: string };
-const chart = ({ kind = "bar", series = activity, compare, today, yScale, groupBy = "day", height }: ChartOptions = {}) =>
+type ChartOptions = { kind?: string; series?: UauiSeries[]; compare?: UauiSeries[]; now?: string; yScale?: string; groupBy?: string; height?: string };
+const chart = ({ kind = "bar", series = activity, compare, now, yScale, groupBy = "day", height }: ChartOptions = {}) =>
     renderElement(
-        html`<uaui-time-series-chart kind=${kind} y-scale=${yScale ?? "linear"} group-by=${groupBy} .today=${today} .series=${series}
+        html`<uaui-time-series-chart kind=${kind} y-scale=${yScale ?? "linear"} group-by=${groupBy} .now=${now} .series=${series}
             .compareSeries=${compare ?? []} style="width:400px${height ? `; --uaui-chart-height: ${height}` : ""}"></uaui-time-series-chart>`,
         "uaui-time-series-chart",
     );
@@ -246,7 +246,7 @@ describe("Feature: today's line", () => {
     describe("Scenario: dates that run past today", () => {
         let el: UauiTestElement;
         beforeEach(async () => {
-            el = await chart({ kind: "bar", series: [reviews], today: "2026-11-02" });
+            el = await chart({ kind: "bar", series: [reviews], now: "2026-11-02" });
             await settle(el);
         });
 
@@ -281,14 +281,14 @@ describe("Feature: today's line", () => {
     });
 
     describe("Scenario: today isn't among the chart's dates", () => {
-        it("draws no today line and names no date as today", async () => {
-            const el = await chart({ kind: "bar", series: [reviews], today: "2026-12-24" });
+        it("draws no now line and names no date as today", async () => {
+            const el = await chart({ kind: "bar", series: [reviews], now: "2026-12-24" });
             expect(rowHeaders(el).some((r) => r.includes("today"))).toBe(false);
         });
 
         it("keeps the label's room, so the plot doesn't move between date ranges", async () => {
-            const inRange = await chart({ kind: "bar", series: [reviews], today: "2026-11-02" });
-            const outOfRange = await chart({ kind: "bar", series: [reviews], today: "2026-12-24" });
+            const inRange = await chart({ kind: "bar", series: [reviews], now: "2026-11-02" });
+            const outOfRange = await chart({ kind: "bar", series: [reviews], now: "2026-12-24" });
             expect(chartOf(outOfRange).chartArea.top).toBe(chartOf(inRange).chartArea.top);
         });
     });
@@ -303,7 +303,7 @@ describe("Feature: today's line", () => {
     describe("Scenario: grouped by week", () => {
         it("names the week that contains today as including it", async () => {
             const weekly = seriesOf("w", "Reviews due", [3, 5, 2], {}, ["2026-10-26", "2026-11-02", "2026-11-09"]);
-            const el = await chart({ kind: "bar", series: [weekly], today: "2026-11-04", groupBy: "week" });
+            const el = await chart({ kind: "bar", series: [weekly], now: "2026-11-04", groupBy: "week" });
             const rows = rowHeaders(el);
             expect(rows.findIndex((r) => r.endsWith("(includes today)"))).toBe(1);
             expect(rows.some((r) => r.endsWith("(today)"))).toBe(false);
@@ -314,7 +314,7 @@ describe("Feature: today's line", () => {
         it("redraws with the line and names the date", async () => {
             const el = await chart({ kind: "line", series: [reviews] });
             expect(rowHeaders(el).some((r) => r.includes("(today)"))).toBe(false);
-            el.today = "2026-11-03";
+            el.now = "2026-11-03";
             await settle(el);
             expect(rowHeaders(el)[2]).toMatch(/\(today\)$/);
             expect(chartOf(el).chartArea.top).toBeGreaterThan(20);
@@ -480,7 +480,7 @@ describe("Feature: Workflow's activity chart", () => {
         }
         const host = render(
             html`<div style="background: var(--uui-color-surface); width: 400px">
-                <uaui-time-series-chart kind="bar" today="2026-11-02" .series=${workflow}></uaui-time-series-chart>
+                <uaui-time-series-chart kind="bar" now="2026-11-02" .series=${workflow}></uaui-time-series-chart>
             </div>`,
         ).container.querySelector("div")!;
         await settle(host.querySelector("uaui-time-series-chart")!);
@@ -521,7 +521,7 @@ describe("Feature: Workflow's activity chart", () => {
     });
 
     it("passes an a11y audit on a log axis with compare", async () => {
-        const el = await chart({ kind: "bar", yScale: "log", today: "2026-06-02", compare: [previousApproved, previousPending] });
+        const el = await chart({ kind: "bar", yScale: "log", now: "2026-06-02", compare: [previousApproved, previousPending] });
         expect(await axeRun(el)).toHaveNoViolations();
     });
 });

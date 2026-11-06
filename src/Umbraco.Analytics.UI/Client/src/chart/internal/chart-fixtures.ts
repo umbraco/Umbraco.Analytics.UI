@@ -1,5 +1,5 @@
 // Sample data for the chart stories: 30 days from 25 May 2026 with a spike on 11 Jun, like the Phase 1 design.
-import { uauiDateBuckets } from "../../date-helpers/index.js";
+import { uauiBucketsFor } from "../../date-helpers/index.js";
 import type { UauiMarker, UauiSeries } from "../types.js";
 
 const pageviewValues = [
@@ -60,7 +60,7 @@ const sundayWeeksOf = (range: { from: string; to: string }, values: number[], va
     return {
         id: "pageviews",
         label: "Pageviews",
-        points: uauiDateBuckets(range, "week", { weekStart: 7 }).map(({ start, days }) => ({ date: start, value: days.reduce((sum, day) => sum + (valueOn.get(day) ?? 0), 0) })),
+        points: uauiBucketsFor(range, "week", { weekStart: 7 }).map(({ start, days }) => ({ date: start, value: days.reduce((sum, day) => sum + (valueOn.get(day) ?? 0), 0) })),
     };
 };
 
@@ -68,6 +68,22 @@ const sundayWeeksOf = (range: { from: string; to: string }, values: number[], va
 export const sundayWeeks = sundayWeeksOf({ from: "2026-05-25", to: "2026-06-23" }, pageviewValues, dayAfter25May);
 /** The 30 days before, as Sunday weeks: the compare series of the week start story. */
 export const sundayWeeksPrevious = sundayWeeksOf({ from: "2026-04-25", to: "2026-05-24" }, previousPageviewValues, dayAfter25Apr);
+
+/** Pageviews for each local hour of 5 Nov 2026, quiet at night and busy in the afternoon, for the hourly story. */
+export const pageviewsByHour: UauiSeries = {
+    id: "pageviews",
+    label: "Pageviews",
+    points: uauiBucketsFor({ from: "2026-11-05", to: "2026-11-05" }, "hour").map(({ start }, hour) => ({
+        date: start,
+        value: Math.round(40 + 160 * Math.sin((Math.PI * Math.max(0, hour - 5)) / 18) ** 2),
+    })),
+};
+
+/** Pageviews for 5 Nov 2026 by hour as of 2:23 PM: the hours after the 2 PM one are 0, and the 2 PM one is part way through. */
+export const pageviewsSoFarToday: UauiSeries = {
+    ...pageviewsByHour,
+    points: pageviewsByHour.points.map((point, hour) => ({ ...point, value: hour > 14 ? 0 : hour === 14 ? Math.round(point.value / 2) : point.value })),
+};
 
 /** Small daily counts for the bar stories (25 May to 23 Jun 2026), like the Phase 1 visitors chart. */
 const returningValues = [1, 0, 1, 0, 1, 0, 0, 2, 1, 0, 1, 0, 0, 2, 0, 1, 1, 0, 0, 2, 0, 0, 1, 0, 1, 0, 1, 0, 0, 1];

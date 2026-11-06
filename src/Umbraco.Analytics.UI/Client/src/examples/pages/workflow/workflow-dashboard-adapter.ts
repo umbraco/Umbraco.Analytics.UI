@@ -59,7 +59,7 @@ export function workflowStatusCodes(id: WorkflowStatusId): WorkflowStatusCode[] 
 export const workflowDay = (x: number): string => new Date(x).toISOString().slice(0, 10);
 
 /**
- * The chart's `today`: the answer's own `today`, read in the same frame as its points' `x`, so the today line always
+ * The chart's `now`: the answer's own `today`, read in the same frame as its points' `x`, so the now line always
  * lands on the answer's day and never on the day before or after.
  *
  * Workflow's own chart compared each day's timestamp with the current time, which is never exactly midnight, so its

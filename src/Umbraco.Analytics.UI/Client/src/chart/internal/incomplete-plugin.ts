@@ -43,7 +43,7 @@ export function createIncompletePlugin(state: UauiIncompleteState): Plugin {
     let tile: { color: string; ratio: number; pattern: CanvasPattern | null } | undefined;
     return {
         id: "uauiIncomplete",
-        // Before the chart's own drawing, so the hover line or band, the today line and the series all sit above it.
+        // Before the chart's own drawing, so the hover line or band, the now line and the series all sit above it.
         beforeDraw: (chart) => {
             const { from, colors } = state;
             const count = chart.data.labels?.length ?? 0;

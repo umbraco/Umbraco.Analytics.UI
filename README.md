@@ -19,11 +19,11 @@ Usage and API are in [Storybook](https://umbraco.github.io/Umbraco.Analytics.UI/
 |---|---|
 | `uaui-kpi-tile` | A headline number as a card, with an icon and a change badge. Can be selectable, a link (`href`) or a button that raises `open`, and can take a status `color`. |
 | `uaui-delta-badge` | The change against a comparison period, e.g. "▲ 12.4%". |
-| `uaui-time-series-chart` | Lines, areas, bars or stacked bars over time (or bars and a line together), with compare, markers, a today line, a hatched, faded incomplete period (`incomplete-from`), a log y-axis option, a 100% share view (`stack="percent"`) and a legend that folds for many series and hides or shows a series when its entry is pressed. |
+| `uaui-time-series-chart` | Lines, areas, bars or stacked bars over time (or bars and a line together), with compare, markers, a now line ("Now" by hour, "Today" otherwise), hourly bars (`group-by="hour"`), a hatched, faded incomplete period (`incomplete-from`), a log y-axis option, a 100% share view (`stack="percent"`) and a legend that folds for many series and hides or shows a series when its entry is pressed. |
 | `uaui-category-chart` | Bars or stacked bars over categories instead of dates (e.g. submissions by hour of day), with compare, a log y-axis option and a legend that hides or shows a series when its entry is pressed. Same look, tooltip and states as the time-series chart. |
 | `uaui-funnel` | Conversion funnel: honest-width bars, the share that moved on between steps, and last period as brackets. |
 | `uaui-toggle-group` | Toggle group: a row of options, exactly one selected. |
-| `uaui-group-by` | Day, week or month switch for a chart. |
+| `uaui-group-by` | Hour, day, week or month switch for a chart. |
 | `uaui-date-range` | Button and dialog to pick a date range and a comparison. |
 | `uaui-data-table` | Sortable, searchable, pageable table. Client or server mode. |
 | `uaui-search-field` | Search box that raises `search` as you type. Works anywhere; in a table, put it in the `toolbar` or `toolbar-start` slot and the table filters itself. |
@@ -34,7 +34,7 @@ Usage and API are in [Storybook](https://umbraco.github.io/Umbraco.Analytics.UI/
 | `uaui-empty-state` | "Nothing to show" message. The chart and table use it too. |
 | `uaui-error-state` | "Could not load" message, with an optional Retry button. The chart and table show it when their `error` is set. The KPI tile shows a dash instead, with no Retry. |
 
-Also public: `UauiLoadStateMixin` (the loading, error and empty settings the charts, funnel and table share, with the error > loading > empty rule and the `retry` event), `UauiChartMixin` (built on it: the settings both charts share, such as `series`, `y-scale` and `value-format`), `UAUI_TABLE_CELL` (the cell element names), `UAUI_TABLE_CONTEXT` (what a custom cell reads from its table), `UauiPaletteStyles` (the colour palette for your own elements), `UauiTableServerController` (runs a table in `server` mode) and the date helpers `uauiPresetRange`, `uauiPreviousPeriod`, `uauiPreviousYear`, `uauiCompareFor`, `uauiDaysIn`, `uauiDateBuckets` and `uauiFormatDateRange`.
+Also public: `UauiLoadStateMixin` (the loading, error and empty settings the charts, funnel and table share, with the error > loading > empty rule and the `retry` event), `UauiChartMixin` (built on it: the settings both charts share, such as `series`, `y-scale` and `value-format`), `UAUI_TABLE_CELL` (the cell element names), `UAUI_TABLE_CONTEXT` (what a custom cell reads from its table), `UauiPaletteStyles` (the colour palette for your own elements), `UauiTableServerController` (runs a table in `server` mode) and the date helpers `uauiPresetRange`, `uauiPreviousPeriod`, `uauiPreviousYear`, `uauiCompareFor`, `uauiDaysIn`, `uauiBucketsFor`, `uauiGroupByOptions` and `uauiFormatDateRange`.
 
 ## Packages
 

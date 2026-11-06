@@ -2,6 +2,7 @@
 // built from year/month/day parts so a timezone never shifts a day.
 
 import type { UauiWeekStart } from "../../date-helpers/date-helpers.js";
+import { hoursBetween, nextHour } from "./hour-math.js";
 
 const pad = (n: number, width = 2) => String(n).padStart(width, "0");
 
@@ -60,9 +61,15 @@ type Range = { from: string; to: string };
 type PresetRange = Range & { preset?: string };
 
 /** The ids of the presets the package knows how to calculate. */
-export type UauiBuiltInPresetId = "last-7-days" | "last-30-days" | "this-month" | "last-month" | "last-year";
+export type UauiBuiltInPresetId = "today" | "yesterday" | "last-7-days" | "last-30-days" | "this-month" | "last-month" | "last-year";
 
 const builtIn: Record<UauiBuiltInPresetId, (today: string) => Range> = {
+    // One whole local day each, not in the default list.
+    today: (today) => ({ from: today, to: today }),
+    yesterday: (today) => {
+        const day = addDays(today, -1);
+        return { from: day, to: day };
+    },
     // Rolling windows include today.
     "last-7-days": (today) => ({ from: addDays(today, -6), to: today }),
     "last-30-days": (today) => ({ from: addDays(today, -29), to: today }),
@@ -95,7 +102,7 @@ export function builtInPresetRange(id: string, today: string): Range | undefined
 }
 
 /** Whole days from `from` to `to`, both inclusive. `undefined` unless both are real dates with `to` on or after `from`. */
-function inclusiveDays(range: Range): number | undefined {
+export function inclusiveDays(range: Range): number | undefined {
     const [a, b] = [parseIso(range.from), parseIso(range.to)];
     if (!a || !b || range.to < range.from) return undefined;
     const ms = Date.UTC(b.year, b.month - 1, b.day) - Date.UTC(a.year, a.month - 1, a.day);
@@ -145,8 +152,11 @@ export function daysIn(range: Range): string[] {
     return count === undefined ? [] : Array.from({ length: count }, (_, i) => addDays(range.from, i));
 }
 
-/** How a chart groups its points. The same three values as `UauiGroupBy`. */
-export type BucketUnit = "day" | "week" | "month";
+/**
+ * How a chart groups its points. `"hour"` is the odd one out: it takes and gives UTC instants, not ISO dates, and its
+ * maths lives in hour-math.ts so this file stays free of time zones.
+ */
+export type BucketUnit = "hour" | "day" | "week" | "month";
 
 /** The week start used when none is given, or when the one given is not a whole number from 1 to 7. */
 export const DEFAULT_WEEK_START: UauiWeekStart = 1;
@@ -158,7 +168,7 @@ export function resolveWeekStart(value: unknown): UauiWeekStart {
 
 /**
  * The first day of the bucket an ISO date falls in: the day itself, the first day of its week (Monday unless
- * `weekStart` says otherwise), or the 1st of its month.
+ * `weekStart` says otherwise), or the 1st of its month. Not for `"hour"`: that is `hourStart`.
  */
 export function bucketStart(iso: string, unit: BucketUnit, weekStart?: UauiWeekStart): string {
     const parts = parseIso(iso);
@@ -170,7 +180,7 @@ export function bucketStart(iso: string, unit: BucketUnit, weekStart?: UauiWeekS
 
 /**
  * How many buckets (days, weeks or months) the bucket `iso` falls in is after the bucket `from` falls in; negative when before.
- * `undefined` when either is not a real date.
+ * `undefined` when either is not a real date. Not for `"hour"`: that is `wallClockHourOffset`.
  */
 export function bucketOffset(from: string, iso: string, unit: BucketUnit, weekStart?: UauiWeekStart): number | undefined {
     const [a, b] = [parseIso(bucketStart(from, unit, weekStart)), parseIso(bucketStart(iso, unit, weekStart))];
@@ -180,23 +190,34 @@ export function bucketOffset(from: string, iso: string, unit: BucketUnit, weekSt
     return unit === "week" ? days / 7 : days;
 }
 
-/** The first day after the bucket that starts on `start`: the next day, the day a week on, or the 1st of the next month. */
+/**
+ * The first day after the bucket that starts on `start`: the next day, the day a week on, or the 1st of the next month.
+ * For `"hour"`, the UTC instant one hour after the hour that starts at `start`.
+ */
 export function bucketEnd(start: string, unit: BucketUnit): string {
+    if (unit === "hour") return nextHour(start) ?? start;
     if (unit === "month") return firstOfNextMonth(start);
     return addDays(start, unit === "week" ? 7 : 1);
 }
 
-/** A bucket of a range: the date its point is plotted at and the days of the range inside it. */
-export type DateBucket = { start: string; days: string[] };
+/** A bucket of a range: the point's date (a UTC instant for `"hour"`), the first day or instant after it, and the days of the range inside it. */
+export type DateBucket = { start: string; end: string; days: string[] };
 
-/** Splits `range` into day, week (from `weekStart`, Monday by default) or month buckets, in order. A bucket at either end holds only the days inside the range. */
+/**
+ * Splits `range` into hour, day, week (from `weekStart`, Monday by default) or month buckets, in order. A bucket at either end holds
+ * only the days inside the range. `"hour"` runs from the range's first local midnight to the midnight after its last day.
+ */
 export function dateBuckets(range: Range, unit: BucketUnit, weekStart?: UauiWeekStart): DateBucket[] {
+    const days = daysIn(range);
+    if (unit === "hour") {
+        return days.length === 0 ? [] : hoursBetween(days[0], addDays(days[days.length - 1], 1)).map(({ start, end, date }) => ({ start, end, days: [date] }));
+    }
     const buckets: DateBucket[] = [];
-    for (const day of daysIn(range)) {
+    for (const day of days) {
         const start = bucketStart(day, unit, weekStart);
         const last = buckets[buckets.length - 1];
         if (last?.start === start) last.days.push(day);
-        else buckets.push({ start, days: [day] });
+        else buckets.push({ start, end: bucketEnd(start, unit), days: [day] });
     }
     return buckets;
 }
