@@ -59,6 +59,9 @@ const presets: UauiDatePreset[] = [
     { id: "custom" },
 ];
 
+/** The second line on the Input tokens tile. `{0}` is where the cached count goes. */
+const cachedDetail = "{0} cached";
+
 const metricLabels: Record<Metric, string> = {
     requests: "Requests",
     inputTokens: "Input tokens",
@@ -219,13 +222,15 @@ export class ExampleAiUsagePageElement extends UmbLitElement {
         void this.#breakdown.reload({ resetPage: true });
     }
 
-    #tile(metric: Metric, icon: string, pick: (t: UsageTotals) => number) {
+    #tile(metric: Metric, icon: string, pick: (t: UsageTotals) => number, detail?: { text: string; pick: (t: UsageTotals) => number }) {
         const summary = this._usage?.summary;
         return html`<uaui-kpi-tile
             label=${metricLabels[metric]}
             icon=${icon}
             .value=${summary && pick(summary)}
             .valueFormat=${COMPACT}
+            .detail=${detail?.text}
+            .detailValue=${summary && detail?.pick(summary)}
             ?no-data=${summary !== undefined && !summary.requests}
             .previous=${this._usage?.compareSummary && pick(this._usage.compareSummary)}
             ?loading=${this._usageLoading}
@@ -254,7 +259,7 @@ export class ExampleAiUsagePageElement extends UmbLitElement {
         const successRate = now && this.#successRate(now);
         const duration = now && this.#avgDuration(now);
         return html`<div class="tiles">
-            ${this.#tile("requests", "icon-chart", (t) => t.requests)} ${this.#tile("inputTokens", "icon-inbox", (t) => t.inputTokens)}
+            ${this.#tile("requests", "icon-chart", (t) => t.requests)} ${this.#tile("inputTokens", "icon-inbox", (t) => t.inputTokens, { text: cachedDetail, pick: (t) => t.cachedInputTokens })}
             ${this.#tile("outputTokens", "icon-navigation-right", (t) => t.outputTokens)}
             ${this.#tile("totalTokens", "icon-coins", (t) => t.inputTokens + t.outputTokens)}
             <uaui-kpi-tile

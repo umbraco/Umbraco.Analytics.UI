@@ -85,6 +85,11 @@ describe("Feature: Umbraco AI usage page", () => {
             expect(tiles(page).map((t) => t.label)).toEqual(["Requests", "Input tokens", "Output tokens", "Total tokens", "Success rate", "Avg duration"]);
         });
 
+        it("shows the cached input tokens as a second line on the Input tokens tile", () => {
+            const t = tile(page, "Input tokens");
+            expect(deepText(shadow(t)).replace(/\s+/g, " ")).toMatch(/\d[\d.,]*[KMB]? cached/);
+        });
+
         it("shows a change badge on the requests tile, from the comparison period", () => {
             expect(shadow(tile(page, "Requests")).querySelector("uaui-delta-badge")).not.toBe(null);
         });
