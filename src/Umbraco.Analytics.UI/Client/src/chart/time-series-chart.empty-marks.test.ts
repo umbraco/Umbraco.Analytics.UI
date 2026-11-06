@@ -53,7 +53,7 @@ describe("Feature: marks on empty periods", () => {
             el = await chart({ series: [allBut26], markers: [{ id: "m1", date: "2026-10-26", title: "Deploy" }] });
         });
 
-        it.skip("shows the marker in the slot of 2026-10-26", () => {
+        it("shows the marker in the slot of 2026-10-26", () => {
             expect(markerX(el, 0)).toBeCloseTo(slotX(el, "Oct 26"), 0);
         });
     });
@@ -64,7 +64,7 @@ describe("Feature: marks on empty periods", () => {
             el = await chart({ series: [seriesOn(["2026-10-24", "2026-10-25", "2026-10-26", "2026-10-27", "2026-10-28", "2026-10-29"])], now: "2026-10-30T10:00" });
         });
 
-        it.skip("puts the now line in the slot of 2026-10-30", () => {
+        it("puts the now line in the slot of 2026-10-30", () => {
             expect(rowHeaders(el).findIndex((r) => r.includes("(today)"))).toBe(6);
         });
     });
@@ -78,7 +78,7 @@ describe("Feature: marks on empty periods", () => {
             });
         });
 
-        it.skip("starts the unfinished part at the slot of 2026-10-29", () => {
+        it("starts the unfinished part at the slot of 2026-10-29", () => {
             expect(rowHeaders(el).map((r) => r.endsWith("(incomplete)"))).toEqual([false, false, false, false, false, true, true]);
         });
     });
@@ -89,7 +89,7 @@ describe("Feature: marks on empty periods", () => {
             el = await chart({ series: [allBut26], compareSeries: [seriesOn(["2026-10-19"], 77)], compare });
         });
 
-        it.skip("puts the compare value in the slot of 2026-10-26", () => {
+        it("puts the compare value in the slot of 2026-10-26", () => {
             // The series' line is dataset 0, its compare line dataset 1; the 26th is slot 2.
             expect(chartOf(el).data.datasets[1].data[2]).toBe(77);
         });
@@ -102,7 +102,7 @@ describe("Feature: marks on empty periods", () => {
                 el = await chart({ series: [allBut26], markers: [{ id: "m9", date: "2026-11-02", title: "Too late" }] });
             });
 
-            it.skip("shows no marker", () => {
+            it("shows no marker", () => {
                 expect(markers(el)).toHaveLength(0);
             });
         });
@@ -114,7 +114,7 @@ describe("Feature: marks on empty periods", () => {
                 el = await chart({ series: [allBut26], compareSeries: [{ ...allBut26, points: [{ date: "2026-10-17", value: 60 }, { date: "2026-10-25", value: 77 }] }], compare });
             });
 
-            it.skip("doesn't draw that compare point", () => {
+            it("doesn't draw that compare point", () => {
                 expect(chartOf(el).data.datasets[1].data).not.toContain(77);
             });
         });
