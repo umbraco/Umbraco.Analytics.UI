@@ -25,3 +25,5 @@ The first release, for Umbraco CMS 19.
 ### Changed
 
 - Breaking, for anyone on a prerelease build: `today` on `uaui-time-series-chart` is now `now`, and `uauiDateBuckets`, `UauiDateBucket` and `UauiDateBucketsOptions` are now `uauiBucketsFor`, `UauiBucket` and `UauiBucketsForOptions`. A bucket also has an `end`.
+- `uaui-time-series-chart` fills its x-axis with every period of `range` (by `group-by` and `week-start`), so a period with no point keeps its slot. Lines and compare lines break where a period has no point, and a lone value shows as a dot. Leave a point out for a period with no value (a rate or an average) and send 0 for counts. Without `range` the axis is the points' dates, as before.
+- Hovering any period of `uaui-time-series-chart`, or any category of `uaui-category-chart`, empty or not, shows the tooltip. It lists every shown series and says "No data" for one with no value there. The hidden table of `uaui-time-series-chart` and `uaui-category-chart` reads "No data" for an empty cell instead of a blank.

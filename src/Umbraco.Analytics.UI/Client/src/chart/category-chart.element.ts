@@ -228,7 +228,7 @@ export class UauiCategoryChartElement extends UauiCategoryChartElementBase {
         });
     }
 
-    /** One row per series with a value in the hovered category, then the total and the compare total. */
+    /** One row per shown series (a "No data" row where it has no value), then the total and the compare total. */
     #renderTooltip() {
         const hover = this.#chart.hover;
         const { data, shown, labels, totals, numberFormat } = this.#derived;
@@ -236,8 +236,7 @@ export class UauiCategoryChartElement extends UauiCategoryChartElementBase {
         if (!hover || !data.series.length || labels[hover.index] === undefined) return nothing;
         const { index } = hover;
         const rows = data.series.flatMap((s, i): UauiChartTooltipRow[] => {
-            const value = s.values[index];
-            return value === null ? [] : [{ color: colorKeyOf(this.series[shown[i]], shown[i]), value, label: this.series.length > 1 ? s.label : undefined }];
+            return [{ color: colorKeyOf(this.series[shown[i]], shown[i]), value: s.values[index], label: this.series.length > 1 ? s.label : undefined }];
         });
         const total = totals[index];
         const compareValue = data.compareTotal?.values[index];

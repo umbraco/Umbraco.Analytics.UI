@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 300" font-family="-apple-system, Segoe UI, Helvetica, Arial, sans-serif" font-size="13">
+  <style>
+    .box { fill: #f6f8fa; stroke: #57606a; stroke-width: 1.2; rx: 6; }
+    .new { fill: #ddf4ff; stroke: #0969da; }
+    .t { fill: #24292f; }
+    .s { fill: #57606a; font-size: 11px; }
+    .a { stroke: #57606a; stroke-width: 1.4; fill: none; marker-end: url(#arrow); }
+    @media (prefers-color-scheme: dark) {
+      .box { fill: #161b22; stroke: #8b949e; }
+      .new { fill: #0c2d6b; stroke: #58a6ff; }
+      .t { fill: #e6edf3; }
+      .s { fill: #8b949e; }
+      .a { stroke: #8b949e; }
+    }
+  </style>
+  <defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#8b949e"/></marker></defs>
+
+  <rect class="box new" x="20" y="20" width="200" height="56"/>
+  <text class="t" x="120" y="44" text-anchor="middle">range + group-by</text>
+  <text class="s" x="120" y="62" text-anchor="middle">every bucket of the range (new)</text>
+
+  <rect class="box" x="20" y="110" width="200" height="56"/>
+  <text class="t" x="120" y="134" text-anchor="middle">points' dates</text>
+  <text class="s" x="120" y="152" text-anchor="middle">as today</text>
+
+  <rect class="box new" x="290" y="64" width="190" height="56"/>
+  <text class="t" x="385" y="88" text-anchor="middle">slots</text>
+  <text class="s" x="385" y="106" text-anchor="middle">both lists, each date once, sorted</text>
+
+  <rect class="box" x="290" y="200" width="190" height="56"/>
+  <text class="t" x="385" y="224" text-anchor="middle">values per series</text>
+  <text class="s" x="385" y="242" text-anchor="middle">null where no point (as today)</text>
+
+  <rect class="box new" x="550" y="20" width="190" height="56"/>
+  <text class="t" x="645" y="44" text-anchor="middle">lines and fills</text>
+  <text class="s" x="645" y="62" text-anchor="middle">break at null; lone value = dot</text>
+
+  <rect class="box new" x="550" y="110" width="190" height="56"/>
+  <text class="t" x="645" y="134" text-anchor="middle">tooltip</text>
+  <text class="s" x="645" y="152" text-anchor="middle">hover any slot; null = "No data"</text>
+
+  <rect class="box new" x="550" y="200" width="190" height="56"/>
+  <text class="t" x="645" y="224" text-anchor="middle">hidden table</text>
+  <text class="s" x="645" y="242" text-anchor="middle">null = "No data"</text>
+
+  <path class="a" d="M220,48 L288,84"/>
+  <path class="a" d="M220,138 L288,104"/>
+  <path class="a" d="M385,120 L385,198"/>
+  <path class="a" d="M480,220 L548,52"/>
+  <path class="a" d="M480,228 L548,140"/>
+  <path class="a" d="M480,228 L548,228"/>
+
+  <text class="s" x="20" y="290">Blue = changed by this feature. Markers, "now" and the unfinished mark find their slot in the same list, so they need no change.</text>
+</svg>

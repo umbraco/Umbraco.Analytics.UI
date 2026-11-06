@@ -103,7 +103,7 @@ describe("Feature: 100% share view", () => {
                 expect([...hiddenTable(el).tHead!.rows[0].cells].map((c) => c.textContent!.trim())).toEqual(["Date", "Home", "Events", "Blog", "Total"]);
                 expect(bodyRows(el)[0].slice(1)).toEqual(["60% (30)", "20% (10)", "20% (10)", "50"]);
                 expect(bodyRows(el)[1].slice(1)).toEqual(["0", "0", "0", "0"]);
-                expect(bodyRows(el)[2].slice(1)).toEqual(["25% (10)", "75% (30)", "", "40"]);
+                expect(bodyRows(el)[2].slice(1)).toEqual(["25% (10)", "75% (30)", "No data", "40"]);
             });
 
             it("shows each share, its label and its value in the tooltip, and the total", async () => {
@@ -182,9 +182,16 @@ describe("Feature: 100% share view", () => {
             expect(`rgb(${r}, ${g}, ${b})`).toBe(uauiChartColors(el).series[2].bar);
         });
 
-        it("keeps no value for it in the tooltip and the hidden table", async () => {
+        it("says No data for it in the hidden table", async () => {
             const el = await chart({ kind: "area", series: sparse });
-            expect(bodyRows(el)[1].slice(1)).toEqual(["50% (20)", "", "50% (20)", "40"]);
+            expect(bodyRows(el)[1].slice(1)).toEqual(["50% (20)", "No data", "50% (20)", "40"]);
+        });
+
+        it("says No data for it in the tooltip, with no share or amount", async () => {
+            const el = await chart({ kind: "area" });
+            // Blog has no point on 3 Jun; the stack lists it first, on top.
+            await hoverDate(el, 2);
+            expect(tooltipRows(el)[0]).toEqual(["No data", "Blog", ""]);
         });
 
         it("leaves stacked bars as they are: no segment, no 0", async () => {

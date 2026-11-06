@@ -46,6 +46,22 @@ const chart = (variant: string, series: unknown[] = [pageviews, sessions]) => {
     );
 };
 
+// A range with gaps, so every value stands alone and draws as a dot: on the series line and on its compare line.
+const loneSeries = { ...pageviews, points: [{ date: "2026-06-01", value: 40 }, { date: "2026-06-03", value: 120 }, { date: "2026-06-05", value: 280 }] };
+const loneCompare = { ...lastPeriod, points: [{ date: "2026-05-01", value: 60 }, { date: "2026-05-03", value: 90 }, { date: "2026-05-05", value: 200 }] };
+const loneChart = () =>
+    renderElement(
+        html`<uaui-time-series-chart kind="line" .series=${[loneSeries]} .compareSeries=${[loneCompare]} .range=${{ from: "2026-06-01", to: "2026-06-05" }}
+            .compare=${{ mode: "custom", from: "2026-05-01", to: "2026-05-05" }} style="width:400px"></uaui-time-series-chart>`,
+        "uaui-time-series-chart",
+    );
+/** What Chart.js resolved for the dots of the series line (dataset 0) and the compare line (dataset 1). */
+const dotsOf = (el: Element) =>
+    [0, 1].map((i) => {
+        const { radius, backgroundColor, borderColor, borderWidth } = chartOf(el).getDatasetMeta(i).data[2].options as unknown as Record<string, unknown>;
+        return { radius, backgroundColor, borderColor, borderWidth };
+    });
+
 describe("Feature: the chart keeps its look when a product changes the shared Chart.js", () => {
     describe("Scenario: a product changes common Chart.defaults", () => {
         it.each(KINDS)("draws a %s chart with the same pixels", async (kind) => {
@@ -60,6 +76,20 @@ describe("Feature: the chart keeps its look when a product changes the shared Ch
             changeDataDefaultsAndOverrides();
             const after = await chart(kind);
             await expectSamePixels(before, after, () => chart(kind));
+        });
+
+        it("draws lone values as the same dots when the point defaults are changed", async () => {
+            const el = await loneChart();
+            const before = await baseline(el);
+            const dots = dotsOf(el);
+            expect(dots.map((dot) => dot.radius)).toEqual([2, 2]);
+            const point = Chart.defaults.elements.point;
+            change(point, "backgroundColor", "rgb(255, 0, 0)");
+            change(point, "borderColor", "rgb(0, 255, 0)");
+            change(point, "borderWidth", 6);
+            const after = await loneChart();
+            expect(dotsOf(after)).toEqual(dots);
+            await expectSamePixels(before, after, loneChart);
         });
 
         it("keeps its own tick font and colour, its clip, and no animation", async () => {

@@ -61,7 +61,7 @@ export class UauiChartDataTableElement extends UmbLitElement {
     }
 
     #cell(value: number | null | undefined) {
-        return html`<td>${value === null || value === undefined ? "" : this.#format(value)}</td>`;
+        return html`<td>${value === null || value === undefined ? this.localize.term("uauiAnalytics_chartNoData") : this.#format(value)}</td>`;
     }
 
     /** A series cell of the share view: the share and the value, or the value alone where there is no share. */
