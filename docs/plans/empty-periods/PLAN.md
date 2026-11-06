@@ -10,7 +10,7 @@ Paths are under `src/Umbraco.Analytics.UI/Client/src/`. The time zone in tests i
   Acceptance: EMP-1 specs green in `chart/time-series-chart.empty-slots.test.ts`. Existing `chart/internal/chart-data.test.ts`, compare and hourly chart tests green.
   depends-on: none
 
-- [ ] **T2** - story: EMP-5 (AC1–AC6). Check that markers, the now line, the unfinished mark and compare points find empty slots through the fuller date list (SPEC R11, R12), with no change to `chart/internal/bucket-lookup.ts` or `incomplete-index.ts` expected. Fix only what a spec shows is wrong.
+- [x] **T2** - story: EMP-5 (AC1–AC6). Check that markers, the now line, the unfinished mark and compare points find empty slots through the fuller date list (SPEC R11, R12), with no change to `chart/internal/bucket-lookup.ts` or `incomplete-index.ts` expected. Fix only what a spec shows is wrong.
   Acceptance: EMP-5 specs green in `chart/time-series-chart.empty-marks.test.ts`. Existing markers, now and incomplete tests green.
   depends-on: T1. parallel-group: B
 
