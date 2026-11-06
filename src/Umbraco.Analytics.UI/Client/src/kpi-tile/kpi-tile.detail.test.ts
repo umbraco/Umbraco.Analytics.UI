@@ -381,19 +381,33 @@ describe("Feature: a tile shows a part of its total on a second line", () => {
     const height = (el: Element) => rect(shadow(el).querySelector(".tile")!).height;
 
     describe("Scenario: the placeholder makes room for the line", () => {
-        it.skip("matches the loaded tile's height in a 300px cell", async () => {
+        it("matches the loaded tile's height in a 300px cell", async () => {
             const [{ el: before }, { el: after }] = [await tileIn(300, loading), await tileIn(300, loaded)];
             expect(height(before)).toBe(height(after));
         });
 
-        it.skip("matches the loaded tile's height in a 200px cell", async () => {
+        it("matches the loaded tile's height in a 200px cell", async () => {
             const [{ el: before }, { el: after }] = [await tileIn(200, loading), await tileIn(200, loaded)];
             expect(height(before)).toBe(height(after));
         });
     });
 
+    describe("Scenario: the placeholder follows the value's size down (220px)", () => {
+        it("matches the loaded tile's height in a 220px cell", async () => {
+            const [{ el: before }, { el: after }] = [await tileIn(220, loading), await tileIn(220, loaded)];
+            expect(height(before)).toBe(height(after));
+        });
+    });
+
+    describe("Scenario: the badge wraps below the line (180px)", () => {
+        it("gives the placeholder the loaded tile's height", async () => {
+            const [{ el: before }, { el: after }] = [await tileIn(180, loading), await tileIn(180, loaded)];
+            expect(height(before)).toBe(height(after));
+        });
+    });
+
     describe("Scenario (sad path): no line", () => {
-        it.skip("keeps today's height: 48px of content", async () => {
+        it("keeps today's height: 48px of content", async () => {
             const { el } = await tileIn(300, html`<uaui-kpi-tile lang="en-US" label="Input tokens" loading></uaui-kpi-tile>`);
             expect(rect(shadow(el).querySelector(".content")!).height).toBe(48);
         });

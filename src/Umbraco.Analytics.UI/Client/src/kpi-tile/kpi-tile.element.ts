@@ -357,11 +357,13 @@ export class UauiKpiTileElement extends UmbLitElement {
     }
 
     #tile(content: TemplateResult): TemplateResult {
+        // Marks a tile asked for a line, so its skeleton can reserve the room for it in CSS.
+        const hasDetail = this.detail ? " has-detail" : "";
         // A native button gives Enter and Space for free, and both arrive as one click.
         if (this.selectable) {
             return html`<button
                 type="button"
-                class="tile selectable"
+                class="tile selectable${hasDetail}"
                 aria-pressed=${this.selected ? "true" : "false"}
                 @click=${this.#toggle}>
                 ${content}<span class="select-border" aria-hidden="true"></span>
@@ -370,11 +372,11 @@ export class UauiKpiTileElement extends UmbLitElement {
         const href = safeHref(this.href);
         if (href) {
             const rel = this.rel || (this.target === "_blank" ? "noopener noreferrer" : undefined);
-            return html`<a class="tile open" href=${href} target=${ifDefined(this.target || undefined)} rel=${ifDefined(rel)}>${content}</a>`;
+            return html`<a class="tile open${hasDetail}" href=${href} target=${ifDefined(this.target || undefined)} rel=${ifDefined(rel)}>${content}</a>`;
         }
         return this.openable
-            ? html`<button type="button" class="tile open" @click=${this.#open}>${content}</button>`
-            : html`<div class="tile">${content}</div>`;
+            ? html`<button type="button" class="tile open${hasDetail}" @click=${this.#open}>${content}</button>`
+            : html`<div class="tile${hasDetail}">${content}</div>`;
     }
 
     static override styles: CSSResultGroup = [
@@ -408,6 +410,9 @@ export class UauiKpiTileElement extends UmbLitElement {
             }
 
             .tile {
+                /* The value's size, set once: 24px from a 240px tile, stepping down smoothly to 18px at 180px. The skeleton
+                   heights read it too, so they follow the value down. */
+                --_uaui-kpi-value-size: clamp(18px, 10cqi, 24px);
                 box-sizing: border-box;
                 height: 100%;
                 display: flex;
@@ -616,8 +621,8 @@ export class UauiKpiTileElement extends UmbLitElement {
 
             .value {
                 display: block;
-                /* Backup for a very long number: 24px from a 240px tile, stepping down smoothly to 18px at 180px. */
-                font-size: clamp(18px, 10cqi, 24px);
+                /* Backup for a very long number, stepping down with the tile (see --_uaui-kpi-value-size). */
+                font-size: var(--_uaui-kpi-value-size);
                 font-weight: 700;
                 line-height: 1.1;
                 white-space: nowrap;
@@ -644,6 +649,24 @@ export class UauiKpiTileElement extends UmbLitElement {
                     align-self: stretch;
                     /* Top-aligned, so labels line up across a row when one tile's badge wraps and another's doesn't. */
                     justify-content: flex-start;
+                }
+            }
+
+            /* With a line the skeleton is the height of a loaded tile with it, so the tile doesn't jump. From the top: the
+               label (12px * 1.3), 5px, the value row, 5px, the line (13px * 1.3). The row is the value (1.1 * its font size)
+               or the badge (24px) if taller: 26.4px at 24px, 24px at the 20px the value steps down to in a 200px cell. This
+               is the wide layout, the badge beside the value; a tile whose badge wraps below the value is taller still and
+               grows to fit it. The narrow block above sets the wrapped height. */
+            .tile.has-detail {
+                --_uaui-skeleton-height: calc(12px * 1.3 + 5px + max(24px, 1.1 * var(--_uaui-kpi-value-size)) + 5px + 13px * 1.3);
+            }
+
+            /* A narrow tile with a line reserves the wrapped layout, loaded or not: label (12px * 1.3), 5px, the value
+               (1.1 * its font size), 5px, the line (13px * 1.3), 5px, the badge's 3px margin and its 24px. After the wide rule
+               above, with the same specificity, so it wins. */
+            @container (width < 240px) {
+                .tile.has-detail {
+                    --_uaui-skeleton-height: calc(12px * 1.3 + 5px + 1.1 * var(--_uaui-kpi-value-size) + 5px + 13px * 1.3 + 5px + 3px + 24px);
                 }
             }
 
