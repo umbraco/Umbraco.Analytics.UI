@@ -159,6 +159,7 @@ export class UauiChartRenderer {
     #family?: "line" | "bar";
     #colors?: UauiChartDrawColors;
     #lastHover?: UauiChartHover;
+    #pointerX?: number;
     #canvas: HTMLCanvasElement;
     #host: HTMLElement;
     #onHover: (hover: UauiChartHover | undefined) => void;
@@ -203,6 +204,7 @@ export class UauiChartRenderer {
                 if (type === "mouseout") {
                     // Chart.js clears its own active elements on mouseout; this keeps that true whatever it does.
                     chart.setActiveElements([]);
+                    this.#pointerX = undefined;
                     if (this.#raiseHover(undefined)) args.changed = true;
                     return;
                 }
@@ -210,24 +212,13 @@ export class UauiChartRenderer {
                 if (!args.inChartArea) return;
                 // Chart.js reports touchstart and touchmove as mousedown and mousemove.
                 if (type !== "mousemove" && type !== "mousedown" && type !== "click") return;
-                const count = chart.data.labels?.length ?? 0;
-                if (!count) {
-                    if (this.#raiseHover(undefined)) args.changed = true;
-                    return;
-                }
-                const x = chart.scales["x"];
-                const index = Math.min(Math.max(Math.round(x.getValueForPixel(args.event.x as number) ?? 0), 0), count - 1);
-                // The tooltip sits above the highest drawn point of the slot, or at the top of the plot with none.
-                const drawn = chart.data.datasets.flatMap((_, datasetIndex) => {
-                    const point = chart.isDatasetVisible(datasetIndex) ? (chart.getDatasetMeta(datasetIndex).data[index] as PointElement | undefined) : undefined;
-                    return point && !point.skip && Number.isFinite(point.y) ? [{ datasetIndex, index, y: point.y }] : [];
-                });
-                const ys = drawn.map((point) => point.y);
-                // Chart.js's `index` mode finds the nearest drawn point, not our slot, so its hover dots (the active elements)
-                // are set to the drawn points of our slot, or none for an empty one.
-                chart.setActiveElements(drawn.map(({ datasetIndex, index }) => ({ datasetIndex, index })));
-                // A redraw puts the hover line on the slot, which Chart.js does only when its active elements change.
-                if (this.#raiseHover({ index, x: x.getPixelForValue(index), y: ys.length ? Math.min(...ys) : chart.chartArea.top })) args.changed = true;
+                this.#pointerX = args.event.x as number;
+                if (this.#hoverAt(chart, this.#pointerX)) args.changed = true;
+            },
+            // Chart.js replays its last event on an update only when it has one, and `setActiveElements` on an empty slot
+            // clears it, so the hover is recomputed here for the pointer's last position.
+            afterUpdate: (chart) => {
+                if (this.#pointerX !== undefined) this.#hoverAt(chart, this.#pointerX);
             },
             beforeDatasetsDraw: (chart) => {
                 const hovered = this.#lastHover;
@@ -297,6 +288,25 @@ export class UauiChartRenderer {
         return chart;
     }
 
+    /** Hovers the slot under the pointer at pixel `pointerX`; true when the hover changed. */
+    #hoverAt(chart: Chart, pointerX: number): boolean {
+        const count = chart.data.labels?.length ?? 0;
+        if (!count) return this.#raiseHover(undefined);
+        const x = chart.scales["x"];
+        const index = Math.min(Math.max(Math.round(x.getValueForPixel(pointerX) ?? 0), 0), count - 1);
+        // The tooltip sits above the highest drawn point of the slot, or at the top of the plot with none.
+        const drawn = chart.data.datasets.flatMap((_, datasetIndex) => {
+            const point = chart.isDatasetVisible(datasetIndex) ? (chart.getDatasetMeta(datasetIndex).data[index] as PointElement | undefined) : undefined;
+            return point && !point.skip && Number.isFinite(point.y) ? [{ datasetIndex, index, y: point.y }] : [];
+        });
+        const ys = drawn.map((point) => point.y);
+        // Chart.js's `index` mode finds the nearest drawn point, not our slot, so its hover dots (the active elements)
+        // are set to the drawn points of our slot, or none for an empty one.
+        chart.setActiveElements(drawn.map(({ datasetIndex, index }) => ({ datasetIndex, index })));
+        // A redraw puts the hover line on the slot, which Chart.js does only when its active elements change.
+        return this.#raiseHover({ index, x: x.getPixelForValue(index), y: ys.length ? Math.min(...ys) : chart.chartArea.top });
+    }
+
     /** Raised on every pointer move, but only a change of x value or height matters. */
     #raiseHover(hover: UauiChartHover | undefined): boolean {
         const last = this.#lastHover;
@@ -317,6 +327,7 @@ export class UauiChartRenderer {
             this.#chart = this.#create(family, model.colors);
             this.#family = family;
             this.#lastHover = undefined;
+            this.#pointerX = undefined;
             this.#onHover(undefined);
         }
         const chart = this.#chart;

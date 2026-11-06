@@ -95,6 +95,16 @@ describe("Feature: the tooltip says no data", () => {
         });
     });
 
+    describe("Scenario: the chart updates under a hovered empty slot", () => {
+        it("moves the tooltip to the new value's height without the pointer moving", async () => {
+            const el = (await chart({ series: [successRate] })) as UauiTestElement & { series: UauiSeries[] };
+            await hoverSlot(el, "Oct 26");
+            const emptyTop = tooltip(el).style.top;
+            el.series = [seriesOf("rate", "Success rate", { ...on(allBut26, 96.5), "2026-10-26": 42 })];
+            await expect.poll(() => tooltip(el).style.top).not.toBe(emptyTop);
+        });
+    });
+
     describe("Scenario: the compare value still shows", () => {
         let el: UauiTestElement;
         beforeEach(async () => {
