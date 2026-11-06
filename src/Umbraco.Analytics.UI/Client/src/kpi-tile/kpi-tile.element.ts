@@ -1,4 +1,4 @@
-import { css, customElement, html, ifDefined, nothing, property, type CSSResultGroup, type TemplateResult } from "@umbraco-cms/backoffice/external/lit";
+import { css, customElement, html, ifDefined, nothing, property, state, type CSSResultGroup, type LitElement, type PropertyValues, type TemplateResult } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { getLoadingMode, isBusy } from "../internal/loading/index.js";
 import { UauiVisuallyHiddenStyles } from "../internal/a11y/visually-hidden.css.js";
@@ -200,6 +200,15 @@ export class UauiKpiTileElement extends UmbLitElement {
     @property({ type: Boolean })
     deselectable = true;
 
+    // Whether the badge no longer fits beside the value, so a tile with a line puts it below the line. Measured from the
+    // rendered widths, since the browser can't tell a grid to wrap.
+    @state()
+    private _wrapped = false;
+
+    #observer?: ResizeObserver;
+    #observed: Element[] = [];
+    #frame = 0;
+
     #formatter = new UauiFigureFormatter();
     // A separate instance for the line: the formatter keeps one set of formats, and the line's options differ.
     #detailFormatter = new UauiFigureFormatter();
@@ -240,6 +249,66 @@ export class UauiKpiTileElement extends UmbLitElement {
         return Number.isFinite(deltaChange(this.delta, figures.current, figures.previous, this.deltaUnit));
     }
 
+    override connectedCallback(): void {
+        super.connectedCallback();
+        // A reconnect: the size may have changed while detached, and updated() doesn't run until something changes.
+        if (this.hasUpdated) this.#syncWrap();
+    }
+
+    override disconnectedCallback(): void {
+        super.disconnectedCallback();
+        cancelAnimationFrame(this.#frame);
+        this.#observer?.disconnect();
+        this.#observer = undefined;
+        this.#observed = [];
+    }
+
+    protected override updated(changed: PropertyValues): void {
+        super.updated(changed);
+        this.#syncWrap();
+    }
+
+    // Only a tile with a line and a badge has a layout to choose; any other is the plain flex row, which wraps by itself.
+    #syncWrap(): void {
+        const row = this.renderRoot.querySelector<HTMLElement>(".row.has-detail");
+        const value = row?.querySelector<HTMLElement>(".value");
+        const badge = row?.querySelector<HTMLElement>("uaui-delta-badge");
+        if (!row || !value || !badge) {
+            this.#observer?.disconnect();
+            this.#observed = [];
+            if (this._wrapped) this._wrapped = false;
+            return;
+        }
+        const targets = [row, value, badge];
+        // Measured next frame: a change of layout moves the row's height, and measuring inside the callback would make the
+        // browser report a ResizeObserver loop.
+        if (!this.#observer) this.#observer = new ResizeObserver(() => this.#measureSoon());
+        if (targets.length !== this.#observed.length || targets.some((node, index) => node !== this.#observed[index])) {
+            this.#observer.disconnect();
+            targets.forEach((node) => this.#observer!.observe(node));
+            this.#observed = targets;
+        }
+        // The value and the badge draw their text a microtask after this tile does, so their widths are only real then.
+        const parts = [value.querySelector<LitElement>("uaui-figure-value"), badge as LitElement];
+        void Promise.all(parts.map((part) => part?.updateComplete)).then(() => this.#measure());
+    }
+
+    // During a live resize, one frame paints in the old layout before the next-frame measurement lands.
+    #measureSoon(): void {
+        cancelAnimationFrame(this.#frame);
+        this.#frame = requestAnimationFrame(() => this.#measure());
+    }
+
+    // The browser's own wrap test: the value, the gap and the badge against the row. The value and the badge are
+    // max-content wide in both layouts, so the answer doesn't depend on the layout it picks.
+    #measure(): void {
+        const [row, value, badge] = this.#observed;
+        if (!row?.isConnected) return;
+        const gap = parseFloat(getComputedStyle(row).columnGap) || 0;
+        const wrapped = value.getBoundingClientRect().width + gap + badge.getBoundingClientRect().width > row.getBoundingClientRect().width;
+        if (wrapped !== this._wrapped) this._wrapped = wrapped;
+    }
+
     override render(): TemplateResult {
         const shown = this.#shown;
         const figures = this.#figures;
@@ -259,7 +328,7 @@ export class UauiKpiTileElement extends UmbLitElement {
                       html`<span class="visually-hidden">${this.label}</span><uaui-skeleton></uaui-skeleton>`
                     : html`<span class="body">
                           <span class="label">${this.label}</span>
-                          <span class="row">
+                          <span class=${showDetail ? (this._wrapped ? "row has-detail wrapped" : "row has-detail") : "row"}>
                               ${this.error || this.noData
                                   ? html`<span class="value no-data"
                                         ><span aria-hidden="true">—</span
@@ -510,9 +579,39 @@ export class UauiKpiTileElement extends UmbLitElement {
                 gap: 8px 10px;
             }
 
-            /* The line is a full-width item of the row, so it sits below the value, and the badge wraps below it. */
-            .detail {
-                flex: 1 1 100%;
+            /* With a line the row is a grid. The value and badge fit on one line: the badge beside the value, the line below
+               both. They don't (the tile measures it): the value, the line, then the badge. The value and the badge stay
+               max-content wide in both, so what the tile measures doesn't change with the layout it picks. */
+            .row.has-detail {
+                display: grid;
+                grid-template-columns: auto minmax(0, 1fr);
+                grid-template-areas: "value badge" "detail detail";
+                justify-content: start;
+                align-items: center;
+                gap: 5px 10px;
+            }
+
+            .row.has-detail.wrapped {
+                grid-template-columns: auto;
+                grid-template-areas: "value" "detail" "badge";
+            }
+
+            .row.has-detail .value {
+                grid-area: value;
+                width: max-content;
+            }
+
+            .row.has-detail .detail {
+                grid-area: detail;
+            }
+
+            .row.has-detail uaui-delta-badge {
+                grid-area: badge;
+                justify-self: start;
+            }
+
+            .row.has-detail.wrapped uaui-delta-badge {
+                margin-top: 3px;
             }
 
             .value {

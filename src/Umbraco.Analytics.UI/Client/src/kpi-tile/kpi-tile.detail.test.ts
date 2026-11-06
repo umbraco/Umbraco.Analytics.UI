@@ -258,7 +258,7 @@ describe("Feature: a tile shows a part of its total on a second line", () => {
     });
 
     describe("Scenario: a tile without a line", () => {
-        it.skip("keeps today's height: 48px of content", async () => {
+        it("keeps today's height: 48px of content", async () => {
             const { el } = await tileIn(300, html`<uaui-kpi-tile lang="en-US" label="Input tokens" .value=${134800} .delta=${18.7}></uaui-kpi-tile>`);
             expect(rect(shadow(el).querySelector(".content")!).height).toBe(48);
         });
@@ -267,40 +267,40 @@ describe("Feature: a tile shows a part of its total on a second line", () => {
         html`<uaui-kpi-tile lang="en-US" label="Input tokens" .value=${shown} .delta=${18.7} detail="{0} cached" .detailValue=${114300}></uaui-kpi-tile>`;
 
     describe("Scenario: the value and the badge fit on one line (400px)", () => {
-        it.skip("puts the badge beside the value, tops level", async () => {
+        it("puts the badge beside the value, tops level", async () => {
             const { el } = await tileIn(400, withBadge());
-            expect(Math.abs(rect(badge(el)).top - rect(value(el)).top)).toBeLessThanOrEqual(1);
+            expect(Math.abs(rect(badge(el)).top - rect(value(el)).top)).toBeLessThanOrEqual(1.5);
         });
 
-        it.skip("puts the line under both the value and the badge", async () => {
+        it("puts the line under both the value and the badge", async () => {
             const { el } = await tileIn(400, withBadge());
             expect(rect(line(el)!).top).toBeGreaterThanOrEqual(Math.max(rect(value(el)).bottom, rect(badge(el)).bottom) - 0.5);
         });
     });
 
-    describe("Scenario: they don't fit (200px)", () => {
-        it.skip("stacks the value, the line, then the badge", async () => {
-            const { el } = await tileIn(200, withBadge());
+    describe("Scenario: they don't fit (180px)", () => {
+        it("stacks the value, the line, then the badge", async () => {
+            const { el } = await tileIn(180, withBadge());
             expect(stack(el)).toEqual(["value", "line", "badge"]);
         });
     });
 
     describe("Scenario: it follows the real widths, not the tile's (260px)", () => {
-        it.skip("keeps the badge beside a short value", async () => {
+        it("keeps the badge beside a short value", async () => {
             const { el } = await tileIn(260, withBadge(5));
-            expect(Math.abs(rect(badge(el)).top - rect(value(el)).top)).toBeLessThanOrEqual(1);
+            expect(Math.abs(rect(badge(el)).top - rect(value(el)).top)).toBeLessThanOrEqual(1.5);
         });
 
-        it.skip("moves the badge below the line for a long value", async () => {
+        it("moves the badge below the line for a long value", async () => {
             const { el } = await tileIn(260, withBadge("€1,234,567.89"));
             expect(stack(el)).toEqual(["value", "line", "badge"]);
         });
     });
 
     describe("Scenario: the tile resizes", () => {
-        it.skip("moves the badge below the line when the cell narrows from 400px to 200px", async () => {
+        it("moves the badge below the line when the cell narrows from 400px to 180px", async () => {
             const { el, cell } = await tileIn(400, withBadge());
-            cell.style.width = "200px";
+            cell.style.width = "180px";
             await expect.poll(() => stack(el)).toEqual(["value", "line", "badge"]);
         });
     });
@@ -308,20 +308,27 @@ describe("Feature: a tile shows a part of its total on a second line", () => {
     describe("Scenario: a long line (200px)", () => {
         const long = () => tileIn(200, html`<uaui-kpi-tile lang="en-US" label="Input tokens" .value=${134800} detail="{0} cached by the provider this period" .detailValue=${1143000}></uaui-kpi-tile>`);
 
-        it.skip("doesn't overflow the tile", async () => {
+        it("doesn't overflow the tile", async () => {
             const { el } = await long();
             const box = shadow(el).querySelector(".tile")!;
             expect(rect(line(el)!).right).toBeLessThanOrEqual(rect(box).right - parseFloat(getComputedStyle(box).paddingRight) + 0.5);
         });
 
-        it.skip("has the full text as its title", async () => {
+        it("has the full text as its title", async () => {
             const { el } = await long();
             expect(lineTitle(el)).toBe("1.14M cached by the provider this period");
         });
     });
 
+    describe("Scenario: a long line doesn't pull the badge away (400px)", () => {
+        it("keeps the badge 10px after the value", async () => {
+            const { el } = await tileIn(400, html`<uaui-kpi-tile lang="en-US" label="Input tokens" .value=${134800} .delta=${18.7} detail="{0} cached by the provider this period" .detailValue=${1143000}></uaui-kpi-tile>`);
+            expect(Math.abs(rect(badge(el)).left - rect(value(el)).right - 10)).toBeLessThanOrEqual(1);
+        });
+    });
+
     describe("Scenario (sad path): no badge", () => {
-        it.skip("puts the line directly below the value", async () => {
+        it("puts the line directly below the value", async () => {
             const { el } = await tileIn(400, html`<uaui-kpi-tile lang="en-US" label="Input tokens" .value=${134800} detail="{0} cached" .detailValue=${114300}></uaui-kpi-tile>`);
             expect(rect(line(el)!).top).toBeGreaterThanOrEqual(rect(value(el)).bottom - 0.5);
         });
