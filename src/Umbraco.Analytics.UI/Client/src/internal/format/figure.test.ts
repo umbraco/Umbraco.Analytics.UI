@@ -156,3 +156,36 @@ describe("Feature: a big number is shown compact", () => {
         expect(figure("1234567")).toEqual({ text: "1234567" });
     });
 });
+
+// KTD-2 — The compact option shortens a number at any size
+describe("Feature: a figure can be forced compact", () => {
+    const figure = (value: number, options?: Intl.NumberFormatOptions, compact?: boolean) => new UauiFigureFormatter().figure(value, "en-US", options, compact === undefined ? undefined : { compact });
+
+    describe("Scenario: compact is set", () => {
+        it("shortens a number under 1,000,000 and keeps the exact amount", () => {
+            expect(figure(412_000, undefined, true)).toEqual({ text: "412K", exact: "412,000" });
+        });
+
+        it("gives no exact amount for a small number that is the same short", () => {
+            expect(figure(5, undefined, true)).toEqual({ text: "5" });
+        });
+
+        it("lets the product's notation win", () => {
+            expect(figure(412_000, { notation: "standard" }, true)).toEqual({ text: "412,000" });
+        });
+    });
+
+    describe("Scenario: compact is not set", () => {
+        it("keeps a number under 1,000,000 exact", () => {
+            expect(figure(412_000)).toEqual({ text: "412,000" });
+        });
+
+        it("keeps a number under 1,000,000 exact when compact is false", () => {
+            expect(figure(412_000, undefined, false)).toEqual({ text: "412,000" });
+        });
+
+        it("still compacts 1,000,000", () => {
+            expect(figure(1_000_000)).toEqual({ text: "1M", exact: "1,000,000" });
+        });
+    });
+});

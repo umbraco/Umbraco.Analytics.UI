@@ -46,16 +46,18 @@ export class UauiFigureFormatter {
      *
      * A number of 1,000,000 or more (by size: -1,200,000 too) is shown compact ("€1.23M") when `valueFormat` doesn't
      * set `notation`; `exact` is then the full amount, formatted with `valueFormat`. `notation: "standard"` keeps the
-     * exact amount, and any other `notation` is the product's choice. The compact form uses up to 3 significant digits
+     * exact amount, and any other `notation` is the product's choice.
+     * With `options.compact` the number is shown compact at any size (a second line follows the value's shortening),
+     * still unless `valueFormat` sets `notation`. `exact` is set only when the compact text differs from it. The compact form uses up to 3 significant digits
      * and ignores the product's digit options. The size is the number itself, not its rounded text, so 999,999.6 stays exact.
      */
-    figure(value: UauiFigureValue, lang: string, valueFormat: Intl.NumberFormatOptions | undefined): UauiFigureText | undefined {
+    figure(value: UauiFigureValue, lang: string, valueFormat: Intl.NumberFormatOptions | undefined, options?: { compact?: boolean }): UauiFigureText | undefined {
         if (typeof value === "string") return value === "" ? undefined : { text: value };
         const number = numericValue(value);
         if (number === undefined) return undefined;
         const { format, compact } = this.#formats(lang, valueFormat);
         const exact = format.format(number);
-        if (valueFormat?.notation !== undefined || Math.abs(number) < COMPACT_FROM) return { text: exact };
+        if (valueFormat?.notation !== undefined || (options?.compact !== true && Math.abs(number) < COMPACT_FROM)) return { text: exact };
         const text = compact.format(number);
         // Equal after an Intl fallback (a bad currency): nothing to add.
         return text === exact ? { text } : { text, exact };
