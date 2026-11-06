@@ -121,14 +121,20 @@ export class UauiChartTooltipElement extends UmbLitElement {
 
     #renderRow(row: UauiChartTooltipRow) {
         const bar = row.bar ?? this.bars;
-        const share = row.value === null ? undefined : (row.share ?? undefined);
+        const swatch = html`<span class=${bar ? "swatch swatch-square" : "swatch"} style="--swatch: var(--uaui-color-${bar ? "bar" : "series"}-${row.color})"></span>`;
+        const label = row.label === undefined ? nothing : html`<span class="tooltip-label">${row.label}</span>`;
+        if (row.value === null) {
+            return html`<div class="tooltip-row tooltip-series">
+                ${swatch}<span class="tooltip-value tooltip-no-data">${this.localize.term("uauiAnalytics_chartNoData")}</span>${label}
+            </div>
+            ${row.compare ? this.#renderCompare(row.compare, bar) : nothing}`;
+        }
+        const share = row.share ?? undefined;
         return html`<div class="tooltip-row tooltip-series">
-                <span class=${bar ? "swatch swatch-square" : "swatch"} style="--swatch: var(--uaui-color-${bar ? "bar" : "series"}-${row.color})"></span>
-                ${row.value === null
-                    ? html`<span class="tooltip-value tooltip-no-data">${this.localize.term("uauiAnalytics_chartNoData")}</span>`
-                    : html`<span class="tooltip-value">${share === undefined ? this.#format(row.value) : this.#formatShare(share)}</span>`}
-                ${row.label === undefined ? nothing : html`<span class="tooltip-label">${row.label}</span>`}
-                ${share === undefined || row.value === null ? nothing : html`<span class="tooltip-amount">${this.#format(row.value)}</span>`}
+                ${swatch}
+                <span class="tooltip-value">${share === undefined ? this.#format(row.value) : this.#formatShare(share)}</span>
+                ${label}
+                ${share === undefined ? nothing : html`<span class="tooltip-amount">${this.#format(row.value)}</span>`}
             </div>
             ${row.compare ? this.#renderCompare(row.compare, bar) : nothing}`;
     }

@@ -68,7 +68,7 @@ const COMPARE_BAR_EXTRA_WIDTH = 12;
  * are too. Our chart sets everything it relies on per chart, so a product's global registrations and defaults don't
  * change it: every registered plugin but these, and the chart's own plugins passed to the renderer, is off for our chart.
  */
-const OWN_PLUGINS = ["filler", "uauiHoverLine"];
+const OWN_PLUGINS = ["filler", "uauiHover"];
 
 /** Whether `id` is a plugin in the shared registry. Chart.js doesn't type `items`, so read it with care. */
 const isRegisteredPlugin = (id: string): boolean =>
@@ -194,8 +194,8 @@ export class UauiChartRenderer {
 
     /** Chart.js can't change a chart's type, so moving between the line and bar kinds builds a new chart. */
     #create(family: "line" | "bar", colors: UauiChartDrawColors): Chart {
-        const hoverLine: Plugin = {
-            id: "uauiHoverLine",
+        const hover: Plugin = {
+            id: "uauiHover",
             // The hovered slot is the one under the pointer on the x scale, not the nearest drawn point: Chart.js's
             // `index` mode skips empty (`null`) points, so an empty slot could never be hovered through it.
             afterEvent: (chart, args) => {
@@ -257,7 +257,7 @@ export class UauiChartRenderer {
         // The package look a product's chart gets too (`uauiChartOptions`): only the parts our chart uses, as its plugins
         // are its own (see `onlyOwnPlugins`). The scales are styled from it in `update`.
         const { responsive, maintainAspectRatio, animation, events } = uauiChartOptions(this.#host, family, colors);
-        const plugins = [hoverLine, ...this.#plugins()];
+        const plugins = [hover, ...this.#plugins()];
         const config: ChartConfiguration = {
             type: family,
             data: { labels: [], datasets: [] },
@@ -273,6 +273,7 @@ export class UauiChartRenderer {
                 normalized: false,
                 events,
                 layout: { padding: { ...PADDING } },
+                // `mode: "index"` is kept so a product's `Chart.defaults` can't change it, though `afterEvent` replaces the active elements.
                 interaction: { mode: "index", intersect: false, axis: "x" },
                 hover: { mode: "index", intersect: false, axis: "x" },
                 scales: { x: {}, y: { min: 0 } },

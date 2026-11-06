@@ -10,6 +10,7 @@ import "../../table/data-table.element.js";
 import { UAUI_TABLE_CELL } from "../../table/cells/cell-names.js";
 import { settle, type UauiTestElement } from "../test/dom.js";
 import type { UauiSeries } from "../../chart/types.js";
+import type { UauiDateRange } from "../../date-range/types.js";
 
 const RUNS = 7;
 const timed = it.skipIf(server.browser !== "chromium");
@@ -90,6 +91,30 @@ describe("Feature: performance targets", () => {
                 return elapsed;
             });
             console.log(`[perf] chart 6x366 redraw: median ${ms.toFixed(1)} ms`);
+            expect(ms).toBeLessThan(100);
+        });
+    });
+
+    describe("Scenario: a sparse chart over a 366-day range", () => {
+        // 5 points in a 366-day range, drawn at day level: every empty day is still a slot.
+        const range: UauiDateRange = { from: "2024-01-01", to: "2024-12-31" };
+        const sparse: UauiSeries[] = [
+            { id: "s0", label: "Series 1", color: 1, points: ["2024-01-01", "2024-03-10", "2024-06-15", "2024-09-20", "2024-12-31"].map((date, i) => ({ date, value: 10 + i * 20 })) },
+        ];
+
+        timed("draws in under 100 ms (median of 7 mounts, cold JIT included)", async () => {
+            const ms = await medianOf(async () => {
+                const el = mount("uaui-time-series-chart", { kind: "line", series: sparse, range });
+                const start = performance.now();
+                document.body.append(el);
+                await el.updateComplete;
+                const elapsed = performance.now() - start;
+                // Guard against timing a chart that drew only its 5 points.
+                const drawn = Chart.getChart(el.shadowRoot!.querySelector("canvas")!);
+                expect(drawn?.data.labels?.length).toBe(366);
+                return elapsed;
+            });
+            console.log(`[perf] chart 5 points over 366 days mount: median ${ms.toFixed(1)} ms`);
             expect(ms).toBeLessThan(100);
         });
     });
