@@ -18,7 +18,7 @@
   Acceptance: KTD-1, KTD-2, KTD-3 AC1–AC5, KTD-5 and KTD-6 AC3 specs green in `src/kpi-tile/kpi-tile.detail.test.ts`. Existing kpi-tile tests green.
   depends-on: T1, T2
 
-- [ ] **T4** - story: KTD-4 (AC1–AC7), KTD-3 (AC6). With a line, the row becomes a grid with areas `"value badge" "detail detail"`, or `"value" "detail" "badge"` when wrapped (mockup). A `ResizeObserver` on the row, value and badge sets the wrapped state when value width + column gap + badge width exceeds the row's width (ARCHITECTURE, Decisions: measure the real layout). It re-checks after each render that changes the value, badge or line, and disconnects in `disconnectedCallback`. Only tiles with a line and a badge are observed; tiles without a line keep today's flex row (R12, R15).
+- [x] **T4** - story: KTD-4 (AC1–AC7), KTD-3 (AC6). With a line, the row becomes a grid with areas `"value badge" "detail detail"`, or `"value" "detail" "badge"` when wrapped (mockup). A `ResizeObserver` on the row, value and badge sets the wrapped state when value width + column gap + badge width exceeds the row's width (ARCHITECTURE, Decisions: measure the real layout). It re-checks after each render that changes the value, badge or line, and disconnects in `disconnectedCallback`. Only tiles with a line and a badge are observed; tiles without a line keep today's flex row (R12, R15).
   Acceptance: KTD-4 and KTD-3 AC6 specs green. `kpi-tile.narrow.test.ts` green unchanged.
   depends-on: T3
 

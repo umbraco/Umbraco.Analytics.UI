@@ -196,7 +196,7 @@ AC2 — The line under both when they fit
   Then  the line's top is below the bottom of both the value and the badge
 
 AC3 — Badge below the line when they don't fit
-  Given value 134800, delta 18.7, detail "{0} cached" and detail-value 114300, in a 200px wide cell
+  Given value 134800, delta 18.7, detail "{0} cached" and detail-value 114300, in a 180px wide cell
   When  the tile renders
   Then  the order from top to bottom is the value, the line, then the badge
 
@@ -207,7 +207,7 @@ AC4 — It follows the real widths, not the tile width
 
 AC5 — It updates as the tile resizes
   Given value 134800, delta 18.7, detail "{0} cached" and detail-value 114300, in a 400px wide cell
-  When  the cell narrows to 200px
+  When  the cell narrows to 180px
   Then  the badge moves below the line
 
 AC6 — A long line is cut

@@ -16,3 +16,5 @@
 - **06-11-2026** (T2) Open for the user: the line's `title` may reach screen readers as a description, repeating "114K cached" after the exact "114,300 cached". axe passes; worth a VoiceOver check at T6.
 - **06-11-2026** (T3) Orchestrator call, open for the user: a tile with no value shows no line (new rule R18), since a part of nothing reads wrong. KTD-1 AC6 now sets a value.
 - **06-11-2026** (T3) Whether a line exists is decided in one place, `hasFigureDetail` in `figure-detail.element.ts`, used by the tile and the element, so an empty line never takes up room.
+- **06-11-2026** (T4) Open for the user: KTD-4's "doesn't fit" cases use a 180px cell, not 200px. With Lato, 134.8K and a +18.7% badge fit a 200px tile by 0.4px, so 200px was a brittle threshold. 180px is the tile's smallest width. The "tops level" check allows 1.5px, since the badge is centred on the value as in the mockup.
+- **06-11-2026** (T4) The tile measures on the next animation frame after a resize, so during a live resize one frame paints in the old layout.
