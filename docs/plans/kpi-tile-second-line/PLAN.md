@@ -32,6 +32,6 @@
   Acceptance: Storybook builds and each new story renders as the mockup, checked by eye in light and dark. Story axe checks pass. `npm run lint`, `npm test`, `npm run build` pass.
   depends-on: T5
 
-- [ ] **T7** - **wire: cached input tokens into the AI usage example.** story: KTD-1 (AC1). In `src/examples/pages/ai/ai-usage-page.element.ts`, the Input tokens tile sets `detail` "{0} cached" (through an example-local string, as the page's other labels are) and `detailValue` from `summary.cachedInputTokens`.
+- [x] **T7** - **wire: cached input tokens into the AI usage example.** story: KTD-1 (AC1). In `src/examples/pages/ai/ai-usage-page.element.ts`, the Input tokens tile sets `detail` "{0} cached" (through an example-local string, as the page's other labels are) and `detailValue` from `summary.cachedInputTokens`.
   Acceptance: the AI example page in Storybook shows "… cached" under Input tokens, short like the value, and hides it on error and no data.
   depends-on: T5. parallel-group: B (with T6)
