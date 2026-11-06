@@ -1,6 +1,7 @@
 import { configDefaults, defineConfig } from "vitest/config";
 import { playwright } from "@vitest/browser-playwright";
 import { fileURLToPath } from "node:url";
+import { minifyTemplates } from "./devops/minify-templates.ts";
 
 /**
  * The shared Chart.js entry, as products import it. Our own code imports this bare specifier too, never a relative path:
@@ -21,6 +22,8 @@ const browserInstances = isCI
 
 export default defineConfig({
     resolve: { alias: chartJsAlias },
+    // Build only: shrinks the text of our css and html templates to keep the bundle in budget (see check:size).
+    plugins: [minifyTemplates()],
     build: {
         lib: {
             // The translations are a second entry so the backoffice can load lang/en.js on its own.
