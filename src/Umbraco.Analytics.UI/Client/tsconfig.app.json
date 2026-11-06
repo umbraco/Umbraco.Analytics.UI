@@ -9,7 +9,8 @@
   "include": [
     "src/**/*.ts",
     "vitest.setup.ts",
-    "vite.config.ts"
+    "vite.config.ts",
+    "devops/minify-templates.ts"
   ],
   "exclude": []
 }
