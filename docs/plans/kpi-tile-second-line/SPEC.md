@@ -26,6 +26,7 @@ detailFormat?: Intl.NumberFormatOptions; // attr "detail-format"; defaults to va
 - **R8** A `detail` with `{0}` and no finite `detail-value` shows no line.
 - **R9** No `detail`, or an empty one, shows no line, whatever `detail-value` is.
 - **R10** With `error` or `no-data`, no line is shown.
+- **R18** With no value shown (value unset, empty or not a finite number), no line is shown.
 - **R11** The line is inside the tile's content. Screen readers read the value, then the line, then the badge, so the value and its part stay together. It is part of a link's or button's name.
 - **R12** When the value and the badge fit on one line, the badge sits beside the value and the line goes under both. When they don't, the value, the line and the badge stack in that order, so the badge never comes between the value and the line. Which one applies follows the real rendered widths of the value, badge and row, never a fixed breakpoint: at the same tile width, a short value keeps the badge beside it and a long one doesn't. It updates as the tile resizes or the value changes. Tiles without a line keep today's badge layout.
 - **R13** While loading with no value, the skeleton is the height of a loaded tile with its line when `detail` is set, and today's height when it isn't, on wide and narrow tiles.

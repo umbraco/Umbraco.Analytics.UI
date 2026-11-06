@@ -64,7 +64,7 @@ AC5 — The pattern's word order is the product's
   Then  the line reads "Cached: 114,300"
 
 AC6 — The attributes work too
-  Given the attributes detail="{0} cached", detail-value="114300" and detail-format='{"notation":"compact"}'
+  Given value 134800 and the attributes detail="{0} cached", detail-value="114300" and detail-format='{"notation":"compact"}'
   When  the tile renders
   Then  the line reads "114K cached"
 

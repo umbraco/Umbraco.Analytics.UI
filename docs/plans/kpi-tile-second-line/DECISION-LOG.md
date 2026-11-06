@@ -14,3 +14,5 @@
 - **06-11-2026** (T1) `compact: false` is the same as leaving the option out; only `true` forces short.
 - **06-11-2026** (T2) Text styles sit on the element's host; the clipping and `title` sit on an inner span, as `uaui-table-secondary-line` does. The title is the shown text ("114K cached"), not the exact amount, which the number keeps as its own hover title.
 - **06-11-2026** (T2) Open for the user: the line's `title` may reach screen readers as a description, repeating "114K cached" after the exact "114,300 cached". axe passes; worth a VoiceOver check at T6.
+- **06-11-2026** (T3) Orchestrator call, open for the user: a tile with no value shows no line (new rule R18), since a part of nothing reads wrong. KTD-1 AC6 now sets a value.
+- **06-11-2026** (T3) Whether a line exists is decided in one place, `hasFigureDetail` in `figure-detail.element.ts`, used by the tile and the element, so an empty line never takes up room.
