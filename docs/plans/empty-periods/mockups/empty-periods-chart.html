@@ -1,0 +1,116 @@
+<!doctype html>
+<!-- Empty periods mockup. Built from the hourly-buckets chart mockup (devkit dashboard starter). Static: the charts are hand-made SVG, not Chart.js. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Mockup: Empty periods</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@umbraco-ui/uui@2/dist/themes/light.css">
+<link rel="stylesheet" href="_mockup.css">
+<script type="module" src="_mockup.js"></script>
+<style>
+.muted { color: var(--uui-color-text-alt); }
+.toolbar { display:flex; justify-content:flex-end; margin-bottom: var(--uui-size-layout-1); }
+.range { display:flex; gap:8px; align-items:center; text-align:left; line-height:1.2; }
+.range small { display:block; color: var(--uui-color-text-alt); }
+.legend { display:flex; gap:16px; font-size:12px; margin-top:8px; color: var(--uui-color-text-alt); }
+.legend i { display:inline-block; width:12px; height:2px; margin-right:6px; vertical-align:3px; }
+.chartwrap { position:relative; }
+.tip { position:absolute; left:23.8%; top:30px; background: var(--uui-color-surface); border:1px solid var(--uui-color-border); border-radius:6px; padding:8px 10px; font-size:12px; box-shadow: var(--uui-shadow-depth-2); min-width:200px; }
+.tip .row { display:flex; justify-content:space-between; gap:12px; margin-top:4px; }
+.tip i { display:inline-block; width:8px; height:8px; margin-right:6px; border-radius:50%; }
+.note { font-size:12px; color: var(--uui-color-text-alt); margin: 0 0 8px; }
+table.hidden-table { border-collapse: collapse; font-size:12px; }
+table.hidden-table th, table.hidden-table td { border:1px dashed var(--uui-color-border); padding:3px 8px; text-align:left; }
+table.hidden-table td.none { color: var(--uui-color-text-alt); }
+</style>
+</head>
+<body class="uui-font uui-text">
+<header class="app-header"><span class="logo">Umbraco</span>
+<uui-tab-group class="sections"><uui-tab label="Content">Content</uui-tab><uui-tab label="Settings">Settings</uui-tab><uui-tab label="AI" active>AI</uui-tab></uui-tab-group>
+<div class="apps"><uui-button look="primary" compact label="User"><uui-avatar name="Matt Brailsford"></uui-avatar></uui-button></div></header>
+<div class="section">
+<nav class="section-sidebar"><h3>AI</h3><uui-menu-item label="Usage" active><uui-icon slot="icon" name="icon-chart-curve"></uui-icon></uui-menu-item></nav>
+<main class="section-main"><div class="body-layout"><div class="main"><div class="dashboard">
+<!-- Replace from here -->
+<div class="toolbar"><uui-button look="outline" label="Date range"><span class="range"><uui-icon name="icon-calendar"></uui-icon><span>Oct 24, 2026 to Nov 6, 2026<small>vs Oct 10, 2026 to Oct 23, 2026</small></span></span></uui-button></div>
+<div class="dashboard-grid">
+<uui-box headline="Success rate (with this change)" class="wide">
+<p class="note">Every day of the range has a slot. Oct 26, 27, 31 and Nov 2 had no requests: nothing is drawn there, the line breaks, and Nov 1 stands alone as a dot. Hovering Oct 26 says "No data", and the compare value still shows.</p>
+<div class="chartwrap"><svg viewBox="0 0 1000 260" width="100%" role="img" aria-label="chart">
+<line x1="56" y1="230.0" x2="990" y2="230.0" stroke="var(--uui-color-divider)"/>
+<text x="50" y="234.0" font-size="11" text-anchor="end" fill="var(--uui-color-text-alt)">90%</text>
+<line x1="56" y1="188.8" x2="990" y2="188.8" stroke="var(--uui-color-divider)"/>
+<text x="50" y="192.8" font-size="11" text-anchor="end" fill="var(--uui-color-text-alt)">92%</text>
+<line x1="56" y1="147.6" x2="990" y2="147.6" stroke="var(--uui-color-divider)"/>
+<text x="50" y="151.6" font-size="11" text-anchor="end" fill="var(--uui-color-text-alt)">94%</text>
+<line x1="56" y1="106.4" x2="990" y2="106.4" stroke="var(--uui-color-divider)"/>
+<text x="50" y="110.4" font-size="11" text-anchor="end" fill="var(--uui-color-text-alt)">96%</text>
+<line x1="56" y1="65.2" x2="990" y2="65.2" stroke="var(--uui-color-divider)"/>
+<text x="50" y="69.2" font-size="11" text-anchor="end" fill="var(--uui-color-text-alt)">98%</text>
+<line x1="56" y1="24.0" x2="990" y2="24.0" stroke="var(--uui-color-divider)"/>
+<text x="50" y="28.0" font-size="11" text-anchor="end" fill="var(--uui-color-text-alt)">100%</text>
+<rect x="189.4" y="24" width="66.7" height="206" fill="none"/>
+<rect x="256.1" y="24" width="66.7" height="206" fill="none"/>
+<rect x="523.0" y="24" width="66.7" height="206" fill="none"/>
+<rect x="656.4" y="24" width="66.7" height="206" fill="none"/>
+<path d="M89.4,85.8 L156.1,98.2 L222.8,122.9 L289.5,69.3 L356.2,63.1" fill="none" stroke="#b07a4f" stroke-width="1.5" stroke-dasharray="5 4"/>
+<path d="M489.6,79.6 L556.4,87.9 L623.1,65.2 L689.8,83.7 L756.5,96.1 L823.2,71.4 L889.9,59.0 L956.6,77.6" fill="none" stroke="#b07a4f" stroke-width="1.5" stroke-dasharray="5 4"/>
+<path d="M89.4,61.1 L156.1,75.5" fill="none" stroke="#3544b1" stroke-width="2"/>
+<path d="M356.2,104.3 L422.9,44.6 L489.6,57.0" fill="none" stroke="#3544b1" stroke-width="2"/>
+<circle cx="623.1" cy="67.3" r="3" fill="#3544b1"/>
+<path d="M756.5,110.5 L823.2,50.8 L889.9,42.5 L956.6,65.2" fill="none" stroke="#3544b1" stroke-width="2"/>
+<line x1="222.8" y1="24" x2="222.8" y2="230" stroke="var(--uui-color-border-emphasis)"/>
+<text x="89.4" y="250" font-size="11" text-anchor="middle" fill="var(--uui-color-text-alt)">Oct 24</text>
+<text x="222.8" y="250" font-size="11" text-anchor="middle" fill="var(--uui-color-text-alt)">Oct 26</text>
+<text x="356.2" y="250" font-size="11" text-anchor="middle" fill="var(--uui-color-text-alt)">Oct 28</text>
+<text x="489.6" y="250" font-size="11" text-anchor="middle" fill="var(--uui-color-text-alt)">Oct 30</text>
+<text x="623.1" y="250" font-size="11" text-anchor="middle" fill="var(--uui-color-text-alt)">Nov 1</text>
+<text x="756.5" y="250" font-size="11" text-anchor="middle" fill="var(--uui-color-text-alt)">Nov 3</text>
+<text x="889.9" y="250" font-size="11" text-anchor="middle" fill="var(--uui-color-text-alt)">Nov 5</text>
+<line x1="56" y1="230" x2="990" y2="230" stroke="var(--uui-color-border)"/>
+</svg>
+<div class="tip"><strong>Oct 26, 2026</strong>
+<div class="row"><span><i style="background:#3544b1"></i>Success rate</span><span class="muted">No data</span></div>
+<div class="row muted"><span><i style="background:#b07a4f"></i>Oct 12, 2026</span><b>95.2%</b></div></div></div>
+<div class="legend"><span><i style="background:#3544b1"></i>Success rate</span><span><i style="background:#b07a4f"></i>Compared period</span></div>
+</uui-box>
+<uui-box headline="Success rate (today, for comparison)" class="wide">
+<p class="note">The same data today: only the 10 days with points get a slot, and the line joins straight across the missing days.</p>
+<svg viewBox="0 0 1000 260" width="100%" role="img" aria-label="chart">
+<line x1="56" y1="230.0" x2="990" y2="230.0" stroke="var(--uui-color-divider)"/>
+<text x="50" y="234.0" font-size="11" text-anchor="end" fill="var(--uui-color-text-alt)">90%</text>
+<line x1="56" y1="188.8" x2="990" y2="188.8" stroke="var(--uui-color-divider)"/>
+<text x="50" y="192.8" font-size="11" text-anchor="end" fill="var(--uui-color-text-alt)">92%</text>
+<line x1="56" y1="147.6" x2="990" y2="147.6" stroke="var(--uui-color-divider)"/>
+<text x="50" y="151.6" font-size="11" text-anchor="end" fill="var(--uui-color-text-alt)">94%</text>
+<line x1="56" y1="106.4" x2="990" y2="106.4" stroke="var(--uui-color-divider)"/>
+<text x="50" y="110.4" font-size="11" text-anchor="end" fill="var(--uui-color-text-alt)">96%</text>
+<line x1="56" y1="65.2" x2="990" y2="65.2" stroke="var(--uui-color-divider)"/>
+<text x="50" y="69.2" font-size="11" text-anchor="end" fill="var(--uui-color-text-alt)">98%</text>
+<line x1="56" y1="24.0" x2="990" y2="24.0" stroke="var(--uui-color-divider)"/>
+<text x="50" y="28.0" font-size="11" text-anchor="end" fill="var(--uui-color-text-alt)">100%</text>
+<path d="M102.7,85.8 L196.1,98.2 L289.5,63.1 L476.3,79.6 L569.7,65.2 L663.1,96.1 L756.5,71.4 L849.9,59.0 L943.3,77.6" fill="none" stroke="#b07a4f" stroke-width="1.5" stroke-dasharray="5 4"/>
+<path d="M102.7,61.1 L196.1,75.5 L289.5,104.3 L382.9,44.6 L476.3,57.0 L569.7,67.3 L663.1,110.5 L756.5,50.8 L849.9,42.5 L943.3,65.2" fill="none" stroke="#3544b1" stroke-width="2"/>
+<text x="102.7" y="250" font-size="11" text-anchor="middle" fill="var(--uui-color-text-alt)">Oct 24</text>
+<text x="196.1" y="250" font-size="11" text-anchor="middle" fill="var(--uui-color-text-alt)">Oct 25</text>
+<text x="289.5" y="250" font-size="11" text-anchor="middle" fill="var(--uui-color-text-alt)">Oct 28</text>
+<text x="382.9" y="250" font-size="11" text-anchor="middle" fill="var(--uui-color-text-alt)">Oct 29</text>
+<text x="476.3" y="250" font-size="11" text-anchor="middle" fill="var(--uui-color-text-alt)">Oct 30</text>
+<text x="569.7" y="250" font-size="11" text-anchor="middle" fill="var(--uui-color-text-alt)">Nov 1</text>
+<text x="663.1" y="250" font-size="11" text-anchor="middle" fill="var(--uui-color-text-alt)">Nov 3</text>
+<text x="756.5" y="250" font-size="11" text-anchor="middle" fill="var(--uui-color-text-alt)">Nov 4</text>
+<text x="849.9" y="250" font-size="11" text-anchor="middle" fill="var(--uui-color-text-alt)">Nov 5</text>
+<text x="943.3" y="250" font-size="11" text-anchor="middle" fill="var(--uui-color-text-alt)">Nov 6</text>
+<line x1="56" y1="230" x2="990" y2="230" stroke="var(--uui-color-border)"/>
+</svg>
+</uui-box>
+<uui-box headline="Hidden table, read by screen readers (first rows)" class="wide">
+<table class="hidden-table"><caption class="note" style="text-align:left">Chart data</caption>
+<thead><tr><th>Date</th><th>Success rate</th><th>Compared period</th></tr></thead>
+<tbody><tr><th scope=row>Oct 24, 2026</th><td>98.2%</td><td>97.0%</td></tr><tr><th scope=row>Oct 25, 2026</th><td>97.5%</td><td>96.4%</td></tr><tr><th scope=row>Oct 26, 2026</th><td class="none">No data</td><td>95.2%</td></tr><tr><th scope=row>Oct 27, 2026</th><td class="none">No data</td><td>97.8%</td></tr><tr><th scope=row>Oct 28, 2026</th><td>96.1%</td><td>98.1%</td></tr><tr><th scope=row>Oct 29, 2026</th><td>99.0%</td><td class="none">No data</td></tr></tbody></table>
+</uui-box>
+</div>
+<!-- Replace to here -->
+</div></div></div></main></div>
+</body>
+</html>

@@ -38,6 +38,8 @@ const meta: Meta<UauiTimeSeriesChartElement> = {
         series: [pageviews],
         compareSeries: [],
         compareLabel: undefined,
+        range: undefined,
+        compare: undefined,
         lowerIsBetter: false,
         markers: [],
         now: undefined,
@@ -69,6 +71,8 @@ const meta: Meta<UauiTimeSeriesChartElement> = {
                 .series=${args.series}
                 .compareSeries=${args.compareSeries}
                 .compareLabel=${args.compareLabel}
+                .range=${args.range}
+                .compare=${args.compare}
                 .lowerIsBetter=${args.lowerIsBetter}
                 .markers=${args.markers}
                 .now=${args.now}
@@ -112,6 +116,31 @@ export const Empty: Story = {
 
 /** The load failed: the error state in place of the plot, with Retry when `retryable` (it raises `retry`). Error wins over loading and empty. */
 export const LoadFailed: Story = { args: { error: true, retryable: true } };
+
+const rateOf = (from: string, values: (number | undefined)[]) => ({
+    id: "rate",
+    label: "Success rate",
+    points: values.flatMap((value, i) =>
+        value === undefined ? [] : [{ date: new Date(Date.UTC(+from.slice(0, 4), +from.slice(5, 7) - 1, +from.slice(8) + i)).toISOString().slice(0, 10), value }],
+    ),
+});
+
+/**
+ * Days with no point are empty slots: the line breaks over them, and a day with empty neighbours (1 Nov) is a lone dot.
+ * Hovering an empty day still opens the tooltip, which reads "No data" for it, and the compare line has one empty day too.
+ */
+export const EmptyPeriods: Story = {
+    name: "Empty periods",
+    args: {
+        series: [rateOf("2026-10-24", [98.2, 97.5, undefined, undefined, 96.1, 99.0, 98.4, undefined, 97.9, undefined, 95.8, 98.7, 99.1, 98.0])],
+        compareSeries: [rateOf("2026-10-10", [97.0, 96.4, 95.2, 97.8, 98.1, undefined, 97.3, 96.9, 98.0, 97.1, 96.5, 97.7, 98.3, 97.4])],
+        range: { from: "2026-10-24", to: "2026-11-06" },
+        compare: { mode: "custom", from: "2026-10-10", to: "2026-10-23" },
+        compareLabel: "Oct 10, 2026 – Oct 23, 2026",
+        groupBy: "day",
+        valueFormat: { style: "unit", unit: "percent", maximumFractionDigits: 1 },
+    },
+};
 
 /** Two series get a legend. */
 export const TwoSeries: Story = { args: { series: [pageviews, sessions] } };

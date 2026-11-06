@@ -217,6 +217,26 @@ describe("Feature: category chart", () => {
         });
     });
 
+    describe("Scenario: hovering a category with no data", () => {
+        const noTablet = (id: string, label: string, values: [number, number]): UauiCategorySeries => ({
+            id,
+            label,
+            points: [{ category: "mobile", value: values[0] }, { category: "desktop", value: values[1] }],
+        });
+
+        it("shows a No data row for each series when every series is empty", async () => {
+            const el = await chart(html`<uaui-category-chart .categories=${categories} .series=${[noTablet("visits", "Visits", [40, 280]), noTablet("orders", "Orders", [12, 61])]} style="width:400px"></uaui-category-chart>`);
+            await hoverCategory(el, 1);
+            expect(deepText(tooltip(el)!).match(/No data/g)).toHaveLength(2);
+        });
+
+        it("shows No data for the empty series when another series has a value", async () => {
+            const el = await chart(html`<uaui-category-chart .categories=${categories} .series=${[noTablet("visits", "Visits", [40, 280]), orders]} style="width:400px"></uaui-category-chart>`);
+            await hoverCategory(el, 1);
+            expect(deepText(tooltip(el)!)).toMatch(/No data[\s\S]*Visits[\s\S]*30[\s\S]*Orders/);
+        });
+    });
+
     describe("Scenario: the series' points", () => {
         it("adds up points in the same category, leaves a category without one empty and drops one in a category it wasn't given", async () => {
             const el = await chart(
@@ -224,7 +244,7 @@ describe("Feature: category chart", () => {
                     .series=${[{ id: "a", label: "A", points: [{ category: "mobile", value: 2 }, { category: "mobile", value: 3 }, { category: "watch", value: 9 }, { category: "desktop", value: 1 }] }]}
                     style="width:400px"></uaui-category-chart>`,
             );
-            expect([0, 1, 2].map((row) => rowCells(el, row))).toEqual([["Mobile", "5"], ["Tablet", ""], ["Desktop", "1"]]);
+            expect([0, 1, 2].map((row) => rowCells(el, row))).toEqual([["Mobile", "5"], ["Tablet", "No data"], ["Desktop", "1"]]);
         });
 
         it("draws bars for a kind it doesn't know", async () => {

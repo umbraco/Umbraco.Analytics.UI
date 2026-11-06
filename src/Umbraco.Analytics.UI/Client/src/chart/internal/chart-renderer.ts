@@ -68,7 +68,7 @@ const COMPARE_BAR_EXTRA_WIDTH = 12;
  * are too. Our chart sets everything it relies on per chart, so a product's global registrations and defaults don't
  * change it: every registered plugin but these, and the chart's own plugins passed to the renderer, is off for our chart.
  */
-const OWN_PLUGINS = ["filler", "tooltip", "uauiHoverLine"];
+const OWN_PLUGINS = ["filler", "uauiHover"];
 
 /** Whether `id` is a plugin in the shared registry. Chart.js doesn't type `items`, so read it with care. */
 const isRegisteredPlugin = (id: string): boolean =>
@@ -99,6 +99,16 @@ const lineClip = (borderWidth: number, pointRadius: number, pointHoverRadius: nu
     return { top: 0, bottom: 0, left: side, right: side };
 };
 
+/** The dot a value gets when it stands alone: a line can't draw it as a segment, so it would otherwise not show. */
+const ISOLATED_POINT_RADIUS = 2;
+
+/** The indexes of the values with no value on either side (a `null` or the chart's edge), which a line draws as no segment. */
+const isolatedIndexes = (values: readonly (number | null)[]) =>
+    new Set(values.flatMap((value, i) => (value !== null && values[i - 1] == null && values[i + 1] == null ? [i] : [])));
+
+/** Whether a lone value is at either end of the line, the only places Chart.js measures a dot's overflow. */
+const isolatedAtEnds = (isolated: ReadonlySet<number>, length: number) => isolated.has(0) || isolated.has(length - 1);
+
 /** The least room a y tick label gets, in pixels: the 11px tick font and a little air. */
 const MIN_TICK_SPACING = 18;
 
@@ -127,7 +137,7 @@ export function thinTicks<T extends { value: number }>(ticks: T[], height: numbe
 const PADDING = { top: 8, right: 12, bottom: 0, left: 0 };
 
 /** An incomplete point: a hollow dot a little larger than a complete one, with a thicker border to read hollow. */
-const INCOMPLETE_POINT_RADIUS = 3;
+export const INCOMPLETE_POINT_RADIUS = 3;
 const INCOMPLETE_POINT_BORDER = 1.5;
 
 const LINE_WIDTH = 2.25;
@@ -149,6 +159,7 @@ export class UauiChartRenderer {
     #family?: "line" | "bar";
     #colors?: UauiChartDrawColors;
     #lastHover?: UauiChartHover;
+    #pointerX?: number;
     #canvas: HTMLCanvasElement;
     #host: HTMLElement;
     #onHover: (hover: UauiChartHover | undefined) => void;
@@ -184,11 +195,35 @@ export class UauiChartRenderer {
 
     /** Chart.js can't change a chart's type, so moving between the line and bar kinds builds a new chart. */
     #create(family: "line" | "bar", colors: UauiChartDrawColors): Chart {
-        const hoverLine: Plugin = {
-            id: "uauiHoverLine",
+        const hover: Plugin = {
+            id: "uauiHover",
+            // The hovered slot is the one under the pointer on the x scale, not the nearest drawn point: Chart.js's
+            // `index` mode skips empty (`null`) points, so an empty slot could never be hovered through it.
+            afterEvent: (chart, args) => {
+                const { type } = args.event;
+                if (type === "mouseout") {
+                    // Chart.js clears its own active elements on mouseout; this keeps that true whatever it does.
+                    chart.setActiveElements([]);
+                    this.#pointerX = undefined;
+                    if (this.#raiseHover(undefined)) args.changed = true;
+                    return;
+                }
+                // Off the plot but on the canvas the last hover stays, as Chart.js keeps its own active elements.
+                if (!args.inChartArea) return;
+                // Chart.js reports touchstart and touchmove as mousedown and mousemove.
+                if (type !== "mousemove" && type !== "mousedown" && type !== "click") return;
+                this.#pointerX = args.event.x as number;
+                if (this.#hoverAt(chart, this.#pointerX)) args.changed = true;
+            },
+            // Chart.js replays its last event on an update only when it has one, and `setActiveElements` on an empty slot
+            // clears it, so the hover is recomputed here for the pointer's last position.
+            afterUpdate: (chart) => {
+                if (this.#pointerX !== undefined) this.#hoverAt(chart, this.#pointerX);
+            },
             beforeDatasetsDraw: (chart) => {
-                const active = chart.getActiveElements()[0]?.element;
-                if (!active || !this.#colors) return;
+                const hovered = this.#lastHover;
+                if (!hovered || !this.#colors || hovered.index >= (chart.data.labels?.length ?? 0)) return;
+                const active = { x: chart.scales["x"].getPixelForValue(hovered.index) };
                 const { ctx, chartArea } = chart;
                 ctx.save();
                 if (family === "bar") {
@@ -213,7 +248,7 @@ export class UauiChartRenderer {
         // The package look a product's chart gets too (`uauiChartOptions`): only the parts our chart uses, as its plugins
         // are its own (see `onlyOwnPlugins`). The scales are styled from it in `update`.
         const { responsive, maintainAspectRatio, animation, events } = uauiChartOptions(this.#host, family, colors);
-        const plugins = [hoverLine, ...this.#plugins()];
+        const plugins = [hover, ...this.#plugins()];
         const config: ChartConfiguration = {
             type: family,
             data: { labels: [], datasets: [] },
@@ -229,37 +264,12 @@ export class UauiChartRenderer {
                 normalized: false,
                 events,
                 layout: { padding: { ...PADDING } },
+                // `mode: "index"` is kept so a product's `Chart.defaults` can't change it, though `afterEvent` replaces the active elements.
                 interaction: { mode: "index", intersect: false, axis: "x" },
                 hover: { mode: "index", intersect: false, axis: "x" },
                 scales: { x: {}, y: { min: 0 } },
                 plugins: {
                     filler: { propagate: true, drawTime: "beforeDatasetDraw" },
-                    tooltip: {
-                        enabled: false,
-                        mode: "index",
-                        intersect: false,
-                        axis: "x",
-                        position: "average",
-                        filter: () => true,
-                        external: ({ tooltip }) => {
-                            const points = tooltip.opacity === 0 ? [] : tooltip.dataPoints;
-                            if (!points?.length) {
-                                this.#lastHover = undefined;
-                                this.#onHover(undefined);
-                                return;
-                            }
-                            const hover = {
-                                index: points[0].dataIndex,
-                                x: tooltip.caretX,
-                                y: Math.min(...points.map((p) => (p.element as PointElement).y)),
-                            };
-                            // Raised on every mouse move, but only a change of x value or height matters.
-                            const last = this.#lastHover;
-                            if (last && last.index === hover.index && last.y === hover.y) return;
-                            this.#lastHover = hover;
-                            this.#onHover(hover);
-                        },
-                    },
                 },
             },
         };
@@ -278,6 +288,35 @@ export class UauiChartRenderer {
         return chart;
     }
 
+    /** Hovers the slot under the pointer at pixel `pointerX`; true when the hover changed. */
+    #hoverAt(chart: Chart, pointerX: number): boolean {
+        const count = chart.data.labels?.length ?? 0;
+        if (!count) return this.#raiseHover(undefined);
+        const x = chart.scales["x"];
+        const index = Math.min(Math.max(Math.round(x.getValueForPixel(pointerX) ?? 0), 0), count - 1);
+        // The tooltip sits above the highest drawn point of the slot, or at the top of the plot with none.
+        const drawn = chart.data.datasets.flatMap((_, datasetIndex) => {
+            const point = chart.isDatasetVisible(datasetIndex) ? (chart.getDatasetMeta(datasetIndex).data[index] as PointElement | undefined) : undefined;
+            return point && !point.skip && Number.isFinite(point.y) ? [{ datasetIndex, index, y: point.y }] : [];
+        });
+        const ys = drawn.map((point) => point.y);
+        // Chart.js's `index` mode finds the nearest drawn point, not our slot, so its hover dots (the active elements)
+        // are set to the drawn points of our slot, or none for an empty one.
+        chart.setActiveElements(drawn.map(({ datasetIndex, index }) => ({ datasetIndex, index })));
+        // A redraw puts the hover line on the slot, which Chart.js does only when its active elements change.
+        return this.#raiseHover({ index, x: x.getPixelForValue(index), y: ys.length ? Math.min(...ys) : chart.chartArea.top });
+    }
+
+    /** Raised on every pointer move, but only a change of x value or height matters. */
+    #raiseHover(hover: UauiChartHover | undefined): boolean {
+        const last = this.#lastHover;
+        // `x` follows the index, so it isn't compared.
+        if (last === hover || (last && hover && last.index === hover.index && last.y === hover.y)) return false;
+        this.#lastHover = hover;
+        this.#onHover(hover);
+        return true;
+    }
+
     update(model: UauiChartModel): void {
         this.#colors = model.colors;
         // A chart with any bars is a bar chart (its x-axis leaves room for them); its lines are line datasets in it.
@@ -288,6 +327,7 @@ export class UauiChartRenderer {
             this.#chart = this.#create(family, model.colors);
             this.#family = family;
             this.#lastHover = undefined;
+            this.#pointerX = undefined;
             this.#onHover(undefined);
         }
         const chart = this.#chart;
@@ -378,6 +418,8 @@ export class UauiChartRenderer {
         const showDots = model.labels.length <= MAX_POINTS_WITH_DOTS;
         const color = colors.series[i];
         const pointRadius = showDots && compareIndex < 0 ? 2 : 0;
+        const isolated = isolatedIndexes(set.values);
+        const loneAtEnd = isolatedAtEnds(isolated, set.values.length);
         const from = model.incompleteFrom;
         const faded = from === undefined ? undefined : colors.incompleteSeries[i];
         // Only the series line is faded, not its compare line, which is the previous period and complete.
@@ -392,7 +434,11 @@ export class UauiChartRenderer {
             borderColor: color.line,
             backgroundColor: color.fill,
             borderWidth: LINE_WIDTH,
-            clip: lineClip(LINE_WIDTH, faded && pointRadius ? INCOMPLETE_POINT_RADIUS : pointRadius, POINT_HOVER_RADIUS),
+            clip: lineClip(
+                LINE_WIDTH,
+                faded && (pointRadius || loneAtEnd) ? INCOMPLETE_POINT_RADIUS : Math.max(pointRadius, loneAtEnd ? ISOLATED_POINT_RADIUS : 0),
+                POINT_HOVER_RADIUS,
+            ),
             ...(faded
                 ? {
                       // A segment is faded when it ends at an incomplete point.
@@ -408,15 +454,21 @@ export class UauiChartRenderer {
             tension: 0,
             stepped: false,
             showLine: true,
-            spanGaps: true,
+            // A date with no value breaks the line (and an area's fill) rather than bridging it.
+            spanGaps: false,
             // A series with a compare line has its gap shaded by the compare line's own fill (see `#compareLineDataset`).
             fill: compareIndex < 0 && model.kind === "area" ? ("origin" as const) : false,
             pointRadius:
-                faded && pointRadius ? (ctx: { dataIndex: number }) => (fadedAt(ctx.dataIndex) ? INCOMPLETE_POINT_RADIUS : pointRadius) : pointRadius,
+                faded || isolated.size
+                    ? (ctx: { dataIndex: number }) => {
+                          const radius = isolated.has(ctx.dataIndex) ? Math.max(pointRadius, ISOLATED_POINT_RADIUS) : pointRadius;
+                          return faded && radius && fadedAt(ctx.dataIndex) ? INCOMPLETE_POINT_RADIUS : radius;
+                      }
+                    : pointRadius,
             pointStyle: "circle" as const,
             pointBackgroundColor: faded ? (ctx: { dataIndex: number }) => (fadedAt(ctx.dataIndex) ? colors.surface : color.line) : color.line,
             pointBorderColor: faded ? (ctx: { dataIndex: number }) => (fadedAt(ctx.dataIndex) ? faded.point : color.line) : color.line,
-            ...(faded ? { pointBorderWidth: (ctx: { dataIndex: number }) => (fadedAt(ctx.dataIndex) ? INCOMPLETE_POINT_BORDER : 1) } : {}),
+            pointBorderWidth: faded ? (ctx: { dataIndex: number }) => (fadedAt(ctx.dataIndex) ? INCOMPLETE_POINT_BORDER : LINE_WIDTH) : LINE_WIDTH,
             pointHoverRadius: POINT_HOVER_RADIUS,
             pointHoverBackgroundColor: colors.surface,
             pointHoverBorderColor: color.line,
@@ -472,17 +524,19 @@ export class UauiChartRenderer {
         // of a line with `segment` options the line's own `backgroundColor`, which would replace the gap's colours, and the
         // series' segments are what fade the incomplete part. `above` and `below` are relative to the compare line, so
         // where it is below its series (the series doing better) is `below`.
+        const values = model.datasets[i].compare!;
+        const isolated = isolatedIndexes(values);
         const gap = model.lowerIsBetter ? { above: colors.gapGood, below: colors.gapBad } : { above: colors.gapBad, below: colors.gapGood };
         return {
             type: "line" as const,
             stack: `compare-line-${i}`,
             ...(mixed ? { order: -1 } : {}),
             label: model.datasets[i].label,
-            data: model.datasets[i].compare!,
+            data: values,
             borderColor: colors.compare,
             backgroundColor: colors.compare,
             borderWidth: COMPARE_LINE_WIDTH,
-            clip: lineClip(COMPARE_LINE_WIDTH, 0, POINT_HOVER_RADIUS),
+            clip: lineClip(COMPARE_LINE_WIDTH, isolatedAtEnds(isolated, values.length) ? ISOLATED_POINT_RADIUS : 0, POINT_HOVER_RADIUS),
             borderDash: [5, 4],
             borderJoinStyle: "round" as const,
             borderCapStyle: "butt" as const,
@@ -490,10 +544,15 @@ export class UauiChartRenderer {
             tension: 0,
             stepped: false,
             showLine: true,
-            spanGaps: true,
+            spanGaps: false,
             fill: { target: i, ...gap },
-            pointRadius: 0,
+            pointRadius: (ctx: { dataIndex: number }) => (isolated.has(ctx.dataIndex) ? ISOLATED_POINT_RADIUS : 0),
             pointStyle: "circle" as const,
+            // Set here, not left to `Chart.defaults.elements.point`, as a lone value now draws a dot. The border is the line's
+            // width, which is what Chart.js falls back to.
+            pointBackgroundColor: colors.compare,
+            pointBorderColor: colors.compare,
+            pointBorderWidth: COMPARE_LINE_WIDTH,
             pointHoverRadius: POINT_HOVER_RADIUS,
             pointHoverBackgroundColor: colors.surface,
             pointHoverBorderColor: colors.compare,

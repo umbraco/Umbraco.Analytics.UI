@@ -43,6 +43,8 @@ export default {
         chartCategoryEmptyDescription: "There is nothing to show yet.",
         chartTableCompareHeader: "{0} (compare)",
         chartTotalLabel: "Total",
+        // The tooltip row and hidden table cell of a series with no value on a date.
+        chartNoData: "No data",
         chartMarkerAriaLabel: "Marker: {0}",
         // One marker inside that label, "Newsletter sent (May 29, 2026)", and what goes between several of them.
         chartMarkerEntry: "{0} ({1})",

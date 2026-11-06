@@ -227,6 +227,7 @@ export class UauiTimeSeriesChartElement extends UauiTimeSeriesChartElementBase {
      * The period the series cover, as `uaui-date-range` emits it. Optional but recommended with `compare`: compare
      * points are aligned from the start of this range's first bucket. Without it, from the first point of the
      * series (at hour level, that point's local day), which misaligns the compare when sparse data omits the period's first days (or weeks, or months).
+     * At week and month level, date each point at its period's start (see `UauiPoint`).
      */
     @property({ attribute: false })
     range?: UauiDateRange;
@@ -284,7 +285,7 @@ export class UauiTimeSeriesChartElement extends UauiTimeSeriesChartElementBase {
     @property({ type: String, attribute: "incomplete-from" })
     incompleteFrom?: string;
 
-    /** Sets the format of the x-axis labels, and the bucket unit (day, week, month) that compare points are aligned in. The points themselves are not grouped: pass them already grouped, with each bucket at its first day. */
+    /** Sets the format of the x-axis labels, and the bucket unit (day, week, month) that compare points are aligned in. The points themselves are not grouped: pass them already grouped, each dated at its bucket's start (see `UauiPoint`). */
     @property({ type: String, attribute: "group-by" })
     groupBy: UauiGroupBy = "day";
 
@@ -400,7 +401,7 @@ export class UauiTimeSeriesChartElement extends UauiTimeSeriesChartElementBase {
         const allKinds = series.map((s) => (share ? seriesKindOf({}, kind) : seriesKindOf(s, kind)));
         const lines = allKinds.map((k) => k === "line");
         const build = (compareOf: UauiSeries[]) =>
-            buildChartData(series, share ? [] : compareOf, groupBy, { from: range?.from, compareFrom: compare?.from }, weekStart, lines);
+            buildChartData(series, share ? [] : compareOf, groupBy, { from: range?.from, to: range?.to, compareFrom: compare?.from }, weekStart, lines);
         const full = build(compareSeries);
         const { data, shown } = visibleData(full, series.map((s) => s.id), hidden, () => build(compareSeries.filter((c) => !hidden.has(c.id))));
         const kinds = shown.map((i) => allKinds[i]);
@@ -595,7 +596,7 @@ export class UauiTimeSeriesChartElement extends UauiTimeSeriesChartElementBase {
             );
     }
 
-    /** One row per series with a point at the hovered date, and for the bar kinds the total and the compare total. */
+    /** One row per shown series ("No data" where it has no point at the hovered date), and for the bar kinds the total and the compare total. */
     #renderTooltip() {
         const hover = this.#chart.hover;
         const { data, shown, kinds, dateLabels, compareDateLabels, compareTotalDateLabels, totals, shares, numberFormat, shareFormat } = this.#derived;
@@ -604,20 +605,17 @@ export class UauiTimeSeriesChartElement extends UauiTimeSeriesChartElementBase {
         const { index } = hover;
         // The share view draws bands and segments in the bar colours, so its swatches are squares.
         const bars = this.#barCount > 0 || !!shares;
-        const rows = data.series.flatMap((s, i): UauiChartTooltipRow[] => {
+        const rows = data.series.map((s, i): UauiChartTooltipRow => {
             const value = s.values[index];
-            if (value === null) return [];
             const compare = s.compare?.[index];
-            return [
-                {
-                    color: colorKeyOf(this.series[shown[i]], shown[i]),
-                    bar: !!shares || kinds[i] === "bar",
-                    value,
-                    label: this.series.length > 1 ? s.label : undefined,
-                    ...(shares ? { share: shares[i][index] } : {}),
-                    compare: compare === null || compare === undefined ? undefined : { value: compare, label: compareDateLabels[i][index], current: value },
-                },
-            ];
+            return {
+                color: colorKeyOf(this.series[shown[i]], shown[i]),
+                bar: !!shares || kinds[i] === "bar",
+                value,
+                label: this.series.length > 1 ? s.label : undefined,
+                ...(shares ? { share: shares[i][index] } : {}),
+                compare: compare === null || compare === undefined ? undefined : { value: compare, label: compareDateLabels[i][index], current: value },
+            };
         });
         // The share view lists the rows as the stack draws them, top segment or band first (the last series).
         if (shares) rows.reverse();
