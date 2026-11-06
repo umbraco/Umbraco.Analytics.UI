@@ -14,7 +14,7 @@ None. The package has no API.
 - **R7** Any slot can be hovered, empty or not. The tooltip's heading is the slot's date; each shown series has a row, and one with no value reads "No data" with no compare change. A compare value at that slot still shows.
 - **R8** The tooltip's total row is left out when every series is empty there, as today.
 - **R9** In the hidden table, every empty value cell reads "No data", compare cells included, never a blank and never 0. The tooltip and table share one new key, `uauiAnalytics_chartNoData` ("No data").
-- **R10** `CHANGELOG.md` gets a `### Changed` line: `uaui-time-series-chart` fills its x-axis with every period of `range`, and lines break where a period has no point; send 0 for counts.
+- **R10** `CHANGELOG.md` gets a `### Changed` line: `uaui-time-series-chart` fills its x-axis with every period of `range`, and lines break where a period has no point; send 0 for counts. A second line: the hidden table of `uaui-time-series-chart` and `uaui-category-chart` reads "No data" for an empty cell instead of a blank.
 - **R11** A marker, the "now" line and the unfinished-period mark in an empty slot show there. Markers outside every slot are still dropped.
 - **R12** A compare point whose matching current slot is empty now shows there, instead of being dropped.
 - **R13** The example pages need no data change: Commerce and Forms already leave a rate out on a day with nothing to divide by. With `range` already passed, their charts now show every day of it.

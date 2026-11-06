@@ -26,7 +26,7 @@ Paths are under `src/Umbraco.Analytics.UI/Client/src/`. The time zone in tests i
   Acceptance: EMP-3 AC1 spec green in `chart/time-series-chart.empty-tooltip.test.ts`. Existing tooltip and hover tests green.
   depends-on: T3
 
-- [ ] **T5** - story: EMP-3 (AC2–AC6), EMP-4 (AC1, AC2). Add `chartNoData: "No data"` to `lang/en.ts` (key `uauiAnalytics_chartNoData`). `#renderTooltip` in `chart/time-series-chart.element.ts` gives every shown series a row; a row whose value is `null` reads the key's text, with no compare change (SPEC R7, R8). `chart/internal/chart-tooltip.element.ts` accepts a row with no value. `chart/internal/chart-data-table.element.ts`'s `#cell` (and `#shareCell` through it) reads the key's text for an empty value, compare cells included (SPEC R9).
+- [x] **T5** - story: EMP-3 (AC2–AC6), EMP-4 (AC1, AC2). Add `chartNoData: "No data"` to `lang/en.ts` (key `uauiAnalytics_chartNoData`). `#renderTooltip` in `chart/time-series-chart.element.ts` gives every shown series a row; a row whose value is `null` reads the key's text, with no compare change (SPEC R7, R8). `chart/internal/chart-tooltip.element.ts` accepts a row with no value. `chart/internal/chart-data-table.element.ts`'s `#cell` (and `#shareCell` through it) reads the key's text for an empty value, compare cells included (SPEC R9).
   Acceptance: EMP-3 AC2–AC6 and EMP-4 AC1–AC2 specs green in `chart/time-series-chart.empty-tooltip.test.ts`. Localization tests green (no unused or missing key). Existing tooltip and table tests green.
   depends-on: T4
 

@@ -39,4 +39,4 @@ examples/pages/commerce/
 - **Changelog:** a `### Changed` line (SPEC, R10).
 - **Isolation:** no new Chart.js plugin or global setting; `time-series-chart.isolation.test.ts` still guards that.
 
-Not touched: `uaui-category-chart` (its slots are its `categories`), `UauiPoint` (no `null`), the date helpers (used as they are), the KPI tile's "No data for this period" (its own key).
+Not touched: `uaui-category-chart`'s slots (they are its `categories`); it shares the hidden table, so its empty cells also read "No data", but its tooltip still leaves out a series with no value (a follow-up), `UauiPoint` (no `null`), the date helpers (used as they are), the KPI tile's "No data for this period" (its own key).
