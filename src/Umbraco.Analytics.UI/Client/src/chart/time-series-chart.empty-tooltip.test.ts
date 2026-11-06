@@ -77,7 +77,7 @@ describe("Feature: the tooltip says no data", () => {
             await hoverSlot(el, "Oct 26");
         });
 
-        it.skip('shows the tooltip with the heading "Oct 26, 2026"', () => {
+        it('shows the tooltip with the heading "Oct 26, 2026"', () => {
             expect(text(deepQuery(tooltip(el).shadowRoot!, ".tooltip-date"))).toBe("Oct 26, 2026");
         });
     });
@@ -104,6 +104,24 @@ describe("Feature: the tooltip says no data", () => {
 
         it.skip("shows the compare value 95.2", () => {
             expect(text(deepQuery(tooltip(el).shadowRoot!, ".tooltip-compare .tooltip-value"))).toBe("95.2");
+        });
+    });
+
+    describe("Scenario: the hover dot follows the slot", () => {
+        const activeIndexes = (el: Element) => chartOf(el).getActiveElements().map((active) => active.index);
+        let el: UauiTestElement;
+        beforeEach(async () => {
+            el = await chart({ series: [successRate] });
+        });
+
+        it("has no hover dot on an empty slot", async () => {
+            await hoverSlot(el, "Oct 26");
+            expect(activeIndexes(el)).toEqual([]);
+        });
+
+        it("has the hover dot on the slot beside an empty one", async () => {
+            await hoverSlot(el, "Oct 25");
+            expect(activeIndexes(el)).toEqual([1]);
         });
     });
 

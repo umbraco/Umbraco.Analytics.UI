@@ -68,7 +68,7 @@ const COMPARE_BAR_EXTRA_WIDTH = 12;
  * are too. Our chart sets everything it relies on per chart, so a product's global registrations and defaults don't
  * change it: every registered plugin but these, and the chart's own plugins passed to the renderer, is off for our chart.
  */
-const OWN_PLUGINS = ["filler", "tooltip", "uauiHoverLine"];
+const OWN_PLUGINS = ["filler", "uauiHoverLine"];
 
 /** Whether `id` is a plugin in the shared registry. Chart.js doesn't type `items`, so read it with care. */
 const isRegisteredPlugin = (id: string): boolean =>
@@ -196,9 +196,43 @@ export class UauiChartRenderer {
     #create(family: "line" | "bar", colors: UauiChartDrawColors): Chart {
         const hoverLine: Plugin = {
             id: "uauiHoverLine",
+            // The hovered slot is the one under the pointer on the x scale, not the nearest drawn point: Chart.js's
+            // `index` mode skips empty (`null`) points, so an empty slot could never be hovered through it.
+            afterEvent: (chart, args) => {
+                const { type } = args.event;
+                if (type === "mouseout") {
+                    // Chart.js clears its own active elements on mouseout; this keeps that true whatever it does.
+                    chart.setActiveElements([]);
+                    if (this.#raiseHover(undefined)) args.changed = true;
+                    return;
+                }
+                // Off the plot but on the canvas the last hover stays, as Chart.js keeps its own active elements.
+                if (!args.inChartArea) return;
+                // Chart.js reports touchstart and touchmove as mousedown and mousemove.
+                if (type !== "mousemove" && type !== "mousedown" && type !== "click") return;
+                const count = chart.data.labels?.length ?? 0;
+                if (!count) {
+                    if (this.#raiseHover(undefined)) args.changed = true;
+                    return;
+                }
+                const x = chart.scales["x"];
+                const index = Math.min(Math.max(Math.round(x.getValueForPixel(args.event.x as number) ?? 0), 0), count - 1);
+                // The tooltip sits above the highest drawn point of the slot, or at the top of the plot with none.
+                const drawn = chart.data.datasets.flatMap((_, datasetIndex) => {
+                    const point = chart.isDatasetVisible(datasetIndex) ? (chart.getDatasetMeta(datasetIndex).data[index] as PointElement | undefined) : undefined;
+                    return point && !point.skip && Number.isFinite(point.y) ? [{ datasetIndex, index, y: point.y }] : [];
+                });
+                const ys = drawn.map((point) => point.y);
+                // Chart.js's `index` mode finds the nearest drawn point, not our slot, so its hover dots (the active elements)
+                // are set to the drawn points of our slot, or none for an empty one.
+                chart.setActiveElements(drawn.map(({ datasetIndex, index }) => ({ datasetIndex, index })));
+                // A redraw puts the hover line on the slot, which Chart.js does only when its active elements change.
+                if (this.#raiseHover({ index, x: x.getPixelForValue(index), y: ys.length ? Math.min(...ys) : chart.chartArea.top })) args.changed = true;
+            },
             beforeDatasetsDraw: (chart) => {
-                const active = chart.getActiveElements()[0]?.element;
-                if (!active || !this.#colors) return;
+                const hovered = this.#lastHover;
+                if (!hovered || !this.#colors || hovered.index >= (chart.data.labels?.length ?? 0)) return;
+                const active = { x: chart.scales["x"].getPixelForValue(hovered.index) };
                 const { ctx, chartArea } = chart;
                 ctx.save();
                 if (family === "bar") {
@@ -244,32 +278,6 @@ export class UauiChartRenderer {
                 scales: { x: {}, y: { min: 0 } },
                 plugins: {
                     filler: { propagate: true, drawTime: "beforeDatasetDraw" },
-                    tooltip: {
-                        enabled: false,
-                        mode: "index",
-                        intersect: false,
-                        axis: "x",
-                        position: "average",
-                        filter: () => true,
-                        external: ({ tooltip }) => {
-                            const points = tooltip.opacity === 0 ? [] : tooltip.dataPoints;
-                            if (!points?.length) {
-                                this.#lastHover = undefined;
-                                this.#onHover(undefined);
-                                return;
-                            }
-                            const hover = {
-                                index: points[0].dataIndex,
-                                x: tooltip.caretX,
-                                y: Math.min(...points.map((p) => (p.element as PointElement).y)),
-                            };
-                            // Raised on every mouse move, but only a change of x value or height matters.
-                            const last = this.#lastHover;
-                            if (last && last.index === hover.index && last.y === hover.y) return;
-                            this.#lastHover = hover;
-                            this.#onHover(hover);
-                        },
-                    },
                 },
             },
         };
@@ -286,6 +294,16 @@ export class UauiChartRenderer {
             }
         });
         return chart;
+    }
+
+    /** Raised on every pointer move, but only a change of x value or height matters. */
+    #raiseHover(hover: UauiChartHover | undefined): boolean {
+        const last = this.#lastHover;
+        // `x` follows the index, so it isn't compared.
+        if (last === hover || (last && hover && last.index === hover.index && last.y === hover.y)) return false;
+        this.#lastHover = hover;
+        this.#onHover(hover);
+        return true;
     }
 
     update(model: UauiChartModel): void {
