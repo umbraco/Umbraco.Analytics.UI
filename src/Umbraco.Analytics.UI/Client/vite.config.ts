@@ -27,6 +27,12 @@ const platformBuildAlias = [
     { find: /^#platform\/chart$/, replacement: CHART_JS_ENTRY },
 ];
 
+/** The core test project's swap points: #platform/* resolves to src/platform/core/ (the Umbraco project uses package.json `imports`). */
+const coreTestAlias = ["lit", "uui", "chart"].map((name) => ({
+    find: new RegExp(`^#platform/${name}$`),
+    replacement: fileURLToPath(new URL(`./src/platform/core/${name}.ts`, import.meta.url)),
+}));
+
 /** True for an alias from platformBuildAlias, so a build that bundles the specifiers (Storybook) can remove them. */
 export const isPlatformBuildAlias = (entry: { find: string | RegExp }): boolean =>
     platformBuildAlias.some((alias) => String(alias.find) === String(entry.find));
@@ -66,10 +72,25 @@ export default defineConfig(({ command }) => ({
         },
     },
     test: {
-        include: ["src/**/*.test.ts"],
-        // Timing specs are flaky while three engines share a small CI runner, so CI runs them alone
-        // (`npm run test:perf`, vitest.perf.config.ts). Locally they stay in the normal run.
-        exclude: isCI ? [...configDefaults.exclude, "src/internal/perf/**"] : configDefaults.exclude,
+        // Two projects share the options below: `umbraco` runs the suite against the backoffice swap points,
+        // `core` runs src/platform/core/ against the core's own (the specs there import #platform/*).
+        projects: [
+            {
+                extends: true,
+                test: {
+                    name: "umbraco",
+                    include: ["src/**/*.test.ts"],
+                    // Timing specs are flaky while three engines share a small CI runner, so CI runs them alone
+                    // (`npm run test:perf`, vitest.perf.config.ts). Locally they stay in the normal run.
+                    exclude: [...configDefaults.exclude, "src/platform/core/**", ...(isCI ? ["src/internal/perf/**"] : [])],
+                },
+            },
+            {
+                extends: true,
+                resolve: { alias: coreTestAlias },
+                test: { name: "core", include: ["src/platform/core/**/*.test.ts"] },
+            },
+        ],
         // Three browser engines run at once on CI, and a canvas screenshot waits for the chart to settle,
         // so give a loaded machine more time than the defaults (15s per test, 1s per poll).
         testTimeout: 30_000,
