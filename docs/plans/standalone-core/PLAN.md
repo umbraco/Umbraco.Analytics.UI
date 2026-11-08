@@ -8,7 +8,7 @@ Pending specs (52, all `it.skip`, no imports yet): `src/platform/umbraco/*.test.
 
 ## Swap points (Umbraco build unchanged)
 
-- [ ] **T1** - story: SAC-1 (AC1–AC5). Add the `imports` field to `package.json` with `#platform/lit`, `#platform/uui`, `#platform/chart` and `#platform/base-element`, and their files in `src/platform/umbraco/` (ARCHITECTURE, What changes). `base-element.ts` exports `UauiLitElement = UmbLitElement` and the `UauiLocalize` type (`lang`, `term`, `date`, `number`). Point Vite, Vitest, tsc and Storybook at `src/platform/umbraco/` for now. `#platform/chart` resolves to the bare `@umbraco/analytics-ui/external/chart.js`, still external in the build.
+- [x] **T1** - story: SAC-1 (AC1–AC5). Add the `imports` field to `package.json` with `#platform/lit`, `#platform/uui`, `#platform/chart` and `#platform/base-element`, and their files in `src/platform/umbraco/` (ARCHITECTURE, What changes). `base-element.ts` exports `UauiLitElement = UmbLitElement` and the `UauiLocalize` type (`lang`, `term`, `date`, `number`). Point Vite, Vitest, tsc and Storybook at `src/platform/umbraco/` for now. `#platform/chart` resolves to the bare `@umbraco/analytics-ui/external/chart.js`, still external in the build.
   Acceptance: `npm run build`, `npm test` and `npm run check:api` pass, with no change to `api/analytics-ui.api.md` or the `wwwroot` file list.
   depends-on: none
 
