@@ -28,7 +28,7 @@ const platformBuildAlias = [
 ];
 
 /** The core test project's swap points: #platform/* resolves to src/platform/core/ (the Umbraco project uses package.json `imports`). */
-const coreTestAlias = ["lit", "uui", "chart"].map((name) => ({
+const coreTestAlias = ["lit", "uui", "chart", "base-element"].map((name) => ({
     find: new RegExp(`^#platform/${name}$`),
     replacement: fileURLToPath(new URL(`./src/platform/core/${name}.ts`, import.meta.url)),
 }));
@@ -79,6 +79,9 @@ export default defineConfig(({ command }) => ({
                 extends: true,
                 test: {
                     name: "umbraco",
+                    // Per project, not in the shared options: a project's setupFiles are appended to the root's, so a
+                    // root entry would run the backoffice setup in the core project too.
+                    setupFiles: ["./vitest.setup.ts"],
                     include: ["src/**/*.test.ts"],
                     // Timing specs are flaky while three engines share a small CI runner, so CI runs them alone
                     // (`npm run test:perf`, vitest.perf.config.ts). Locally they stay in the normal run.
@@ -88,7 +91,7 @@ export default defineConfig(({ command }) => ({
             {
                 extends: true,
                 resolve: { alias: coreTestAlias },
-                test: { name: "core", include: ["src/platform/core/**/*.test.ts"] },
+                test: { name: "core", include: ["src/platform/core/**/*.test.ts"], setupFiles: ["./vitest.setup.core.ts"] },
             },
         ],
         // Three browser engines run at once on CI, and a canvas screenshot waits for the chart to settle,
@@ -103,7 +106,6 @@ export default defineConfig(({ command }) => ({
             headless: true,
             commands: { lintText },
         },
-        setupFiles: ["./vitest.setup.ts"],
         onConsoleLog: (log: string) => {
             if (log.includes("Lit is in dev mode")) return false;
             return undefined;
