@@ -68,7 +68,7 @@ Pending specs (52, all `it.skip`, no imports yet): `src/platform/umbraco/*.test.
   Acceptance: SAC-5 AC4 and SAC-13 AC3 specs green. New report committed for sign-off. `api/analytics-ui.api.md` unchanged.
   depends-on: T13
 
-- [ ] **T15** - **wire: the core into a plain page.** story: SAC-5 (AC1, AC2). A browser test in `src/platform/core/core-bundle.test.ts` imports the built `dist/core` file on a page with only `lit`, `@umbraco-ui/uui` and UUI's theme CSS, then renders each public element.
+- [x] **T15** - **wire: the core into a plain page.** story: SAC-5 (AC1, AC2). A browser test in `src/platform/core/core-bundle.test.ts` imports the built `dist/core` file on a page with only `lit`, `@umbraco-ui/uui` and UUI's theme CSS, then renders each public element.
   Acceptance: SAC-5 AC1 and AC2 green against the real build output, not the source.
   depends-on: T13
 
