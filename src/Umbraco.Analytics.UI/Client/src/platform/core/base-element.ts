@@ -16,3 +16,7 @@ export class UauiLitElement extends LitElement {
 
     readonly localize = new UauiLocalizationController(this);
 }
+
+// Swap point: the constructor type the mixins constrain their base class with. The same shape as the backoffice's.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type HTMLElementConstructor<T = HTMLElement> = new (...args: any[]) => T;

@@ -89,9 +89,9 @@ interface ContextRequest {
  */
 export abstract class UauiContextBase implements UauiContextMinimal {
     #host: UauiContextProviderHost;
-    #token: UauiContextToken<never>;
+    #token: UauiContextToken;
 
-    constructor(host: UauiContextProviderHost, token: UauiContextToken<never>) {
+    constructor(host: UauiContextProviderHost, token: UauiContextToken) {
         this.#host = host;
         this.#token = token;
         host.addEventListener("context-request", this.#onRequest);

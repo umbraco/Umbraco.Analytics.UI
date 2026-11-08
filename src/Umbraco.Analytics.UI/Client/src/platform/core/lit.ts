@@ -5,4 +5,3 @@ export type { CSSResult, CSSResultGroup, PropertyValues, ReactiveController, Rea
 export { customElement, property, query, state } from "lit/decorators.js";
 export { ifDefined } from "lit/directives/if-defined.js";
 export { repeat } from "lit/directives/repeat.js";
-export { ref } from "lit/directives/ref.js";

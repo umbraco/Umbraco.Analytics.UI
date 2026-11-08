@@ -1,6 +1,5 @@
 import { property } from "#platform/lit";
-import type { HTMLElementConstructor } from "@umbraco-cms/backoffice/extension-api";
-import type { UauiLitElement } from "#platform/base-element";
+import type { HTMLElementConstructor, UauiLitElement } from "#platform/base-element";
 import { getLoadingMode, isBusy, type UauiLoadingMode } from "../internal/loading/loading-mode.js";
 
 export type { UauiLoadingMode };

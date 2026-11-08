@@ -20,7 +20,7 @@ describe("#platform/lit in the core build", () => {
     });
 
     it("exports every value src imports from #platform/lit", () => {
-        const used = ["LitElement", "css", "customElement", "html", "ifDefined", "nothing", "property", "query", "ref", "repeat", "state"];
+        const used = ["LitElement", "css", "customElement", "html", "ifDefined", "nothing", "property", "query", "repeat", "state"];
         expect(used.filter((name) => !(name in platformLit))).toEqual([]);
     });
 });

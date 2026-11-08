@@ -1,5 +1,3 @@
-import type { UmbLocalizationDictionary } from "@umbraco-cms/backoffice/localization-api";
-
 // Loaded by the package's `localization` extension as lang/en.js. The section name is the
 // key prefix: `emptyHeadline` below is `uauiAnalytics_emptyHeadline`. Placeholders are {0}, {1}...
 // Generic verbs reuse Umbraco's keys instead of copies: Save is `buttons_save`, Close is
@@ -157,4 +155,4 @@ export default {
         // The progress cell: {0} is the completed count and {1} the total, both formatted, "2 of 3".
         tableProgress: "{0} of {1}",
     },
-} satisfies UmbLocalizationDictionary;
+} satisfies Record<string, Record<string, string>>;

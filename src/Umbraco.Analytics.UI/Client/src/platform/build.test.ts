@@ -8,6 +8,7 @@ import { commands } from "vitest/browser";
 declare module "vitest/browser" {
     interface BrowserCommands {
         lintText: (code: string, filePath: string) => Promise<{ ruleId: string | null; message: string }[]>;
+        buildBothLibraries: () => Promise<{ umbraco: boolean; core: boolean }>;
     }
 }
 
@@ -15,8 +16,14 @@ describe("Feature: One build, one release", () => {
     describe("Scenario: One build makes both", () => {
         // Given a clean checkout
         // When  npm run build runs
-        it.skip("both wwwroot and dist/core are produced", () => {
-            // AC1: one assertion.
+        // The two builds run into scratch folders (devops/build-commands.ts), so the spec needs no earlier `npm run build`
+        // and leaves wwwroot and dist/core alone. `npm run build` runs the same two configs.
+        let produced: { umbraco: boolean; core: boolean };
+        beforeEach(async () => {
+            produced = await commands.buildBothLibraries();
+        });
+        it("both wwwroot and dist/core are produced", () => {
+            expect(produced).toEqual({ umbraco: true, core: true });
         });
     });
     describe("Scenario: Both npm packages share the version", () => {

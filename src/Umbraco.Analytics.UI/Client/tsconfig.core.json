@@ -1,0 +1,31 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "allowImportingTsExtensions": true,
+    "incremental": false,
+    /* The core build's swap points: #platform/* is src/platform/core/ (package.json `imports` points at the backoffice).
+       @umbraco-cms/* resolves to a file with no exports, so any import of it, even a type-only one, is an error: the
+       core must not need the backoffice, and the files tsc loads must not include its types. */
+    "paths": {
+      "@umbraco-cms/*": [ "./vitest.backoffice-blocked.ts" ],
+      "@umbraco/analytics-ui/external/chart.js": [ "./src/external/chart.js/index.ts" ],
+      "#platform/lit": [ "./src/platform/core/lit.ts" ],
+      "#platform/uui": [ "./src/platform/core/uui.ts" ],
+      "#platform/chart": [ "./src/platform/core/chart.ts" ],
+      "#platform/base-element": [ "./src/platform/core/base-element.ts" ],
+      "#platform/context": [ "./src/platform/core/context.ts" ],
+      "#platform/date-range-opener": [ "./src/platform/core/date-range-opener.ts" ]
+    },
+    /* No backoffice ambient types either */
+    "types": []
+  },
+  "include": [ "src/**/*.ts", "vitest.setup.core.ts", "vite.config.core.ts" ],
+  "exclude": [
+    "src/platform/umbraco/**",
+    "src/platform/core/core-isolation.test.ts",
+    "src/examples/**",
+    "src/**/*.story.ts",
+    "src/internal/story/**"
+  ]
+}

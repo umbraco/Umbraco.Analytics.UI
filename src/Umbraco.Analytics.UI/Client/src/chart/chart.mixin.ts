@@ -1,6 +1,5 @@
 import { property } from "#platform/lit";
-import type { HTMLElementConstructor } from "@umbraco-cms/backoffice/extension-api";
-import type { UauiLitElement } from "#platform/base-element";
+import type { HTMLElementConstructor, UauiLitElement } from "#platform/base-element";
 import { UauiLoadStateMixin, type UauiLoadStateMixinInterface } from "../load-state/load-state.mixin.js";
 import type { UauiChartScale } from "./types.js";
 
