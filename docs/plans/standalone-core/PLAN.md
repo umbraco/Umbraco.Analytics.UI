@@ -56,7 +56,7 @@ Pending specs (52, all `it.skip`, no imports yet): `src/platform/umbraco/*.test.
 
 ## Core build and tests
 
-- [ ] **T12** - story: SAC-13 (AC5), SAC-1 (AC4). Flip the default: every existing test runs in the `core` Vitest project. A second project `umbraco` runs `src/platform/umbraco/**/*.test.ts` and a smoke set (each element renders, with axe) (ARCHITECTURE guess 5). Move `src/internal/localization/register.ts` into `src/platform/umbraco/`. Make the core isolation guard catch any `@umbraco-cms` import in any core spec file, not just its own page: alias `@umbraco-cms/*` to a throwing stub in the `core` project (DECISION-LOG T7, T9). Storybook stays on `umbraco`.
+- [x] **T12** - story: SAC-13 (AC5), SAC-1 (AC4). Flip the default: every existing test runs in the `core` Vitest project. A second project `umbraco` runs `src/platform/umbraco/**/*.test.ts` and a smoke set (each element renders, with axe) (ARCHITECTURE guess 5). Move `src/internal/localization/register.ts` into `src/platform/umbraco/`. Make the core isolation guard catch any `@umbraco-cms` import in any core spec file, not just its own page: alias `@umbraco-cms/*` to a throwing stub in the `core` project (DECISION-LOG T7, T9). Storybook stays on `umbraco`.
   Acceptance: `npm test` runs both projects green. SAC-1 AC4 and SAC-13 AC5 specs green.
   depends-on: T7, T8, T9, T10, T11
 
