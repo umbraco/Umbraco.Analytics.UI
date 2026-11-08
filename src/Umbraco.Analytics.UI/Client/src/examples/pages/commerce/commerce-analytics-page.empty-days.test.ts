@@ -3,7 +3,7 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { html } from "@umbraco-cms/backoffice/external/lit";
 import { chartOf } from "../../../internal/test/chart.js";
-import { renderPageExample } from "../../../internal/test/page-example.js";
+import { renderPageExample } from "../../../platform/umbraco/test-modal-host.js";
 import { settle, shadow, type UauiTestElement } from "../../../internal/test/dom.js";
 import type { UauiDateRange } from "../../../date-range/types.js";
 import type { UauiTimeSeriesChartElement } from "../../../chart/time-series-chart.element.js";

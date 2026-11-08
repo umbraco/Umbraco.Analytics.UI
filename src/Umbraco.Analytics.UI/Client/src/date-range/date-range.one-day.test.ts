@@ -1,7 +1,6 @@
 // HRS-9 — A one-day range reads as one date.
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { html } from "#platform/lit";
-import { umbLocalizationManager } from "@umbraco-cms/backoffice/localization-api";
 import { uauiFormatDateRange } from "../date-helpers/index.js";
 import { deepText, renderElement, shadow } from "../internal/test/dom.js";
 import "./date-range.element.js";
@@ -20,12 +19,12 @@ describe("Feature: a one-day range reads as one date", () => {
     });
 
     describe("Scenario: the button", () => {
-        const previousLanguage = umbLocalizationManager.documentLanguage;
+        const previousLanguage = document.documentElement.lang;
         beforeEach(() => {
-            umbLocalizationManager.documentLanguage = "en-US";
+            document.documentElement.lang = "en-US";
         });
         afterEach(() => {
-            umbLocalizationManager.documentLanguage = previousLanguage;
+            document.documentElement.lang = previousLanguage;
         });
 
         it("shows one date", async () => {

@@ -2,12 +2,10 @@
 // DR-3 — The date range button with a comparison on
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { html } from "#platform/lit";
-import { umbLocalizationManager } from "@umbraco-cms/backoffice/localization-api";
 import darkCss from "@umbraco-ui/uui/themes/dark.css?inline";
 import highContrastCss from "@umbraco-ui/uui/themes/high-contrast.css?inline";
 import { axeRun } from "../internal/test/a11y.js";
-import { renderWithModals } from "../internal/test/modal-host.js";
-import { deepQuery, settle, shadow, type UauiTestElement } from "../internal/test/dom.js";
+import { deepQuery, settle, shadow, type UauiTestElement, renderElement } from "../internal/test/dom.js";
 import "./date-range.element.js";
 import "../group-by/group-by.element.js";
 
@@ -15,7 +13,7 @@ const value = { from: "2026-05-25", to: "2026-06-23" };
 const compare = { mode: "previous-period", from: "2026-04-25", to: "2026-05-24" };
 
 const render = async (compareValue?: object, width = "auto", dir = "ltr") => {
-    const el = await renderWithModals(
+    const el = await renderElement(
         html`<div dir=${dir} style="background: var(--uui-color-surface); padding: 8px; width: ${width}">
             <uaui-group-by .value=${"week"} .options=${["day", "week", "month"]}></uaui-group-by>
             <uaui-date-range .value=${value} .compare=${compareValue}></uaui-date-range>
@@ -31,12 +29,12 @@ const dateButton = (el: UauiTestElement) => shadow(el).querySelector("uui-button
 const line2 = (el: UauiTestElement) => shadow(el).querySelector(".compare")?.textContent?.trim();
 
 describe("Feature: the date range button with a comparison", () => {
-    const previousLanguage = umbLocalizationManager.documentLanguage;
+    const previousLanguage = document.documentElement.lang;
     beforeEach(() => {
-        umbLocalizationManager.documentLanguage = "en-US";
+        document.documentElement.lang = "en-US";
     });
     afterEach(() => {
-        umbLocalizationManager.documentLanguage = previousLanguage;
+        document.documentElement.lang = previousLanguage;
     });
 
     describe("Scenario: no comparison", () => {

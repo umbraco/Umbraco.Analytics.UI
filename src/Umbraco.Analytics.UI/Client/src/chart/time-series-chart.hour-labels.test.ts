@@ -1,7 +1,6 @@
 // HRS-6 — Hour labels.
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { page, userEvent } from "vitest/browser";
-import { umbLocalizationManager } from "@umbraco-cms/backoffice/localization-api";
 import { deepText, settle, shadow } from "../internal/test/dom.js";
 import { screenshotIt } from "../internal/test/screenshot.js";
 import { chartOf, hourlyChart, hoursOf25Oct, hoursOf29Mar, hoursOf4Nov, hoursOf5Nov, rowHeaders, seriesAt, xTickLabels } from "./internal/hourly-fixtures.js";
@@ -15,12 +14,12 @@ const hoverHeading = async (el: Element, index: number) => {
 };
 
 describe("Feature: hour labels", () => {
-    const englishBefore = umbLocalizationManager.documentLanguage;
+    const englishBefore = document.documentElement.lang;
     beforeEach(() => {
-        umbLocalizationManager.documentLanguage = "en-US";
+        document.documentElement.lang = "en-US";
     });
     afterEach(() => {
-        umbLocalizationManager.documentLanguage = englishBefore;
+        document.documentElement.lang = englishBefore;
     });
 
     describe("Scenario: one day", () => {
@@ -116,12 +115,12 @@ describe("Feature: hour labels", () => {
     });
 
     describe("Scenario: in the editor's culture", () => {
-        const previousLanguage = umbLocalizationManager.documentLanguage;
+        const previousLanguage = document.documentElement.lang;
         beforeEach(() => {
-            umbLocalizationManager.documentLanguage = "da-DK";
+            document.documentElement.lang = "da-DK";
         });
         afterEach(() => {
-            umbLocalizationManager.documentLanguage = previousLanguage;
+            document.documentElement.lang = previousLanguage;
         });
 
         it("shows 2 PM as 14", async () => {

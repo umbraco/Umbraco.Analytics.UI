@@ -1,4 +1,5 @@
 import { css, customElement, html, ifDefined, nothing, property, type CSSResultGroup, type LitElement, type TemplateResult } from "#platform/lit";
+import "#platform/uui";
 import { UauiLitElement } from "#platform/base-element";
 import { getLoadingMode, isBusy } from "../internal/loading/index.js";
 import { UauiVisuallyHiddenStyles } from "../internal/a11y/visually-hidden.css.js";

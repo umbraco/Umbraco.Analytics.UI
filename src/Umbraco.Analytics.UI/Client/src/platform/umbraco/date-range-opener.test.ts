@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { html } from "#platform/lit";
 import { UMB_MODAL_MANAGER_CONTEXT, type UmbModalContext } from "@umbraco-cms/backoffice/modal";
 import { deepQuery, recordEvents, settle, shadow, type UauiTestElement } from "../../internal/test/dom.js";
-import { renderWithModals } from "../../internal/test/modal-host.js";
+import { renderWithModals } from "./test-modal-host.js";
 import "../../date-range/date-range.element.js";
 
 const initial = { from: "2026-05-25", to: "2026-06-23" };

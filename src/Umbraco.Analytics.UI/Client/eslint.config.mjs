@@ -38,6 +38,10 @@ const buildFolderPatterns = [
     { regex: "(^|/)platform/(umbraco|core)(/|$)", message: "Import the build's files through #platform/*; only src/platform may reach platform/umbraco or platform/core directly." },
 ];
 
+const umbracoFolderPatterns = [
+    { regex: "(^|/)platform/umbraco(/|$)", message: "Specs run on the core build. A spec that needs the backoffice belongs in src/platform/umbraco/." },
+];
+
 export default tseslint.config(
     { ignores: ["node_modules", "types", "storybook-static", "../wwwroot"] },
     ...tseslint.configs.recommended,
@@ -57,8 +61,16 @@ export default tseslint.config(
         rules: { "no-restricted-imports": ["error", { patterns: [...platformPatterns, ...buildFolderPatterns, ...sharedPatterns] }] },
     },
     {
-        // Test-only files may reach a build folder by relative path until T12 splits the Vitest projects.
+        // Specs and test helpers run on the core build, so they may use the core's files by relative path (its public
+        // `registerUauiTranslations`, the translation reset) but never the Umbraco build's: what needs the backoffice
+        // is a spec in src/platform/umbraco/.
         files: ["src/**/*.test.ts", "src/internal/test/**"],
+        ignores: ["src/platform/**", "src/examples/**"],
+        rules: { "no-restricted-imports": ["error", { patterns: [...platformPatterns, ...umbracoFolderPatterns, ...sharedPatterns] }] },
+    },
+    {
+        // Storybook runs on the Umbraco build, so a story may use its test modal host.
+        files: ["src/**/*.story.ts"],
         ignores: ["src/platform/**", "src/examples/**"],
         rules: { "no-restricted-imports": ["error", { patterns: [...platformPatterns, ...sharedPatterns] }] },
     },

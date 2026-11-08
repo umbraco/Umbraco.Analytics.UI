@@ -6,7 +6,8 @@ import { umbLocalizationManager } from "@umbraco-cms/backoffice/localization-api
 import darkCss from "@umbraco-ui/uui/themes/dark.css?inline";
 import highContrastCss from "@umbraco-ui/uui/themes/high-contrast.css?inline";
 import { axeRun } from "../../../internal/test/a11y.js";
-import { renderPageExample, saveDateRange, withTheme } from "../../../internal/test/page-example.js";
+import { saveDateRange, withTheme } from "../../../internal/test/page-example.js";
+import { renderPageExample } from "../../../platform/umbraco/test-modal-host.js";
 import { deepQuery, deepQueryAll, deepText, settle, shadow, type UauiTestElement } from "../../../internal/test/dom.js";
 import "./ai-usage-page.element.js";
 import { CLOCK } from "./ai-usage-fake-data.js";

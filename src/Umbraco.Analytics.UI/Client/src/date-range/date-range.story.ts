@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/web-components-vite";
 import { html } from "#platform/lit";
 import type { UauiDateRangeElement } from "./date-range.element.js";
 import "./date-range.element.js";
-import "../internal/test/modal-host.element.js";
+import "../platform/umbraco/test-modal-host.element.js";
 
 const value = { from: "2026-05-25", to: "2026-06-23" };
 const compare = { mode: "previous-period" as const, from: "2026-04-25", to: "2026-05-24" };

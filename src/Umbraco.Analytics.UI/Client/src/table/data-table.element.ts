@@ -9,6 +9,7 @@ import {
     type PropertyValues,
     type TemplateResult,
 } from "#platform/lit";
+import "#platform/uui";
 import { UauiLitElement } from "#platform/base-element";
 import "../empty-state/empty-state.element.js";
 import "../error-state/error-state.element.js";

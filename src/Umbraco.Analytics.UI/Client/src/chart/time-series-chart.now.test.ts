@@ -1,7 +1,6 @@
 // HRS-4 — The now line.
 // The line's word is drawn on the canvas, so it's read from the canvas's fillText calls.
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { umbLocalizationManager } from "@umbraco-cms/backoffice/localization-api";
 import { page, userEvent } from "vitest/browser";
 import { deepText, shadow } from "../internal/test/dom.js";
 import { chartOf, hourlyChart, hoursOf25Oct, hoursOf4Nov, hoursOf5Nov, rowHeaders, seriesAt } from "./internal/hourly-fixtures.js";
@@ -11,10 +10,10 @@ const nowRow = (el: Element) => rowHeaders(el).find((r) => r.includes("(now)") |
 const days = ["2026-11-03", "2026-11-04", "2026-11-05", "2026-11-06"];
 
 describe("Feature: the now line", () => {
-    const previousLanguage = umbLocalizationManager.documentLanguage;
+    const previousLanguage = document.documentElement.lang;
     let drawn: string[];
     beforeEach(() => {
-        umbLocalizationManager.documentLanguage = "en-US";
+        document.documentElement.lang = "en-US";
         drawn = [];
         const fillText = CanvasRenderingContext2D.prototype.fillText;
         vi.spyOn(CanvasRenderingContext2D.prototype, "fillText").mockImplementation(function (this: CanvasRenderingContext2D, text: string, x: number, y: number) {
@@ -23,7 +22,7 @@ describe("Feature: the now line", () => {
         });
     });
     afterEach(() => {
-        umbLocalizationManager.documentLanguage = previousLanguage;
+        document.documentElement.lang = previousLanguage;
         vi.restoreAllMocks();
     });
 

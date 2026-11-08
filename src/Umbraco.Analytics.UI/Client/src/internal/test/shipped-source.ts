@@ -9,6 +9,8 @@ const files = import.meta.glob(
         "!../../**/*fixtures.ts",
         "!../../examples/**",
         "!../../internal/test/**",
+        "!../../platform/umbraco/test-*.ts",
+        "!../../platform/umbraco/backoffice-en.ts",
         "!../../internal/story/**",
         "!../../lang/**",
     ],

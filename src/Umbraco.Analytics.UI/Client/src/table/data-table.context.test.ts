@@ -2,6 +2,7 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { customElement, html, property, state } from "#platform/lit";
 import { UauiLitElement } from "#platform/base-element";
+import { consumeContext, observe } from "#platform/context";
 import "#platform/uui";
 import { render } from "vitest-browser-lit";
 import { deepText, renderElement, settle, shadow, type UauiTestElement } from "../internal/test/dom.js";
@@ -23,9 +24,9 @@ class TestStatsCellElement extends UauiLitElement implements UauiTableCellElemen
 
     constructor() {
         super();
-        this.consumeContext(UAUI_TABLE_CONTEXT, (context) => {
-            this.observe(context?.stats, (stats) => (this._stats = stats), "_stats");
-            this.observe(context?.compare, (compare) => (this._compare = compare), "_compare");
+        consumeContext(this, UAUI_TABLE_CONTEXT, (context) => {
+            observe(this, context?.stats, (stats) => (this._stats = stats), "_stats");
+            observe(this, context?.compare, (compare) => (this._compare = compare), "_compare");
         });
     }
 

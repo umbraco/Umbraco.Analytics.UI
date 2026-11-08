@@ -2,9 +2,7 @@
 // DR-5 - A fixed "today" for the date range
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { html } from "#platform/lit";
-import { umbLocalizationManager } from "@umbraco-cms/backoffice/localization-api";
-import { renderWithModals } from "../internal/test/modal-host.js";
-import { deepQuery, settle, shadow, type UauiTestElement } from "../internal/test/dom.js";
+import { deepQuery, settle, shadow, type UauiTestElement, renderElement } from "../internal/test/dom.js";
 import "./date-range.element.js";
 
 const openModal = async (el: UauiTestElement) => {
@@ -27,18 +25,18 @@ const clockToday = () => {
 };
 
 describe("Feature: a fixed today for the date range", () => {
-    const previousLanguage = umbLocalizationManager.documentLanguage;
+    const previousLanguage = document.documentElement.lang;
     beforeEach(() => {
-        umbLocalizationManager.documentLanguage = "en-US";
+        document.documentElement.lang = "en-US";
     });
     afterEach(() => {
-        umbLocalizationManager.documentLanguage = previousLanguage;
+        document.documentElement.lang = previousLanguage;
     });
 
     describe("Scenario: choosing a preset with today set", () => {
         let modal: UauiTestElement;
         beforeEach(async () => {
-            const el = await renderWithModals(html`<uaui-date-range today="2026-06-23"></uaui-date-range>`, "uaui-date-range");
+            const el = await renderElement(html`<uaui-date-range today="2026-06-23"></uaui-date-range>`, "uaui-date-range");
             modal = await openModal(el);
             await setField(modal, "preset", "last-7-days");
         });
@@ -58,12 +56,12 @@ describe("Feature: a fixed today for the date range", () => {
 
     describe("Scenario: no value given", () => {
         it("defaults to the last 30 days as of the set day", async () => {
-            const el = await renderWithModals(html`<uaui-date-range today="2026-06-23"></uaui-date-range>`, "uaui-date-range");
+            const el = await renderElement(html`<uaui-date-range today="2026-06-23"></uaui-date-range>`, "uaui-date-range");
             expect(shadow(el).textContent).toContain("May 25, 2026 to Jun 23, 2026");
         });
 
         it("follows the set day when it changes", async () => {
-            const el = (await renderWithModals(html`<uaui-date-range today="2026-06-23"></uaui-date-range>`, "uaui-date-range")) as UauiTestElement & { today: string };
+            const el = (await renderElement(html`<uaui-date-range today="2026-06-23"></uaui-date-range>`, "uaui-date-range")) as UauiTestElement & { today: string };
             el.today = "2026-07-01";
             await el.updateComplete;
             expect(shadow(el).textContent).toContain("Jun 2, 2026 to Jul 1, 2026");
@@ -72,7 +70,7 @@ describe("Feature: a fixed today for the date range", () => {
 
     describe("Scenario: a value given", () => {
         it("keeps the value when today is set", async () => {
-            const el = await renderWithModals(
+            const el = await renderElement(
                 html`<uaui-date-range today="2026-06-23" .value=${{ from: "2026-01-01", to: "2026-01-31" }}></uaui-date-range>`,
                 "uaui-date-range",
             );
@@ -82,7 +80,7 @@ describe("Feature: a fixed today for the date range", () => {
 
     describe("Scenario: max-date with today set", () => {
         it("wins over the set day for the latest date the dialog accepts", async () => {
-            const el = await renderWithModals(html`<uaui-date-range today="2026-06-23" max-date="2026-06-30"></uaui-date-range>`, "uaui-date-range");
+            const el = await renderElement(html`<uaui-date-range today="2026-06-23" max-date="2026-06-30"></uaui-date-range>`, "uaui-date-range");
             const modal = await openModal(el);
             expect(field(modal, "to").max).toBe("2026-06-30");
         });
@@ -90,7 +88,7 @@ describe("Feature: a fixed today for the date range", () => {
 
     describe("Scenario (sad path): today is not a real date", () => {
         it("uses the clock instead", async () => {
-            const el = await renderWithModals(html`<uaui-date-range today="soon"></uaui-date-range>`, "uaui-date-range");
+            const el = await renderElement(html`<uaui-date-range today="soon"></uaui-date-range>`, "uaui-date-range");
             const modal = await openModal(el);
             expect(field(modal, "to").max).toBe(clockToday());
         });

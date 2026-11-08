@@ -1,6 +1,5 @@
 // HRS-3 — Compare hour for hour.
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { umbLocalizationManager } from "@umbraco-cms/backoffice/localization-api";
 import { page, userEvent } from "vitest/browser";
 import { deepText, shadow } from "../internal/test/dom.js";
 import { buildChartData } from "./internal/chart-data.js";
@@ -9,12 +8,12 @@ import { chartOf, hourlyChart, hoursOf25Oct, hoursOf26Oct, hoursOf4Nov, hoursOf5
 const twoPm = (hours: string[]) => [hours[14]];
 
 describe("Feature: compare hour for hour", () => {
-    const previousLanguage = umbLocalizationManager.documentLanguage;
+    const previousLanguage = document.documentElement.lang;
     beforeEach(() => {
-        umbLocalizationManager.documentLanguage = "en-US";
+        document.documentElement.lang = "en-US";
     });
     afterEach(() => {
-        umbLocalizationManager.documentLanguage = previousLanguage;
+        document.documentElement.lang = previousLanguage;
     });
 
     describe("Scenario: today against yesterday", () => {

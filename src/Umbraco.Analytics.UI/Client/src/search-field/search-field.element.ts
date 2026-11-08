@@ -1,4 +1,5 @@
 import { css, customElement, html, nothing, property, query, type CSSResultGroup, type TemplateResult } from "#platform/lit";
+import "#platform/uui";
 import type { UUIInputElement, UUIInputEvent } from "#platform/uui";
 import { UauiLitElement } from "#platform/base-element";
 

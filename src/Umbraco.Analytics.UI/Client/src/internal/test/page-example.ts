@@ -1,15 +1,5 @@
-import { html, type TemplateResult } from "#platform/lit";
 import { expect } from "vitest";
-import { renderWithModals } from "./modal-host.js";
 import { deepQuery, settle, type UauiTestElement } from "./dom.js";
-
-/**
- * Renders a page example under a modal host (the date range dialog needs one), 1200px wide like a
- * backoffice workspace, and returns the element matching `tag`, once it has updated.
- */
-export function renderPageExample(template: TemplateResult, tag: string): Promise<UauiTestElement> {
-    return renderWithModals(html`<div style="width: 1200px">${template}</div>`, tag);
-}
 
 /**
  * Runs `run` with a UUI theme applied, and the body set up like the backoffice and Storybook set it up: the

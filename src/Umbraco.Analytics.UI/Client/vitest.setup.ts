@@ -1,7 +1,7 @@
 // Adapted from Umbraco UI's vitest.setup.ts so tests read the same across both libraries.
 import "@umbraco-ui/uui/themes/light.css";
 import { beforeAll, beforeEach } from "vitest";
-import { registerUauiTranslations } from "./src/internal/test/localization.js";
+import { registerUauiTranslations } from "./src/platform/umbraco/test-localization.js";
 import "./vitest.axe.js";
 
 // Every test renders translated text, not keys.

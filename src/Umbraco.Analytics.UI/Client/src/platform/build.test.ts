@@ -1,4 +1,4 @@
-// SAC-13 AC1–AC5 — standalone core package (docs/plans/standalone-core).
+// SAC-13 AC1–AC4 — standalone core package (docs/plans/standalone-core).
 // Pending: #platform/* doesn't exist yet, so nothing is imported. The builder adds the imports, arranges each
 // scenario in beforeEach and writes the one assertion the Then names, then removes .skip.
 import { beforeEach, describe, expect, it } from "vitest";
@@ -58,11 +58,6 @@ describe("Feature: One build, one release", () => {
             });
         });
     });
-    describe("Scenario: axe passes in both builds", () => {
-        // Given the element tests
-        // When  they run on the core build and the Umbraco smoke set
-        it.skip("every axe check passes", () => {
-            // AC5: one assertion.
-        });
-    });
+    // AC5 (axe passes in both builds) runs in src/platform/umbraco/smoke.test.ts and the element specs: it needs a real
+    // browser page per build, which a spec in this file can't start.
 });

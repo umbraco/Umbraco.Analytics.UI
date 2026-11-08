@@ -1,4 +1,5 @@
 import { css, customElement, html, nothing, property, type CSSResultGroup, type TemplateResult } from "#platform/lit";
+import "#platform/uui";
 import { UauiLitElement } from "#platform/base-element";
 import { openDateRange } from "#platform/date-range-opener";
 import { builtInPresetRange, parseIso, todayIso } from "../internal/date/date-math.js";

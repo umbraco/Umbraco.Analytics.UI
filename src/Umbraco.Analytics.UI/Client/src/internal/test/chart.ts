@@ -2,7 +2,6 @@
 // builder, and the en-US labels those specs read. Tests only; never imported by shipped code.
 import { Chart } from "#platform/chart";
 import { afterEach, beforeEach } from "vitest";
-import { umbLocalizationManager } from "@umbraco-cms/backoffice/localization-api";
 import type { UauiSeries } from "../../chart/types.js";
 import { shadow } from "./dom.js";
 
@@ -14,11 +13,11 @@ export const seriesOn = (dates: string[], value = 90): UauiSeries => ({ id: "rat
 
 /** Call inside a `describe`: sets the document language to en-US for each spec (labels such as "Oct 24") and restores it after. */
 export function useEnglishDates(): void {
-    const previousLanguage = umbLocalizationManager.documentLanguage;
+    const previousLanguage = document.documentElement.lang;
     beforeEach(() => {
-        umbLocalizationManager.documentLanguage = "en-US";
+        document.documentElement.lang = "en-US";
     });
     afterEach(() => {
-        umbLocalizationManager.documentLanguage = previousLanguage;
+        document.documentElement.lang = previousLanguage;
     });
 }

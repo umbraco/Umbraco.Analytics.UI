@@ -1,17 +1,16 @@
 // HRS-5 — Incomplete hours.
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { umbLocalizationManager } from "@umbraco-cms/backoffice/localization-api";
 import { hourlyChart, hoursOf5Nov, rowHeaders, seriesAt } from "./internal/hourly-fixtures.js";
 
 const firstIncomplete = (el: Element) => rowHeaders(el).find((r) => r.includes("incomplete)"));
 
 describe("Feature: incomplete hours", () => {
-    const previousLanguage = umbLocalizationManager.documentLanguage;
+    const previousLanguage = document.documentElement.lang;
     beforeEach(() => {
-        umbLocalizationManager.documentLanguage = "en-US";
+        document.documentElement.lang = "en-US";
     });
     afterEach(() => {
-        umbLocalizationManager.documentLanguage = previousLanguage;
+        document.documentElement.lang = previousLanguage;
     });
 
     describe("Scenario: incomplete from a time", () => {

@@ -9,8 +9,8 @@ import { html } from "#platform/lit";
 // Registers every uui-* element, as the backoffice does
 import "#platform/uui";
 import { UmbIconRegistry } from "@umbraco-cms/backoffice/icon";
-import { registerUauiLocalization } from "../src/internal/localization/register.js";
-import backofficeEn from "../src/internal/test/backoffice-en.js";
+import { registerUauiLocalization } from "../src/platform/umbraco/localization-register.js";
+import backofficeEn from "../src/platform/umbraco/backoffice-en.js";
 import customElements from "../custom-elements.json";
 
 // Same theme switcher as Umbraco UI's Storybook, so components are checked against every backoffice theme
