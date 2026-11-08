@@ -1,7 +1,7 @@
 {
   // Declaration emit for the core package: the same sources as tsconfig.api.json with #platform/* on src/platform/core/
   // (the core's swap points), and none of the backoffice-only files. Emitted to temp/ (not types/) so it never mixes
-  // with the Umbraco declarations; api-extractor.core.json rolls it up.
+  // with the Umbraco declarations; core/api-extractor.json rolls it up.
   "extends": "./tsconfig.api.json",
   "compilerOptions": {
     "outDir": "./temp/core-types",

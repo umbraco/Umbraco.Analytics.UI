@@ -3,7 +3,7 @@ import { playwright } from "@vitest/browser-playwright";
 import { fileURLToPath } from "node:url";
 import { minifyTemplates } from "./devops/minify-templates.ts";
 import { lintText } from "./devops/lint-text-command.ts";
-import { buildBothLibraries, buildCoreBundle, checkCoreSize, checkDoctoredCore, checkDoctoredCoreApi, readApiReports } from "./devops/build-commands.ts";
+import { buildBothLibraries, packBothPackages, buildCoreBundle, checkCoreSize, checkDoctoredCore, checkDoctoredCoreApi, readApiReports } from "./devops/build-commands.ts";
 
 /**
  * The shared Chart.js entry, as products import it. Our own code imports this bare specifier too, never a relative path:
@@ -118,7 +118,7 @@ export default defineConfig(({ command }) => ({
             provider: playwright({ contextOptions: { timezoneId: "Europe/Copenhagen", locale: "en-US" } }),
             instances: browserInstances,
             headless: true,
-            commands: { lintText, buildCoreBundle, checkCoreSize, checkDoctoredCore, checkDoctoredCoreApi, readApiReports, buildBothLibraries },
+            commands: { lintText, buildCoreBundle, checkCoreSize, checkDoctoredCore, checkDoctoredCoreApi, readApiReports, buildBothLibraries, packBothPackages },
         },
         onConsoleLog: (log: string) => {
             if (log.includes("Lit is in dev mode")) return false;

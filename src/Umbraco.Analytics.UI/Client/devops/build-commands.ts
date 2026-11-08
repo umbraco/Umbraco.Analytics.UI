@@ -129,8 +129,8 @@ function doctoredApiSetup(): Promise<{ config: string }> {
         mkdirSync(reportFolder);
         const report = readFileSync(join(project, "api/analytics-ui-core.api.md"), "utf8");
         writeFileSync(join(reportFolder, "analytics-ui-core.api.md"), report.replace("// (No @packageDocumentation comment for this package)", "$&\n\nexport const uauiDoctored: number;"));
-        // api-extractor looks for package.json from the config's folder, so a copy sits beside the config.
-        copyFileSync(join(project, "package.json"), join(dir, "package.json"));
+        // api-extractor names the report after the package.json nearest the config, so the core's sits beside it.
+        copyFileSync(join(project, "core/package.json"), join(dir, "package.json"));
         // The real extractor tsconfig maps the swap points into temp/core-types, so this one maps them into the scratch types.
         const swapPoints = ["lit", "uui", "chart", "base-element", "context", "date-range-opener"];
         const tsconfig = join(dir, "tsconfig.json");
@@ -150,7 +150,7 @@ function doctoredApiSetup(): Promise<{ config: string }> {
         writeFileSync(
             config,
             JSON.stringify({
-                extends: join(project, "api-extractor.core.json"),
+                extends: join(project, "core/api-extractor.json"),
                 projectFolder: project,
                 compiler: { tsconfigFilePath: tsconfig },
                 mainEntryPointFilePath: join(types, "platform/core/index.d.ts"),
@@ -171,4 +171,40 @@ export async function checkDoctoredCoreApi(): Promise<RunResult> {
     const { config } = await doctoredApiSetup();
     const project = process.cwd();
     return node([join(project, "node_modules/@microsoft/api-extractor/bin/api-extractor"), "run", "-c", config, "--typescript-compiler-folder", join(project, "node_modules/typescript")]);
+}
+
+/**
+ * Vitest browser command: packs both npm packages in a scratch project whose version.json says `version`, and returns the
+ * `version` in each tarball's package.json. The scratch project mirrors the Client folder's depth (the publish scripts
+ * read ../../../version.json and ../../../LICENSE.md), so the worktree's package.json and artifacts are never touched.
+ */
+export async function packBothPackages(_context: unknown, version: string): Promise<{ umbraco: string; core: string }> {
+    const scratch = mkdtempSync(join(tmpdir(), "uaui-pack-"));
+    try {
+        const client = join(scratch, "a/b/c");
+        mkdirSync(join(client, "dist/core"), { recursive: true });
+        mkdirSync(join(client, "types/core"), { recursive: true });
+        mkdirSync(join(client, "artifacts"));
+        writeFileSync(join(scratch, "version.json"), JSON.stringify({ version }));
+        writeFileSync(join(scratch, "LICENSE.md"), "licence");
+        writeFileSync(join(client, "dist/core/analytics-ui-core.js"), "export {};\n");
+        writeFileSync(join(client, "types/core/analytics-ui-core.d.ts"), "export {};\n");
+        copyFileSync(join(process.cwd(), "package.json"), join(client, "package.json"));
+        const publish = join(process.cwd(), "devops/publish");
+        const env = { ...process.env, NPM_PACKAGE_VERSION: "" };
+        const npm = (args: string[], cwd: string) => run("npm", args, { cwd, env });
+        await run(process.execPath, [join(publish, "sync-package-version.js")], { cwd: client, env });
+        await npm(["pack", "--pack-destination", join(client, "artifacts")], client);
+        await run(process.execPath, [join(publish, "pack-core.js")], { cwd: client, env });
+        const versionIn = async (tarball: string) => {
+            const { stdout } = await run("tar", ["-xzOf", join(client, "artifacts", tarball), "package/package.json"]);
+            return (JSON.parse(stdout) as { version: string }).version;
+        };
+        return {
+            umbraco: await versionIn(`umbraco-analytics-ui-${version}.tgz`),
+            core: await versionIn(`umbraco-analytics-ui-core-${version}.tgz`),
+        };
+    } finally {
+        rmSync(scratch, { recursive: true, force: true });
+    }
 }

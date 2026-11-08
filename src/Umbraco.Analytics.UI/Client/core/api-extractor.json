@@ -1,10 +1,11 @@
 {
   "$schema": "https://developer.microsoft.com/json-schemas/api-extractor/v7/api-extractor.schema.json",
+  // This config sits in core/ so API Extractor names the report after core/package.json (@umbraco/analytics-ui-core).
   // The core package (`@umbraco/analytics-ui-core`): the same public API plus `registerUauiTranslations`, from the core's
   // own declarations (tsconfig.core-api.json). Its report is api/analytics-ui-core.api.md, checked by `check:api`; the
   // rolled-up types/core/analytics-ui-core.d.ts is what the npm package ships.
-  "extends": "./api-extractor.json",
-  "projectFolder": ".",
+  "extends": "../api-extractor.json",
+  "projectFolder": "..",
   "mainEntryPointFilePath": "<projectFolder>/temp/core-types/platform/core/index.d.ts",
   "compiler": {
     "tsconfigFilePath": "<projectFolder>/tsconfig.core-api-extractor.json"

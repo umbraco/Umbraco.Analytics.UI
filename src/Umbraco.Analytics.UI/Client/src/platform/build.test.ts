@@ -10,6 +10,7 @@ declare module "vitest/browser" {
         lintText: (code: string, filePath: string) => Promise<{ ruleId: string | null; message: string }[]>;
         checkDoctoredCoreApi: () => Promise<{ code: number; output: string }>;
         buildBothLibraries: () => Promise<{ umbraco: boolean; core: boolean }>;
+        packBothPackages: (version: string) => Promise<{ umbraco: string; core: string }>;
     }
 }
 
@@ -30,8 +31,14 @@ describe("Feature: One build, one release", () => {
     describe("Scenario: Both npm packages share the version", () => {
         // Given version.json says 19.1.0
         // When  both npm packages are packed
-        it.skip("both package.json files say 19.1.0", () => {
-            // AC2: one assertion.
+        // The pack runs in a scratch project with its own version.json (devops/build-commands.ts), so the worktree's
+        // package.json and artifacts folder are left alone.
+        let versions: { umbraco: string; core: string };
+        beforeEach(async () => {
+            versions = await commands.packBothPackages("19.1.0");
+        });
+        it("both package.json files say 19.1.0", () => {
+            expect(versions).toEqual({ umbraco: "19.1.0", core: "19.1.0" });
         });
     });
     describe("Scenario: check:api checks both reports", () => {
