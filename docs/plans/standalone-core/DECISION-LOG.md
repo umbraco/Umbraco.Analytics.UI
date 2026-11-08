@@ -24,3 +24,7 @@
 - 08-11-2026 (T4): `observe`'s callback gets `T | undefined`: it's called with `undefined` when the source is undefined, as the backoffice does. T8 must keep this.
 - 08-11-2026 (T4): `UauiContextHost` uses `any` for the observe source and callback inside the host type only (tighter types stopped `UmbLitElement` fitting). The helpers' own signatures stay fully typed.
 - 08-11-2026 (T4): Re-exports that keep `import type` in the API report: a separate `import type { X }` then `export type { X }`. `export type { X } from` prints `import`.
+- 08-11-2026 (T5, user): Signed off dropping `constructor();` under `UauiDateRangeElement` in `api/analytics-ui.api.md`; the element no longer needs its own constructor. Rejected: an empty constructor kept only for the report.
+- 08-11-2026 (T5): Test-only files may import `src/platform/umbraco/` by relative path until T12 (lint exempts them, nothing else). T12 moves `package-manifest.test.ts` and the test modal host into the `umbraco` Vitest project and deletes the `src/internal/test/modal-host.element.ts` shim.
+- 08-11-2026 (T5): The date range dialog keeps its own working value; the Umbraco modal only receives the final value on Save. Focus moves in `firstUpdated` (Save when the range is valid, else the preset select), replacing `umbFocus` in shared code.
+- 08-11-2026 (T5): For T9: `openDateRange` doesn't know which button opened it, so the core opener saves the focused element (through shadow roots) before opening and restores it after closing (R14).

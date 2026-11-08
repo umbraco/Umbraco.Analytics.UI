@@ -24,7 +24,7 @@ Pending specs (52, all `it.skip`, no imports yet): `src/platform/umbraco/*.test.
   Acceptance: SAC-4 specs green in `src/platform/umbraco/context.test.ts`. `api/analytics-ui.api.md` unchanged.
   depends-on: T2. parallel-group: A
 
-- [ ] **T5** - story: SAC-3 (AC1–AC4). Split the date range dialog (ARCHITECTURE, Decisions). `src/date-range/date-range-dialog.element.ts` (internal, `uaui-date-range-dialog`) holds today's dialog content, takes the data as properties and fires `submit` with the value or `close`. Date fields use `uui-input type="date"`; styles use `UUITextStyles` (ARCHITECTURE guesses 3, 4). `#platform/date-range-opener` with `src/platform/umbraco/date-range-opener.ts` keeps `uaui-date-range-modal` (same name, manifest unchanged) as a thin `UmbModalBaseElement` around the dialog, opened through the modal manager. `date-range.element.ts` calls the opener.
+- [x] **T5** - story: SAC-3 (AC1–AC4). Split the date range dialog (ARCHITECTURE, Decisions). `src/date-range/date-range-dialog.element.ts` (internal, `uaui-date-range-dialog`) holds today's dialog content, takes the data as properties and fires `submit` with the value or `close`. Date fields use `uui-input type="date"`; styles use `UUITextStyles` (ARCHITECTURE guesses 3, 4). `#platform/date-range-opener` with `src/platform/umbraco/date-range-opener.ts` keeps `uaui-date-range-modal` (same name, manifest unchanged) as a thin `UmbModalBaseElement` around the dialog, opened through the modal manager. `date-range.element.ts` calls the opener.
   Acceptance: SAC-3 specs green in `src/platform/umbraco/date-range-opener.test.ts`. Existing date-range tests green. `umbraco-package.json` unchanged.
   depends-on: T2. parallel-group: A
 
