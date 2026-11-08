@@ -1,14 +1,12 @@
 # Spec: Standalone core package
 
 > [!IMPORTANT]
-> **3 guesses need your OK.**
+> **2 guesses need your OK.**
 >
 > 1. The core's peer ranges are the ones CMS 19 ships: `lit` `^3.3.1` and `@umbraco-ui/uui` `^2.1.1`.\
 >    *If not:* the Cloud team's answer on their versions changes them.
 > 2. Icons a product passes in (such as a KPI tile's `icon`) need the host's own icon registry in the core. We only bring the icons our own elements draw.\
 >    *If not:* ship the whole backoffice icon set with the core, which is large.
-> 3. The core bundle budget is 10% above the Umbraco bundle's, for the fallback icons and translation code.\
->    *If not:* set a different number in `check:size`.
 
 ## Endpoints
 None.
@@ -38,7 +36,7 @@ None.
 - **R16** The 6 icons our own elements draw (alert, search, delete, calendar, navigation-left, navigation-right) show with no icon registry on the page. Any other icon, such as one a product picks for a KPI tile, needs the host's registry.
 - **R17** When a host's icon registry answers for a name, its icon is used, not ours.
 - **R18** Light and dark mode follow the UUI theme CSS on the page, and charts redraw when it changes, as in the backoffice.
-- **R19** The core bundle stays within its budget in `check:size` (see guess 3), and doesn't contain Lit, UUI or Chart.js.
+- **R19** The core bundle stays within 56 KB gzip in `check:size` (the Umbraco main bundle plus translations, plus the code only the core carries: its translations, icons, theme helpers and dialog opener), and doesn't contain Lit, UUI or Chart.js.
 
 **Both**
 
