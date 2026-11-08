@@ -20,7 +20,7 @@ Pending specs (52, all `it.skip`, no imports yet): `src/platform/umbraco/*.test.
   Acceptance: `api/analytics-ui.api.md` unchanged in meaning: if api-extractor prints the parameter type differently, stop and ask before committing. Existing date-helper tests green.
   depends-on: T2. parallel-group: A
 
-- [ ] **T4** - story: SAC-4 (AC1–AC3). Add `#platform/context` with `src/platform/umbraco/context.ts`: re-exports `UmbContextToken`, `UmbBasicState`, `UmbObjectState`, the `Observable` type, and two helpers `consumeContext(host, token, callback)` and `observe(host, source, callback, alias)` that call the host's own methods. `src/table/table-context.ts`, `table-context.controller.ts`, `share-cell.element.ts` and `table-compare-badge.element.ts` use them.
+- [x] **T4** - story: SAC-4 (AC1–AC3). Add `#platform/context` with `src/platform/umbraco/context.ts`: re-exports `UmbContextToken`, `UmbBasicState`, `UmbObjectState`, the `Observable` type, and two helpers `consumeContext(host, token, callback)` and `observe(host, source, callback, alias)` that call the host's own methods. `src/table/table-context.ts`, `table-context.controller.ts`, `share-cell.element.ts` and `table-compare-badge.element.ts` use them.
   Acceptance: SAC-4 specs green in `src/platform/umbraco/context.test.ts`. `api/analytics-ui.api.md` unchanged.
   depends-on: T2. parallel-group: A
 
