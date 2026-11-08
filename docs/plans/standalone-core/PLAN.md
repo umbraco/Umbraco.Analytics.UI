@@ -12,7 +12,7 @@ Pending specs (52, all `it.skip`, no imports yet): `src/platform/umbraco/*.test.
   Acceptance: `npm run build`, `npm test` and `npm run check:api` pass, with no change to `api/analytics-ui.api.md` or the `wwwroot` file list.
   depends-on: none
 
-- [ ] **T2** - story: SAC-1 (AC1, AC5), SAC-13 (AC4). Switch every import of `@umbraco-cms/backoffice/external/lit`, `.../lit-element` and `.../external/uui` in components, tests and stories to `#platform/*`. Chart.js imports switch to `#platform/chart`. A lint rule in `eslint.config.js` allows `lit`, `@umbraco-ui/uui`, `chart.js` and `@umbraco-cms/*` only in `src/platform/`, `src/examples/` and `.storybook/`. Search and replace, no behaviour change.
+- [x] **T2** - story: SAC-1 (AC1, AC5), SAC-13 (AC4). Switch every import of `@umbraco-cms/backoffice/external/lit`, `.../lit-element` and `.../external/uui` in components, tests and stories to `#platform/*`. Chart.js imports switch to `#platform/chart`. A lint rule in `eslint.config.js` allows `lit`, `@umbraco-ui/uui`, `chart.js` and `@umbraco-cms/*` only in `src/platform/`, `src/examples/` and `.storybook/`. Search and replace, no behaviour change.
   Acceptance: SAC-13 AC4 spec green. `npm run lint`, `npm test`, `npm run check:api` pass, report unchanged.
   depends-on: T1
 

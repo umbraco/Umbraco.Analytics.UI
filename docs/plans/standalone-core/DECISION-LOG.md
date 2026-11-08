@@ -11,3 +11,10 @@
 - 08-11-2026 (T1): `UauiLitElement` is a named re-export of `UmbLitElement`, so the API report still says `extends UmbLitElement`. Accepted cost: a migrated bundle imports `UmbLitElement` under two names (~22 bytes).
 - 08-11-2026 (T1): `@linkcode` defined in `tsdoc.json`, because API Extractor now reads lit-html's doc comments, which use it. Silences only that tag.
 - 08-11-2026 (T1): `cleanse-pkg.js` removes the `imports` field from the published types package.
+- 08-11-2026 (T2, user): Signed off the 2-line `api/analytics-ui.api.md` change, `import type { ReactiveController, ReactiveControllerHost }` → `import { ... }`. API Extractor drops `type` for names passed through a re-export; no effect for products. Rejected: a post-build rewrite of the emitted types to keep the line identical.
+- 08-11-2026 (user): Byte-identical Umbraco output is a check during refactors, not a requirement. What must hold: the API report's meaning, behaviour, and the size budget.
+- 08-11-2026 (T2): `src/examples/**` and `src/docs/*.mdx` keep the real specifiers, since they show product code and are published in the docs.
+- 08-11-2026 (T2): `umbFocus` still comes from `@umbraco-cms/backoffice/lit-element` in the date range modal; T5 moves it with the modal.
+- 08-11-2026 (T2): UUI theme CSS imports (`@umbraco-ui/uui/themes/*.css`) are allowed anywhere: assets, not code.
+- 08-11-2026 (T2): Public TSDoc keeps saying `UmbLitElement`, since `UauiLitElement` isn't exported to products.
+- 08-11-2026 (T2): The lint spec reaches ESLint through a Vitest browser command (`devops/lint-text-command.ts`), since specs run in the browser.
