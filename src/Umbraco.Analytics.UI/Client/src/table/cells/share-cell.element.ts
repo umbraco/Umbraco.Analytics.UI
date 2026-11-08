@@ -1,5 +1,6 @@
 import { css, customElement, html, nothing, property, state, type CSSResultGroup, type PropertyValues, type TemplateResult } from "#platform/lit";
 import { UauiLitElement } from "#platform/base-element";
+import { consumeContext, observe } from "#platform/context";
 import "../table-compare-badge.element.js";
 import { UauiPaletteStyles, type UauiColorSlot } from "../../theme/index.js";
 import "../../internal/meter-bar/meter-bar.element.js";
@@ -62,9 +63,9 @@ export class UauiShareCellElement extends UauiLitElement implements UauiTableCel
 
     constructor() {
         super();
-        this.consumeContext(UAUI_TABLE_CONTEXT, (context) => {
-            this.observe(context?.stats, (stats) => (this._stats = stats), "_stats");
-            this.observe(context?.columns, (columns) => (this._columns = columns ?? []), "_columns");
+        consumeContext(this, UAUI_TABLE_CONTEXT, (context) => {
+            observe(this, context?.stats, (stats) => (this._stats = stats), "_stats");
+            observe(this, context?.columns, (columns) => (this._columns = columns ?? []), "_columns");
         });
     }
 

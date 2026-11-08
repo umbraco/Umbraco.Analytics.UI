@@ -1,5 +1,4 @@
-import { UmbContextToken, type UmbContextMinimal } from "@umbraco-cms/backoffice/context-api";
-import type { Observable } from "@umbraco-cms/backoffice/external/rxjs";
+import { UmbContextToken, type Observable, type UmbContextMinimal } from "#platform/context";
 import type { UauiTableColumn, UauiTableCompareLookup, UauiTableStats } from "./types.js";
 
 /**

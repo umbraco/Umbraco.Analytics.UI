@@ -16,6 +16,7 @@ const sharedPatterns = [
 ];
 
 const platformPatterns = [
+    { regex: "^@umbraco-cms/backoffice/(context-api|observable-api|class-api|controller-api)$", message: "Import contexts and observable state from #platform/context." },
     { regex: "^lit(/|$)", message: "Import Lit from #platform/lit." },
     { regex: "^@umbraco-cms/backoffice/external/lit$", message: "Import Lit from #platform/lit." },
     // UUI's CSS assets (themes) are not code, so tests may load them directly.

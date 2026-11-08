@@ -1,5 +1,6 @@
 import { css, customElement, html, nothing, property, state, type CSSResultGroup, type TemplateResult } from "#platform/lit";
 import { UauiLitElement } from "#platform/base-element";
+import { consumeContext, observe } from "#platform/context";
 import "../delta-badge/delta-badge.element.js";
 import type { UauiDeltaBadgeSize, UauiDeltaUnit } from "../delta-badge/delta-badge.element.js";
 import { deltaChange } from "../internal/delta/delta-change.js";
@@ -49,8 +50,8 @@ export class UauiTableCompareBadgeElement extends UauiLitElement {
 
     constructor() {
         super();
-        this.consumeContext(UAUI_TABLE_CONTEXT, (context) => {
-            this.observe(context?.compare, (lookup) => (this._compare = lookup), "_compare");
+        consumeContext(this, UAUI_TABLE_CONTEXT, (context) => {
+            observe(this, context?.compare, (lookup) => (this._compare = lookup), "_compare");
         });
     }
 

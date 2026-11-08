@@ -6,7 +6,8 @@
     "#platform/lit": "./src/platform/umbraco/lit.ts",
     "#platform/uui": "./src/platform/umbraco/uui.ts",
     "#platform/chart": "./src/platform/umbraco/chart.ts",
-    "#platform/base-element": "./src/platform/umbraco/base-element.ts"
+    "#platform/base-element": "./src/platform/umbraco/base-element.ts",
+    "#platform/context": "./src/platform/umbraco/context.ts"
   },
   "types": "./types/umbraco-analytics-ui-public.d.ts",
   "exports": {
