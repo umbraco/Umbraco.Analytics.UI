@@ -26,7 +26,7 @@ None.
 
 - **R7** Importing `@umbraco/analytics-ui-core` on a page with only Lit, UUI and the UUI theme CSS defines every public `uaui-*` element, with no errors in the console.
 - **R8** The core's files import nothing from `@umbraco-cms/*` (checked in the build).
-- **R9** The core's public exports are the Umbraco package's, plus `registerUauiTranslations`, with the same element names, attributes, properties and events.
+- **R9** The core's public exports are the Umbraco package's, plus `registerUauiTranslations` and two types a host writes itself (the translations dictionary type and `UauiLocalize`), with the same element names, attributes, properties and events. Other helper types the API uses (the base element, context token and state types) stay unnamed, so they aren't frozen as a contract.
 - **R10** With no translations registered, every element shows English text, including the 8 reused Umbraco words.
 - **R11** `registerUauiTranslations(culture, dictionary)` adds or overrides keys for a culture. Elements already on the page re-render with the new text.
 - **R12** An element reads its culture from its nearest `lang` attribute, then `<html lang>`, then `en`. Changing `<html lang>` re-renders elements with the new text and number and date formats.

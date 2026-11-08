@@ -175,7 +175,7 @@ AC3 — Nothing from Umbraco is in the core
 AC4 — Same public names as the Umbraco package
   Given both API reports
   When  their exports are compared
-  Then  the core has every Umbraco export plus registerUauiTranslations, and nothing else
+  Then  the core has every Umbraco export plus registerUauiTranslations, the translations dictionary type and UauiLocalize, and nothing else
 
 AC5 — Lit, UUI and Chart.js aren't bundled in
   Given the core build output

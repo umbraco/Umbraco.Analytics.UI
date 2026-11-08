@@ -64,7 +64,7 @@ Pending specs (52, all `it.skip`, no imports yet): `src/platform/umbraco/*.test.
   Acceptance: SAC-5 AC3 and AC5 green in `src/platform/core/core-bundle.test.ts`, SAC-13 AC1 green in `src/platform/build.test.ts`. `wwwroot` file list unchanged.
   depends-on: T12
 
-- [ ] **T14** - story: SAC-5 (AC4), SAC-13 (AC3). `api-extractor.core.json` writes `api/analytics-ui-core.api.md` from the core types. `build:api` and `check:api` run it with the others.
+- [x] **T14** - story: SAC-5 (AC4), SAC-13 (AC3). `api-extractor.core.json` writes `api/analytics-ui-core.api.md` from the core types. `build:api` and `check:api` run it with the others.
   Acceptance: SAC-5 AC4 and SAC-13 AC3 specs green. New report committed for sign-off. `api/analytics-ui.api.md` unchanged.
   depends-on: T13
 
@@ -74,7 +74,7 @@ Pending specs (52, all `it.skip`, no imports yet): `src/platform/umbraco/*.test.
 
 ## Shipping
 
-- [ ] **T16** - **wire: the core npm package.** story: SAC-13 (AC2). A `package.json` for `@umbraco/analytics-ui-core` (ARCHITECTURE guesses 1, 2): ESM entry and types from `dist/core`, peer `lit` `^3.3.1` and `@umbraco-ui/uui` `^2.1.1` (SPEC guess 1), dependency `chart.js` at today's range. `devops/publish/` syncs its version from `version.json` and packs it beside `@umbraco/analytics-ui`.
+- [ ] **T16** - **wire: the core npm package.** story: SAC-13 (AC2). A `package.json` for `@umbraco/analytics-ui-core` (ARCHITECTURE guesses 1, 2): ESM entry from `dist/core`, types from `types/core/analytics-ui-core.d.ts` (in `files`; DECISION-LOG T14). If the core `package.json` changes where api-extractor finds its package name, the core report's heading changes and needs sign-off again, peer `lit` `^3.3.1` and `@umbraco-ui/uui` `^2.1.1` (SPEC guess 1), dependency `chart.js` at today's range. `devops/publish/` syncs its version from `version.json` and packs it beside `@umbraco/analytics-ui`.
   Acceptance: SAC-13 AC2 green. `npm pack` of the core, installed into an empty folder with Vite, renders a `uaui-kpi-tile`.
   depends-on: T14, T15
 
