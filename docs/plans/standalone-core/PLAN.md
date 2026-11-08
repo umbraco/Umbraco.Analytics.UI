@@ -16,7 +16,7 @@ Pending specs (52, all `it.skip`, no imports yet): `src/platform/umbraco/*.test.
   Acceptance: SAC-13 AC4 spec green. `npm run lint`, `npm test`, `npm run check:api` pass, report unchanged.
   depends-on: T1
 
-- [ ] **T3** - story: SAC-1 (AC1). `uauiFormatDateRange` in `src/date-helpers/date-helpers.ts` and the helpers in `src/internal/delta/delta-text.ts` take `UauiLocalize` (or a `Pick` of it) instead of `UmbLocalizationController` (ARCHITECTURE, Every component).
+- [x] **T3** - story: SAC-1 (AC1). `uauiFormatDateRange` in `src/date-helpers/date-helpers.ts` and the helpers in `src/internal/delta/delta-text.ts` take `UauiLocalize` (or a `Pick` of it) instead of `UmbLocalizationController` (ARCHITECTURE, Every component).
   Acceptance: `api/analytics-ui.api.md` unchanged in meaning: if api-extractor prints the parameter type differently, stop and ask before committing. Existing date-helper tests green.
   depends-on: T2. parallel-group: A
 
@@ -60,7 +60,7 @@ Pending specs (52, all `it.skip`, no imports yet): `src/platform/umbraco/*.test.
   Acceptance: `npm test` runs both projects green. SAC-1 AC4 and SAC-13 AC5 specs green.
   depends-on: T7, T8, T9, T10, T11
 
-- [ ] **T13** - story: SAC-5 (AC3, AC5), SAC-13 (AC1). `vite.config.core.ts` builds `src/index.ts` plus `src/platform/core/public.ts` with `#platform/*` on core, to `dist/core/`, keeping `lit`, `@umbraco-ui/uui` and `chart.js` external. `npm run build` runs both builds. `devops/check-bundle-size.js` checks the core file against its budget (SPEC guess 3) and fails on any `@umbraco-cms/` import in it.
+- [ ] **T13** - story: SAC-5 (AC3, AC5), SAC-13 (AC1). `vite.config.core.ts` builds `src/index.ts` plus `src/platform/core/public.ts` with `#platform/*` on core, to `dist/core/`, keeping `lit`, `@umbraco-ui/uui` and `chart.js` external. `npm run build` runs both builds. `devops/check-bundle-size.js` checks the core file against its budget (SPEC guess 3) and fails on any `@umbraco-cms/` import in it. Add `tsconfig.core.json` that type-checks all of `src/**` with `#platform/*` on core, run in `build`; then delete the interim `tsconfig.structural.json` and `src/platform/structural-check/` and their `build:app` step (DECISION-LOG T3).
   Acceptance: SAC-5 AC3 and AC5 green in `src/platform/core/core-bundle.test.ts`, SAC-13 AC1 green in `src/platform/build.test.ts`. `wwwroot` file list unchanged.
   depends-on: T12
 

@@ -18,3 +18,5 @@
 - 08-11-2026 (T2): UUI theme CSS imports (`@umbraco-ui/uui/themes/*.css`) are allowed anywhere: assets, not code.
 - 08-11-2026 (T2): Public TSDoc keeps saying `UmbLitElement`, since `UauiLitElement` isn't exported to products.
 - 08-11-2026 (T2): The lint spec reaches ESLint through a Vitest browser command (`devops/lint-text-command.ts`), since specs run in the browser.
+- 08-11-2026 (T3): Replaces the T1 "one copy" note. In the Umbraco build, `UauiLocalize` is `UmbLocalizationController` under our name (`import type { ... as UauiLocalize }` then `export type`), so the API report still prints `UmbLocalizationController`; other re-export forms changed the report. `src/platform/localize.ts` is now the structural contract: the core implements it, and the backoffice controller must satisfy it (checked in `swap-points.test.ts`).
+- 08-11-2026 (T3): Interim `tsconfig.structural.json` + `src/platform/structural-check/` type-check the helpers against the structural `UauiLocalize`. Its file list is by hand, so a new helper taking `UauiLocalize` before T13 must be added to it. Removed in T13 when `tsconfig.core.json` checks all of `src/**` on core.
