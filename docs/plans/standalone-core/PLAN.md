@@ -74,11 +74,11 @@ Pending specs (52, all `it.skip`, no imports yet): `src/platform/umbraco/*.test.
 
 ## Shipping
 
-- [ ] **T16** - **wire: the core npm package.** story: SAC-13 (AC2). A `package.json` for `@umbraco/analytics-ui-core` (ARCHITECTURE guesses 1, 2): ESM entry from `dist/core`, types from `types/core/analytics-ui-core.d.ts` (in `files`; DECISION-LOG T14). If the core `package.json` changes where api-extractor finds its package name, the core report's heading changes and needs sign-off again, peer `lit` `^3.3.1` and `@umbraco-ui/uui` `^2.1.1` (SPEC guess 1), dependency `chart.js` at today's range. `devops/publish/` syncs its version from `version.json` and packs it beside `@umbraco/analytics-ui`.
+- [x] **T16** - **wire: the core npm package.** story: SAC-13 (AC2). A `package.json` for `@umbraco/analytics-ui-core` (ARCHITECTURE guesses 1, 2): ESM entry from `dist/core`, types from `types/core/analytics-ui-core.d.ts` (in `files`; DECISION-LOG T14). If the core `package.json` changes where api-extractor finds its package name, the core report's heading changes and needs sign-off again, peer `lit` `^3.3.1` and `@umbraco-ui/uui` `^2.1.1` (SPEC guess 1), dependency `chart.js` at today's range. `devops/publish/` syncs its version from `version.json` and packs it beside `@umbraco/analytics-ui`.
   Acceptance: SAC-13 AC2 green. `npm pack` of the core, installed into an empty folder with Vite, renders a `uaui-kpi-tile`.
   depends-on: T14, T15
 
-- [ ] **T17** - **wire: the core into the pipeline.** story: SAC-13 (AC1, AC2). `azure-pipelines.yml` builds, tests and publishes the core package to the same npm feeds as `@umbraco/analytics-ui` (`npm - Nightly`, `npm - Pre-releases`, npm.org for releases).
+- [ ] **T17** - **wire: the core into the pipeline.** story: SAC-13 (AC1, AC2). `azure-pipelines.yml` builds, tests and publishes the core package (run `build:app` before packing, and `pack:core` before `postpack:api`'s copy to the output folder, or copy again after it; DECISION-LOG T16) to the same npm feeds as `@umbraco/analytics-ui` (`npm - Nightly`, `npm - Pre-releases`, npm.org for releases).
   Acceptance: a pipeline run on the topic branch has both npm `.tgz` files as artifacts with the same version.
   depends-on: T16
 
