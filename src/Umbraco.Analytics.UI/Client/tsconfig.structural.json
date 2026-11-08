@@ -1,0 +1,16 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "allowImportingTsExtensions": true,
+    "incremental": false,
+    "paths": {
+      "@umbraco/analytics-ui/external/chart.js": [ "./src/external/chart.js/index.ts" ],
+      "#platform/base-element": [ "./src/platform/structural-check/base-element.ts" ]
+    }
+  },
+  "include": [
+    "src/date-helpers/date-helpers.ts",
+    "src/internal/delta/delta-text.ts"
+  ]
+}

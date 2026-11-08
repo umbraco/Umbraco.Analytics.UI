@@ -42,7 +42,7 @@
   "scripts": {
     "dev": "vite",
     "build": "npm run build:api && npm run build:app",
-    "build:app": "tsc -p tsconfig.app.json && vite build",
+    "build:app": "tsc -p tsconfig.app.json && tsc -p tsconfig.structural.json && vite build",
     "build:api": "tsc -p tsconfig.api.json && api-extractor run -c api-extractor.json --typescript-compiler-folder ./node_modules/typescript --local && api-extractor run -c api-extractor.external-chart.json --typescript-compiler-folder ./node_modules/typescript --local",
     "check:size": "node ./devops/check-bundle-size.js",
     "check:api": "tsc -p tsconfig.api.json && api-extractor run -c api-extractor.json --typescript-compiler-folder ./node_modules/typescript && api-extractor run -c api-extractor.external-chart.json --typescript-compiler-folder ./node_modules/typescript",

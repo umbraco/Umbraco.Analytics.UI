@@ -1,4 +1,4 @@
-import type { UmbLocalizationController } from "@umbraco-cms/backoffice/localization-api";
+import type { UauiLocalize } from "#platform/base-element";
 import type { UauiCompare, UauiDateRange } from "../date-range/types.js";
 import type { UauiGroupBy } from "../group-by/group-by.element.js";
 import { builtInPresetRange, compareRangeFor, dateBuckets, daysIn, inclusiveDays, previousPeriodRange, previousYearRange } from "../internal/date/date-math.js";
@@ -118,7 +118,7 @@ export type UauiFormatDateRangeOptions = {
  * the chart's `compareLabel`. Pass the element's `this.localize`. When `from` equals `to` the text is that one date alone.
  * A date that isn't a real calendar date is shown as it is.
  */
-export function uauiFormatDateRange(localize: Pick<UmbLocalizationController, "date" | "term">, range: UauiDateSpan, options: UauiFormatDateRangeOptions = {}): string {
+export function uauiFormatDateRange(localize: Pick<UauiLocalize, "date" | "term">, range: UauiDateSpan, options: UauiFormatDateRangeOptions = {}): string {
     const { from, to } = range;
     const display = options.showYear === false ? displayIsoDateWithoutYear : displayIsoDate;
     if (from === to) return display(from, localize);
