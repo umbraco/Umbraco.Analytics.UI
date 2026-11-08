@@ -1,7 +1,7 @@
 /// <reference types="vite/client" />
 // DR-5 - A fixed "today" for the date range
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { html } from "@umbraco-cms/backoffice/external/lit";
+import { html } from "#platform/lit";
 import { umbLocalizationManager } from "@umbraco-cms/backoffice/localization-api";
 import { renderWithModals } from "../internal/test/modal-host.js";
 import { deepQuery, settle, shadow, type UauiTestElement } from "../internal/test/dom.js";

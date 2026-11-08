@@ -1,7 +1,7 @@
 // Test-only: what a Chart.js chart resolved, so a pixel mismatch on CI can be explained from the log and artifacts
 // instead of from two hashes. Files go to test-results/chart-diagnostics/, which CI publishes when tests fail.
 import { commands } from "vitest/browser";
-import type { Chart } from "@umbraco/analytics-ui/external/chart.js";
+import type { Chart } from "#platform/chart";
 
 type Snapshot = Record<string, unknown>;
 

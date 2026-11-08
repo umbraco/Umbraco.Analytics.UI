@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/web-components-vite";
-import { html } from "@umbraco-cms/backoffice/external/lit";
+import { html } from "#platform/lit";
 import type { UauiErrorStateElement } from "./error-state.element.js";
 import "./error-state.element.js";
 

@@ -1,8 +1,8 @@
 // FND-2 — Built-in text is translated
 // The override spec renders a tiny test element; the aria-label spec renders uaui-date-range.
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { customElement, html } from "@umbraco-cms/backoffice/external/lit";
-import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
+import { customElement, html } from "#platform/lit";
+import { UauiLitElement } from "#platform/base-element";
 import { renderElement, shadow, type UauiTestElement } from "../internal/test/dom.js";
 import { umbExtensionsRegistry } from "@umbraco-cms/backoffice/extension-registry";
 import "../empty-state/empty-state.element.js";
@@ -12,7 +12,7 @@ import { registerUauiLocalization, UAUI_EN_ALIAS } from "../internal/localizatio
 import { registerUauiTranslationOverride } from "../internal/test/localization.js";
 
 @customElement("uaui-test-localized")
-export class UauiTestLocalizedElement extends UmbLitElement {
+export class UauiTestLocalizedElement extends UauiLitElement {
     override render() {
         return html`
             <h2>${this.localize.term("uauiAnalytics_emptyHeadline")}</h2>

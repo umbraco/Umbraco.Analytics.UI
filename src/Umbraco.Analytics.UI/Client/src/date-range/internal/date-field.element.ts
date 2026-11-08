@@ -1,5 +1,5 @@
-import { css, customElement, html, nothing, property, type CSSResultGroup, type TemplateResult } from "@umbraco-cms/backoffice/external/lit";
-import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
+import { css, customElement, html, nothing, property, type CSSResultGroup, type TemplateResult } from "#platform/lit";
+import { UauiLitElement } from "#platform/base-element";
 // Registers umb-input-date, the backoffice's date field
 import "@umbraco-cms/backoffice/components";
 import { parseIso } from "../../internal/date/date-math.js";
@@ -13,7 +13,7 @@ import { parseIso } from "../../internal/date/date-math.js";
  * @fires change - The editor changed the date. Bubbles, not composed. Read the new date from the element's `value`.
  */
 @customElement("uaui-date-field")
-export class UauiDateFieldElement extends UmbLitElement {
+export class UauiDateFieldElement extends UauiLitElement {
     /** The field's name, which also names its message (`data-for`). Set as a property: it is not an attribute. */
     @property({ attribute: false })
     name = "";

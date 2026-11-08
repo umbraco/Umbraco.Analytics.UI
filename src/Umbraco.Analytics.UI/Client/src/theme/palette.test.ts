@@ -1,6 +1,6 @@
 // FND-1 — Products use the package's palette
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { css, html, LitElement } from "@umbraco-cms/backoffice/external/lit";
+import { css, html, LitElement } from "#platform/lit";
 import lightCss from "@umbraco-ui/uui/themes/light.css?inline";
 import darkCss from "@umbraco-ui/uui/themes/dark.css?inline";
 import highContrastCss from "@umbraco-ui/uui/themes/high-contrast.css?inline";

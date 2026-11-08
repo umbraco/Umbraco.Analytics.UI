@@ -3,8 +3,8 @@
 // Chromium only (other engines time differently). CI runs these alone: `npm run test:perf`.
 import { afterEach, describe, expect, it } from "vitest";
 import { server } from "vitest/browser";
-import { Chart } from "@umbraco/analytics-ui/external/chart.js";
-import "@umbraco-cms/backoffice/external/uui";
+import { Chart } from "#platform/chart";
+import "#platform/uui";
 import "../../chart/time-series-chart.element.js";
 import "../../table/data-table.element.js";
 import { UAUI_TABLE_CELL } from "../../table/cells/cell-names.js";

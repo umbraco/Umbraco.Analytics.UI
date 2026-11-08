@@ -1,4 +1,4 @@
-import type { ReactiveController, ReactiveControllerHost } from "@umbraco-cms/backoffice/external/lit";
+import type { ReactiveController, ReactiveControllerHost } from "#platform/lit";
 import type { UauiChartData } from "./chart-values.js";
 
 /**

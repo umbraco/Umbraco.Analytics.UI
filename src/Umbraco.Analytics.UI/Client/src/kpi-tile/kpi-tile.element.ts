@@ -1,5 +1,5 @@
-import { css, customElement, html, ifDefined, nothing, property, type CSSResultGroup, type LitElement, type TemplateResult } from "@umbraco-cms/backoffice/external/lit";
-import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
+import { css, customElement, html, ifDefined, nothing, property, type CSSResultGroup, type LitElement, type TemplateResult } from "#platform/lit";
+import { UauiLitElement } from "#platform/base-element";
 import { getLoadingMode, isBusy } from "../internal/loading/index.js";
 import { UauiVisuallyHiddenStyles } from "../internal/a11y/visually-hidden.css.js";
 import { UauiPaletteStyles } from "../theme/index.js";
@@ -57,7 +57,7 @@ import { hasFigureDetail } from "../internal/figure/figure-detail.element.js";
  * @cssprop --uaui-kpi-icon-fg - Icon colour. Defaults to space cadet, which passes 3:1 on the default square, or the status text colour when `color` is set. A product that overrides either owns that contrast.
  */
 @customElement("uaui-kpi-tile")
-export class UauiKpiTileElement extends UmbLitElement {
+export class UauiKpiTileElement extends UauiLitElement {
     /** What the number is, e.g. "Revenue". */
     @property({ type: String })
     label = "";

@@ -1,4 +1,4 @@
-import type { ReactiveController, ReactiveControllerHost } from "@umbraco-cms/backoffice/external/lit";
+import type { ReactiveController, ReactiveControllerHost } from "#platform/lit";
 
 /**
  * Tells a host whether its scroll area holds more than it can show, sideways. Watches the area and the table inside

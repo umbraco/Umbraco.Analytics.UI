@@ -1,5 +1,5 @@
-import { css, customElement, html, property, type CSSResultGroup, type TemplateResult } from "@umbraco-cms/backoffice/external/lit";
-import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
+import { css, customElement, html, property, type CSSResultGroup, type TemplateResult } from "#platform/lit";
+import { UauiLitElement } from "#platform/base-element";
 import { UauiPaletteStyles } from "../../theme/index.js";
 import { UauiFunnelSwatchStyles } from "./funnel-swatch.css.js";
 
@@ -10,7 +10,7 @@ import { UauiFunnelSwatchStyles } from "./funnel-swatch.css.js";
  * @element uaui-funnel-legend
  */
 @customElement("uaui-funnel-legend")
-export class UauiFunnelLegendElement extends UmbLitElement {
+export class UauiFunnelLegendElement extends UauiLitElement {
     /** Names this period. */
     @property({ type: String })
     label = "";

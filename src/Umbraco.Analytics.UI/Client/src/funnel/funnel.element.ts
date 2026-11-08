@@ -9,8 +9,8 @@ import {
     type CSSResultGroup,
     type PropertyValues,
     type TemplateResult,
-} from "@umbraco-cms/backoffice/external/lit";
-import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
+} from "#platform/lit";
+import { UauiLitElement } from "#platform/base-element";
 import "../delta-badge/delta-badge.element.js";
 import "../empty-state/empty-state.element.js";
 import "../error-state/error-state.element.js";
@@ -46,7 +46,7 @@ interface Derived {
  * `UmbLitElement` with the shared load states (`UauiLoadStateMixin`): the base of `uaui-funnel`. Exported so its type
  * has a name in the public API; extend the element, not this.
  */
-export const UauiFunnelElementBase = UauiLoadStateMixin(UmbLitElement);
+export const UauiFunnelElementBase = UauiLoadStateMixin(UauiLitElement);
 
 /**
  * Shows how many reached each step of a process (visitors, carts, orders) and how many moved on to the next, as

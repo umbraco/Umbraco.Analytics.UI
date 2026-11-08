@@ -3,7 +3,7 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import darkCss from "@umbraco-ui/uui/themes/dark.css?inline";
 import highContrastCss from "@umbraco-ui/uui/themes/high-contrast.css?inline";
-import { html } from "@umbraco-cms/backoffice/external/lit";
+import { html } from "#platform/lit";
 import { render } from "vitest-browser-lit";
 import { axeRun } from "../internal/test/a11y.js";
 import "./kpi-tile.element.js";

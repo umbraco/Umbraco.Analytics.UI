@@ -1,6 +1,6 @@
 // HRS-9 — A one-day range reads as one date.
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { html } from "@umbraco-cms/backoffice/external/lit";
+import { html } from "#platform/lit";
 import { umbLocalizationManager } from "@umbraco-cms/backoffice/localization-api";
 import { uauiFormatDateRange } from "../date-helpers/index.js";
 import { deepText, renderElement, shadow } from "../internal/test/dom.js";

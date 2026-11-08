@@ -1,5 +1,5 @@
-import { css, customElement, html, nothing, property, type CSSResultGroup, type TemplateResult } from "@umbraco-cms/backoffice/external/lit";
-import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
+import { css, customElement, html, nothing, property, type CSSResultGroup, type TemplateResult } from "#platform/lit";
+import { UauiLitElement } from "#platform/base-element";
 
 /**
  * Tells the editor there is nothing to show, e.g. a chart or table with no rows.
@@ -12,7 +12,7 @@ import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
  * @element uaui-empty-state
  */
 @customElement("uaui-empty-state")
-export class UauiEmptyStateElement extends UmbLitElement {
+export class UauiEmptyStateElement extends UauiLitElement {
     /** The main line. Defaults to the translation of "No data yet". An empty string hides it. */
     @property({ type: String })
     headline?: string;

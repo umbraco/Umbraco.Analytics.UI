@@ -1,13 +1,13 @@
 // T60 — UauiChartMixin: one call, the base class's type inferred, so a subclass base keeps its own members; each chart
 // narrows `series` to its own type. The type checks run in `tsc -p tsconfig.app.json` (part of `npm run build`).
 import { describe, expect, expectTypeOf, it } from "vitest";
-import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
+import { UauiLitElement } from "#platform/base-element";
 import { UauiChartMixin } from "./chart.mixin.js";
 import type { UauiCategoryChartElement } from "./category-chart.element.js";
 import type { UauiTimeSeriesChartElement } from "./time-series-chart.element.js";
 import type { UauiCategorySeries, UauiChartScale, UauiSeries } from "./types.js";
 
-class ProductBase extends UmbLitElement {
+class ProductBase extends UauiLitElement {
     productSetting = "kept";
     static productStatic = 42;
 }
@@ -19,7 +19,7 @@ class TestMixedChartElement extends Mixed {
 customElements.define("uaui-test-mixed-chart", TestMixedChartElement);
 
 describe("Feature: the chart mixin", () => {
-    describe("Scenario: applied to a subclass of UmbLitElement", () => {
+    describe("Scenario: applied to a subclass of UauiLitElement", () => {
         it("keeps the base's own members in the type and at runtime", () => {
             const el = new TestMixedChartElement();
             expectTypeOf(el.productSetting).toEqualTypeOf<string>();
@@ -33,7 +33,7 @@ describe("Feature: the chart mixin", () => {
             expectTypeOf(el.series).toEqualTypeOf<UauiSeries[]>();
             expectTypeOf(el.yScale).toEqualTypeOf<UauiChartScale>();
             expectTypeOf(el.loading).toEqualTypeOf<boolean>();
-            expectTypeOf(el).toExtend<UmbLitElement>();
+            expectTypeOf(el).toExtend<UauiLitElement>();
             expect(el.series).toEqual([]);
             expect(el.compareSeries).toEqual([]);
             expect(el.yScale).toBe("linear");

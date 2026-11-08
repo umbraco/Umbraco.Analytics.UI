@@ -1,6 +1,6 @@
 // What the time-series chart specs for empty periods share: the Chart.js chart behind an element, a one-series
 // builder, and the en-US labels those specs read. Tests only; never imported by shipped code.
-import { Chart } from "@umbraco/analytics-ui/external/chart.js";
+import { Chart } from "#platform/chart";
 import { afterEach, beforeEach } from "vitest";
 import { umbLocalizationManager } from "@umbraco-cms/backoffice/localization-api";
 import type { UauiSeries } from "../../chart/types.js";

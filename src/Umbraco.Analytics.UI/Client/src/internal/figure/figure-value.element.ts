@@ -1,5 +1,5 @@
-import { css, customElement, html, nothing, property, type CSSResultGroup, type TemplateResult } from "@umbraco-cms/backoffice/external/lit";
-import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
+import { css, customElement, html, nothing, property, type CSSResultGroup, type TemplateResult } from "#platform/lit";
+import { UauiLitElement } from "#platform/base-element";
 import { UauiVisuallyHiddenStyles } from "../a11y/visually-hidden.css.js";
 import type { UauiFigureText } from "../format/figure.js";
 
@@ -13,7 +13,7 @@ import type { UauiFigureText } from "../format/figure.js";
  * @element uaui-figure-value
  */
 @customElement("uaui-figure-value")
-export class UauiFigureValueElement extends UmbLitElement {
+export class UauiFigureValueElement extends UauiLitElement {
     /** What to show: the text, and the exact amount when the text is a compact form of it. */
     @property({ attribute: false })
     figure?: UauiFigureText;

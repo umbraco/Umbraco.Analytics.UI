@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/web-components-vite";
-import { html } from "@umbraco-cms/backoffice/external/lit";
+import { html } from "#platform/lit";
 import type { UauiDateRangeElement } from "./date-range.element.js";
 import "./date-range.element.js";
 import "../internal/test/modal-host.element.js";

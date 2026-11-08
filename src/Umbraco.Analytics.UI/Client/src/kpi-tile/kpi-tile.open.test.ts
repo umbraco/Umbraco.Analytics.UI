@@ -2,7 +2,7 @@
 // T61 — KPI tiles that drill down: a link (`href`) or a button that raises `open`, as `uui-card`; and status colours.
 import { describe, expect, it } from "vitest";
 import { page, userEvent } from "vitest/browser";
-import { html, type TemplateResult } from "@umbraco-cms/backoffice/external/lit";
+import { html, type TemplateResult } from "#platform/lit";
 import { render } from "vitest-browser-lit";
 import darkCss from "@umbraco-ui/uui/themes/dark.css?inline";
 import lightCss from "@umbraco-ui/uui/themes/light.css?inline";

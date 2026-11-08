@@ -1,5 +1,5 @@
-import { css, customElement, html, nothing, property, type CSSResultGroup, type TemplateResult } from "@umbraco-cms/backoffice/external/lit";
-import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
+import { css, customElement, html, nothing, property, type CSSResultGroup, type TemplateResult } from "#platform/lit";
+import { UauiLitElement } from "#platform/base-element";
 import { UMB_MODAL_MANAGER_CONTEXT, type UmbModalManagerContext } from "@umbraco-cms/backoffice/modal";
 import { builtInPresetRange, parseIso, todayIso } from "../internal/date/date-math.js";
 import { uauiFormatDateRange } from "../date-helpers/date-helpers.js";
@@ -24,7 +24,7 @@ const defaultValue = (today: string): UauiDateRange => ({
  * @fires change - The editor saved the dialog. Bubbles, not composed or cancelable, like `uaui-group-by`. `detail` is `{ value, compare }` (`UauiDateRangeChangeDetail`).
  */
 @customElement("uaui-date-range")
-export class UauiDateRangeElement extends UmbLitElement {
+export class UauiDateRangeElement extends UauiLitElement {
     /** The range shown. Defaults to the last 30 days, counted back from `today`. Setting `undefined` restores that default. */
     @property({ attribute: false })
     get value(): UauiDateRange {

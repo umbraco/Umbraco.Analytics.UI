@@ -1,8 +1,8 @@
 // The sort button's label lines up with its column's values, whichever side the column is aligned to.
 /// <reference types="vite/client" />
 import { describe, expect, it } from "vitest";
-import "@umbraco-cms/backoffice/external/uui";
-import { html } from "@umbraco-cms/backoffice/external/lit";
+import "#platform/uui";
+import { html } from "#platform/lit";
 import { axeRun } from "../../internal/test/a11y.js";
 import { deepQueryAll, renderElement, settle, shadow } from "../../internal/test/dom.js";
 import "../data-table.element.js";

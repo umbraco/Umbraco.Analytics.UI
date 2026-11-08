@@ -1,4 +1,4 @@
-import type { ReactiveController, ReactiveControllerHost } from "@umbraco-cms/backoffice/external/lit";
+import type { ReactiveController, ReactiveControllerHost } from "#platform/lit";
 import type { UauiDataTableElement } from "./data-table.element.js";
 import type { UauiTablePageChangeDetail, UauiTableSort, UauiTableSortChangeDetail, UauiTableStatsInput } from "./types.js";
 import type { UauiSearchDetail } from "../search-field/search-field.element.js";

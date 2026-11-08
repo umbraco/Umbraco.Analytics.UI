@@ -1,6 +1,6 @@
-import type { ReactiveController } from "@umbraco-cms/backoffice/external/lit";
-import type { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
-import type { Plugin } from "@umbraco/analytics-ui/external/chart.js";
+import type { ReactiveController } from "#platform/lit";
+import type { UauiLitElement } from "#platform/base-element";
+import type { Plugin } from "#platform/chart";
 import { clashingColors, colorsDiffer, resolveChartColors, type UauiChartDrawColors, type UauiSeriesColorKey } from "./chart-colors.js";
 import { UauiChartRenderer, type UauiChartHover } from "./chart-renderer.js";
 import type { UauiChartTooltipElement } from "./chart-tooltip.element.js";
@@ -28,7 +28,7 @@ export interface UauiChartControllerOptions {
  * Internal: not exported.
  */
 export class UauiChartController implements ReactiveController {
-    readonly #host: UmbLitElement;
+    readonly #host: UauiLitElement;
     readonly #options: UauiChartControllerOptions;
     #renderer?: UauiChartRenderer;
     #colors?: UauiChartDrawColors;
@@ -38,7 +38,7 @@ export class UauiChartController implements ReactiveController {
     #dirty = true;
     #warned = new Set<string>();
 
-    constructor(host: UmbLitElement, options: UauiChartControllerOptions) {
+    constructor(host: UauiLitElement, options: UauiChartControllerOptions) {
         this.#host = host;
         this.#options = options;
         host.addController(this);

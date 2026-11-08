@@ -1,7 +1,7 @@
 /// <reference types="vite/client" />
 // T61 — Progress cell: "2 of 3" with a decorative bar, the total from a row field the column's meta names.
 import { describe, expect, it } from "vitest";
-import { html } from "@umbraco-cms/backoffice/external/lit";
+import { html } from "#platform/lit";
 import darkCss from "@umbraco-ui/uui/themes/dark.css?inline";
 import highContrastCss from "@umbraco-ui/uui/themes/high-contrast.css?inline";
 import { render } from "vitest-browser-lit";

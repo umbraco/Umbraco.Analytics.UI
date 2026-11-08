@@ -1,7 +1,7 @@
 // BDG-1 — Change badge matches the design
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { umbLocalizationManager } from "@umbraco-cms/backoffice/localization-api";
-import { html } from "@umbraco-cms/backoffice/external/lit";
+import { html } from "#platform/lit";
 import { renderElement, shadow, type UauiTestElement } from "../internal/test/dom.js";
 import "./delta-badge.element.js";
 

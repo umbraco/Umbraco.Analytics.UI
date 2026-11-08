@@ -3,7 +3,7 @@
 import { beforeAll, describe, expect, it } from "vitest";
 import latoBold from "../../node_modules/@umbraco-ui/uui/dist/assets/fonts/LatoLatin-Bold.woff2?url";
 import latoRegular from "../../node_modules/@umbraco-ui/uui/dist/assets/fonts/LatoLatin-Regular.woff2?url";
-import { html } from "@umbraco-cms/backoffice/external/lit";
+import { html } from "#platform/lit";
 import { render } from "vitest-browser-lit";
 import { axeRun } from "../internal/test/a11y.js";
 import "./kpi-tile.element.js";

@@ -1,5 +1,5 @@
-import { css, customElement, html, property, type CSSResultGroup, type TemplateResult } from "@umbraco-cms/backoffice/external/lit";
-import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
+import { css, customElement, html, property, type CSSResultGroup, type TemplateResult } from "#platform/lit";
+import { UauiLitElement } from "#platform/base-element";
 import { asText } from "../internal/cell-values.js";
 import { safeHref } from "../internal/safe-href.js";
 import "../table-skeleton-cell.element.js";
@@ -15,7 +15,7 @@ import type { UauiTableCellElement, UauiTableColumn } from "../types.js";
  * @element uaui-link-cell
  */
 @customElement("uaui-link-cell")
-export class UauiLinkCellElement extends UmbLitElement implements UauiTableCellElement {
+export class UauiLinkCellElement extends UauiLitElement implements UauiTableCellElement {
     /** The column the cell is in. Its `meta.hrefKey` names the key in `item` that holds the URL. */
     @property({ attribute: false })
     column: UauiTableColumn = { key: "value", label: "" };

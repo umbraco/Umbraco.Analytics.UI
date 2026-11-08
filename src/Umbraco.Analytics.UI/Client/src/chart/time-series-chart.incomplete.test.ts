@@ -1,10 +1,10 @@
 // Incomplete period — `incomplete-from` marks the latest dates as not final: the series draw see-through there over a
 // hatched band, and the tooltip and the hidden table name those dates as incomplete.
 // Canvas outcomes are read from the Chart.js chart (dataset options, pixels), as the other time-series chart specs do.
-import { Chart } from "@umbraco/analytics-ui/external/chart.js";
+import { Chart } from "#platform/chart";
 import { describe, expect, it } from "vitest";
 import { page, userEvent } from "vitest/browser";
-import { html } from "@umbraco-cms/backoffice/external/lit";
+import { html } from "#platform/lit";
 import { axeRun } from "../internal/test/a11y.js";
 import { deepQuery, deepText, renderElement, settle, shadow } from "../internal/test/dom.js";
 import { firstIncompleteIndex } from "./internal/incomplete-index.js";

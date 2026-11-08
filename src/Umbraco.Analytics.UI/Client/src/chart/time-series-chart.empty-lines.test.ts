@@ -1,7 +1,7 @@
 // EMP-2 — Lines break at empty periods.
 // Read from the Chart.js datasets the chart built (spanGaps) and the radius Chart.js resolved for each point, not from pixels.
 import { beforeEach, describe, expect, it } from "vitest";
-import { html } from "@umbraco-cms/backoffice/external/lit";
+import { html } from "#platform/lit";
 import { chartOf, seriesOn, useEnglishDates } from "../internal/test/chart.js";
 import { renderElement, settle, type UauiTestElement } from "../internal/test/dom.js";
 import type { UauiCompare, UauiDateRange } from "../date-range/types.js";

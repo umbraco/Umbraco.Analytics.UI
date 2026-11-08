@@ -2,10 +2,10 @@
 // Chart.js is shared through `@umbraco/analytics-ui/external/chart.js`, so a product's global registrations and
 // `Chart.defaults` changes reach our chart's Chart.js too. These specs change them as a careless product would and
 // check our chart draws the same pixels and keeps its own options.
-import { Chart, Colors, Legend, Title, type Plugin } from "@umbraco/analytics-ui/external/chart.js";
+import { Chart, Colors, Legend, Title, type Plugin } from "#platform/chart";
 import { describe, expect, it, vi } from "vitest";
 import { page, userEvent } from "vitest/browser";
-import { html } from "@umbraco-cms/backoffice/external/lit";
+import { html } from "#platform/lit";
 import {
     baseline,
     canvasOf,

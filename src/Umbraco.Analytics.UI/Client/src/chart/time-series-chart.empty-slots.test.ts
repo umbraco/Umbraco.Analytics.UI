@@ -2,7 +2,7 @@
 // The slots are the chart's x-axis dates, read from the Chart.js chart's labels (formatted for en-US: "Oct 24" by day
 // and week, "Jan 2026" by month).
 import { beforeEach, describe, expect, it } from "vitest";
-import { html } from "@umbraco-cms/backoffice/external/lit";
+import { html } from "#platform/lit";
 import { chartOf, useEnglishDates } from "../internal/test/chart.js";
 import { renderElement, settle, type UauiTestElement } from "../internal/test/dom.js";
 import type { UauiDateRange } from "../date-range/types.js";

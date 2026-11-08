@@ -4,12 +4,12 @@
 // (tooltip, badges, group-by, KPI tile) is measured from the rendered element's computed styles, so a change
 // to the element's CSS is what the spec sees.
 import { afterAll, afterEach, beforeEach, describe, expect, it } from "vitest";
-import { html } from "@umbraco-cms/backoffice/external/lit";
+import { html } from "#platform/lit";
 import lightCss from "@umbraco-ui/uui/themes/light.css?inline";
 import darkCss from "@umbraco-ui/uui/themes/dark.css?inline";
 import highContrastCss from "@umbraco-ui/uui/themes/high-contrast.css?inline";
 import { page, userEvent } from "vitest/browser";
-import { Chart } from "@umbraco/analytics-ui/external/chart.js";
+import { Chart } from "#platform/chart";
 import { deepQuery, renderElement, settle, shadow, type UauiTestElement } from "../internal/test/dom.js";
 import "../delta-badge/delta-badge.element.js";
 import "../chart/time-series-chart.element.js";

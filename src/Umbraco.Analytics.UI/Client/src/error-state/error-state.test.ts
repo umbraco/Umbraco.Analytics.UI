@@ -1,8 +1,8 @@
 // T27 — the error state element itself (the data elements' specs are in their own folders)
 /// <reference types="vite/client" />
 import { beforeEach, describe, expect, it } from "vitest";
-import { html } from "@umbraco-cms/backoffice/external/lit";
-import "@umbraco-cms/backoffice/external/uui";
+import { html } from "#platform/lit";
+import "#platform/uui";
 import darkCss from "@umbraco-ui/uui/themes/dark.css?inline";
 import highContrastCss from "@umbraco-ui/uui/themes/high-contrast.css?inline";
 import { render } from "vitest-browser-lit";

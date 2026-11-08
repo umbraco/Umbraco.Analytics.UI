@@ -1,9 +1,9 @@
 // T59 — 100% share view: each date's series as its share of that date's total (`stack="percent"`).
 // Canvas-only outcomes are checked with screenshot comparison (toMatchScreenshot): see screenshotIt.
-import { Chart, uauiChartColors } from "@umbraco/analytics-ui/external/chart.js";
+import { Chart, uauiChartColors } from "#platform/chart";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { page, userEvent } from "vitest/browser";
-import { html } from "@umbraco-cms/backoffice/external/lit";
+import { html } from "#platform/lit";
 import darkCss from "@umbraco-ui/uui/themes/dark.css?inline";
 import highContrastCss from "@umbraco-ui/uui/themes/high-contrast.css?inline";
 import { render } from "vitest-browser-lit";

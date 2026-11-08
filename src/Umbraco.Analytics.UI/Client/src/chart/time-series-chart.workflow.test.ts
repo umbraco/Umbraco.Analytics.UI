@@ -1,10 +1,10 @@
 // T58 — Time-series chart for Workflow: bars and a line in one chart (a series' `kind`), a now line (`now`) for
 // dates that run past today, and a log y-axis (`y-scale="log"`).
 // Canvas outcomes are read from the Chart.js chart (datasets, scales, element positions) and checked with screenshots.
-import { Chart } from "@umbraco/analytics-ui/external/chart.js";
+import { Chart } from "#platform/chart";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { page, userEvent } from "vitest/browser";
-import { html } from "@umbraco-cms/backoffice/external/lit";
+import { html } from "#platform/lit";
 import darkCss from "@umbraco-ui/uui/themes/dark.css?inline";
 import highContrastCss from "@umbraco-ui/uui/themes/high-contrast.css?inline";
 import { render } from "vitest-browser-lit";

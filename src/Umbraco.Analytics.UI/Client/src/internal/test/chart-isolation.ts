@@ -1,6 +1,6 @@
 // What the chart isolation specs share (CHT-6): a fingerprint of a chart's pixels, a settled baseline, the comparison
 // with diagnostics, and the changes a careless product makes to the shared Chart.js (each undone after the spec).
-import { Chart, type Plugin } from "@umbraco/analytics-ui/external/chart.js";
+import { Chart, type Plugin } from "#platform/chart";
 import { afterEach, expect } from "vitest";
 import { chartSnapshot, environmentSnapshot, writeChartDiagnostics } from "./chart-diagnostics.js";
 import { settle, shadow, type UauiTestElement } from "./dom.js";

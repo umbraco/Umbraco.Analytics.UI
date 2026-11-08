@@ -1,6 +1,6 @@
 // TBL-10 — Server mode wiring helper
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { customElement, html, LitElement, ref } from "@umbraco-cms/backoffice/external/lit";
+import { customElement, html, LitElement, ref } from "#platform/lit";
 import { render } from "vitest-browser-lit";
 import { nextEvent, shadow } from "../internal/test/dom.js";
 import "./data-table.element.js";

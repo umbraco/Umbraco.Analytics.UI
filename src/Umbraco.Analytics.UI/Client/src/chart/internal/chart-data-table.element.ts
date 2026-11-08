@@ -1,5 +1,5 @@
-import { css, customElement, html, nothing, property, type CSSResultGroup, type TemplateResult } from "@umbraco-cms/backoffice/external/lit";
-import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
+import { css, customElement, html, nothing, property, type CSSResultGroup, type TemplateResult } from "#platform/lit";
+import { UauiLitElement } from "#platform/base-element";
 import { UauiVisuallyHiddenStyles } from "../../internal/a11y/visually-hidden.css.js";
 import { getNumberFormat } from "../../internal/format/number-format.js";
 import type { UauiChartData } from "./chart-values.js";
@@ -12,7 +12,7 @@ import type { UauiChartData } from "./chart-values.js";
  * @element uaui-chart-data-table
  */
 @customElement("uaui-chart-data-table")
-export class UauiChartDataTableElement extends UmbLitElement {
+export class UauiChartDataTableElement extends UauiLitElement {
     /** The formatted x value (a date on the time-series chart) of each row. */
     @property({ attribute: false })
     labels: string[] = [];

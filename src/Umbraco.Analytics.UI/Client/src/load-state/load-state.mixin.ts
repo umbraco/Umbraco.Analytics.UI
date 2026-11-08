@@ -1,6 +1,6 @@
-import { property } from "@umbraco-cms/backoffice/external/lit";
+import { property } from "#platform/lit";
 import type { HTMLElementConstructor } from "@umbraco-cms/backoffice/extension-api";
-import type { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
+import type { UauiLitElement } from "#platform/base-element";
 import { getLoadingMode, isBusy, type UauiLoadingMode } from "../internal/loading/loading-mode.js";
 
 export type { UauiLoadingMode };
@@ -64,7 +64,7 @@ export declare class UauiLoadStateMixinInterface {
  * @param superClass - The class to extend, `UmbLitElement` or a subclass of it.
  * @returns The class with the shared load states.
  */
-export const UauiLoadStateMixin = <T extends HTMLElementConstructor<UmbLitElement>>(superClass: T): HTMLElementConstructor<UauiLoadStateMixinInterface> & T => {
+export const UauiLoadStateMixin = <T extends HTMLElementConstructor<UauiLitElement>>(superClass: T): HTMLElementConstructor<UauiLoadStateMixinInterface> & T => {
     class UauiLoadStateMixinClass extends superClass {
         /** Shows a skeleton on first load, or a loading bar over the old data when reloading. */
         @property({ type: Boolean, reflect: true })

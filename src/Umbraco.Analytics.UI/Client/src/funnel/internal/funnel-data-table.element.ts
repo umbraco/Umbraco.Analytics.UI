@@ -1,5 +1,5 @@
-import { css, customElement, html, nothing, property, type CSSResultGroup, type TemplateResult } from "@umbraco-cms/backoffice/external/lit";
-import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
+import { css, customElement, html, nothing, property, type CSSResultGroup, type TemplateResult } from "#platform/lit";
+import { UauiLitElement } from "#platform/base-element";
 import { UauiVisuallyHiddenStyles } from "../../internal/a11y/visually-hidden.css.js";
 
 /** One step as the hidden table lists it, every figure already formatted ("" for the first step's "from previous" cells). */
@@ -23,7 +23,7 @@ export interface UauiFunnelTableRow {
  * @element uaui-funnel-data-table
  */
 @customElement("uaui-funnel-data-table")
-export class UauiFunnelDataTableElement extends UmbLitElement {
+export class UauiFunnelDataTableElement extends UauiLitElement {
     @property({ attribute: false })
     rows: UauiFunnelTableRow[] = [];
 

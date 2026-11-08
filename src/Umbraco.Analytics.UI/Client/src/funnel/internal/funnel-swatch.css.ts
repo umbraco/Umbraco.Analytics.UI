@@ -1,4 +1,4 @@
-import { css } from "@umbraco-cms/backoffice/external/lit";
+import { css } from "#platform/lit";
 
 /**
  * The key swatches of the funnel's legend and tooltip, small copies of what the funnel draws: `.swatch` is a bar, and

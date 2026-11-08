@@ -1,4 +1,4 @@
-import { css, type CSSResult } from "@umbraco-cms/backoffice/external/lit";
+import { css, type CSSResult } from "#platform/lit";
 import { UauiPaletteStyles } from "../../theme/index.js";
 
 /**

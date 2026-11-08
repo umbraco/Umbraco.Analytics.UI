@@ -1,9 +1,9 @@
 // CHT-4 — Lower is better
 // A metric like refund rate or average duration: a fall is good. The gap shading and the tooltip badges follow.
-import { Chart } from "@umbraco/analytics-ui/external/chart.js";
+import { Chart } from "#platform/chart";
 import { describe, expect, it } from "vitest";
 import { page, userEvent } from "vitest/browser";
-import { html } from "@umbraco-cms/backoffice/external/lit";
+import { html } from "#platform/lit";
 import { deepQuery, renderElement, shadow, type UauiTestElement } from "../internal/test/dom.js";
 import type { UauiDeltaBadgeElement } from "../delta-badge/delta-badge.element.js";
 import type { UauiTimeSeriesChartElement } from "./time-series-chart.element.js";

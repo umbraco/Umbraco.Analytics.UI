@@ -1,6 +1,6 @@
 // FND-1 — Theme tokens products can override
 import { beforeEach, describe, expect, it } from "vitest";
-import { html } from "@umbraco-cms/backoffice/external/lit";
+import { html } from "#platform/lit";
 import { renderElement, type UauiTestElement } from "../internal/test/dom.js";
 import "../delta-badge/delta-badge.element.js";
 

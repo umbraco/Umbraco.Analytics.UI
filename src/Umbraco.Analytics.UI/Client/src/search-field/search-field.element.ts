@@ -1,6 +1,6 @@
-import { css, customElement, html, nothing, property, query, type CSSResultGroup, type TemplateResult } from "@umbraco-cms/backoffice/external/lit";
-import type { UUIInputElement, UUIInputEvent } from "@umbraco-cms/backoffice/external/uui";
-import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
+import { css, customElement, html, nothing, property, query, type CSSResultGroup, type TemplateResult } from "#platform/lit";
+import type { UUIInputElement, UUIInputEvent } from "#platform/uui";
+import { UauiLitElement } from "#platform/base-element";
 
 /** The detail of the `search` event of `uaui-search-field`: what the editor typed. Empty when the box was cleared. */
 export type UauiSearchDetail = {
@@ -23,7 +23,7 @@ const DEBOUNCE_MS = 300;
  * @fires search - The text changed and typing stopped. Bubbles, not composed or cancelable, like `sort-change`. `detail` is `{ query }`. Clearing the box raises it at once.
  */
 @customElement("uaui-search-field")
-export class UauiSearchFieldElement extends UmbLitElement {
+export class UauiSearchFieldElement extends UauiLitElement {
     /**
      * The text in the box. Typing updates it, as `uui-input` does. Setting it from code does not raise `search`:
      * a product that restores or clears it sets the table's `query` too.

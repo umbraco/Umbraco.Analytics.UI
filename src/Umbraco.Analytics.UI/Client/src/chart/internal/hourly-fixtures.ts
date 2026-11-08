@@ -1,7 +1,7 @@
 // Shared set-up for the hourly chart specs (docs/plans/hourly-buckets). The specs run with the browser's time zone
 // pinned to Europe/Copenhagen (PLAN.md T1): CET (+01:00) in November, CEST (+02:00) until 25 Oct 2026.
-import { Chart } from "@umbraco/analytics-ui/external/chart.js";
-import { html } from "@umbraco-cms/backoffice/external/lit";
+import { Chart } from "#platform/chart";
+import { html } from "#platform/lit";
 import { deepQuery, renderElement, shadow } from "../../internal/test/dom.js";
 import type { UauiSeries } from "../types.js";
 import "../time-series-chart.element.js";

@@ -1,8 +1,8 @@
 // TBL-1 — The table's context: column stats and the compare lookup, for any cell
 import { beforeEach, describe, expect, it } from "vitest";
-import { customElement, html, property, state } from "@umbraco-cms/backoffice/external/lit";
-import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
-import "@umbraco-cms/backoffice/external/uui";
+import { customElement, html, property, state } from "#platform/lit";
+import { UauiLitElement } from "#platform/base-element";
+import "#platform/uui";
 import { render } from "vitest-browser-lit";
 import { deepText, renderElement, settle, shadow, type UauiTestElement } from "../internal/test/dom.js";
 import "./data-table.element.js";
@@ -14,7 +14,7 @@ import type { UauiTableCellElement, UauiTableColumn, UauiTableCompareLookup, Uau
 
 /** A product's own cell that reads the table's context: shows the column's total and max, and the compare row's value. */
 @customElement("uaui-test-stats-cell")
-class TestStatsCellElement extends UmbLitElement implements UauiTableCellElement {
+class TestStatsCellElement extends UauiLitElement implements UauiTableCellElement {
     @property({ attribute: false }) column: UauiTableColumn = { key: "", label: "" };
     @property({ attribute: false }) item: Record<string, unknown> = {};
     @property({ attribute: false }) value: unknown;

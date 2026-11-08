@@ -1,9 +1,9 @@
 // T25: compare badges come from one piece, `uaui-table-compare-badge`, which cells compose; column `meta` says what is better
 /// <reference types="vite/client" />
 import { describe, expect, it } from "vitest";
-import { customElement, html, property } from "@umbraco-cms/backoffice/external/lit";
-import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
-import "@umbraco-cms/backoffice/external/uui";
+import { customElement, html, property } from "#platform/lit";
+import { UauiLitElement } from "#platform/base-element";
+import "#platform/uui";
 import darkCss from "@umbraco-ui/uui/themes/dark.css?inline";
 import highContrastCss from "@umbraco-ui/uui/themes/high-contrast.css?inline";
 import { render } from "vitest-browser-lit";
@@ -15,7 +15,7 @@ import { UAUI_TABLE_CELL } from "./cells/cell-names.js";
 import type { UauiTableCellElement, UauiTableColumn } from "./types.js";
 
 @customElement("example-product-cell")
-class ExampleProductCellElement extends UmbLitElement implements UauiTableCellElement {
+class ExampleProductCellElement extends UauiLitElement implements UauiTableCellElement {
     @property({ attribute: false }) column: UauiTableColumn = { key: "value", label: "" };
     @property({ attribute: false }) item: Record<string, unknown> = {};
     @property({ attribute: false }) value: unknown;

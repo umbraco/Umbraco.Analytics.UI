@@ -1,5 +1,5 @@
-import { css, customElement, html, nothing, property, type CSSResultGroup, type TemplateResult } from "@umbraco-cms/backoffice/external/lit";
-import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
+import { css, customElement, html, nothing, property, type CSSResultGroup, type TemplateResult } from "#platform/lit";
+import { UauiLitElement } from "#platform/base-element";
 import { compareRangeFor } from "../../internal/date/date-math.js";
 import type { UauiCompare, UauiDateRange } from "../types.js";
 import "./date-field.element.js";
@@ -27,7 +27,7 @@ export type UauiCompareGroupChangeDetail = { compare: UauiCompare | undefined };
  * @fires change - The editor changed the comparison. Bubbles, not composed. `detail` is `{ compare }` (`UauiCompareGroupChangeDetail`).
  */
 @customElement("uaui-compare-group")
-export class UauiCompareGroupElement extends UmbLitElement {
+export class UauiCompareGroupElement extends UauiLitElement {
     /** The main range, which a previous-period or previous-year comparison follows. */
     @property({ attribute: false })
     range: UauiDateRange = { from: "", to: "" };

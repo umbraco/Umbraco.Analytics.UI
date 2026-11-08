@@ -1,5 +1,5 @@
-import { css, customElement, html, nothing, property, type CSSResultGroup, type PropertyValues, type TemplateResult } from "@umbraco-cms/backoffice/external/lit";
-import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
+import { css, customElement, html, nothing, property, type CSSResultGroup, type PropertyValues, type TemplateResult } from "#platform/lit";
+import { UauiLitElement } from "#platform/base-element";
 import { asNumber } from "../internal/cell-values.js";
 import { getNumberFormat } from "../../internal/format/number-format.js";
 import "../table-compare-badge.element.js";
@@ -13,7 +13,7 @@ import type { UauiTableCellElement, UauiTableColumn } from "../types.js";
  * @element uaui-number-cell
  */
 @customElement("uaui-number-cell")
-export class UauiNumberCellElement extends UmbLitElement implements UauiTableCellElement {
+export class UauiNumberCellElement extends UauiLitElement implements UauiTableCellElement {
     /** The column the cell is in. Its `valueFormat` formats the number. */
     @property({ attribute: false })
     column: UauiTableColumn = { key: "value", label: "" };

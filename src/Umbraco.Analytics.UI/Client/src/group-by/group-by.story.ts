@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/web-components-vite";
-import { html } from "@umbraco-cms/backoffice/external/lit";
+import { html } from "#platform/lit";
 import type { UauiGroupByElement } from "./group-by.element.js";
 import "./group-by.element.js";
 

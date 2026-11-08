@@ -1,5 +1,5 @@
-import { css, customElement, html, nothing, property, type CSSResultGroup, type PropertyValues, type TemplateResult } from "@umbraco-cms/backoffice/external/lit";
-import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
+import { css, customElement, html, nothing, property, type CSSResultGroup, type PropertyValues, type TemplateResult } from "#platform/lit";
+import { UauiLitElement } from "#platform/base-element";
 import { asIsoDay } from "../internal/cell-values.js";
 import { getUtcDateFormat } from "../../internal/format/date-format.js";
 import "../table-skeleton-cell.element.js";
@@ -18,7 +18,7 @@ const DEFAULT_DATE_FORMAT: Intl.DateTimeFormatOptions = { dateStyle: "medium" };
  * @element uaui-date-cell
  */
 @customElement("uaui-date-cell")
-export class UauiDateCellElement extends UmbLitElement implements UauiTableCellElement {
+export class UauiDateCellElement extends UauiLitElement implements UauiTableCellElement {
     /** The column the cell is in. Its `dateFormat` formats the date. */
     @property({ attribute: false })
     column: UauiTableColumn = { key: "value", label: "" };

@@ -1,5 +1,5 @@
-import { css, customElement, html, nothing, property, type CSSResultGroup, type TemplateResult } from "@umbraco-cms/backoffice/external/lit";
-import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
+import { css, customElement, html, nothing, property, type CSSResultGroup, type TemplateResult } from "#platform/lit";
+import { UauiLitElement } from "#platform/base-element";
 import "../../delta-badge/delta-badge.element.js";
 import { UauiChartTooltipSurface } from "../../chart/internal/chart-tooltip-surface.css.js";
 import { UauiFunnelSwatchStyles } from "./funnel-swatch.css.js";
@@ -12,7 +12,7 @@ import { UauiFunnelSwatchStyles } from "./funnel-swatch.css.js";
  * @element uaui-funnel-tooltip
  */
 @customElement("uaui-funnel-tooltip")
-export class UauiFunnelTooltipElement extends UmbLitElement {
+export class UauiFunnelTooltipElement extends UauiLitElement {
     /** The step's label. */
     @property({ type: String })
     heading = "";

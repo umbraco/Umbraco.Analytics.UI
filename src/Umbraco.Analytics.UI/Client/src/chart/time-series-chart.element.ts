@@ -7,8 +7,8 @@ import {
     type CSSResultGroup,
     type PropertyValues,
     type TemplateResult,
-} from "@umbraco-cms/backoffice/external/lit";
-import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
+} from "#platform/lit";
+import { UauiLitElement } from "#platform/base-element";
 import { UauiChartMixin } from "./chart.mixin.js";
 import type { UauiGroupBy } from "../group-by/group-by.element.js";
 import type { UauiWeekStart } from "../date-helpers/date-helpers.js";
@@ -141,7 +141,7 @@ const emptyDerived: Derived = {
  * `UmbLitElement` with the settings every chart shares (`UauiChartMixin`), for dated series: the base of
  * `uaui-time-series-chart`. Exported so its type has a name in the public API; extend the element, not this.
  */
-export const UauiTimeSeriesChartElementBase = UauiChartMixin(UmbLitElement);
+export const UauiTimeSeriesChartElementBase = UauiChartMixin(UauiLitElement);
 
 /**
  * Shows a metric over time as lines, filled areas, bars or stacked bars, with a legend, a hover tooltip and a visually

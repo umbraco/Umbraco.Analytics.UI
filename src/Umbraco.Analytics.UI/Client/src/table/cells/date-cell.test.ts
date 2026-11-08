@@ -1,8 +1,8 @@
 /// <reference types="vite/client" />
 // T49 — Date cell: an ISO date in the editor's culture, read as its day so no timezone moves it, sortable by date.
 import { describe, expect, it } from "vitest";
-import { html } from "@umbraco-cms/backoffice/external/lit";
-import { ifDefined } from "@umbraco-cms/backoffice/external/lit";
+import { html } from "#platform/lit";
+import { ifDefined } from "#platform/lit";
 import darkCss from "@umbraco-ui/uui/themes/dark.css?inline";
 import { render } from "vitest-browser-lit";
 import { axeRun } from "../../internal/test/a11y.js";

@@ -7,7 +7,7 @@ import {
     type ChartConfiguration,
     type PointElement,
     type Plugin,
-} from "@umbraco/analytics-ui/external/chart.js";
+} from "#platform/chart";
 import type { UauiChartKind, UauiSeriesKind } from "../types.js";
 import type { UauiChartDrawColors } from "./chart-colors.js";
 import type { UauiHourTick } from "./hour-ticks.js";

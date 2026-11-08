@@ -3,7 +3,7 @@
 // The modal opens through UMB_MODAL_MANAGER_CONTEXT. Every spec renders under uaui-test-modal-host, which
 // provides the modal manager and the backoffice's real modal container.
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { html } from "@umbraco-cms/backoffice/external/lit";
+import { html } from "#platform/lit";
 import { umbLocalizationManager } from "@umbraco-cms/backoffice/localization-api";
 import darkCss from "@umbraco-ui/uui/themes/dark.css?inline";
 import highContrastCss from "@umbraco-ui/uui/themes/high-contrast.css?inline";

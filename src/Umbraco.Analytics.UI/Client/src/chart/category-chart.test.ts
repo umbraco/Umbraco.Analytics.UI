@@ -1,11 +1,11 @@
 // T60 — Category chart: bars over a non-date x-axis (Forms' submissions by hour of day), with the time-series chart's
 // look, tooltip, legend, hidden table and states. Canvas-only outcomes use toMatchScreenshot (see screenshotIt).
 /// <reference types="vite/client" />
-import { Chart } from "@umbraco/analytics-ui/external/chart.js";
+import { Chart } from "#platform/chart";
 import { afterEach, beforeEach, describe, expect, it, vi, type MockInstance } from "vitest";
 import { page, userEvent } from "vitest/browser";
-import { html } from "@umbraco-cms/backoffice/external/lit";
-import "@umbraco-cms/backoffice/external/uui";
+import { html } from "#platform/lit";
+import "#platform/uui";
 import darkCss from "@umbraco-ui/uui/themes/dark.css?inline";
 import highContrastCss from "@umbraco-ui/uui/themes/high-contrast.css?inline";
 import { render } from "vitest-browser-lit";

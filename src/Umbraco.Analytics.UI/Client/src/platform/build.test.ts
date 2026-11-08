@@ -1,0 +1,68 @@
+// SAC-13 AC1–AC5 — standalone core package (docs/plans/standalone-core).
+// Pending: #platform/* doesn't exist yet, so nothing is imported. The builder adds the imports, arranges each
+// scenario in beforeEach and writes the one assertion the Then names, then removes .skip.
+import { beforeEach, describe, expect, it } from "vitest";
+import { commands } from "vitest/browser";
+
+// Registered in vite.config.ts (test.browser.commands): lints text in Node with the project's ESLint config.
+declare module "vitest/browser" {
+    interface BrowserCommands {
+        lintText: (code: string, filePath: string) => Promise<{ ruleId: string | null; message: string }[]>;
+    }
+}
+
+describe("Feature: One build, one release", () => {
+    describe("Scenario: One build makes both", () => {
+        // Given a clean checkout
+        // When  npm run build runs
+        it.skip("both wwwroot and dist/core are produced", () => {
+            // AC1: one assertion.
+        });
+    });
+    describe("Scenario: Both npm packages share the version", () => {
+        // Given version.json says 19.1.0
+        // When  both npm packages are packed
+        it.skip("both package.json files say 19.1.0", () => {
+            // AC2: one assertion.
+        });
+    });
+    describe("Scenario: check:api checks both reports", () => {
+        // Given a change to a core-only export
+        // When  npm run check:api runs
+        it.skip("it fails on api/analytics-ui-core.api.md", () => {
+            // AC3: one assertion.
+        });
+    });
+    describe("Scenario: Lint stops real imports outside the platform folder", () => {
+        // Given a component that imports from "lit"
+        // When  npm run lint runs
+        describe("a component importing lit", () => {
+            let findings: { ruleId: string | null; message: string }[];
+            beforeEach(async () => {
+                const component = 'import { html } from "lit";\nexport const template = html`<p></p>`;\n';
+                findings = await commands.lintText(component, "src/kpi-tile/fixture.element.ts");
+            });
+            it("it fails", () => {
+                expect(findings.filter((f) => f.ruleId === "no-restricted-imports")).toHaveLength(1);
+            });
+        });
+        // Given a component that imports from the backoffice's Lit
+        describe("a component importing the backoffice's Lit", () => {
+            let findings: { ruleId: string | null; message: string }[];
+            beforeEach(async () => {
+                const component = 'import { html } from "@umbraco-cms/backoffice/external/lit";\nexport const template = html`<p></p>`;\n';
+                findings = await commands.lintText(component, "src/kpi-tile/fixture.element.ts");
+            });
+            it("it fails", () => {
+                expect(findings.filter((f) => f.ruleId === "no-restricted-imports")).toHaveLength(1);
+            });
+        });
+    });
+    describe("Scenario: axe passes in both builds", () => {
+        // Given the element tests
+        // When  they run on the core build and the Umbraco smoke set
+        it.skip("every axe check passes", () => {
+            // AC5: one assertion.
+        });
+    });
+});

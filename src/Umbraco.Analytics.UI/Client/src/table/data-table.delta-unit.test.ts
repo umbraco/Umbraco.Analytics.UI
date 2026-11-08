@@ -1,8 +1,8 @@
 // T47: a column's `meta.deltaUnit: "points"` makes its compare badges show the change in percentage points, for rate columns
 import { describe, expect, it } from "vitest";
-import { customElement, html, property } from "@umbraco-cms/backoffice/external/lit";
-import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
-import "@umbraco-cms/backoffice/external/uui";
+import { customElement, html, property } from "#platform/lit";
+import { UauiLitElement } from "#platform/base-element";
+import "#platform/uui";
 import { axeRun } from "../internal/test/a11y.js";
 import { deepQueryAll, deepText, renderElement, settle, shadow } from "../internal/test/dom.js";
 import "./data-table.element.js";
@@ -12,7 +12,7 @@ import type { UauiDeltaBadgeElement } from "../delta-badge/delta-badge.element.j
 import type { UauiTableCellElement, UauiTableColumn, UauiTableColumnMeta } from "./types.js";
 
 @customElement("example-rate-cell")
-class ExampleRateCellElement extends UmbLitElement implements UauiTableCellElement {
+class ExampleRateCellElement extends UauiLitElement implements UauiTableCellElement {
     @property({ attribute: false }) column: UauiTableColumn = { key: "value", label: "" };
     @property({ attribute: false }) item: Record<string, unknown> = {};
     @property({ attribute: false }) value: unknown;

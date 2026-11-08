@@ -1,4 +1,4 @@
-import { html, type TemplateResult } from "@umbraco-cms/backoffice/external/lit";
+import { html, type TemplateResult } from "#platform/lit";
 import { renderElement, type UauiTestElement } from "./dom.js";
 import "./modal-host.element.js";
 

@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/web-components-vite";
-import { css, html, LitElement, nothing } from "@umbraco-cms/backoffice/external/lit";
+import { css, html, LitElement, nothing } from "#platform/lit";
 import { notPublicApi } from "../story/internal.js";
 import { getLoadingMode } from "./loading-mode.js";
 import "./skeleton.element.js";

@@ -1,5 +1,5 @@
-import { customElement, html, nothing, property, type CSSResultGroup, type PropertyValues, type TemplateResult } from "@umbraco-cms/backoffice/external/lit";
-import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
+import { customElement, html, nothing, property, type CSSResultGroup, type PropertyValues, type TemplateResult } from "#platform/lit";
+import { UauiLitElement } from "#platform/base-element";
 import { getNumberFormat } from "../internal/format/number-format.js";
 import { UauiChartMixin } from "./chart.mixin.js";
 import { buildCategoryData } from "./internal/category-data.js";
@@ -63,7 +63,7 @@ const emptyDerived: Derived = {
  * `UmbLitElement` with the settings every chart shares (`UauiChartMixin`), for category series: the base of
  * `uaui-category-chart`. Exported so its type has a name in the public API; extend the element, not this.
  */
-export const UauiCategoryChartElementBase = UauiChartMixin(UmbLitElement);
+export const UauiCategoryChartElementBase = UauiChartMixin(UauiLitElement);
 
 /**
  * Shows a metric per category, such as submissions by hour of the day, as bars or stacked bars, with a legend, a hover

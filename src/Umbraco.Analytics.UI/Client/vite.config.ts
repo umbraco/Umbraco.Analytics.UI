@@ -2,6 +2,7 @@ import { configDefaults, defineConfig } from "vitest/config";
 import { playwright } from "@vitest/browser-playwright";
 import { fileURLToPath } from "node:url";
 import { minifyTemplates } from "./devops/minify-templates.ts";
+import { lintText } from "./devops/lint-text-command.ts";
 
 /**
  * The shared Chart.js entry, as products import it. Our own code imports this bare specifier too, never a relative path:
@@ -79,6 +80,7 @@ export default defineConfig(({ command }) => ({
             provider: playwright({ contextOptions: { timezoneId: "Europe/Copenhagen", locale: "en-US" } }),
             instances: browserInstances,
             headless: true,
+            commands: { lintText },
         },
         setupFiles: ["./vitest.setup.ts"],
         onConsoleLog: (log: string) => {

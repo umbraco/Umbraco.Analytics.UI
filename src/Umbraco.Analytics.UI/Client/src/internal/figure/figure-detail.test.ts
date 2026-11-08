@@ -1,7 +1,7 @@
 // KTD-1 (AC1, AC5, AC7, AC9–AC12) — The line under a tile's value: a pattern with the formatted number in each {0}
 /// <reference types="vite/client" />
 import { describe, expect, it } from "vitest";
-import { html } from "@umbraco-cms/backoffice/external/lit";
+import { html } from "#platform/lit";
 import { axeRun } from "../test/a11y.js";
 import { deepQuery, renderElement, shadow } from "../test/dom.js";
 import type { UauiFigureText } from "../format/figure.js";

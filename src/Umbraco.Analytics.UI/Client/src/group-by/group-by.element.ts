@@ -1,5 +1,5 @@
-import { css, customElement, html, property, type CSSResultGroup, type TemplateResult } from "@umbraco-cms/backoffice/external/lit";
-import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
+import { css, customElement, html, property, type CSSResultGroup, type TemplateResult } from "#platform/lit";
+import { UauiLitElement } from "#platform/base-element";
 import "../toggle-group/toggle-group.element.js";
 import type { UauiToggleGroupChangeDetail } from "../toggle-group/toggle-group.element.js";
 
@@ -28,7 +28,7 @@ through `options` (see `uauiGroupByOptions`).
  * @fires change - The editor picked a different option. Bubbles, not cancelable. `detail` is `{ value }` (`UauiGroupByChangeDetail`).
  */
 @customElement("uaui-group-by")
-export class UauiGroupByElement extends UmbLitElement {
+export class UauiGroupByElement extends UauiLitElement {
     /** The selected option. Picking an option updates it, as `uui-radio-group` does, then raises `change`. */
     @property({ type: String, reflect: true })
     value: UauiGroupBy = "day";

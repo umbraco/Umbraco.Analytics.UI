@@ -1,10 +1,10 @@
 // T60 — UauiLoadStateMixin: the load states the charts, the funnel and the table share. Attribute names, reflection and
 // defaults, the error > loading > empty rule, and one `retry` event. Type checks run in `tsc -p tsconfig.app.json`.
 import { describe, expect, expectTypeOf, it } from "vitest";
-import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
+import { UauiLitElement } from "#platform/base-element";
 import { UauiLoadStateMixin, type UauiLoadingMode } from "./load-state.mixin.js";
 
-class ProductBase extends UmbLitElement {
+class ProductBase extends UauiLitElement {
     productSetting = "kept";
 }
 

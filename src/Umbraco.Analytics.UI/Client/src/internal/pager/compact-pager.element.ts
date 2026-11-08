@@ -1,5 +1,5 @@
-import { css, customElement, html, property, type CSSResultGroup } from "@umbraco-cms/backoffice/external/lit";
-import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
+import { css, customElement, html, property, type CSSResultGroup } from "#platform/lit";
+import { UauiLitElement } from "#platform/base-element";
 import { getNumberFormat } from "../format/number-format.js";
 
 /** What `page-change` carries: the page (from 1) and page size the editor chose. */
@@ -17,7 +17,7 @@ export type CompactPagerChangeDetail = { page: number; pageSize: number };
  * @fires page-change - The editor picked another page or page size. `detail` is `{ page, pageSize }`. Doesn't bubble.
  */
 @customElement("uaui-compact-pager")
-export class UauiCompactPagerElement extends UmbLitElement {
+export class UauiCompactPagerElement extends UauiLitElement {
     /** The page shown, starting at 1. */
     @property({ type: Number })
     page = 1;

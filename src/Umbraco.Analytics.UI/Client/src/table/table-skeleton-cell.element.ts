@@ -1,5 +1,5 @@
-import { css, customElement, html, nothing, property, type CSSResultGroup, type TemplateResult } from "@umbraco-cms/backoffice/external/lit";
-import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
+import { css, customElement, html, nothing, property, type CSSResultGroup, type TemplateResult } from "#platform/lit";
+import { UauiLitElement } from "#platform/base-element";
 import "../internal/loading/skeleton.element.js";
 
 /**
@@ -11,7 +11,7 @@ import "../internal/loading/skeleton.element.js";
  * @element uaui-table-skeleton-cell
  */
 @customElement("uaui-table-skeleton-cell")
-export class UauiTableSkeletonCellElement extends UmbLitElement {
+export class UauiTableSkeletonCellElement extends UauiLitElement {
     /**
      * The width of the first block, as a percent of the cell. A second block is 70% of it. The table sets its own width per
      * row, which wins, so this only matters outside a table.

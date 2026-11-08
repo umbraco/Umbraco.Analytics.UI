@@ -2,7 +2,7 @@
 // Every key reads as a marker here, so any word left in an element's text, aria-label, title or placeholder
 // did not come from a key. Sample data is written DATA; see `untranslatedWords`.
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { html } from "@umbraco-cms/backoffice/external/lit";
+import { html } from "#platform/lit";
 import { umbLocalizationManager } from "@umbraco-cms/backoffice/localization-api";
 import { deepQuery, deepQueryAll, renderElement, settle, shadow, type UauiTestElement } from "../internal/test/dom.js";
 import { renderWithModals } from "../internal/test/modal-host.js";

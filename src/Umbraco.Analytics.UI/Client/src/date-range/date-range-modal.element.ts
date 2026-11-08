@@ -1,4 +1,4 @@
-import { css, customElement, html, nothing, type CSSResultGroup } from "@umbraco-cms/backoffice/external/lit";
+import { css, customElement, html, nothing, type CSSResultGroup } from "#platform/lit";
 import { umbFocus } from "@umbraco-cms/backoffice/lit-element";
 import { UmbModalBaseElement } from "@umbraco-cms/backoffice/modal";
 import { UmbTextStyles } from "@umbraco-cms/backoffice/style";

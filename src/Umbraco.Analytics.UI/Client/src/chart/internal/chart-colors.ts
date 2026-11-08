@@ -1,4 +1,4 @@
-import { uauiChartColors, type UauiChartColors } from "@umbraco/analytics-ui/external/chart.js";
+import { uauiChartColors, type UauiChartColors } from "#platform/chart";
 import type { UauiColorSlot, UauiStatusColor } from "../../theme/types.js";
 
 /** What a series is coloured by: a palette slot or a status colour. Both name the tokens (`--uaui-color-series-<key>`). */

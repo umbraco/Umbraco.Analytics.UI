@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/web-components-vite";
-import { css, html, LitElement } from "@umbraco-cms/backoffice/external/lit";
+import { css, html, LitElement } from "#platform/lit";
 import { UauiPaletteStyles } from "./index.js";
 
 const tokens = [

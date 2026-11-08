@@ -2,7 +2,7 @@
 // `uauiWatchTheme` from `@umbraco/analytics-ui/external/chart.js`).
 /// <reference types="vite/client" />
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { css, html, LitElement } from "@umbraco-cms/backoffice/external/lit";
+import { css, html, LitElement } from "#platform/lit";
 import lightCss from "@umbraco-ui/uui/themes/light.css?inline";
 import darkCss from "@umbraco-ui/uui/themes/dark.css?inline";
 import highContrastCss from "@umbraco-ui/uui/themes/high-contrast.css?inline";

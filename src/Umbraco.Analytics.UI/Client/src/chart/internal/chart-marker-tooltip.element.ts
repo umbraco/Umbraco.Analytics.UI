@@ -1,5 +1,5 @@
-import { css, customElement, html, nothing, property, type CSSResultGroup, type TemplateResult } from "@umbraco-cms/backoffice/external/lit";
-import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
+import { css, customElement, html, nothing, property, type CSSResultGroup, type TemplateResult } from "#platform/lit";
+import { UauiLitElement } from "#platform/base-element";
 import { UauiChartTooltipSurface } from "./chart-tooltip-surface.css.js";
 
 /** One marker as the tooltip lists it. */
@@ -18,7 +18,7 @@ export interface UauiChartMarkerTooltipEntry {
  * @element uaui-chart-marker-tooltip
  */
 @customElement("uaui-chart-marker-tooltip")
-export class UauiChartMarkerTooltipElement extends UmbLitElement {
+export class UauiChartMarkerTooltipElement extends UauiLitElement {
     /** The markers to list. */
     @property({ attribute: false })
     entries: UauiChartMarkerTooltipEntry[] = [];

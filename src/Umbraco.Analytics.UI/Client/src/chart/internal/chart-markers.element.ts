@@ -1,5 +1,5 @@
-import { css, customElement, html, nothing, property, repeat, state, type CSSResultGroup, type PropertyValues, type TemplateResult } from "@umbraco-cms/backoffice/external/lit";
-import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
+import { css, customElement, html, nothing, property, repeat, state, type CSSResultGroup, type PropertyValues, type TemplateResult } from "#platform/lit";
+import { UauiLitElement } from "#platform/base-element";
 import { dateOnly } from "../../internal/date/date-math.js";
 import { hourStart } from "../../internal/date/hour-math.js";
 import type { UauiGroupBy } from "../../group-by/group-by.element.js";
@@ -31,7 +31,7 @@ export interface UauiChartMarkersActiveDetail {
  * @fires marker-click - A dot was clicked, or Enter or Space was pressed on it. Not bubbling. `detail` is `{ id }` of the earliest marker of the dot.
  */
 @customElement("uaui-chart-markers")
-export class UauiChartMarkersElement extends UmbLitElement {
+export class UauiChartMarkersElement extends UauiLitElement {
     /** The markers grouped per dot. */
     @property({ attribute: false })
     buckets: MarkerBucket[] = [];

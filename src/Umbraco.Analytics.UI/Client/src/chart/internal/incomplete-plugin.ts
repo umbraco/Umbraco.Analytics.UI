@@ -1,4 +1,4 @@
-import type { Plugin } from "@umbraco/analytics-ui/external/chart.js";
+import type { Plugin } from "#platform/chart";
 import type { UauiChartDrawColors } from "./chart-colors.js";
 
 /** What the plugin draws. The element owns it and changes it between draws. */

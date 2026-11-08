@@ -1,9 +1,9 @@
 // T59 — Many series stay readable: palette slots 5 to 8, a legend that folds, a tooltip that caps its rows.
 // Canvas-only outcomes are checked with screenshot comparison (toMatchScreenshot): see screenshotIt.
-import { Chart, uauiChartColors } from "@umbraco/analytics-ui/external/chart.js";
+import { Chart, uauiChartColors } from "#platform/chart";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { page, userEvent } from "vitest/browser";
-import { html } from "@umbraco-cms/backoffice/external/lit";
+import { html } from "#platform/lit";
 import lightCss from "@umbraco-ui/uui/themes/light.css?inline";
 import darkCss from "@umbraco-ui/uui/themes/dark.css?inline";
 import highContrastCss from "@umbraco-ui/uui/themes/high-contrast.css?inline";

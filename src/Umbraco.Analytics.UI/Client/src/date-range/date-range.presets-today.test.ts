@@ -1,7 +1,7 @@
 /// <reference types="vite/client" />
 // HRS-8 — Today and Yesterday presets.
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { html } from "@umbraco-cms/backoffice/external/lit";
+import { html } from "#platform/lit";
 import { umbLocalizationManager } from "@umbraco-cms/backoffice/localization-api";
 import { uauiCompareFor, uauiPresetRange } from "../date-helpers/index.js";
 import { renderWithModals } from "../internal/test/modal-host.js";

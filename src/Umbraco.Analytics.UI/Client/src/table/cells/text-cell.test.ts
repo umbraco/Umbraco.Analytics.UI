@@ -1,7 +1,7 @@
 /// <reference types="vite/client" />
 // T68 — A second line under a text or link cell's value, from `meta.secondaryKey`.
 import { describe, expect, it } from "vitest";
-import { html } from "@umbraco-cms/backoffice/external/lit";
+import { html } from "#platform/lit";
 import { render } from "vitest-browser-lit";
 import { axeRun } from "../../internal/test/a11y.js";
 import { renderElement, settle, shadow } from "../../internal/test/dom.js";

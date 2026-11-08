@@ -1,5 +1,5 @@
-import { css, customElement, html, nothing, property, type CSSResultGroup, type PropertyValues, type TemplateResult } from "@umbraco-cms/backoffice/external/lit";
-import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
+import { css, customElement, html, nothing, property, type CSSResultGroup, type PropertyValues, type TemplateResult } from "#platform/lit";
+import { UauiLitElement } from "#platform/base-element";
 import { asNumber } from "../internal/cell-values.js";
 import { getNumberFormat } from "../../internal/format/number-format.js";
 import "../table-compare-badge.element.js";
@@ -16,7 +16,7 @@ const percentFormatOptions: Intl.NumberFormatOptions = { style: "percent", maxim
  * @element uaui-percent-cell
  */
 @customElement("uaui-percent-cell")
-export class UauiPercentCellElement extends UmbLitElement implements UauiTableCellElement {
+export class UauiPercentCellElement extends UauiLitElement implements UauiTableCellElement {
     /** The column the cell is in. Its `valueFormat` formats the percentage. */
     @property({ attribute: false })
     column: UauiTableColumn = { key: "value", label: "" };

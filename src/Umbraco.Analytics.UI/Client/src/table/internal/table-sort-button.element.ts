@@ -1,5 +1,5 @@
-import { css, customElement, html, property, type CSSResultGroup } from "@umbraco-cms/backoffice/external/lit";
-import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
+import { css, customElement, html, property, type CSSResultGroup } from "#platform/lit";
+import { UauiLitElement } from "#platform/base-element";
 
 /**
  * The button inside a sortable column header: the label (slotted) and a `uui-symbol-sort`, as in `umb-table`.
@@ -11,7 +11,7 @@ import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
  * @slot - The header label.
  */
 @customElement("uaui-table-sort-button")
-export class UauiTableSortButtonElement extends UmbLitElement {
+export class UauiTableSortButtonElement extends UauiLitElement {
     /** This column is the one the table is sorted by. */
     @property({ type: Boolean })
     active = false;

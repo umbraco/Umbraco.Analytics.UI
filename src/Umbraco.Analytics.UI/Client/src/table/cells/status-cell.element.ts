@@ -1,5 +1,5 @@
-import { css, customElement, html, nothing, property, type CSSResultGroup, type PropertyValues, type TemplateResult } from "@umbraco-cms/backoffice/external/lit";
-import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
+import { css, customElement, html, nothing, property, type CSSResultGroup, type PropertyValues, type TemplateResult } from "#platform/lit";
+import { UauiLitElement } from "#platform/base-element";
 import { UauiPaletteStyles } from "../../theme/index.js";
 import { asNumber, asText } from "../internal/cell-values.js";
 import { getNumberFormat } from "../../internal/format/number-format.js";
@@ -35,7 +35,7 @@ const colorOf = (value: unknown): UauiStatusColor => (typeof value === "string" 
  * @cssprop --uaui-text-negative - Text of the `danger` color. Defaults to dark maroon (dark theme: spanish pink), which passes 4.5:1 on the tint.
  */
 @customElement("uaui-status-cell")
-export class UauiStatusCellElement extends UmbLitElement implements UauiTableCellElement {
+export class UauiStatusCellElement extends UauiLitElement implements UauiTableCellElement {
     /**
      * The column the cell is in. Its `meta.colorKey` names the key in `item` that holds the color, `meta.textKey` the
      * key that holds the text, and `valueFormat` formats a number value when there is no text.

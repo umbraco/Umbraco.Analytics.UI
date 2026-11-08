@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/web-components-vite";
-import { html } from "@umbraco-cms/backoffice/external/lit";
+import { html } from "#platform/lit";
 import "../stat/stat.element.js";
 import type { UauiFunnelElement } from "./funnel.element.js";
 import "./funnel.element.js";

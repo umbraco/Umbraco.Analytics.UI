@@ -2,8 +2,8 @@
 // Runs against a test host that uses the loading parts the way a data element (T6, T9, T15) will.
 /// <reference types="vite/client" />
 import { beforeEach, describe, expect, it } from "vitest";
-import { css, customElement, html, nothing, property } from "@umbraco-cms/backoffice/external/lit";
-import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
+import { css, customElement, html, nothing, property } from "#platform/lit";
+import { UauiLitElement } from "#platform/base-element";
 import darkCss from "@umbraco-ui/uui/themes/dark.css?inline";
 import highContrastCss from "@umbraco-ui/uui/themes/high-contrast.css?inline";
 import { render } from "vitest-browser-lit";
@@ -20,7 +20,7 @@ const HOST_HEIGHT = 200;
  * as the min-height of its region, and picks what to render with `getLoadingMode`.
  */
 @customElement("uaui-loading-test-host")
-class LoadingTestHost extends UmbLitElement {
+class LoadingTestHost extends UauiLitElement {
     @property({ type: Boolean })
     loading = false;
 
