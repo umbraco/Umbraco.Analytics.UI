@@ -3,8 +3,9 @@ import en from "../../lang/en.js";
 import type { UauiLocalize } from "../localize.js";
 import { fallbackEnglish } from "./fallback-en.js";
 
-type Term = string | ((...args: unknown[]) => string);
-type Dictionary = Record<string, Term>;
+/** One culture's translations: whole keys to a string or a function of the arguments. */
+export type UauiTranslations = Record<string, string | ((...args: unknown[]) => string)>;
+type Dictionary = UauiTranslations;
 type Host = ReactiveControllerHost & HTMLElement;
 
 const DEFAULT_CULTURE = "en";
@@ -28,7 +29,7 @@ const updateHosts = () => store.hosts.forEach((host) => host.requestUpdate());
  * Adds or overrides translations for a culture. Keys are written whole, `uauiAnalytics_emptyHeadline`; a value is a
  * string (`{0}` and `%0%` are replaced by the arguments) or a function of the arguments. Elements already on the page re-render.
  */
-export function registerUauiTranslations(culture: string, dictionary: Dictionary): void {
+export function registerUauiTranslations(culture: string, dictionary: UauiTranslations): void {
     const code = culture.toLowerCase();
     store.dictionaries.set(code, { ...store.dictionaries.get(code), ...dictionary });
     updateHosts();

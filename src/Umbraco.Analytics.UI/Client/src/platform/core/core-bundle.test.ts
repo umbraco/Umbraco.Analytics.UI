@@ -1,6 +1,6 @@
 // SAC-5 AC1–AC5 — standalone core package (docs/plans/standalone-core).
 // AC3 and AC5 read a real core build: the commands in devops/build-commands.ts build it once per run into a scratch
-// folder (never dist/core), so a spec never sees a stale or missing file and parallel engines don't clash. AC1, AC2 and AC4 are pending: other tasks own them.
+// folder (never dist/core), so a spec never sees a stale or missing file and parallel engines don't clash. AC1 and AC2 are pending: other tasks own them.
 import { beforeEach, describe, expect, it } from "vitest";
 import { commands } from "vitest/browser";
 
@@ -8,6 +8,7 @@ declare module "vitest/browser" {
     interface BrowserCommands {
         buildCoreBundle: () => Promise<string>;
         checkCoreSize: () => Promise<{ code: number; output: string }>;
+        readApiReports: () => Promise<{ umbraco: string; core: string }>;
         checkDoctoredCore: (doctoring: "bundled-source" | "unlisted-import" | "backoffice-import" | "no-licence") => Promise<{ code: number; output: string }>;
     }
 }
@@ -43,8 +44,18 @@ describe("Feature: The core loads on its own", () => {
     describe("Scenario: Same public names as the Umbraco package", () => {
         // Given both API reports
         // When  their exports are compared
-        it.skip("the core has every Umbraco export plus registerUauiTranslations, and nothing else", () => {
-            // AC4: one assertion.
+        let umbracoExports: string[];
+        let coreExports: string[];
+        beforeEach(async () => {
+            const reports = await commands.readApiReports();
+            // Every top-level `export <kind> <Name>` line of a report is one export of the package.
+            const exportsOf = (report: string) =>
+                [...report.matchAll(/^export (?:declare )?(?:abstract )?(?:const|class|function|interface|type|enum) (\w+)/gm)].map((match) => match[1]).sort();
+            umbracoExports = exportsOf(reports.umbraco);
+            coreExports = exportsOf(reports.core);
+        });
+        it("the core has every Umbraco export plus registerUauiTranslations, UauiTranslations and UauiLocalize, and nothing else", () => {
+            expect(coreExports).toEqual([...umbracoExports, "registerUauiTranslations", "UauiTranslations", "UauiLocalize"].sort());
         });
     });
     describe("Scenario: Lit, UUI and Chart.js aren't bundled in", () => {

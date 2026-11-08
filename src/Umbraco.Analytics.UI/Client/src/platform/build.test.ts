@@ -8,6 +8,7 @@ import { commands } from "vitest/browser";
 declare module "vitest/browser" {
     interface BrowserCommands {
         lintText: (code: string, filePath: string) => Promise<{ ruleId: string | null; message: string }[]>;
+        checkDoctoredCoreApi: () => Promise<{ code: number; output: string }>;
         buildBothLibraries: () => Promise<{ umbraco: boolean; core: boolean }>;
     }
 }
@@ -36,8 +37,15 @@ describe("Feature: One build, one release", () => {
     describe("Scenario: check:api checks both reports", () => {
         // Given a change to a core-only export
         // When  npm run check:api runs
-        it.skip("it fails on api/analytics-ui-core.api.md", () => {
-            // AC3: one assertion.
+        // The command runs api-extractor in non-local mode (as check:api does) against a scratch copy of the core report
+        // with one extra export, so the committed report stays as it is.
+        let check: { code: number; output: string };
+        beforeEach(async () => {
+            check = await commands.checkDoctoredCoreApi();
+        });
+        it("it fails on api/analytics-ui-core.api.md", () => {
+            expect(check.output).toMatch(/analytics-ui-core\.api\.md/);
+            expect(check.code).not.toBe(0);
         });
     });
     describe("Scenario: Lint stops real imports outside the platform folder", () => {

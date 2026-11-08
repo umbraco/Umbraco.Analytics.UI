@@ -1,0 +1,23 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/api-extractor/v7/api-extractor.schema.json",
+  // The core package (`@umbraco/analytics-ui-core`): the same public API plus `registerUauiTranslations`, from the core's
+  // own declarations (tsconfig.core-api.json). Its report is api/analytics-ui-core.api.md, checked by `check:api`; the
+  // rolled-up types/core/analytics-ui-core.d.ts is what the npm package ships.
+  "extends": "./api-extractor.json",
+  "projectFolder": ".",
+  "mainEntryPointFilePath": "<projectFolder>/temp/core-types/platform/core/index.d.ts",
+  "compiler": {
+    "tsconfigFilePath": "<projectFolder>/tsconfig.core-api-extractor.json"
+  },
+  "apiReport": {
+    "enabled": true,
+    "reportFileName": "analytics-ui-core.api.md",
+    "reportFolder": "<projectFolder>/api/",
+    "reportTempFolder": "<projectFolder>/temp/"
+  },
+  "dtsRollup": {
+    "enabled": true,
+    "untrimmedFilePath": "<projectFolder>/types/core/analytics-ui-core.d.ts",
+    "publicTrimmedFilePath": ""
+  }
+}

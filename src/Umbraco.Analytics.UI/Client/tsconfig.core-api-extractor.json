@@ -1,0 +1,16 @@
+{
+  // API Extractor reads the emitted .d.ts files, so the swap points and the shared Chart.js entry resolve to the core's
+  // emitted declarations in temp/core-types/, not to source.
+  "extends": "./tsconfig.core-api.json",
+  "compilerOptions": {
+    "paths": {
+      "@umbraco/analytics-ui/external/chart.js": [ "./temp/core-types/external/chart.js/index.d.ts" ],
+      "#platform/lit": [ "./temp/core-types/platform/core/lit.d.ts" ],
+      "#platform/uui": [ "./temp/core-types/platform/core/uui.d.ts" ],
+      "#platform/chart": [ "./temp/core-types/platform/core/chart.d.ts" ],
+      "#platform/base-element": [ "./temp/core-types/platform/core/base-element.d.ts" ],
+      "#platform/context": [ "./temp/core-types/platform/core/context.d.ts" ],
+      "#platform/date-range-opener": [ "./temp/core-types/platform/core/date-range-opener.d.ts" ]
+    }
+  }
+}

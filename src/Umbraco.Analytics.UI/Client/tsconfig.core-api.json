@@ -1,0 +1,24 @@
+{
+  // Declaration emit for the core package: the same sources as tsconfig.api.json with #platform/* on src/platform/core/
+  // (the core's swap points), and none of the backoffice-only files. Emitted to temp/ (not types/) so it never mixes
+  // with the Umbraco declarations; api-extractor.core.json rolls it up.
+  "extends": "./tsconfig.api.json",
+  "compilerOptions": {
+    "outDir": "./temp/core-types",
+    "declarationMap": false,
+    "tsBuildInfoFile": "./temp/core-types/.tsbuildinfo",
+    "paths": {
+      "@umbraco-cms/*": [ "./vitest.backoffice-blocked.ts" ],
+      "@umbraco/analytics-ui/external/chart.js": [ "./src/external/chart.js/index.ts" ],
+      "#platform/lit": [ "./src/platform/core/lit.ts" ],
+      "#platform/uui": [ "./src/platform/core/uui.ts" ],
+      "#platform/chart": [ "./src/platform/core/chart.ts" ],
+      "#platform/base-element": [ "./src/platform/core/base-element.ts" ],
+      "#platform/context": [ "./src/platform/core/context.ts" ],
+      "#platform/date-range-opener": [ "./src/platform/core/date-range-opener.ts" ]
+    },
+    "types": []
+  },
+  "include": [ "src/**/*.ts" ],
+  "exclude": [ "src/**/*.test.ts", "src/**/*.story.ts", "src/internal/test/**", "src/internal/story/**", "src/platform/umbraco/**", "src/platform/structural-check/**", "src/examples/**" ]
+}
