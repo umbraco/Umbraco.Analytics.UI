@@ -39,8 +39,8 @@ export async function withTheme<T>(themeCss: string | undefined, run: () => Prom
 export async function saveDateRange(page: Element, fields: Record<string, string>): Promise<void> {
     const dateRange = page.shadowRoot!.querySelector("uaui-date-range")!;
     (dateRange.shadowRoot!.querySelector("uui-button") as HTMLElement).click();
-    await expect.poll(() => deepQuery<UauiTestElement>(document, "uaui-date-range-modal")).not.toBe(null);
-    const modal = deepQuery<UauiTestElement>(document, "uaui-date-range-modal")!;
+    await expect.poll(() => deepQuery<UauiTestElement>(document, "uaui-date-range-dialog")).not.toBe(null);
+    const modal = deepQuery<UauiTestElement>(document, "uaui-date-range-dialog")!;
     await modal.updateComplete;
     for (const [name, value] of Object.entries(fields)) {
         const field = deepQuery<HTMLInputElement>(modal.shadowRoot!, `[name='${name}']`);

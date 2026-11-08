@@ -14,7 +14,6 @@ import "../chart/internal/chart-marker-tooltip.element.js";
 import "../funnel/funnel.element.js";
 import "../funnel/internal/funnel-tooltip.element.js";
 import "../date-range/date-range.element.js";
-import "../date-range/date-range-modal.element.js";
 import "../delta-badge/delta-badge.element.js";
 import "../empty-state/empty-state.element.js";
 import "../error-state/error-state.element.js";
@@ -162,8 +161,8 @@ describe("Feature: built-in text is translated, with nothing hard-coded", () => 
         const openDialog = async (value: unknown, withCompare?: unknown) => {
             const el = await renderWithModals(html`<uaui-date-range .value=${value} .compare=${withCompare}></uaui-date-range>`, "uaui-date-range");
             (shadow(el).querySelector("uui-button") as HTMLElement).click();
-            await expect.poll(() => deepQuery<UauiTestElement>(document, "uaui-date-range-modal")).not.toBe(null);
-            return deepQuery<UauiTestElement>(document, "uaui-date-range-modal")!;
+            await expect.poll(() => deepQuery<UauiTestElement>(document, "uaui-date-range-dialog")).not.toBe(null);
+            return deepQuery<UauiTestElement>(document, "uaui-date-range-dialog")!;
         };
 
         it("has no hard-coded words with a comparison on", async () => {

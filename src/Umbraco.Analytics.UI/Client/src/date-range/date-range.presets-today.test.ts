@@ -7,12 +7,11 @@ import { uauiCompareFor, uauiPresetRange } from "../date-helpers/index.js";
 import { renderWithModals } from "../internal/test/modal-host.js";
 import { deepQuery, settle, shadow, type UauiTestElement } from "../internal/test/dom.js";
 import "./date-range.element.js";
-import "./date-range-modal.element.js";
 
 const openModal = async (el: UauiTestElement) => {
     (shadow(el).querySelector("uui-button") as HTMLElement).click();
-    await expect.poll(() => deepQuery<UauiTestElement>(document, "uaui-date-range-modal")).not.toBe(null);
-    const modal = deepQuery<UauiTestElement>(document, "uaui-date-range-modal")!;
+    await expect.poll(() => deepQuery<UauiTestElement>(document, "uaui-date-range-dialog")).not.toBe(null);
+    const modal = deepQuery<UauiTestElement>(document, "uaui-date-range-dialog")!;
     await modal.updateComplete;
     return modal;
 };

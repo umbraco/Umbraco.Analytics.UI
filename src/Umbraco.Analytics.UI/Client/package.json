@@ -7,7 +7,8 @@
     "#platform/uui": "./src/platform/umbraco/uui.ts",
     "#platform/chart": "./src/platform/umbraco/chart.ts",
     "#platform/base-element": "./src/platform/umbraco/base-element.ts",
-    "#platform/context": "./src/platform/umbraco/context.ts"
+    "#platform/context": "./src/platform/umbraco/context.ts",
+    "#platform/date-range-opener": "./src/platform/umbraco/date-range-opener.ts"
   },
   "types": "./types/umbraco-analytics-ui-public.d.ts",
   "exports": {

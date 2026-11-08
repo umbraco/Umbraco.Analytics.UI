@@ -194,7 +194,6 @@ export type UauiDateRangeChangeDetail = {
 
 // @public
 export class UauiDateRangeElement extends UmbLitElement {
-    constructor();
     allowCompare: boolean;
     compare?: UauiCompare;
     maxDate?: string;

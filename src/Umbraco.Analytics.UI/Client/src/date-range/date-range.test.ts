@@ -11,14 +11,13 @@ import { axeRun } from "../internal/test/a11y.js";
 import { renderWithModals } from "../internal/test/modal-host.js";
 import { deepQuery, recordEvents, settle, shadow, type UauiTestElement } from "../internal/test/dom.js";
 import "./date-range.element.js";
-import "./date-range-modal.element.js";
 
 const value = { from: "2026-05-25", to: "2026-06-23" };
 
 const openModal = async (el: UauiTestElement) => {
     (shadow(el).querySelector("uui-button") as HTMLElement).click();
-    await expect.poll(() => deepQuery<UauiTestElement>(document, "uaui-date-range-modal")).not.toBe(null);
-    const modal = deepQuery<UauiTestElement>(document, "uaui-date-range-modal")!;
+    await expect.poll(() => deepQuery<UauiTestElement>(document, "uaui-date-range-dialog")).not.toBe(null);
+    const modal = deepQuery<UauiTestElement>(document, "uaui-date-range-dialog")!;
     await modal.updateComplete;
     return modal;
 };
@@ -269,6 +268,18 @@ describe("Feature: pick a date range", () => {
 
         it("focuses the first field, since Save is disabled", async () => {
             await expect.poll(() => shadow(modal).activeElement?.getAttribute("name")).toBe("preset");
+        });
+    });
+
+    describe("Scenario: opening with a valid range", () => {
+        let modal: UauiTestElement;
+        beforeEach(async () => {
+            const el = await renderWithModals(html`<uaui-date-range .value=${value}></uaui-date-range>`, "uaui-date-range");
+            modal = await openModal(el);
+        });
+
+        it("focuses Save", async () => {
+            await expect.poll(() => shadow(modal).activeElement?.classList.contains("save")).toBe(true);
         });
     });
 

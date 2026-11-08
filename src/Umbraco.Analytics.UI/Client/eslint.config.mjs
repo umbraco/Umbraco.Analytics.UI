@@ -24,11 +24,18 @@ const platformPatterns = [
     { regex: "^@umbraco-cms/backoffice/external/uui$", message: "Import UUI from #platform/uui." },
     { regex: "^chart\\.js(/|$)", message: "Import Chart.js from #platform/chart." },
     { regex: "^@umbraco/analytics-ui/external/chart\\.js$", message: "Import Chart.js from #platform/chart." },
+    { regex: "^@umbraco-cms/backoffice/modal$", message: "Open modals through #platform/date-range-opener." },
+    { regex: "^@umbraco-cms/backoffice/style$", message: "Use UUITextStyles from #platform/uui." },
     {
         regex: "^@umbraco-cms/backoffice/lit-element$",
         importNames: ["UmbLitElement"],
         message: "Extend UauiLitElement from #platform/base-element.",
     },
+];
+
+// A build's folder (platform/umbraco, platform/core) is reached only through #platform/*, never by relative path.
+const buildFolderPatterns = [
+    { regex: "(^|/)platform/(umbraco|core)(/|$)", message: "Import the build's files through #platform/*; only src/platform may reach platform/umbraco or platform/core directly." },
 ];
 
 export default tseslint.config(
@@ -46,6 +53,12 @@ export default tseslint.config(
         // Lit, UUI, Chart.js and the backoffice base class are real imports only inside the platform folder (and the
         // examples, which show what a product writes). Everything else goes through #platform/* so a build can swap them.
         files: ["src/**/*.ts"],
+        ignores: ["src/platform/**", "src/examples/**"],
+        rules: { "no-restricted-imports": ["error", { patterns: [...platformPatterns, ...buildFolderPatterns, ...sharedPatterns] }] },
+    },
+    {
+        // Test-only files may reach a build folder by relative path until T12 splits the Vitest projects.
+        files: ["src/**/*.test.ts", "src/internal/test/**"],
         ignores: ["src/platform/**", "src/examples/**"],
         rules: { "no-restricted-imports": ["error", { patterns: [...platformPatterns, ...sharedPatterns] }] },
     },

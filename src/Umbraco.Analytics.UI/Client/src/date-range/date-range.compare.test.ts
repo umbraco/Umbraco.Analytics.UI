@@ -9,7 +9,6 @@ import { axeRun } from "../internal/test/a11y.js";
 import { renderWithModals } from "../internal/test/modal-host.js";
 import { deepQuery, recordEvents, settle, shadow, type UauiTestElement } from "../internal/test/dom.js";
 import "./date-range.element.js";
-import "./date-range-modal.element.js";
 
 const value = { from: "2026-05-25", to: "2026-06-23" };
 
@@ -18,8 +17,8 @@ const render = (template = html`<uaui-date-range .value=${value}></uaui-date-ran
 const renderOn31Mar = () => render(html`<uaui-date-range today="2026-03-31"></uaui-date-range>`);
 const openModal = async (el: UauiTestElement) => {
     (shadow(el).querySelector("uui-button") as HTMLElement).click();
-    await expect.poll(() => deepQuery<UauiTestElement>(document, "uaui-date-range-modal")).not.toBe(null);
-    const modal = deepQuery<UauiTestElement>(document, "uaui-date-range-modal")!;
+    await expect.poll(() => deepQuery<UauiTestElement>(document, "uaui-date-range-dialog")).not.toBe(null);
+    const modal = deepQuery<UauiTestElement>(document, "uaui-date-range-dialog")!;
     await modal.updateComplete;
     return modal;
 };
