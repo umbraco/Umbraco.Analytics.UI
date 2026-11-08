@@ -1,7 +1,7 @@
 // SAC-5 AC1–AC5 — standalone core package (docs/plans/standalone-core).
 // AC3 and AC5 read a real core build: the commands in devops/build-commands.ts build it once per run into a scratch
-// folder (never dist/core), so a spec never sees a stale or missing file and parallel engines don't clash. AC1 and AC2 are pending: other tasks own them.
-import { beforeEach, describe, expect, it } from "vitest";
+// folder (never dist/core), so a spec never sees a stale or missing file and parallel engines don't clash. AC1, AC2 and the icon and uui-input checks import that built file onto the test page (see loadBuiltCore).
+import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { commands } from "vitest/browser";
 
 declare module "vitest/browser" {
@@ -13,19 +13,152 @@ declare module "vitest/browser" {
     }
 }
 
-describe("Feature: The core loads on its own", () => {
-    describe("Scenario: Every public element is defined", () => {
-        // Given the core build on a page with Lit, UUI and the UUI theme CSS
-        // When  @umbraco/analytics-ui-core is imported
-        it.skip("every public uaui-* element name is a defined custom element", () => {
-            // AC1: one assertion.
-        });
+
+/**
+ * The libraries the core leaves to its host. The page loads them with these dynamic imports, so they are the page's one
+ * copy of each, the same ones this spec's own page would use. Nothing from src/ is imported by this file: a source element
+ * would define its tag first and the spec would prove nothing about the built file.
+ */
+const pageLibraries: Record<string, () => Promise<Record<string, unknown>>> = {
+    lit: () => import("lit"),
+    "lit/decorators.js": () => import("lit/decorators.js"),
+    "lit/directives/if-defined.js": () => import("lit/directives/if-defined.js"),
+    "lit/directives/repeat.js": () => import("lit/directives/repeat.js"),
+    "@umbraco-ui/uui": () => import("@umbraco-ui/uui"),
+    "chart.js": () => import("chart.js"),
+};
+
+type PageLoader = (specifier: string) => Promise<Record<string, unknown>>;
+
+/**
+ * Imports the built core onto this page. A module in a blob URL can't resolve bare specifiers, and an import map can't be
+ * added once the page has loaded modules, so each library import in the built text is pointed at a small blob module that
+ * re-exports the names the core imports from the page's own copy (loaded lazily, when the core is imported: the core, not
+ * this spec, is what brings UUI in). The built file is read from the shared scratch build and never written anywhere.
+ */
+async function loadBuiltCore(): Promise<Record<string, unknown>> {
+    const urls: string[] = [];
+    const blob = (code: string) => {
+        const url = URL.createObjectURL(new Blob([code], { type: "text/javascript" }));
+        urls.push(url);
+        return url;
+    };
+    const rewritten = (await commands.buildCoreBundle()).replace(/^import \{([^}]*)\} from "([^"]+)";$/gm, (_line, names: string, specifier: string) => {
+        if (!pageLibraries[specifier]) throw new Error(`The built core imports "${specifier}", which this page doesn't provide.`);
+        const exported = names.split(",").map((name) => name.trim().split(/\s+as\s+/)[0]);
+        // Like an ESM link error: a name the page's library doesn't have fails the import instead of being undefined.
+        const proxy = [
+            `const page = await globalThis.__uauiPageLibrary(${JSON.stringify(specifier)});`,
+            ...exported.map((name) => `if (!(${JSON.stringify(name)} in page)) throw new SyntaxError(${JSON.stringify(`The page's "${specifier}" has no export named "${name}".`)});`),
+            ...exported.map((name) => `export const ${name} = page.${name};`),
+        ].join("\n");
+        return `import { ${names} } from "${blob(proxy)}";`;
     });
-    describe("Scenario: No errors on load", () => {
-        // Given the same page
-        // When  the core is imported and a uaui-kpi-tile is rendered
-        it.skip("the console has no errors", () => {
-            // AC2: one assertion.
+    // Every import left must now point at a blob module. A form the rewrite doesn't know would load as a bare specifier and fail obscurely.
+    const missed = [...rewritten.matchAll(/^(?:import|export)\b[^"'\n]*?\bfrom\s*["']([^"']+)["']|^import\s*["']([^"']+)["']|\bimport\(\s*["']([^"']+)["']\s*\)/gm)]
+        .filter((match) => !(match[1] ?? match[2] ?? match[3]).startsWith("blob:"))
+        .map((match) => match[0]);
+    if (missed.length > 0) throw new Error(`the rewrite missed an import form: ${missed.join(", ")}`);
+    const text = rewritten;
+    const host = globalThis as { __uauiPageLibrary?: PageLoader };
+    host.__uauiPageLibrary = (specifier) => pageLibraries[specifier]();
+    try {
+        return (await import(/* @vite-ignore */ blob(text))) as Record<string, unknown>;
+    } finally {
+        delete host.__uauiPageLibrary;
+        urls.forEach((url) => URL.revokeObjectURL(url));
+    }
+}
+
+/**
+ * Elements are rendered bare, except these: with no data they draw nothing by design (a cell or badge with no value), so they
+ * get the one property that makes them draw.
+ */
+const sampleProperties: Record<string, Record<string, unknown>> = {
+    "uaui-date-cell": { value: "2026-01-02" },
+    "uaui-delta-badge": { value: 5 },
+    "uaui-link-cell": { value: "Home" },
+    "uaui-number-cell": { value: 5 },
+    "uaui-percent-cell": { value: 0.5 },
+    "uaui-progress-cell": { value: 5 },
+    "uaui-share-cell": { value: 5 },
+    "uaui-status-cell": { value: "ok" },
+    "uaui-table-compare-badge": { value: 5, compareValue: 4 },
+    "uaui-text-cell": { value: "Home" },
+};
+
+/** Public element classes from the committed core report: `UauiKpiTileElement` is `uaui-kpi-tile`. */
+function publicElements(report: string): { className: string; tag: string }[] {
+    return [...report.matchAll(/^export (?:abstract )?class (Uaui\w+Element)\b/gm)].map((match) => ({
+        className: match[1],
+        tag: match[1].replace(/^Uaui|Element$/g, "").replace(/([a-z0-9])([A-Z])/g, "$1-$2").toLowerCase().replace(/^/, "uaui-"),
+    }));
+}
+
+describe("Feature: The core loads on its own", () => {
+    // Given the core build on a page with Lit, UUI and the UUI theme CSS
+    // When  the built core file is imported
+    describe("Scenarios on the loaded core", () => {
+        let core: Record<string, unknown>;
+        let elements: { className: string; tag: string }[];
+        let errors: unknown[][];
+        let unrendered: string[];
+        beforeAll(async () => {
+            elements = publicElements((await commands.readApiReports()).core);
+            // The console watch is on only while the core loads and renders, and is in place before the import, so a load-time error is caught too.
+            const spy = vi.spyOn(console, "error").mockImplementation(() => {});
+            unrendered = [];
+            try {
+                core = await loadBuiltCore();
+                // And every public element is rendered
+                for (const { tag } of elements) {
+                    const el = document.createElement(tag) as HTMLElement & { updateComplete?: Promise<boolean> };
+                    Object.assign(el, sampleProperties[tag]);
+                    document.body.append(el);
+                    try {
+                        await el.updateComplete;
+                        // Lit's marker comments don't count as content.
+                        if (!el.shadowRoot || el.shadowRoot.innerHTML.replace(/<!--.*?-->/g, "").trim() === "") unrendered.push(tag);
+                    } catch {
+                        unrendered.push(tag);
+                    } finally {
+                        el.remove();
+                    }
+                }
+                errors = [...spy.mock.calls];
+            } finally {
+                spy.mockRestore();
+            }
+        });
+        describe("Scenario: Every public element is defined", () => {
+            it("every public uaui-* element name is a defined custom element", () => {
+                // The class the tag is defined as must be the one the built file exports, not a source copy or nothing.
+                const wrong = elements.filter(({ className, tag }) => !core[className] || customElements.get(tag) !== core[className]).map(({ tag }) => tag);
+                expect(elements.length > 0 ? wrong : ["no public elements found in the core API report"]).toEqual([]);
+            });
+        });
+        describe("Scenario: No errors on load", () => {
+            it("the console has no errors", () => {
+                expect(errors).toEqual([]);
+            });
+            it("every public element renders content in its shadow root", () => {
+                expect(unrendered).toEqual([]);
+            });
+        });
+        describe("Scenario: The core brings what it needs", () => {
+            it("a uui-icon named icon-alert draws an svg with no icon registry on the page", async () => {
+                const icon = document.createElement("uui-icon");
+                icon.setAttribute("name", "icon-alert");
+                document.body.append(icon);
+                try {
+                    await expect.poll(() => icon.shadowRoot?.querySelector("svg") ?? null).not.toBeNull();
+                } finally {
+                    icon.remove();
+                }
+            });
+            it("uaui-search-field's uui-input is defined, with only the built core importing UUI", () => {
+                expect(customElements.get("uui-input")).toBeDefined();
+            });
         });
     });
     describe("Scenario: Nothing from Umbraco is in the core", () => {
