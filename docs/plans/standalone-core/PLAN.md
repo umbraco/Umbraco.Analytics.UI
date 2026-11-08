@@ -46,7 +46,7 @@ Pending specs (52, all `it.skip`, no imports yet): `src/platform/umbraco/*.test.
   Acceptance: SAC-9 specs green in `src/platform/core/date-range-opener.test.ts`, with an axe check on the open dialog.
   depends-on: T5, T7. parallel-group: C
 
-- [ ] **T10** - story: SAC-11 (AC1–AC3). `src/platform/core/icons.ts`: the 14 SVGs our elements draw, copied from the backoffice icon set, and one `document` listener for UUI's icon request event that answers only those names and only if no registry above has answered. Imported once by the core entry.
+- [x] **T10** - story: SAC-11 (AC1–AC3). `src/platform/core/icons.ts`: the 6 SVGs our elements draw (alert, search, delete, calendar, navigation-left, navigation-right; user decision 08-11-2026), copied from the backoffice icon set, and one `document` listener for UUI's icon request event that answers only those names and only if no registry above has answered. Imported once by the core entry.
   Acceptance: SAC-11 specs green in `src/platform/core/icons.test.ts`.
   depends-on: T6. parallel-group: C
 
@@ -60,7 +60,7 @@ Pending specs (52, all `it.skip`, no imports yet): `src/platform/umbraco/*.test.
   Acceptance: `npm test` runs both projects green. SAC-1 AC4 and SAC-13 AC5 specs green.
   depends-on: T7, T8, T9, T10, T11
 
-- [ ] **T13** - story: SAC-5 (AC3, AC5), SAC-13 (AC1). `vite.config.core.ts` builds `src/index.ts` plus `src/platform/core/public.ts` with `#platform/*` on core, to `dist/core/`, keeping `lit`, `@umbraco-ui/uui` and `chart.js` external. `npm run build` runs both builds. `devops/check-bundle-size.js` checks the core file against its budget (SPEC guess 3) and fails on any `@umbraco-cms/` import in it. Add `tsconfig.core.json` that type-checks all of `src/**` with `#platform/*` on core, run in `build`; then delete the interim `tsconfig.structural.json` and `src/platform/structural-check/` and their `build:app` step (DECISION-LOG T3).
+- [ ] **T13** - story: SAC-5 (AC3, AC5), SAC-13 (AC1). `vite.config.core.ts` builds `src/index.ts` plus `src/platform/core/public.ts` with `#platform/*` on core, to `dist/core/`, keeping `lit`, `@umbraco-ui/uui` and `chart.js` external. `npm run build` runs both builds. `devops/check-bundle-size.js` checks the core file against its budget (SPEC guess 3) and fails on any `@umbraco-cms/` import in it. The core build sets rolldown `output.comments.legal: true`, and a check fails if the built core file lacks the Lucide licence ("ISC License") from `icons.ts` (DECISION-LOG T10). Add `tsconfig.core.json` that type-checks all of `src/**` with `#platform/*` on core, run in `build`; then delete the interim `tsconfig.structural.json` and `src/platform/structural-check/` and their `build:app` step (DECISION-LOG T3).
   Acceptance: SAC-5 AC3 and AC5 green in `src/platform/core/core-bundle.test.ts`, SAC-13 AC1 green in `src/platform/build.test.ts`. `wwwroot` file list unchanged.
   depends-on: T12
 

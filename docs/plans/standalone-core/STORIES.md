@@ -353,7 +353,7 @@ AC1 — Our icons show with no registry
 
 AC2 — Every built-in icon is covered
   Given the core build with no icon registry on the page
-  When  each of icon-alert, icon-search, icon-calendar, icon-navigation-left, icon-navigation-right, icon-check, icon-wrong, icon-time, icon-inbox, icon-chart, icon-chart-curve, icon-block, icon-undo and icon-delete is requested
+  When  each of icon-alert, icon-search, icon-delete, icon-calendar, icon-navigation-left and icon-navigation-right is requested
   Then  each resolves to an SVG
 
 Sad path

@@ -35,7 +35,7 @@ None.
 - **R13** A key missing in the chosen culture falls back to its language (`da` for `da-DK`), then English.
 - **R14** The date range button opens its dialog in `uui-modal-dialog`. Focus moves into it, Escape and Close discard changes, Save fires `change`, and focus returns to the button.
 - **R15** A custom cell inside `uaui-data-table` can read the table context by firing a `context-request` event (as `@lit/context`'s consumer does) and gets updates when rows or columns change.
-- **R16** Icons our own elements draw (alert, search, calendar, pager arrows, check, wrong, time, inbox, chart, chart-curve, block, undo, delete) show with no icon registry on the page.
+- **R16** The 6 icons our own elements draw (alert, search, delete, calendar, navigation-left, navigation-right) show with no icon registry on the page. Any other icon, such as one a product picks for a KPI tile, needs the host's registry.
 - **R17** When a host's icon registry answers for a name, its icon is used, not ours.
 - **R18** Light and dark mode follow the UUI theme CSS on the page, and charts redraw when it changes, as in the backoffice.
 - **R19** The core bundle stays within its budget in `check:size` (see guess 3), and doesn't contain Lit, UUI or Chart.js.
