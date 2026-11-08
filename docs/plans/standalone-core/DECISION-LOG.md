@@ -28,3 +28,6 @@
 - 08-11-2026 (T5): Test-only files may import `src/platform/umbraco/` by relative path until T12 (lint exempts them, nothing else). T12 moves `package-manifest.test.ts` and the test modal host into the `umbraco` Vitest project and deletes the `src/internal/test/modal-host.element.ts` shim.
 - 08-11-2026 (T5): The date range dialog keeps its own working value; the Umbraco modal only receives the final value on Save. Focus moves in `firstUpdated` (Save when the range is valid, else the preset select), replacing `umbFocus` in shared code.
 - 08-11-2026 (T5): For T9: `openDateRange` doesn't know which button opened it, so the core opener saves the focused element (through shadow roots) before opening and restores it after closing (R14).
+- 08-11-2026 (T6): The core imports all of `@umbraco-ui/uui` (one import), not one package per element: it's a peer the host provides, so it costs nothing in the core bundle. T13 keeps `@umbraco-ui/uui` external and T16 lists it as one peer.
+- 08-11-2026 (T6): `lit` `^3.3.3` and `@umbraco-ui/uui` `^2.1.1` are direct devDependencies, matching what CMS 19.0.0-beta1's lockfile resolves. Peer ranges come in T16.
+- 08-11-2026 (T6): The core's `chart.ts` re-exports `chart.js` by name plus the look helpers from `src/external/chart.js/look.ts` (which imports nothing from the backoffice), not the products' entry.

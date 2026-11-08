@@ -30,7 +30,7 @@ Pending specs (52, all `it.skip`, no imports yet): `src/platform/umbraco/*.test.
 
 ## Core platform
 
-- [ ] **T6** - story: SAC-5 (AC1, AC3). `src/platform/core/lit.ts` re-exports what we use from `lit` (`css`, `html`, `nothing`, `LitElement`, the decorators, `ifDefined`, `ref`, `repeat`, and the types). `uui.ts` imports and so defines the UUI elements we use (box, breadcrumbs, button, dialog-layout, form-layout-item, icon, input, loader-bar, modal, select, symbol-sort, table, toggle) from `@umbraco-ui/uui`. `chart.ts` re-exports `chart.js`. Add a Vitest project `core` that resolves `#platform/*` to `src/platform/core/` and runs `src/platform/core/**/*.test.ts`.
+- [x] **T6** - story: SAC-5 (AC1, AC3). `src/platform/core/lit.ts` re-exports what we use from `lit` (`css`, `html`, `nothing`, `LitElement`, the decorators, `ifDefined`, `ref`, `repeat`, and the types). `uui.ts` imports and so defines the UUI elements we use (box, breadcrumbs, button, dialog-layout, form-layout-item, icon, input, loader-bar, modal, select, symbol-sort, table, toggle) from `@umbraco-ui/uui`. `chart.ts` re-exports `chart.js`. Add a Vitest project `core` that resolves `#platform/*` to `src/platform/core/` and runs `src/platform/core/**/*.test.ts`.
   Acceptance: the `core` Vitest project runs. A spec that imports `#platform/uui` finds `uui-button` defined.
   depends-on: T2. parallel-group: B
 
