@@ -50,7 +50,7 @@ Pending specs (52, all `it.skip`, no imports yet): `src/platform/umbraco/*.test.
   Acceptance: SAC-11 specs green in `src/platform/core/icons.test.ts`.
   depends-on: T6. parallel-group: C
 
-- [ ] **T11** - story: SAC-12 (AC1, AC2). Check charts in the core take their colours from UUI's theme CSS and redraw on a stylesheet swap (`theme-watch.ts` should already do it). Fix only what fails.
+- [x] **T11** - story: SAC-12 (AC1, AC2). Check charts in the core take their colours from UUI's theme CSS and redraw on a stylesheet swap (`theme-watch.ts` should already do it). Fix only what fails.
   Acceptance: SAC-12 specs green in `src/platform/core/theme.test.ts`, loading UUI's light and dark theme CSS.
   depends-on: T7
 
