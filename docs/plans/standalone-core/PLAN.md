@@ -38,7 +38,7 @@ Pending specs (52, all `it.skip`, no imports yet): `src/platform/umbraco/*.test.
   Acceptance: SAC-6, SAC-7 and SAC-8 specs green in `src/platform/core/localization.test.ts`. `src/lang/localization.*.test.ts` also checks the 8 fallback keys exist.
   depends-on: T3, T6. parallel-group: C
 
-- [ ] **T8** - story: SAC-10 (AC1–AC3). `src/platform/core/context.ts`: a token type, a provider that answers `context-request` events (the community protocol, with `subscribe`), a small state class with `subscribe` and `value`, and `consumeContext` and `observe` helpers with the same signatures as T4's.
+- [x] **T8** - story: SAC-10 (AC1–AC3). `src/platform/core/context.ts`: a token type, a provider that answers `context-request` events (the community protocol, with `subscribe`), a small state class with `subscribe` and `value`, and `consumeContext` and `observe` helpers with the same signatures as T4's.
   Acceptance: SAC-10 specs green in `src/platform/core/context.test.ts`, one of them consuming with a hand-written `context-request` event as `@lit/context` sends it.
   depends-on: T4, T6. parallel-group: C
 
