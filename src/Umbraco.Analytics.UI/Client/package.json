@@ -2,6 +2,12 @@
   "name": "@umbraco/analytics-ui",
   "version": "19.0.0-alpha.1",
   "type": "module",
+  "imports": {
+    "#platform/lit": "./src/platform/umbraco/lit.ts",
+    "#platform/uui": "./src/platform/umbraco/uui.ts",
+    "#platform/chart": "./src/platform/umbraco/chart.ts",
+    "#platform/base-element": "./src/platform/umbraco/base-element.ts"
+  },
   "types": "./types/umbraco-analytics-ui-public.d.ts",
   "exports": {
     ".": {

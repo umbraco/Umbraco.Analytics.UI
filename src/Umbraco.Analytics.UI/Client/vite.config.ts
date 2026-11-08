@@ -14,14 +14,30 @@ export const chartJsAlias = [
     { find: /^@umbraco\/analytics-ui\/external\/chart\.js$/, replacement: fileURLToPath(new URL("./src/external/chart.js/index.ts", import.meta.url)) },
 ];
 
+/**
+ * The Umbraco build's swap points. They are aliased straight to the external specifiers, not to the re-export files
+ * in src/platform/umbraco/ (which tsc and tests use through package.json `imports`): an `export *` from an external
+ * module makes the bundler add a namespace-merge shim. Only valid where those specifiers stay external, which is the
+ * library build alone: Storybook's build bundles them, so .storybook/main.ts drops these aliases (see isPlatformBuildAlias).
+ */
+const platformBuildAlias = [
+    { find: /^#platform\/lit$/, replacement: "@umbraco-cms/backoffice/external/lit" },
+    { find: /^#platform\/uui$/, replacement: "@umbraco-cms/backoffice/external/uui" },
+    { find: /^#platform\/chart$/, replacement: CHART_JS_ENTRY },
+];
+
+/** True for an alias from platformBuildAlias, so a build that bundles the specifiers (Storybook) can remove them. */
+export const isPlatformBuildAlias = (entry: { find: string | RegExp }): boolean =>
+    platformBuildAlias.some((alias) => String(alias.find) === String(entry.find));
+
 // Same browser matrix as Umbraco UI: Chromium locally, all three engines on CI.
 const isCI = process.env.CI === "true" || !!process.env.TF_BUILD;
 const browserInstances = isCI
     ? [{ browser: "chromium" as const }, { browser: "firefox" as const }, { browser: "webkit" as const }]
     : [{ browser: "chromium" as const }];
 
-export default defineConfig({
-    resolve: { alias: chartJsAlias },
+export default defineConfig(({ command }) => ({
+    resolve: { alias: command === "build" ? [...platformBuildAlias, ...chartJsAlias] : chartJsAlias },
     // Build only: shrinks the text of our css and html templates to keep the bundle in budget (see check:size).
     plugins: [minifyTemplates()],
     build: {
@@ -70,4 +86,4 @@ export default defineConfig({
             return undefined;
         },
     },
-});
+}));

@@ -5,7 +5,8 @@
     { "tagName": "@element", "syntaxKind": "block" },
     { "tagName": "@cssprop", "syntaxKind": "block" },
     { "tagName": "@fires", "syntaxKind": "block" },
-    { "tagName": "@slot", "syntaxKind": "block" }
+    { "tagName": "@slot", "syntaxKind": "block" },
+    { "tagName": "@linkcode", "syntaxKind": "inline" }
   ],
-  "supportForTags": { "@element": true, "@cssprop": true, "@fires": true, "@slot": true }
+  "supportForTags": { "@element": true, "@cssprop": true, "@fires": true, "@slot": true, "@linkcode": true }
 }
