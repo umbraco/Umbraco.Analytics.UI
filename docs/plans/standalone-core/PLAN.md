@@ -42,7 +42,7 @@ Pending specs (52, all `it.skip`, no imports yet): `src/platform/umbraco/*.test.
   Acceptance: SAC-10 specs green in `src/platform/core/context.test.ts`, one of them consuming with a hand-written `context-request` event as `@lit/context` sends it.
   depends-on: T4, T6. parallel-group: C
 
-- [ ] **T9** - story: SAC-9 (AC1–AC7). `src/platform/core/date-range-opener.ts`: puts `uaui-date-range-dialog` in a `uui-modal-dialog` inside a `uui-modal-container` on `document.body` (made on first use), resolves on `submit`, discards on `close` or Escape, removes the dialog when it closes and returns focus to the button.
+- [x] **T9** - story: SAC-9 (AC1–AC7). `src/platform/core/date-range-opener.ts`: puts `uaui-date-range-dialog` in a `uui-modal-dialog` inside a `uui-modal-container` on `document.body` (made on first use), resolves on `submit`, discards on `close` or Escape, removes the dialog when it closes and returns focus to the button.
   Acceptance: SAC-9 specs green in `src/platform/core/date-range-opener.test.ts`, with an axe check on the open dialog.
   depends-on: T5, T7. parallel-group: C
 
@@ -56,7 +56,7 @@ Pending specs (52, all `it.skip`, no imports yet): `src/platform/umbraco/*.test.
 
 ## Core build and tests
 
-- [ ] **T12** - story: SAC-13 (AC5), SAC-1 (AC4). Flip the default: every existing test runs in the `core` Vitest project. A second project `umbraco` runs `src/platform/umbraco/**/*.test.ts` and a smoke set (each element renders, with axe) (ARCHITECTURE guess 5). Move `src/internal/localization/register.ts` into `src/platform/umbraco/`. Storybook stays on `umbraco`.
+- [ ] **T12** - story: SAC-13 (AC5), SAC-1 (AC4). Flip the default: every existing test runs in the `core` Vitest project. A second project `umbraco` runs `src/platform/umbraco/**/*.test.ts` and a smoke set (each element renders, with axe) (ARCHITECTURE guess 5). Move `src/internal/localization/register.ts` into `src/platform/umbraco/`. Make the core isolation guard catch any `@umbraco-cms` import in any core spec file, not just its own page: alias `@umbraco-cms/*` to a throwing stub in the `core` project (DECISION-LOG T7, T9). Storybook stays on `umbraco`.
   Acceptance: `npm test` runs both projects green. SAC-1 AC4 and SAC-13 AC5 specs green.
   depends-on: T7, T8, T9, T10, T11
 
