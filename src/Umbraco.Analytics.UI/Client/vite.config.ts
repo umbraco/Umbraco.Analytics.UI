@@ -28,7 +28,7 @@ const platformBuildAlias = [
 ];
 
 /** The core test project's swap points: #platform/* resolves to src/platform/core/ (the Umbraco project uses package.json `imports`). */
-const coreTestAlias = ["lit", "uui", "chart", "base-element"].map((name) => ({
+const coreTestAlias = ["lit", "uui", "chart", "base-element", "context"].map((name) => ({
     find: new RegExp(`^#platform/${name}$`),
     replacement: fileURLToPath(new URL(`./src/platform/core/${name}.ts`, import.meta.url)),
 }));

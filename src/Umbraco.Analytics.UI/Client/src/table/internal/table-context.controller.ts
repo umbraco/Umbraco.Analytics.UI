@@ -1,13 +1,13 @@
-import { UauiContextBase, UmbBasicState, UmbObjectState, type UauiContextProviderHost } from "#platform/context";
+import { UauiContextBase, UauiBasicState, UauiObjectState, type UauiContextProviderHost } from "#platform/context";
 import { UAUI_TABLE_CONTEXT, type UauiTableContext } from "../table-context.js";
 import type { UauiTableColumn, UauiTableCompareLookup, UauiTableStats } from "../types.js";
 
 /** The context a table provides to its cells. Internal: the table sets the state, cells only read `UauiTableContext`. */
 export class UauiTableContextController extends UauiContextBase implements UauiTableContext {
     // Basic states, not deep ones: a deep state would freeze the product's column objects.
-    #columns = new UmbBasicState<UauiTableColumn[]>([]);
-    #stats = new UmbObjectState<UauiTableStats>({});
-    #compare = new UmbBasicState<UauiTableCompareLookup>(() => undefined);
+    #columns = new UauiBasicState<UauiTableColumn[]>([]);
+    #stats = new UauiObjectState<UauiTableStats>({});
+    #compare = new UauiBasicState<UauiTableCompareLookup>(() => undefined);
 
     readonly columns = this.#columns.asObservable();
     readonly stats = this.#stats.asObservable();
