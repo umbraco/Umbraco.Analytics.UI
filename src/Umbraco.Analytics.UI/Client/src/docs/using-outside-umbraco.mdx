@@ -70,6 +70,8 @@ The key names are the ones in [Translations](?path=/docs/guides-translations--do
 
 An invalid tag falls back to `en`.
 
+The core passes the language straight to `Intl`, so a bare `en` formats dates the American way ("Jun 1"). The Umbraco backoffice treats a bare `en` as British English ("1 Jun"). Set a full culture such as `en-GB` or `en-US` on `<html lang>` to choose.
+
 **Note:** changing `<html lang>` redraws every element, but changing `lang` on a parent does not: set it before the elements render, or re-render them yourself.
 
 ## Icons
