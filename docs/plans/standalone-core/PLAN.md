@@ -82,6 +82,6 @@ Pending specs (52, all `it.skip`, no imports yet): `src/platform/umbraco/*.test.
   Acceptance: a pipeline run on the topic branch has both npm `.tgz` files as artifacts with the same version.
   depends-on: T16
 
-- [ ] **T18** - story: SAC-13. Docs: `CLAUDE.md` import rules point at `#platform/*`, and say only `src/platform/` may touch Lit, UUI, Chart.js or `@umbraco-cms/*` directly. `CHANGELOG.md` gets an `### Added` line for `@umbraco/analytics-ui-core`. A Storybook docs page in `src/docs/` on using the core outside Umbraco: install, peer packages, theme CSS, `registerUauiTranslations`, icons a host must register (SPEC guess 2).
+- [x] **T18** - story: SAC-13. Docs: `CLAUDE.md` import rules point at `#platform/*`, and say only `src/platform/` may touch Lit, UUI, Chart.js or `@umbraco-cms/*` directly. `CHANGELOG.md` gets an `### Added` line for `@umbraco/analytics-ui-core`. A Storybook docs page in `src/docs/` on using the core outside Umbraco: install, peer packages, theme CSS, `registerUauiTranslations`, icons a host must register (SPEC guess 2).
   Acceptance: `npm run lint`, `npm test`, `npm run build` pass. The docs page shows in Storybook.
   depends-on: T16
