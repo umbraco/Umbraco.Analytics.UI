@@ -1,7 +1,7 @@
 // T69 — The number text of a tile or stat: compact for the eye, exact for screen readers and hover
 /// <reference types="vite/client" />
 import { describe, expect, it } from "vitest";
-import { html } from "@umbraco-cms/backoffice/external/lit";
+import { html } from "#platform/lit";
 import { axeRun } from "../test/a11y.js";
 import { renderElement, shadow } from "../test/dom.js";
 import "./figure-value.element.js";

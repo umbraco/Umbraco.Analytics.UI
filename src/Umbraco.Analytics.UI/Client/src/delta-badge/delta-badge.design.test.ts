@@ -1,7 +1,6 @@
 // BDG-1 — Change badge matches the design
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { umbLocalizationManager } from "@umbraco-cms/backoffice/localization-api";
-import { html } from "@umbraco-cms/backoffice/external/lit";
+import { html } from "#platform/lit";
 import { renderElement, shadow, type UauiTestElement } from "../internal/test/dom.js";
 import "./delta-badge.element.js";
 
@@ -80,14 +79,14 @@ describe("Feature: change badge matches the design", () => {
 
     describe("Scenario: culture-aware number", () => {
         let el: UauiTestElement;
-        const previousLanguage = umbLocalizationManager.documentLanguage;
+        const previousLanguage = document.documentElement.lang;
         beforeEach(async () => {
-            // The backoffice sets the formatting language from the user's language, not the <html> lang.
-            umbLocalizationManager.documentLanguage = "da-DK";
+            // Formatting follows the page language (<html lang>), so pin it.
+            document.documentElement.lang = "da-DK";
             el = await renderElement(html`<uaui-delta-badge .value=${12.4}></uaui-delta-badge>`, "uaui-delta-badge");
         });
         afterEach(() => {
-            umbLocalizationManager.documentLanguage = previousLanguage;
+            document.documentElement.lang = previousLanguage;
         });
 
         it("formats the percent the way the culture does", () => {

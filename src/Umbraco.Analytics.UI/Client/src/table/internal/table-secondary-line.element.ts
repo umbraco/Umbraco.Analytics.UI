@@ -1,5 +1,5 @@
-import { css, customElement, html, ifDefined, property, type CSSResultGroup, type TemplateResult } from "@umbraco-cms/backoffice/external/lit";
-import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
+import { css, customElement, html, ifDefined, property, type CSSResultGroup, type TemplateResult } from "#platform/lit";
+import { UauiLitElement } from "#platform/base-element";
 
 /**
  * The muted second line under a table cell's value (`meta.secondaryKey`): smaller, one line, cut with an ellipsis, the
@@ -9,7 +9,7 @@ import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
  * @element uaui-table-secondary-line
  */
 @customElement("uaui-table-secondary-line")
-export class UauiTableSecondaryLineElement extends UmbLitElement {
+export class UauiTableSecondaryLineElement extends UauiLitElement {
     /** The text to show. */
     @property({ type: String })
     text = "";

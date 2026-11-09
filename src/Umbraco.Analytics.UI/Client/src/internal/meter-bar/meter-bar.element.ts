@@ -1,5 +1,5 @@
-import { css, customElement, html, property, type CSSResultGroup } from "@umbraco-cms/backoffice/external/lit";
-import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
+import { css, customElement, html, property, type CSSResultGroup } from "#platform/lit";
+import { UauiLitElement } from "#platform/base-element";
 import { UauiPaletteStyles, type UauiColorSlot } from "../../theme/index.js";
 
 /**
@@ -9,7 +9,7 @@ import { UauiPaletteStyles, type UauiColorSlot } from "../../theme/index.js";
  * @element uaui-meter-bar
  */
 @customElement("uaui-meter-bar")
-export class UauiMeterBarElement extends UmbLitElement {
+export class UauiMeterBarElement extends UauiLitElement {
     /** How much of the track is filled, 0 to 100. */
     @property({ type: Number })
     percent = 0;

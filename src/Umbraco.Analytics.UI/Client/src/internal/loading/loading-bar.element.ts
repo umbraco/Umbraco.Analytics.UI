@@ -1,5 +1,5 @@
-import { css, customElement, html, type CSSResultGroup } from "@umbraco-cms/backoffice/external/lit";
-import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
+import { css, customElement, html, type CSSResultGroup } from "#platform/lit";
+import { UauiLitElement } from "#platform/base-element";
 
 /**
  * A thin bar along the top edge of a data element that is reloading with data already shown.
@@ -11,7 +11,7 @@ import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
  * @element uaui-loading-bar
  */
 @customElement("uaui-loading-bar")
-export class UauiLoadingBarElement extends UmbLitElement {
+export class UauiLoadingBarElement extends UauiLitElement {
     override render() {
         return html`<div class="bar" role="progressbar" aria-label=${this.localize.term("general_loading")}>
             <div class="indicator"></div>

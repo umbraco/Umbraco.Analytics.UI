@@ -1,8 +1,8 @@
 // T56 — The chart follows every colour it draws when a stylesheet changes, not only those it shares with products'
 // charts (`uauiWatchTheme`): a theme or override that changes only the gap shading or the markers redraws it too.
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { html } from "@umbraco-cms/backoffice/external/lit";
-import { Chart } from "@umbraco/analytics-ui/external/chart.js";
+import { html } from "#platform/lit";
+import { Chart } from "#platform/chart";
 import { renderElement, settle, shadow, type UauiTestElement } from "../internal/test/dom.js";
 import "./time-series-chart.element.js";
 

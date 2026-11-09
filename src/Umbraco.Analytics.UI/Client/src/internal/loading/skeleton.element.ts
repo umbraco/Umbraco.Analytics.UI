@@ -1,5 +1,5 @@
-import { css, customElement, html, type CSSResultGroup } from "@umbraco-cms/backoffice/external/lit";
-import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
+import { css, customElement, html, type CSSResultGroup } from "#platform/lit";
+import { UauiLitElement } from "#platform/base-element";
 import { UauiPaletteStyles } from "../../theme/index.js";
 
 /**
@@ -17,7 +17,7 @@ import { UauiPaletteStyles } from "../../theme/index.js";
  * @element uaui-skeleton
  */
 @customElement("uaui-skeleton")
-export class UauiSkeletonElement extends UmbLitElement {
+export class UauiSkeletonElement extends UauiLitElement {
     override connectedCallback() {
         super.connectedCallback();
         this.setAttribute("aria-hidden", "true");

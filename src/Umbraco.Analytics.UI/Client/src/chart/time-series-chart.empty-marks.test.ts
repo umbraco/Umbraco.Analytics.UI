@@ -2,7 +2,7 @@
 // Markers are read from their HTML buttons, "now" and the unfinished part from the hidden table's row headers, and
 // compare points from the Chart.js compare line's data.
 import { beforeEach, describe, expect, it } from "vitest";
-import { html } from "@umbraco-cms/backoffice/external/lit";
+import { html } from "#platform/lit";
 import { chartOf, seriesOn, useEnglishDates } from "../internal/test/chart.js";
 import { deepQuery, deepQueryAll, renderElement, settle, shadow, type UauiTestElement } from "../internal/test/dom.js";
 import type { UauiCompare, UauiDateRange } from "../date-range/types.js";

@@ -1,8 +1,8 @@
 // TBL-5 — Open a row
 /// <reference types="vite/client" />
 import { beforeEach, describe, expect, it } from "vitest";
-import { html } from "@umbraco-cms/backoffice/external/lit";
-import "@umbraco-cms/backoffice/external/uui";
+import { html } from "#platform/lit";
+import "#platform/uui";
 import { userEvent } from "vitest/browser";
 import darkCss from "@umbraco-ui/uui/themes/dark.css?inline";
 import highContrastCss from "@umbraco-ui/uui/themes/high-contrast.css?inline";

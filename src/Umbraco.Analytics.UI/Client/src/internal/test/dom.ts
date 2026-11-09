@@ -1,7 +1,7 @@
 // DOM helpers shared by the specs: render an element by tag name, query through shadow roots, wait for nested
 // elements to settle, and record events.
 import { render } from "vitest-browser-lit";
-import type { TemplateResult } from "@umbraco-cms/backoffice/external/lit";
+import type { TemplateResult } from "#platform/lit";
 
 export type UauiTestElement = HTMLElement & {
     updateComplete: Promise<boolean>;

@@ -1,16 +1,15 @@
 // HRS-2 — One bar per hour.
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { umbLocalizationManager } from "@umbraco-cms/backoffice/localization-api";
 import { axeRun } from "../internal/test/a11y.js";
 import { chartOf, hourlyChart, hoursOf5Nov, rowHeaders, seriesAt } from "./internal/hourly-fixtures.js";
 
 describe("Feature: one bar per hour", () => {
-    const previousLanguage = umbLocalizationManager.documentLanguage;
+    const previousLanguage = document.documentElement.lang;
     beforeEach(() => {
-        umbLocalizationManager.documentLanguage = "en-US";
+        document.documentElement.lang = "en-US";
     });
     afterEach(() => {
-        umbLocalizationManager.documentLanguage = previousLanguage;
+        document.documentElement.lang = previousLanguage;
     });
 
     describe("Scenario: a day of UTC hourly points", () => {

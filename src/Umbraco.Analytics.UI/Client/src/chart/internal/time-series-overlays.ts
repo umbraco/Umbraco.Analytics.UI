@@ -1,4 +1,4 @@
-import type { Plugin } from "@umbraco/analytics-ui/external/chart.js";
+import type { Plugin } from "#platform/chart";
 import type { UauiChartDrawColors } from "./chart-colors.js";
 import { createIncompletePlugin, type UauiIncompleteState } from "./incomplete-plugin.js";
 import { createMarkersPlugin, type UauiMarkerPin, type UauiMarkerPlacement, type UauiMarkersState } from "./markers-plugin.js";

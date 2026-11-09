@@ -1,5 +1,5 @@
-import { css, customElement, html, nothing, property, type CSSResultGroup, type PropertyValues, type TemplateResult } from "@umbraco-cms/backoffice/external/lit";
-import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
+import { css, customElement, html, nothing, property, type CSSResultGroup, type PropertyValues, type TemplateResult } from "#platform/lit";
+import { UauiLitElement } from "#platform/base-element";
 import { UauiPaletteStyles } from "../../theme/index.js";
 import "../../internal/meter-bar/meter-bar.element.js";
 import { asNumber } from "../internal/cell-values.js";
@@ -23,7 +23,7 @@ import type { UauiTableCellElement, UauiTableColumn } from "../types.js";
  * @cssprop --uaui-tint-neutral - Colour of the track behind the bar.
  */
 @customElement("uaui-progress-cell")
-export class UauiProgressCellElement extends UmbLitElement implements UauiTableCellElement {
+export class UauiProgressCellElement extends UauiLitElement implements UauiTableCellElement {
     /** The column the cell is in. Its `meta.totalKey` names the key in `item` that holds the total, `meta.color` the bar's palette slot, and `valueFormat` formats both numbers. */
     @property({ attribute: false })
     column: UauiTableColumn = { key: "value", label: "" };

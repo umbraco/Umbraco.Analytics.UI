@@ -1,8 +1,8 @@
 // Legend entries show and hide series on the category chart too (the parts are shared with the time-series chart).
 /// <reference types="vite/client" />
-import { Chart } from "@umbraco/analytics-ui/external/chart.js";
+import { Chart } from "#platform/chart";
 import { beforeEach, describe, expect, it } from "vitest";
-import { html } from "@umbraco-cms/backoffice/external/lit";
+import { html } from "#platform/lit";
 import { axeRun } from "../internal/test/a11y.js";
 import { deepQuery, deepText, renderElement, settle, shadow, type UauiTestElement } from "../internal/test/dom.js";
 import "./category-chart.element.js";

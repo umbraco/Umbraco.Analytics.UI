@@ -2,6 +2,8 @@ import { configDefaults, defineConfig } from "vitest/config";
 import { playwright } from "@vitest/browser-playwright";
 import { fileURLToPath } from "node:url";
 import { minifyTemplates } from "./devops/minify-templates.ts";
+import { lintText } from "./devops/lint-text-command.ts";
+import { buildBothLibraries, readUmbracoBuild, packBothPackages, packLikeCi, buildCoreBundle, checkCoreSize, checkDoctoredCore, checkDoctoredCoreApi, readApiReports } from "./devops/build-commands.ts";
 
 /**
  * The shared Chart.js entry, as products import it. Our own code imports this bare specifier too, never a relative path:
@@ -14,14 +16,46 @@ export const chartJsAlias = [
     { find: /^@umbraco\/analytics-ui\/external\/chart\.js$/, replacement: fileURLToPath(new URL("./src/external/chart.js/index.ts", import.meta.url)) },
 ];
 
+/**
+ * The Umbraco build's swap points. They are aliased straight to the external specifiers, not to the re-export files
+ * in src/platform/umbraco/ (which tsc and tests use through package.json `imports`): an `export *` from an external
+ * module makes the bundler add a namespace-merge shim. Only valid where those specifiers stay external, which is the
+ * library build alone: Storybook's build bundles them, so .storybook/main.ts drops these aliases (see isPlatformBuildAlias).
+ */
+const platformBuildAlias = [
+    { find: /^#platform\/lit$/, replacement: "@umbraco-cms/backoffice/external/lit" },
+    { find: /^#platform\/uui$/, replacement: "@umbraco-cms/backoffice/external/uui" },
+    { find: /^#platform\/chart$/, replacement: CHART_JS_ENTRY },
+];
+
+/** The core test project's swap points: #platform/* resolves to src/platform/core/ (the Umbraco project uses package.json `imports`). */
+export const coreTestAlias = [
+    { find: /^#platform\/(.*)$/, replacement: fileURLToPath(new URL("./src/platform/core/", import.meta.url)) + "$1.ts" },
+];
+
+/** The specs that run against the backoffice (the `umbraco` Vitest project); every other spec runs in `core`. */
+const umbracoSpecs = ["src/platform/umbraco/**/*.test.ts", "src/examples/**/*.test.ts"];
+
+/**
+ * The core project's guard: any `@umbraco-cms/*` import from any module a core spec loads throws, so a spec can't
+ * pass on the backoffice by accident. Type-only imports are erased before this applies.
+ */
+export const backofficeBlockedAlias = [
+    { find: /^@umbraco-cms\/.*$/, replacement: fileURLToPath(new URL("./vitest.backoffice-blocked.ts", import.meta.url)) },
+];
+
+/** True for an alias from platformBuildAlias, so a build that bundles the specifiers (Storybook) can remove them. */
+export const isPlatformBuildAlias = (entry: { find: string | RegExp }): boolean =>
+    platformBuildAlias.some((alias) => String(alias.find) === String(entry.find));
+
 // Same browser matrix as Umbraco UI: Chromium locally, all three engines on CI.
 const isCI = process.env.CI === "true" || !!process.env.TF_BUILD;
 const browserInstances = isCI
     ? [{ browser: "chromium" as const }, { browser: "firefox" as const }, { browser: "webkit" as const }]
     : [{ browser: "chromium" as const }];
 
-export default defineConfig({
-    resolve: { alias: chartJsAlias },
+export default defineConfig(({ command }) => ({
+    resolve: { alias: command === "build" ? [...platformBuildAlias, ...chartJsAlias] : chartJsAlias },
     // Build only: shrinks the text of our css and html templates to keep the bundle in budget (see check:size).
     plugins: [minifyTemplates()],
     build: {
@@ -49,10 +83,30 @@ export default defineConfig({
         },
     },
     test: {
-        include: ["src/**/*.test.ts"],
-        // Timing specs are flaky while three engines share a small CI runner, so CI runs them alone
-        // (`npm run test:perf`, vitest.perf.config.ts). Locally they stay in the normal run.
-        exclude: isCI ? [...configDefaults.exclude, "src/internal/perf/**"] : configDefaults.exclude,
+        // Two projects share the options below. `core` is the default: every spec runs against the core's swap points
+        // (#platform/* resolves to src/platform/core/) with no backoffice, so a spec can't pass on backoffice state.
+        // `umbraco` runs what is about the backoffice itself: src/platform/umbraco/ (the swap points, the package
+        // manifest, localization extensions, the smoke set) and src/examples/, whose product-style pages extend UmbLitElement.
+        projects: [
+            {
+                extends: true,
+                resolve: { alias: [...coreTestAlias, ...backofficeBlockedAlias] },
+                test: {
+                    name: "core",
+                    include: ["src/**/*.test.ts"],
+                    // Timing specs are flaky while three engines share a small CI runner, so CI runs them alone
+                    // (`npm run test:perf`, vitest.perf.config.ts). Locally they stay in the normal run.
+                    exclude: [...configDefaults.exclude, ...umbracoSpecs, ...(isCI ? ["src/internal/perf/**"] : [])],
+                    // Per project, not in the shared options: a project's setupFiles are appended to the root's, so a
+                    // root entry would run the backoffice setup in the core project too.
+                    setupFiles: ["./vitest.setup.core.ts"],
+                },
+            },
+            {
+                extends: true,
+                test: { name: "umbraco", include: umbracoSpecs, setupFiles: ["./vitest.setup.ts"] },
+            },
+        ],
         // Three browser engines run at once on CI, and a canvas screenshot waits for the chart to settle,
         // so give a loaded machine more time than the defaults (15s per test, 1s per poll).
         testTimeout: 30_000,
@@ -63,11 +117,11 @@ export default defineConfig({
             provider: playwright({ contextOptions: { timezoneId: "Europe/Copenhagen", locale: "en-US" } }),
             instances: browserInstances,
             headless: true,
+            commands: { lintText, buildCoreBundle, checkCoreSize, checkDoctoredCore, checkDoctoredCoreApi, readApiReports, buildBothLibraries, readUmbracoBuild, packBothPackages, packLikeCi },
         },
-        setupFiles: ["./vitest.setup.ts"],
         onConsoleLog: (log: string) => {
             if (log.includes("Lit is in dev mode")) return false;
             return undefined;
         },
     },
-});
+}));

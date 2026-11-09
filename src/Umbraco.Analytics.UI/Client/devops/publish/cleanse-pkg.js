@@ -17,6 +17,8 @@ if (process.env.BUILD_BUILDID)
     const chartJs = JSON.parse(readFileSync('./node_modules/chart.js/package.json', 'utf8'));
     packageJson.dependencies = { 'chart.js': chartJs.version };
     delete packageJson.scripts;
+    // `imports` points at source files that the types package doesn't ship.
+    delete packageJson.imports;
 
     // Write the package.json back to disk
     writeFileSync(packageFile, JSON.stringify(packageJson, null, 2), 'utf8');

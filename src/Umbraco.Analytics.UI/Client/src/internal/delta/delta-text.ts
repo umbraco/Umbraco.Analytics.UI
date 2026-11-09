@@ -1,4 +1,4 @@
-import type { UmbLocalizationController } from "@umbraco-cms/backoffice/localization-api";
+import type { UauiLocalize } from "#platform/base-element";
 import type { UauiDeltaUnit } from "../../delta-badge/delta-badge.element.js";
 
 /** Whether a change is good, bad or neither. */
@@ -26,7 +26,7 @@ export function deltaSentiment(rounded: number, lowerIsBetter: boolean): UauiDel
  * A change as the delta badge writes it: signed, in the user's culture, "+12.4%" or "+12.4 pp".
  * Shared by the badge and any element that words the same change for screen readers. Internal: not exported.
  */
-export function formatDelta(localize: UmbLocalizationController, value: number, unit: UauiDeltaUnit, maxDecimals: number): string {
+export function formatDelta(localize: UauiLocalize, value: number, unit: UauiDeltaUnit, maxDecimals: number): string {
     const rounded = roundDelta(value, maxDecimals);
     const options = { maximumFractionDigits: maxDecimals, signDisplay: "exceptZero" } as const;
     // Percent style lets the culture place the sign and spacing ("+12.4%" in en, "+12,4 %" in da-DK).
@@ -36,7 +36,7 @@ export function formatDelta(localize: UmbLocalizationController, value: number, 
 }
 
 /** The word for a sentiment: "improvement", "decline" or "no change". */
-export function deltaSentimentWord(localize: UmbLocalizationController, sentiment: UauiDeltaSentiment): string {
+export function deltaSentimentWord(localize: UauiLocalize, sentiment: UauiDeltaSentiment): string {
     const key = {
         positive: "uauiAnalytics_deltaImprovement",
         negative: "uauiAnalytics_deltaDecline",

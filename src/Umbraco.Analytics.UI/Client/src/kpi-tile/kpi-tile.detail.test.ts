@@ -5,7 +5,7 @@ import { beforeAll, describe, expect, it } from "vitest";
 import { page } from "vitest/browser";
 import latoBold from "../../node_modules/@umbraco-ui/uui/dist/assets/fonts/LatoLatin-Bold.woff2?url";
 import latoRegular from "../../node_modules/@umbraco-ui/uui/dist/assets/fonts/LatoLatin-Regular.woff2?url";
-import { html, type TemplateResult } from "@umbraco-cms/backoffice/external/lit";
+import { html, type TemplateResult } from "#platform/lit";
 import darkCss from "@umbraco-ui/uui/themes/dark.css?inline";
 import { render } from "vitest-browser-lit";
 import { axeRun } from "../internal/test/a11y.js";

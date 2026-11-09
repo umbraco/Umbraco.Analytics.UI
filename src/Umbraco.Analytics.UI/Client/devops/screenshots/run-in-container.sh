@@ -23,7 +23,7 @@ docker run --rm \
     "$IMAGE" \
     sh -c '
         npm ci --no-fund --no-audit --prefer-offline &&
-        npx vitest run --project chromium "$@";
+        npx vitest run --project "*chromium*" "$@";
         status=$?
         # Hand the written baselines back to the host user.
         find src -type d -name __screenshots__ -exec chown -R "$HOST_UID:$HOST_GID" {} +

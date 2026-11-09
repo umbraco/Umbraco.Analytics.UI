@@ -1,13 +1,12 @@
 // CHT-4 — Event markers
 // The dot and dashed line are canvas; each dot also has an HTML button over it, which the specs drive.
 /// <reference types="vite/client" />
-import { Chart } from "@umbraco/analytics-ui/external/chart.js";
+import { Chart } from "#platform/chart";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { page, userEvent } from "vitest/browser";
-import { html } from "@umbraco-cms/backoffice/external/lit";
+import { html } from "#platform/lit";
 import darkCss from "@umbraco-ui/uui/themes/dark.css?inline";
 import highContrastCss from "@umbraco-ui/uui/themes/high-contrast.css?inline";
-import { umbLocalizationManager } from "@umbraco-cms/backoffice/localization-api";
 import { render } from "vitest-browser-lit";
 import { axeRun } from "../internal/test/a11y.js";
 import { pressTab } from "../internal/test/keyboard.js";
@@ -83,14 +82,14 @@ describe("Feature: event markers", () => {
         // 23:30Z is 00:30 on 6 Nov in Copenhagen.
         const hourly = [{ id: "pv", label: "Pageviews", points: [{ date: "2026-11-05T22:00:00Z", value: 1 }, { date: "2026-11-05T23:00:00Z", value: 2 }] }];
         const late = { id: "m5", date: "2026-11-05T23:30:00Z", title: "Deploy" };
-        const previousLanguage = umbLocalizationManager.documentLanguage;
+        const previousLanguage = document.documentElement.lang;
         let el: UauiTestElement;
         beforeEach(async () => {
-            umbLocalizationManager.documentLanguage = "en-US";
+            document.documentElement.lang = "en-US";
             el = await chart([late], "bar", hourly, "hour");
         });
         afterEach(() => {
-            umbLocalizationManager.documentLanguage = previousLanguage;
+            document.documentElement.lang = previousLanguage;
         });
 
         it("names the local hour for screen readers", () => {

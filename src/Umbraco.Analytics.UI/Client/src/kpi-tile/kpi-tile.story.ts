@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/web-components-vite";
-import { html, ifDefined } from "@umbraco-cms/backoffice/external/lit";
+import { html, ifDefined } from "#platform/lit";
 import type { UauiKpiTileElement } from "./kpi-tile.element.js";
 import "./kpi-tile.element.js";
 

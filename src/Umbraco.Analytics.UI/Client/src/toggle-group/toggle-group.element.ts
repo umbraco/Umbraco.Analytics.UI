@@ -1,5 +1,5 @@
-import { css, customElement, html, ifDefined, property, repeat, type CSSResultGroup, type TemplateResult } from "@umbraco-cms/backoffice/external/lit";
-import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
+import { css, customElement, html, ifDefined, property, repeat, type CSSResultGroup, type TemplateResult } from "#platform/lit";
+import { UauiLitElement } from "#platform/base-element";
 import { UauiPaletteStyles } from "../theme/index.js";
 
 /** One choice of `uaui-toggle-group`: the `value` it reports and the `label` it shows. */
@@ -20,7 +20,7 @@ export type UauiToggleGroupChangeDetail = { value: string };
  * @fires change - The editor picked a different option. Bubbles, not cancelable. `detail` is `{ value }` (`UauiToggleGroupChangeDetail`).
  */
 @customElement("uaui-toggle-group")
-export class UauiToggleGroupElement extends UmbLitElement {
+export class UauiToggleGroupElement extends UauiLitElement {
     /** The selected option's `value`. Picking an option updates it, as `uui-radio-group` does, then raises `change`. */
     @property({ type: String, reflect: true })
     value = "";

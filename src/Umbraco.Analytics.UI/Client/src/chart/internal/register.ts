@@ -9,7 +9,7 @@ import {
     LineElement,
     PointElement,
     Tooltip,
-} from "@umbraco/analytics-ui/external/chart.js";
+} from "#platform/chart";
 
 // Only what the chart draws. Stacking is a scale option, so it needs no extra registration.
 // TimeScale is left out: it needs a date adapter, and the x-axis uses pre-formatted labels instead.

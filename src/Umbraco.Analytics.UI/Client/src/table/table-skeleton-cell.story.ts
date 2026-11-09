@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/web-components-vite";
-import { css, customElement, html, property, type CSSResultGroup } from "@umbraco-cms/backoffice/external/lit";
-import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
+import { css, customElement, html, property, type CSSResultGroup } from "#platform/lit";
+import { UauiLitElement } from "#platform/base-element";
 import "./table-skeleton-cell.element.js";
 import "./data-table.element.js";
 import type { UauiTableSkeletonCellElement } from "./table-skeleton-cell.element.js";
@@ -38,7 +38,7 @@ export const TwoLines: Story = { name: "Two lines", args: { lines: 2 } };
 
 /** A custom cell with a second line: its own element name goes in `column.elementName`, and it draws the skeleton cell while `loading`. */
 @customElement("uaui-story-customer-cell")
-class StoryCustomerCellElement extends UmbLitElement implements UauiTableCellElement {
+class StoryCustomerCellElement extends UauiLitElement implements UauiTableCellElement {
     @property({ attribute: false }) column: UauiTableColumn = { key: "", label: "" };
     @property({ attribute: false }) item: Record<string, unknown> = {};
     @property({ attribute: false }) value: unknown;

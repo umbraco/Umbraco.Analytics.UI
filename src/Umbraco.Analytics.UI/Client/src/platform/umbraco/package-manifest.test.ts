@@ -1,8 +1,8 @@
 // INT-1: the shipped umbraco-package.json is hand-written JSON, so these specs keep it in step with the code.
 import { describe, expect, it } from "vitest";
 import raw from "../../../public/umbraco-package.json?raw";
-import { UAUI_EN_ALIAS, UAUI_LOCALIZATION_WEIGHT } from "../localization/register.js";
-import { uauiDateRangeModalManifest } from "../../date-range/manifests.js";
+import { UAUI_EN_ALIAS, UAUI_LOCALIZATION_WEIGHT } from "./localization-register.js";
+import { uauiDateRangeModalManifest } from "./date-range-manifests.js";
 
 type ShippedExtension = Record<string, unknown> & { type: string; meta?: { culture?: string } };
 const shipped = JSON.parse(raw) as { extensions: ShippedExtension[]; importmap: { imports: Record<string, string> } };

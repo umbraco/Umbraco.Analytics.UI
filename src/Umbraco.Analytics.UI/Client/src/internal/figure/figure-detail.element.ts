@@ -1,5 +1,5 @@
-import { css, customElement, html, nothing, property, type CSSResultGroup, type TemplateResult } from "@umbraco-cms/backoffice/external/lit";
-import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
+import { css, customElement, html, nothing, property, type CSSResultGroup, type TemplateResult } from "#platform/lit";
+import { UauiLitElement } from "#platform/base-element";
 import type { UauiFigureText } from "../format/figure.js";
 import "./figure-value.element.js";
 
@@ -20,7 +20,7 @@ export function hasFigureDetail(pattern: string | undefined, figure: UauiFigureT
  * @element uaui-figure-detail
  */
 @customElement("uaui-figure-detail")
-export class UauiFigureDetailElement extends UmbLitElement {
+export class UauiFigureDetailElement extends UauiLitElement {
     /** The text of the line, with `{0}` where the number goes. */
     @property({ attribute: false })
     pattern?: string;

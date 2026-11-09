@@ -1,0 +1,122 @@
+import { Meta } from "@storybook/addon-docs/blocks";
+
+<Meta title="Guides/Using outside Umbraco" />
+
+# Using outside Umbraco
+
+`@umbraco/analytics-ui-core` is the same components for a page that is not the Umbraco backoffice. It has the same version as `@umbraco/analytics-ui`. Inside the backoffice, keep using the NuGet package and `@umbraco/analytics-ui`.
+
+## Install
+
+```sh
+npm i @umbraco/analytics-ui-core lit @umbraco-ui/uui
+```
+
+`lit` and `@umbraco-ui/uui` are peers: your page provides them, so there is one copy of each. Chart.js comes with the package.
+
+## Load the UUI theme
+
+The elements take their colours from UUI's CSS custom properties. Without a theme they are unstyled. Load one:
+
+```ts
+import "@umbraco-ui/uui/themes/light.css"; // or dark.css
+```
+
+Colours are covered in [Theming and palette](?path=/docs/guides-theming-and-palette--docs).
+
+## Register the elements
+
+Import the package once. It registers every `uaui-*` element:
+
+```ts
+import "@umbraco/analytics-ui-core";
+```
+
+```html
+<uaui-kpi-tile label="Revenue" value="€ 4,837.40"></uaui-kpi-tile>
+```
+
+## Translations
+
+English is built in. Add or change a culture with `registerUauiTranslations`. Keys are whole (`uauiAnalytics_errorHeadline`), and `{0}`, `{1}` are replaced by the arguments.
+
+```ts
+import { registerUauiTranslations, type UauiTranslations } from "@umbraco/analytics-ui-core";
+
+const da: UauiTranslations = {
+  uauiAnalytics_errorHeadline: "Noget gik galt",
+  uauiAnalytics_errorDescription: "Dataen kunne ikke hentes.",
+};
+
+registerUauiTranslations("da", da);
+```
+
+The core also reuses eight Umbraco keys for generic words. Translate these too, or a Danish page keeps English "Save" and "Close":
+
+- `general_clear`, `general_close`, `general_loading`, `general_retry`
+- `general_search`, `general_searchNoResult`
+- `buttons_save`
+- `validation_invalidEmpty`
+
+A key you leave out falls back to English. Registering again for the same culture merges with what is there, and elements already on the page redraw.
+
+The key names are the ones in [Translations](?path=/docs/guides-translations--docs). Numbers and dates use `Intl` with the chosen language.
+
+### Which language an element uses
+
+1. The nearest `lang` attribute on the element or an ancestor, through shadow roots.
+2. `<html lang>`.
+3. `en`.
+
+An invalid tag falls back to `en`.
+
+The core passes the language straight to `Intl`, so a bare `en` formats dates the American way ("Jun 1"). The Umbraco backoffice treats a bare `en` as British English ("1 Jun"). Set a full culture such as `en-GB` or `en-US` on `<html lang>` to choose.
+
+**Note:** changing `<html lang>` redraws every element, but changing `lang` on a parent does not: set it before the elements render, or re-render them yourself.
+
+## Icons
+
+Six icons are built in: `icon-alert`, `icon-search`, `icon-delete`, `icon-calendar`, `icon-navigation-left` and `icon-navigation-right`. They are used only when your page has no UUI icon registry that knows the name.
+
+Any other icon, such as the `icon` of a `uaui-kpi-tile`, needs your page's own UUI icon registry. Without one, that icon draws nothing.
+
+Fill a UUI registry yourself with the SVG for each name, and attach it to the page:
+
+```ts
+import { UUIIconRegistry } from "@umbraco-ui/uui";
+
+const registry = new UUIIconRegistry();
+registry.defineIcon("icon-shopping-basket", "<svg viewBox=\"0 0 24 24\">...</svg>");
+registry.attach(document.body);
+```
+
+```html
+<uaui-kpi-tile label="Orders" value="1,204" icon="icon-shopping-basket"></uaui-kpi-tile>
+```
+
+## Date range dialog
+
+`uaui-date-range` opens its custom range dialog in a UUI modal. The core adds its own `uui-modal-container` to `<body>` the first time. Focus returns to the button that opened it.
+
+## Your own table cells
+
+A cell reads the table through `UAUI_TABLE_CONTEXT`, using the community `context-request` protocol. A cell written with [`@lit/context`](https://lit.dev/docs/data/context/) can use the token as its key:
+
+```ts
+import { ContextConsumer, createContext } from "@lit/context";
+import { LitElement } from "lit";
+import { UAUI_TABLE_CONTEXT, type UauiTableContext } from "@umbraco/analytics-ui-core";
+
+const TABLE = createContext<UauiTableContext>(UAUI_TABLE_CONTEXT);
+
+class MyCell extends LitElement {
+  #table = new ContextConsumer(this, { context: TABLE, subscribe: true });
+}
+```
+
+The cell is not called back with `undefined` when it leaves a table, so a cell moved out keeps the last stats it got.
+
+## Limits
+
+- One copy of the core per page: both would define the same element names.
+- Chart.js types and options are not part of the API, as in the main package.

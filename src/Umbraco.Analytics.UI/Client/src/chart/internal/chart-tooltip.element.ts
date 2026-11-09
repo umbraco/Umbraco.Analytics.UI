@@ -1,5 +1,5 @@
-import { css, customElement, html, nothing, property, type CSSResultGroup, type TemplateResult } from "@umbraco-cms/backoffice/external/lit";
-import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
+import { css, customElement, html, nothing, property, type CSSResultGroup, type TemplateResult } from "#platform/lit";
+import { UauiLitElement } from "#platform/base-element";
 import type { UauiSeriesColorKey } from "./chart-colors.js";
 import { getNumberFormat } from "../../internal/format/number-format.js";
 import "../../delta-badge/delta-badge.element.js";
@@ -49,7 +49,7 @@ export const TOOLTIP_MAX_ROWS = 8;
  * @element uaui-chart-tooltip
  */
 @customElement("uaui-chart-tooltip")
-export class UauiChartTooltipElement extends UmbLitElement {
+export class UauiChartTooltipElement extends UauiLitElement {
     /** The hovered x value, formatted: a date on the time-series chart. */
     @property({ type: String })
     heading = "";

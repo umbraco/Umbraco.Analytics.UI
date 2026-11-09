@@ -1,5 +1,5 @@
-import { css, customElement, html, property, type CSSResultGroup, type TemplateResult } from "@umbraco-cms/backoffice/external/lit";
-import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
+import { css, customElement, html, property, type CSSResultGroup, type TemplateResult } from "#platform/lit";
+import { UauiLitElement } from "#platform/base-element";
 import { asText } from "../internal/cell-values.js";
 import "../table-skeleton-cell.element.js";
 import "../internal/table-secondary-line.element.js";
@@ -12,7 +12,7 @@ import type { UauiTableCellElement, UauiTableColumn } from "../types.js";
  * @element uaui-text-cell
  */
 @customElement("uaui-text-cell")
-export class UauiTextCellElement extends UmbLitElement implements UauiTableCellElement {
+export class UauiTextCellElement extends UauiLitElement implements UauiTableCellElement {
     /** The column the cell is in. */
     @property({ attribute: false })
     column: UauiTableColumn = { key: "value", label: "" };

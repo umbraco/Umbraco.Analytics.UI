@@ -2,11 +2,11 @@
 // Canvas colours are read from the drawn Chart.js datasets; swatches from the legend's and tooltip's computed styles.
 import { afterEach, beforeEach, describe, expect, it, vi, type MockInstance } from "vitest";
 import { page, userEvent } from "vitest/browser";
-import { html } from "@umbraco-cms/backoffice/external/lit";
+import { html } from "#platform/lit";
 import lightCss from "@umbraco-ui/uui/themes/light.css?inline";
 import darkCss from "@umbraco-ui/uui/themes/dark.css?inline";
 import highContrastCss from "@umbraco-ui/uui/themes/high-contrast.css?inline";
-import { Chart, uauiChartColors } from "@umbraco/analytics-ui/external/chart.js";
+import { Chart, uauiChartColors } from "#platform/chart";
 import { axeRun } from "../internal/test/a11y.js";
 import { deepQuery, deepQueryAll, renderElement, shadow, type UauiTestElement } from "../internal/test/dom.js";
 import type { UauiChartKind, UauiSeries } from "./types.js";

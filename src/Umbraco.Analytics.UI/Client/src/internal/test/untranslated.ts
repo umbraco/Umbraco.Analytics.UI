@@ -1,36 +1,25 @@
 // Tests only; never imported by shipped code. Finds text a package element draws that did not come from a
 // translation key: render with every key mapped to a marker, then list the words left over.
-import { umbExtensionsRegistry } from "@umbraco-cms/backoffice/extension-registry";
 import en from "../../lang/en.js";
+import { registerUauiTranslations } from "../../platform/core/public.js";
+import { resetUauiTranslations } from "./localization.js";
 import { usedUmbracoKeys } from "./shipped-source.js";
-import { waitForKey } from "./localization.js";
 
-const ALIAS = "Uaui.Localization.Markers";
 const MARKER = /⟦[^⟧]*⟧/g;
 
 /** What a key reads as while the markers are registered. Its arguments are dropped, so only the key's own text is left. */
 export const markerFor = (key: string) => `⟦${key}⟧`;
 
 /**
- * Maps every `uauiAnalytics_*` key, and every Umbraco key the package reuses, to its marker, ahead of the package's
- * and the backoffice's own English text. Returns a function that removes them again.
+ * Maps every `uauiAnalytics_*` key, and every Umbraco key the package reuses, to its marker, ahead of the core's
+ * built-in English. Returns a function that puts the built-in English back.
  */
 export async function registerMarkerTranslations(): Promise<() => void> {
-    const localizations: Record<string, Record<string, string>> = { uauiAnalytics: {} };
-    for (const key of Object.keys(en.uauiAnalytics)) localizations.uauiAnalytics[key] = markerFor(`uauiAnalytics_${key}`);
-    for (const key of usedUmbracoKeys()) {
-        const [section, name] = key.split("_");
-        (localizations[section] ??= {})[name] = markerFor(key);
-    }
-    umbExtensionsRegistry.register({
-        type: "localization",
-        alias: ALIAS,
-        name: "Uaui markers (test)",
-        weight: 50,
-        meta: { culture: "en", localizations },
-    });
-    await waitForKey("uauiAnalytics_emptyHeadline", markerFor("uauiAnalytics_emptyHeadline"));
-    return () => umbExtensionsRegistry.unregister(ALIAS);
+    const markers: Record<string, string> = {};
+    for (const key of Object.keys(en.uauiAnalytics)) markers[`uauiAnalytics_${key}`] = markerFor(`uauiAnalytics_${key}`);
+    for (const key of usedUmbracoKeys()) markers[key] = markerFor(key);
+    registerUauiTranslations("en", markers);
+    return resetUauiTranslations;
 }
 
 const TEXT_ATTRIBUTES = ["aria-label", "aria-description", "aria-roledescription", "aria-valuetext", "title", "placeholder", "alt", "label"];

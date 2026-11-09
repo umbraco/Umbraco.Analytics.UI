@@ -1,9 +1,9 @@
-import { css, customElement, html, nothing, property, type CSSResultGroup, type TemplateResult } from "@umbraco-cms/backoffice/external/lit";
-import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
-import { UMB_MODAL_MANAGER_CONTEXT, type UmbModalManagerContext } from "@umbraco-cms/backoffice/modal";
+import { css, customElement, html, nothing, property, type CSSResultGroup, type TemplateResult } from "#platform/lit";
+import "#platform/uui";
+import { UauiLitElement } from "#platform/base-element";
+import { openDateRange } from "#platform/date-range-opener";
 import { builtInPresetRange, parseIso, todayIso } from "../internal/date/date-math.js";
 import { uauiFormatDateRange } from "../date-helpers/date-helpers.js";
-import { UAUI_DATE_RANGE_MODAL } from "./date-range-modal.token.js";
 import { defaultPresets } from "./presets.js";
 import type { UauiCompare, UauiDatePreset, UauiDateRange, UauiDateRangeChangeDetail } from "./types.js";
 
@@ -24,7 +24,7 @@ const defaultValue = (today: string): UauiDateRange => ({
  * @fires change - The editor saved the dialog. Bubbles, not composed or cancelable, like `uaui-group-by`. `detail` is `{ value, compare }` (`UauiDateRangeChangeDetail`).
  */
 @customElement("uaui-date-range")
-export class UauiDateRangeElement extends UmbLitElement {
+export class UauiDateRangeElement extends UauiLitElement {
     /** The range shown. Defaults to the last 30 days, counted back from `today`. Setting `undefined` restores that default. */
     @property({ attribute: false })
     get value(): UauiDateRange {
@@ -64,31 +64,17 @@ export class UauiDateRangeElement extends UmbLitElement {
         return this.today && parseIso(this.today) ? this.today : todayIso();
     }
 
-    #modalManager?: UmbModalManagerContext;
-
-    constructor() {
-        super();
-        this.consumeContext(UMB_MODAL_MANAGER_CONTEXT, (manager) => {
-            this.#modalManager = manager;
-        });
-    }
-
     #rangeText(from: string, to: string) {
         return uauiFormatDateRange(this.localize, { from, to });
     }
 
     async #open() {
-        if (!this.#modalManager) {
-            console.warn("uaui-date-range: no UMB_MODAL_MANAGER_CONTEXT found, so the dialog can't open.", this);
-            return;
-        }
-        // Copies: the modal context deep-freezes what it is given, and these belong to the product.
-        const modal = this.#modalManager.open(this, UAUI_DATE_RANGE_MODAL, {
-            data: { presets: this.presets, today: this.#today, maxDate: this.maxDate || this.#today, allowCompare: this.allowCompare },
-            value: { value: { ...this.value }, compare: this.compare && { ...this.compare } },
-        });
-        // Closing the dialog rejects it: that is the editor discarding their edits, not an error.
-        const result = await modal.onSubmit().catch(() => undefined);
+        // Copies: the opener may freeze what it is given, and these belong to the product.
+        const result = await openDateRange(
+            this,
+            { presets: this.presets, today: this.#today, maxDate: this.maxDate || this.#today, allowCompare: this.allowCompare },
+            { value: { ...this.value }, compare: this.compare && { ...this.compare } },
+        );
         if (!result) return;
         this.value = result.value;
         this.compare = result.compare;

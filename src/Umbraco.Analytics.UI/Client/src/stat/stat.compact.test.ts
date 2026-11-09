@@ -1,7 +1,7 @@
 // T69 — A big number value is shown compact, with the exact amount for hover and screen readers
 /// <reference types="vite/client" />
 import { describe, expect, it } from "vitest";
-import { html } from "@umbraco-cms/backoffice/external/lit";
+import { html } from "#platform/lit";
 import darkCss from "@umbraco-ui/uui/themes/dark.css?inline";
 import { render } from "vitest-browser-lit";
 import { axeRun } from "../internal/test/a11y.js";

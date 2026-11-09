@@ -1,7 +1,6 @@
-import { css, customElement, html, nothing, type CSSResultGroup } from "@umbraco-cms/backoffice/external/lit";
-import { umbFocus } from "@umbraco-cms/backoffice/lit-element";
-import { UmbModalBaseElement } from "@umbraco-cms/backoffice/modal";
-import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
+import { css, customElement, html, nothing, property, type CSSResultGroup } from "#platform/lit";
+import { UauiLitElement } from "#platform/base-element";
+import { UUITextStyles } from "#platform/uui";
 import { builtInPresetRange, compareRangeFor, parseIso, todayIso } from "../internal/date/date-math.js";
 import { displayIsoDate } from "../internal/date/format-date.js";
 import "./internal/compare-group.element.js";
@@ -27,15 +26,22 @@ const presetTerms: Record<string, string> = {
 type Field = "from" | "to" | "compare-from" | "compare-to";
 
 /**
- * The dialog behind `uaui-date-range`: pick a preset or type two dates, then Save or Close.
- * Opened through the backoffice modal manager with `UAUI_DATE_RANGE_MODAL`, not placed on a page.
+ * The content of the date range dialog behind `uaui-date-range`: pick a preset or type two dates, then Save or Close.
+ * Internal: the build's opener places it in a modal. It takes `data` and `value`, keeps the edits in `value`, and
+ * fires `submit` (detail is the value) on Save or `close` on Close. It never closes itself.
  *
- * The edits live in the modal's value, as in the backoffice's own modals: Save submits it, Close rejects it.
- *
- * @element uaui-date-range-modal
+ * @element uaui-date-range-dialog
+ * @fires submit - The editor pressed Save. `detail` is the `UauiDateRangeModalValue`.
+ * @fires close - The editor pressed Close.
  */
-@customElement("uaui-date-range-modal")
-export class UauiDateRangeModalElement extends UmbModalBaseElement<UauiDateRangeModalData, UauiDateRangeModalValue> {
+@customElement("uaui-date-range-dialog")
+export class UauiDateRangeDialogElement extends UauiLitElement {
+    @property({ attribute: false })
+    data?: UauiDateRangeModalData;
+
+    @property({ attribute: false })
+    value: UauiDateRangeModalValue = { value: { from: "", to: "" } };
+
     get #today() {
         return this.data?.today || todayIso();
     }
@@ -75,11 +81,15 @@ export class UauiDateRangeModalElement extends UmbModalBaseElement<UauiDateRange
         const range = { ...current, ...changes };
         const compare = this.value?.compare;
         const dates = compare && compareRangeFor(compare.mode, range);
-        this.updateValue({ value: range, compare: dates ? { mode: compare.mode, ...dates } : compare });
+        this.#update({ value: range, compare: dates ? { mode: compare.mode, ...dates } : compare });
+    }
+
+    #update(changes: Partial<UauiDateRangeModalValue>) {
+        this.value = { ...this.value, ...changes };
     }
 
     #onCompareChange(e: CustomEvent<UauiCompareGroupChangeDetail>) {
-        this.updateValue({ compare: e.detail.compare });
+        this.#update({ compare: e.detail.compare });
     }
 
     #onPresetChange(e: Event) {
@@ -139,6 +149,25 @@ export class UauiDateRangeModalElement extends UmbModalBaseElement<UauiDateRange
 
     /** Fixed on first render, so focus never jumps while the editor types. Save when it can be pressed, else the first field. */
     #focusSave?: boolean;
+    #focusTimer?: ReturnType<typeof setTimeout>;
+
+    override firstUpdated() {
+        this.#focusInitial();
+    }
+
+    override disconnectedCallback() {
+        super.disconnectedCallback();
+        clearTimeout(this.#focusTimer);
+    }
+
+    /** The modal may not be showing yet when we first render, so a refused focus is retried until it lands or we disconnect. */
+    #focusInitial() {
+        const target = this.shadowRoot?.querySelector<HTMLElement>(this.#focusSave ? ".save" : "uui-select");
+        target?.focus();
+        if (!(target && this.shadowRoot?.activeElement === target)) {
+            this.#focusTimer = setTimeout(() => this.#focusInitial(), 100);
+        }
+    }
 
     override render() {
         const fields: Field[] = ["from", "to", ...(this.value?.compare ? (["compare-from", "compare-to"] as const) : [])];
@@ -158,7 +187,6 @@ export class UauiDateRangeModalElement extends UmbModalBaseElement<UauiDateRange
                                 selected: p.id === presetId,
                             }))}
                             .value=${presetId}
-                            ${this.#focusSave ? nothing : umbFocus()}
                             @change=${this.#onPresetChange}></uui-select>
                     </uui-form-layout-item>
                     ${this.#renderDate("from", this.localize.term("uauiAnalytics_dateRangeFrom"))}
@@ -169,7 +197,7 @@ export class UauiDateRangeModalElement extends UmbModalBaseElement<UauiDateRange
                 <uui-button
                     slot="actions"
                     label=${this.localize.term("general_close")}
-                    @click=${() => this._rejectModal()}></uui-button>
+                    @click=${() => this.dispatchEvent(new Event("close"))}></uui-button>
                 <uui-button
                     slot="actions"
                     class="save"
@@ -177,14 +205,13 @@ export class UauiDateRangeModalElement extends UmbModalBaseElement<UauiDateRange
                     color="positive"
                     label=${this.localize.term("buttons_save")}
                     ?disabled=${invalid}
-                    ${this.#focusSave ? umbFocus() : nothing}
-                    @click=${() => this._submitModal()}></uui-button>
+                    @click=${() => this.dispatchEvent(new CustomEvent<UauiDateRangeModalValue>("submit", { detail: this.value }))}></uui-button>
             </uui-dialog-layout>
         `;
     }
 
     static override styles: CSSResultGroup = [
-        UmbTextStyles,
+        UUITextStyles,
         css`
             uui-dialog-layout {
                 min-inline-size: min(560px, 90vw);
@@ -215,6 +242,6 @@ export class UauiDateRangeModalElement extends UmbModalBaseElement<UauiDateRange
 
 declare global {
     interface HTMLElementTagNameMap {
-        "uaui-date-range-modal": UauiDateRangeModalElement;
+        "uaui-date-range-dialog": UauiDateRangeDialogElement;
     }
 }

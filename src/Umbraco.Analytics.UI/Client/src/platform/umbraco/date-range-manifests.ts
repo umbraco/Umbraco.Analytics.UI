@@ -1,5 +1,5 @@
 import type { ManifestModal } from "@umbraco-cms/backoffice/modal";
-import { UAUI_DATE_RANGE_MODAL } from "./date-range-modal.token.js";
+import { UAUI_DATE_RANGE_MODAL } from "./date-range-opener.js";
 
 /** The `modal` extension for the date range dialog. The element is in the main bundle, so it is looked up by name. */
 export const uauiDateRangeModalManifest: ManifestModal = {

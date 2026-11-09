@@ -1,9 +1,9 @@
 // TBL-1 — Cells are elements, as in the CMS umb-table
 /// <reference types="vite/client" />
 import { beforeEach, describe, expect, it } from "vitest";
-import { customElement, html, property } from "@umbraco-cms/backoffice/external/lit";
-import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
-import "@umbraco-cms/backoffice/external/uui";
+import { customElement, html, property } from "#platform/lit";
+import { UauiLitElement } from "#platform/base-element";
+import "#platform/uui";
 import darkCss from "@umbraco-ui/uui/themes/dark.css?inline";
 import highContrastCss from "@umbraco-ui/uui/themes/high-contrast.css?inline";
 import { render } from "vitest-browser-lit";
@@ -17,7 +17,7 @@ import { UAUI_TABLE_CELL } from "./cells/cell-names.js";
 
 /** A product's own cell: a dot and the value. Records what the table gave it. */
 @customElement("uaui-test-dot-cell")
-class TestDotCellElement extends UmbLitElement implements UauiTableCellElement {
+class TestDotCellElement extends UauiLitElement implements UauiTableCellElement {
     @property({ attribute: false }) column: UauiTableColumn = { key: "", label: "" };
     @property({ attribute: false }) item: Record<string, unknown> = {};
     @property({ attribute: false }) value: unknown;

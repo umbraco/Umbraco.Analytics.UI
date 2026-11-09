@@ -8,8 +8,9 @@ import {
     type CSSResultGroup,
     type PropertyValues,
     type TemplateResult,
-} from "@umbraco-cms/backoffice/external/lit";
-import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
+} from "#platform/lit";
+import "#platform/uui";
+import { UauiLitElement } from "#platform/base-element";
 import "../empty-state/empty-state.element.js";
 import "../error-state/error-state.element.js";
 import { UauiLoadStateMixin, type UauiLoadingMode } from "../load-state/load-state.mixin.js";
@@ -86,7 +87,7 @@ const SKELETON_WIDTHS = [72, 54, 83, 47, 65];
  * `UmbLitElement` with the shared load states (`UauiLoadStateMixin`): the base of `uaui-data-table`. Exported so its
  * type has a name in the public API; extend the element, not this.
  */
-export const UauiDataTableElementBase = UauiLoadStateMixin(UmbLitElement);
+export const UauiDataTableElementBase = UauiLoadStateMixin(UauiLitElement);
 
 /**
  * A table of rows. Each column names the cell element that shows its values in `elementName`: the built-in

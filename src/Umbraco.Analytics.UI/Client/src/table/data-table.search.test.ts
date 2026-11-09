@@ -1,6 +1,6 @@
 // TBL-4 — Search rows
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { html } from "@umbraco-cms/backoffice/external/lit";
+import { html } from "#platform/lit";
 import { userEvent } from "vitest/browser";
 import { nextEvent, renderElement, shadow, type UauiTestElement } from "../internal/test/dom.js";
 import "../search-field/search-field.element.js";

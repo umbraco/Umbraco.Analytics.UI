@@ -1,11 +1,9 @@
-import { css, customElement, html, nothing, property, type CSSResultGroup, type TemplateResult } from "@umbraco-cms/backoffice/external/lit";
-import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
-// Registers umb-input-date, the backoffice's date field
-import "@umbraco-cms/backoffice/components";
+import { css, customElement, html, nothing, property, type CSSResultGroup, type TemplateResult } from "#platform/lit";
+import { UauiLitElement } from "#platform/base-element";
 import { parseIso } from "../../internal/date/date-math.js";
 
 /**
- * One date field of the date range dialog: a label, the backoffice's date input and the message under it. It is
+ * One date field of the date range dialog: a label, a UUI date input and the message under it. It is
  * controlled: it shows `value` and raises `change` with what the editor typed, and the dialog decides what to
  * keep. The message is `error` when set, else "required" while the date is empty or half-typed. Internal: not exported.
  *
@@ -13,7 +11,7 @@ import { parseIso } from "../../internal/date/date-math.js";
  * @fires change - The editor changed the date. Bubbles, not composed. Read the new date from the element's `value`.
  */
 @customElement("uaui-date-field")
-export class UauiDateFieldElement extends UmbLitElement {
+export class UauiDateFieldElement extends UauiLitElement {
     /** The field's name, which also names its message (`data-for`). Set as a property: it is not an attribute. */
     @property({ attribute: false })
     name = "";
@@ -44,14 +42,14 @@ export class UauiDateFieldElement extends UmbLitElement {
     override render(): TemplateResult {
         const { name, error } = this;
         return html`<uui-form-layout-item>
-            <umb-input-date
+            <uui-input
                 type="date"
                 name=${name}
                 label=${this.label}
                 .value=${this.value}
                 .max=${this.max}
                 ?error=${!!error}
-                @change=${this.#onChange}></umb-input-date>
+                @change=${this.#onChange}></uui-input>
             ${error
                 ? html`<div slot="message" class="error" data-for=${name} role="alert">${error}</div>`
                 : !parseIso(this.value)
@@ -69,8 +67,9 @@ export class UauiDateFieldElement extends UmbLitElement {
             margin: 0;
         }
 
-        umb-input-date {
+        uui-input {
             width: 100%;
+            /* The date picker follows the theme, as the backoffice's umb-input-date does */
         }
 
         .error {

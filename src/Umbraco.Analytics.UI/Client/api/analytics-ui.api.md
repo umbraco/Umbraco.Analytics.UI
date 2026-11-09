@@ -10,8 +10,8 @@ import { HTMLElementConstructor } from '@umbraco-cms/backoffice/extension-api';
 import { nothing } from '@umbraco-cms/backoffice/external/lit';
 import type { Observable } from '@umbraco-cms/backoffice/external/rxjs';
 import { PropertyValues } from '@umbraco-cms/backoffice/external/lit';
-import type { ReactiveController } from '@umbraco-cms/backoffice/external/lit';
-import type { ReactiveControllerHost } from '@umbraco-cms/backoffice/external/lit';
+import { ReactiveController } from '@umbraco-cms/backoffice/external/lit';
+import { ReactiveControllerHost } from '@umbraco-cms/backoffice/external/lit';
 import { TemplateResult } from '@umbraco-cms/backoffice/external/lit';
 import { UmbContextMinimal } from '@umbraco-cms/backoffice/context-api';
 import { UmbContextToken } from '@umbraco-cms/backoffice/context-api';
@@ -194,7 +194,6 @@ export type UauiDateRangeChangeDetail = {
 
 // @public
 export class UauiDateRangeElement extends UmbLitElement {
-    constructor();
     allowCompare: boolean;
     compare?: UauiCompare;
     maxDate?: string;

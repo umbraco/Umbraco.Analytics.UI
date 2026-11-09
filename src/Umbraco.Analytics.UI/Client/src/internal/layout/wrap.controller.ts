@@ -1,4 +1,4 @@
-import type { ReactiveController, ReactiveControllerHost } from "@umbraco-cms/backoffice/external/lit";
+import type { ReactiveController, ReactiveControllerHost } from "#platform/lit";
 
 /** What a `UauiWrapController` measures: a row, and two items in it that wrap onto a new line when they don't both fit. */
 export interface UauiWrapTargets {

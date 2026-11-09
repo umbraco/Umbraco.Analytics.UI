@@ -1,9 +1,9 @@
 // CHT-6 (T60) — The category chart keeps its look on a shared Chart.js, as the time-series chart does
 // (time-series-chart.isolation.test.ts): a product's Chart.defaults changes and global plugins don't reach it.
-import { Chart, Colors, Legend, Title, type Plugin } from "@umbraco/analytics-ui/external/chart.js";
+import { Chart, Colors, Legend, Title, type Plugin } from "#platform/chart";
 import { describe, expect, it, vi } from "vitest";
 import { page, userEvent } from "vitest/browser";
-import { html } from "@umbraco-cms/backoffice/external/lit";
+import { html } from "#platform/lit";
 import {
     baseline,
     canvasOf,

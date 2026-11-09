@@ -2,8 +2,8 @@
 // T53 — Changing or removing the label at runtime, and a label of only spaces
 /// <reference types="vite/client" />
 import { describe, expect, it } from "vitest";
-import { html } from "@umbraco-cms/backoffice/external/lit";
-import "@umbraco-cms/backoffice/external/uui";
+import { html } from "#platform/lit";
+import "#platform/uui";
 import { render } from "vitest-browser-lit";
 import { axeRun } from "../internal/test/a11y.js";
 import { renderElement, settle, shadow, type UauiTestElement } from "../internal/test/dom.js";

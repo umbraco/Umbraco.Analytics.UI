@@ -1,4 +1,4 @@
-import type { ReactiveController, ReactiveControllerHost } from "@umbraco-cms/backoffice/external/lit";
+import type { ReactiveController, ReactiveControllerHost } from "#platform/lit";
 
 /** Plain elements that draw something without children of their own, such as an image or a form control. */
 const SELF_DRAWING_TAGS = new Set(["img", "input", "select", "textarea", "video", "audio", "canvas", "iframe", "object", "embed", "picture", "hr", "meter", "progress"]);

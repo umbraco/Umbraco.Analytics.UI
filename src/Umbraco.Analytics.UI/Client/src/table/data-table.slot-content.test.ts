@@ -1,8 +1,8 @@
 // T51 — An empty slotted element is no content, so a live region can stay mounted
 /// <reference types="vite/client" />
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { html, type TemplateResult } from "@umbraco-cms/backoffice/external/lit";
-import "@umbraco-cms/backoffice/external/uui";
+import { html, type TemplateResult } from "#platform/lit";
+import "#platform/uui";
 import { axeRun } from "../internal/test/a11y.js";
 import { renderElement, settle, shadow, type UauiTestElement } from "../internal/test/dom.js";
 import "./data-table.element.js";

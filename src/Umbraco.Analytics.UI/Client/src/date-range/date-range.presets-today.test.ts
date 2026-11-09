@@ -1,18 +1,15 @@
 /// <reference types="vite/client" />
 // HRS-8 — Today and Yesterday presets.
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { html } from "@umbraco-cms/backoffice/external/lit";
-import { umbLocalizationManager } from "@umbraco-cms/backoffice/localization-api";
+import { html } from "#platform/lit";
 import { uauiCompareFor, uauiPresetRange } from "../date-helpers/index.js";
-import { renderWithModals } from "../internal/test/modal-host.js";
-import { deepQuery, settle, shadow, type UauiTestElement } from "../internal/test/dom.js";
+import { deepQuery, settle, shadow, type UauiTestElement, renderElement } from "../internal/test/dom.js";
 import "./date-range.element.js";
-import "./date-range-modal.element.js";
 
 const openModal = async (el: UauiTestElement) => {
     (shadow(el).querySelector("uui-button") as HTMLElement).click();
-    await expect.poll(() => deepQuery<UauiTestElement>(document, "uaui-date-range-modal")).not.toBe(null);
-    const modal = deepQuery<UauiTestElement>(document, "uaui-date-range-modal")!;
+    await expect.poll(() => deepQuery<UauiTestElement>(document, "uaui-date-range-dialog")).not.toBe(null);
+    const modal = deepQuery<UauiTestElement>(document, "uaui-date-range-dialog")!;
     await modal.updateComplete;
     return modal;
 };
@@ -27,12 +24,12 @@ const presetNames = (modal: Element) => (field(modal, "preset") as unknown as { 
 const withPresets = [{ id: "today" }, { id: "yesterday" }, { id: "last-7-days" }, { id: "custom" }];
 
 describe("Feature: Today and Yesterday presets", () => {
-    const previousLanguage = umbLocalizationManager.documentLanguage;
+    const previousLanguage = document.documentElement.lang;
     beforeEach(() => {
-        umbLocalizationManager.documentLanguage = "en-US";
+        document.documentElement.lang = "en-US";
     });
     afterEach(() => {
-        umbLocalizationManager.documentLanguage = previousLanguage;
+        document.documentElement.lang = previousLanguage;
     });
 
     describe("Scenario: the dates of each preset", () => {
@@ -52,7 +49,7 @@ describe("Feature: Today and Yesterday presets", () => {
     describe("Scenario: a product adds both presets", () => {
         let modal: UauiTestElement;
         beforeEach(async () => {
-            const el = await renderWithModals(html`<uaui-date-range today="2026-11-05" .presets=${withPresets}></uaui-date-range>`, "uaui-date-range");
+            const el = await renderElement(html`<uaui-date-range today="2026-11-05" .presets=${withPresets}></uaui-date-range>`, "uaui-date-range");
             modal = await openModal(el);
         });
 
@@ -68,7 +65,7 @@ describe("Feature: Today and Yesterday presets", () => {
 
     describe("Scenario: sad path", () => {
         it("leaves them out of the default list", async () => {
-            const el = await renderWithModals(html`<uaui-date-range today="2026-11-05"></uaui-date-range>`, "uaui-date-range");
+            const el = await renderElement(html`<uaui-date-range today="2026-11-05"></uaui-date-range>`, "uaui-date-range");
             const modal = await openModal(el);
             expect(presetNames(modal).filter((n) => n === "Today" || n === "Yesterday")).toEqual([]);
         });

@@ -1,8 +1,8 @@
 // T27 — tile error state
 /// <reference types="vite/client" />
 import { beforeEach, describe, expect, it } from "vitest";
-import { html } from "@umbraco-cms/backoffice/external/lit";
-import "@umbraco-cms/backoffice/external/uui";
+import { html } from "#platform/lit";
+import "#platform/uui";
 import { renderElement, shadow, type UauiTestElement } from "../internal/test/dom.js";
 import "./kpi-tile.element.js";
 

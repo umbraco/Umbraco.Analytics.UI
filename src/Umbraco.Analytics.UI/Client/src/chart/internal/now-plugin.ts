@@ -1,4 +1,4 @@
-import type { Plugin } from "@umbraco/analytics-ui/external/chart.js";
+import type { Plugin } from "#platform/chart";
 import type { UauiChartDrawColors } from "./chart-colors.js";
 
 /** Where now is on the chart: the index of the date (bucket) that contains it, and the word drawn over its line. */

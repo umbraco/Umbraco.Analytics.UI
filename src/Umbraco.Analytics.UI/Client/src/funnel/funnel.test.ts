@@ -1,8 +1,8 @@
 // T42 — conversion funnel (SPEC.md §10)
 import { beforeEach, describe, expect, it } from "vitest";
 import { page, userEvent } from "vitest/browser";
-import { html } from "@umbraco-cms/backoffice/external/lit";
-import "@umbraco-cms/backoffice/external/uui";
+import { html } from "#platform/lit";
+import "#platform/uui";
 import { axeRun } from "../internal/test/a11y.js";
 import { pressTab } from "../internal/test/keyboard.js";
 import { deepQuery, deepText, pressed, recordEvents, renderElement, settle, shadow, type UauiTestElement } from "../internal/test/dom.js";

@@ -1,25 +1,22 @@
 /// <reference types="vite/client" />
 // DR-2 — Pick a comparison range
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { html } from "@umbraco-cms/backoffice/external/lit";
-import { umbLocalizationManager } from "@umbraco-cms/backoffice/localization-api";
+import { html } from "#platform/lit";
 import darkCss from "@umbraco-ui/uui/themes/dark.css?inline";
 import highContrastCss from "@umbraco-ui/uui/themes/high-contrast.css?inline";
 import { axeRun } from "../internal/test/a11y.js";
-import { renderWithModals } from "../internal/test/modal-host.js";
-import { deepQuery, recordEvents, settle, shadow, type UauiTestElement } from "../internal/test/dom.js";
+import { deepQuery, recordEvents, settle, shadow, type UauiTestElement, renderElement } from "../internal/test/dom.js";
 import "./date-range.element.js";
-import "./date-range-modal.element.js";
 
 const value = { from: "2026-05-25", to: "2026-06-23" };
 
-const render = (template = html`<uaui-date-range .value=${value}></uaui-date-range>`) => renderWithModals(template, "uaui-date-range");
+const render = (template = html`<uaui-date-range .value=${value}></uaui-date-range>`) => renderElement(template, "uaui-date-range");
 // 31 Mar 2026: February is shorter, so a This month comparison has to stop at 28 Feb.
 const renderOn31Mar = () => render(html`<uaui-date-range today="2026-03-31"></uaui-date-range>`);
 const openModal = async (el: UauiTestElement) => {
     (shadow(el).querySelector("uui-button") as HTMLElement).click();
-    await expect.poll(() => deepQuery<UauiTestElement>(document, "uaui-date-range-modal")).not.toBe(null);
-    const modal = deepQuery<UauiTestElement>(document, "uaui-date-range-modal")!;
+    await expect.poll(() => deepQuery<UauiTestElement>(document, "uaui-date-range-dialog")).not.toBe(null);
+    const modal = deepQuery<UauiTestElement>(document, "uaui-date-range-dialog")!;
     await modal.updateComplete;
     return modal;
 };
@@ -39,13 +36,13 @@ const comparison = (modal: Element) => [field(modal, "compare-from")!.value, fie
 const errorFor = (modal: Element, name: string) => deepQuery(shadow(modal), `[data-for='${name}']`)?.textContent?.trim();
 
 describe("Feature: pick a comparison range", () => {
-    // The backoffice sets the formatting language from the user's language, so pin it rather than use the browser's.
-    const previousLanguage = umbLocalizationManager.documentLanguage;
+    // Formatting follows the page language (<html lang>), so pin it rather than use the browser's.
+    const previousLanguage = document.documentElement.lang;
     beforeEach(() => {
-        umbLocalizationManager.documentLanguage = "en-US";
+        document.documentElement.lang = "en-US";
     });
     afterEach(() => {
-        umbLocalizationManager.documentLanguage = previousLanguage;
+        document.documentElement.lang = previousLanguage;
     });
 
     describe("Scenario: no comparison yet", () => {

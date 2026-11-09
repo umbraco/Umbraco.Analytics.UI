@@ -1,5 +1,5 @@
-import { css, customElement, html, nothing, property, repeat, state, type CSSResultGroup, type PropertyValues, type TemplateResult } from "@umbraco-cms/backoffice/external/lit";
-import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
+import { css, customElement, html, nothing, property, repeat, state, type CSSResultGroup, type PropertyValues, type TemplateResult } from "#platform/lit";
+import { UauiLitElement } from "#platform/base-element";
 import type { UauiSeriesColorKey } from "./chart-colors.js";
 import { UauiPaletteStyles } from "../../theme/index.js";
 
@@ -39,7 +39,7 @@ export const LEGEND_MAX_ENTRIES = 8;
  * @element uaui-chart-legend
  */
 @customElement("uaui-chart-legend")
-export class UauiChartLegendElement extends UmbLitElement {
+export class UauiChartLegendElement extends UauiLitElement {
     /** The series to list. */
     @property({ attribute: false })
     entries: UauiChartLegendEntry[] = [];

@@ -1,5 +1,6 @@
-import { css, customElement, html, nothing, property, type CSSResultGroup, type TemplateResult } from "@umbraco-cms/backoffice/external/lit";
-import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
+import { css, customElement, html, nothing, property, type CSSResultGroup, type TemplateResult } from "#platform/lit";
+import "#platform/uui";
+import { UauiLitElement } from "#platform/base-element";
 
 /**
  * Tells the editor the data could not be loaded, with an optional Retry button.
@@ -14,7 +15,7 @@ import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
  * @fires retry - The Retry button was pressed. Bubbles, is not composed. Only shown while `retryable`.
  */
 @customElement("uaui-error-state")
-export class UauiErrorStateElement extends UmbLitElement {
+export class UauiErrorStateElement extends UauiLitElement {
     /** The main line. Defaults to the translation of "Something went wrong". An empty string hides it. */
     @property({ type: String })
     headline?: string;

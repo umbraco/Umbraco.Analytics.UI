@@ -2,10 +2,8 @@
 // Every key reads as a marker here, so any word left in an element's text, aria-label, title or placeholder
 // did not come from a key. Sample data is written DATA; see `untranslatedWords`.
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { html } from "@umbraco-cms/backoffice/external/lit";
-import { umbLocalizationManager } from "@umbraco-cms/backoffice/localization-api";
+import { html } from "#platform/lit";
 import { deepQuery, deepQueryAll, renderElement, settle, shadow, type UauiTestElement } from "../internal/test/dom.js";
-import { renderWithModals } from "../internal/test/modal-host.js";
 import { markerFor, registerMarkerTranslations, untranslatedWords } from "../internal/test/untranslated.js";
 import "../chart/time-series-chart.element.js";
 import "../chart/category-chart.element.js";
@@ -14,7 +12,6 @@ import "../chart/internal/chart-marker-tooltip.element.js";
 import "../funnel/funnel.element.js";
 import "../funnel/internal/funnel-tooltip.element.js";
 import "../date-range/date-range.element.js";
-import "../date-range/date-range-modal.element.js";
 import "../delta-badge/delta-badge.element.js";
 import "../empty-state/empty-state.element.js";
 import "../error-state/error-state.element.js";
@@ -55,14 +52,14 @@ const wordsIn = async (el: UauiTestElement) => {
 
 describe("Feature: built-in text is translated, with nothing hard-coded", () => {
     let restore: () => void;
-    const previousLanguage = umbLocalizationManager.documentLanguage;
+    const previousLanguage = document.documentElement.lang;
     beforeAll(async () => {
-        umbLocalizationManager.documentLanguage = "en-US";
+        document.documentElement.lang = "en-US";
         restore = await registerMarkerTranslations();
     });
     afterAll(() => {
         restore();
-        umbLocalizationManager.documentLanguage = previousLanguage;
+        document.documentElement.lang = previousLanguage;
     });
 
     describe("Scenario: the markers are in effect", () => {
@@ -148,22 +145,22 @@ describe("Feature: built-in text is translated, with nothing hard-coded", () => 
 
     describe("Scenario: date range button", () => {
         it("has no hard-coded words with a comparison on", async () => {
-            const el = await renderWithModals(html`<uaui-date-range .value=${range} .compare=${compare}></uaui-date-range>`, "uaui-date-range");
+            const el = await renderElement(html`<uaui-date-range .value=${range} .compare=${compare}></uaui-date-range>`, "uaui-date-range");
             expect(await wordsIn(el)).toEqual([]);
         });
 
         it("has no hard-coded words without one", async () => {
-            const el = await renderWithModals(html`<uaui-date-range .value=${range}></uaui-date-range>`, "uaui-date-range");
+            const el = await renderElement(html`<uaui-date-range .value=${range}></uaui-date-range>`, "uaui-date-range");
             expect(await wordsIn(el)).toEqual([]);
         });
     });
 
     describe("Scenario: date range dialog", () => {
         const openDialog = async (value: unknown, withCompare?: unknown) => {
-            const el = await renderWithModals(html`<uaui-date-range .value=${value} .compare=${withCompare}></uaui-date-range>`, "uaui-date-range");
+            const el = await renderElement(html`<uaui-date-range .value=${value} .compare=${withCompare}></uaui-date-range>`, "uaui-date-range");
             (shadow(el).querySelector("uui-button") as HTMLElement).click();
-            await expect.poll(() => deepQuery<UauiTestElement>(document, "uaui-date-range-modal")).not.toBe(null);
-            return deepQuery<UauiTestElement>(document, "uaui-date-range-modal")!;
+            await expect.poll(() => deepQuery<UauiTestElement>(document, "uaui-date-range-dialog")).not.toBe(null);
+            return deepQuery<UauiTestElement>(document, "uaui-date-range-dialog")!;
         };
 
         it("has no hard-coded words with a comparison on", async () => {

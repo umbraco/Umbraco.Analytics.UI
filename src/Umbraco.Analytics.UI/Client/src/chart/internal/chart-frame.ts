@@ -1,4 +1,4 @@
-import { css, html, nothing, type CSSResultGroup, type TemplateResult } from "@umbraco-cms/backoffice/external/lit";
+import { css, html, nothing, type CSSResultGroup, type TemplateResult } from "#platform/lit";
 import "../../empty-state/empty-state.element.js";
 import "../../error-state/error-state.element.js";
 import type { UauiLoadingMode } from "../../internal/loading/loading-mode.js";

@@ -1,18 +1,18 @@
 // T60 — UauiChartController on its own, now that two charts use it: it creates and draws the Chart.js chart when
 // invalidated, destroys it on disconnect and builds it again on reconnect, dismisses the hover with Escape, and warns
 // once per id.
-import { Chart } from "@umbraco/analytics-ui/external/chart.js";
+import { Chart } from "#platform/chart";
 import { afterEach, beforeEach, describe, expect, it, vi, type MockInstance } from "vitest";
 import { page, userEvent } from "vitest/browser";
-import { html, nothing, type PropertyValues } from "@umbraco-cms/backoffice/external/lit";
-import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
+import { html, nothing, type PropertyValues } from "#platform/lit";
+import { UauiLitElement } from "#platform/base-element";
 import { renderElement, shadow } from "../../internal/test/dom.js";
 import { UauiChartController } from "./chart.controller.js";
 import { renderChartFrame, UauiChartFrameStyles } from "./chart-frame.js";
 import "./chart-tooltip.element.js";
 
 /** The smallest chart element: the frame, one series of bars, and the tooltip while hovering. */
-class TestChartElement extends UmbLitElement {
+class TestChartElement extends UauiLitElement {
     static override properties = { values: { attribute: false } };
     static override styles = UauiChartFrameStyles;
 

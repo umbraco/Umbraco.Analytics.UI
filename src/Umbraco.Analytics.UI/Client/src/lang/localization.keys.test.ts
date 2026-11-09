@@ -1,7 +1,7 @@
 // FND-2 — Built-in text is translated: the keys the code uses and the keys the dictionary has agree.
 import { describe, expect, it } from "vitest";
-import backofficeEn from "../internal/test/backoffice-en.js";
 import { shippedSources, usedUauiKeys, usedUmbracoKeys } from "../internal/test/shipped-source.js";
+import { fallbackEnglish } from "../platform/core/fallback-en.js";
 import en from "./en.js";
 
 const flatten = (dictionary: Record<string, unknown>): string[] =>
@@ -10,7 +10,6 @@ const flatten = (dictionary: Record<string, unknown>): string[] =>
     );
 
 const dictionaryKeys = new Set(flatten(en));
-const umbracoKeys = new Set(flatten(backofficeEn as Record<string, unknown>));
 
 describe("Feature: every key is defined and used", () => {
     describe("Scenario: the code asks for a package key", () => {
@@ -25,9 +24,9 @@ describe("Feature: every key is defined and used", () => {
         });
     });
 
-    describe("Scenario: the code reuses an Umbraco key", () => {
-        it("uses only keys the backoffice's English text has", () => {
-            expect([...usedUmbracoKeys()].filter((key) => !umbracoKeys.has(key))).toEqual([]);
+    describe("Scenario: the core carries English for the Umbraco keys the code reuses", () => {
+        it("has exactly the Umbraco keys the code uses", () => {
+            expect(Object.keys(fallbackEnglish).sort()).toEqual([...usedUmbracoKeys()].sort());
         });
     });
 

@@ -3,7 +3,7 @@
 /// <reference types="vite/client" />
 import { beforeEach, describe, expect, it } from "vitest";
 import { page, userEvent } from "vitest/browser";
-import { html } from "@umbraco-cms/backoffice/external/lit";
+import { html } from "#platform/lit";
 import darkCss from "@umbraco-ui/uui/themes/dark.css?inline";
 import { axeRun } from "../internal/test/a11y.js";
 import { withTheme } from "../internal/test/page-example.js";

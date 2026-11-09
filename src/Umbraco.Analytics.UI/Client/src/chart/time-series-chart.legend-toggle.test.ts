@@ -1,9 +1,9 @@
 // Legend entries show and hide their series: visual only, per chart, with the axis, tooltip, table and shares following.
 /// <reference types="vite/client" />
-import { Chart } from "@umbraco/analytics-ui/external/chart.js";
+import { Chart } from "#platform/chart";
 import { beforeEach, describe, expect, it } from "vitest";
 import { page, userEvent } from "vitest/browser";
-import { html } from "@umbraco-cms/backoffice/external/lit";
+import { html } from "#platform/lit";
 import { axeRun } from "../internal/test/a11y.js";
 import { deepQuery, deepQueryAll, deepText, renderElement, settle, shadow, type UauiTestElement } from "../internal/test/dom.js";
 import type { UauiChartKind, UauiSeries } from "./types.js";

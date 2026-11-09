@@ -1,5 +1,6 @@
-import { css, customElement, html, nothing, property, state, type CSSResultGroup, type TemplateResult } from "@umbraco-cms/backoffice/external/lit";
-import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
+import { css, customElement, html, nothing, property, state, type CSSResultGroup, type TemplateResult } from "#platform/lit";
+import { UauiLitElement } from "#platform/base-element";
+import { consumeContext, observe } from "#platform/context";
 import "../delta-badge/delta-badge.element.js";
 import type { UauiDeltaBadgeSize, UauiDeltaUnit } from "../delta-badge/delta-badge.element.js";
 import { deltaChange } from "../internal/delta/delta-change.js";
@@ -24,7 +25,7 @@ import type { UauiTableColumn, UauiTableCompareLookup } from "./types.js";
  * @element uaui-table-compare-badge
  */
 @customElement("uaui-table-compare-badge")
-export class UauiTableCompareBadgeElement extends UmbLitElement {
+export class UauiTableCompareBadgeElement extends UauiLitElement {
     /** The column the cell is in. Its `key` picks the compare value, `meta.lowerIsBetter` the sentiment and `meta.deltaUnit` the unit. */
     @property({ attribute: false })
     column: UauiTableColumn = { key: "value", label: "" };
@@ -49,8 +50,8 @@ export class UauiTableCompareBadgeElement extends UmbLitElement {
 
     constructor() {
         super();
-        this.consumeContext(UAUI_TABLE_CONTEXT, (context) => {
-            this.observe(context?.compare, (lookup) => (this._compare = lookup), "_compare");
+        consumeContext(this, UAUI_TABLE_CONTEXT, (context) => {
+            observe(this, context?.compare, (lookup) => (this._compare = lookup), "_compare");
         });
     }
 

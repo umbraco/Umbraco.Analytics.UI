@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/web-components-vite";
 import { html, ifDefined } from "@umbraco-cms/backoffice/external/lit";
 import { regionSource, sourceDocs } from "../../../internal/story/source.js";
 import raw from "./ai-usage-page.element.ts?raw";
-import "../../../internal/test/modal-host.element.js";
+import "../../../platform/umbraco/test-modal-host.element.js";
 import "./ai-usage-page.element.js";
 
 const imports = `import { css, customElement, html, property, state } from "@umbraco-cms/backoffice/external/lit";

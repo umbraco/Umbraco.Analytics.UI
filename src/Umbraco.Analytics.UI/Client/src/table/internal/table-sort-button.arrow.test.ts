@@ -1,8 +1,8 @@
 // The sorted column's arrow sits level with its label: the middle of the visible chevron at the middle of the label's
 // capitals, ascending or descending, at any font size.
 import { describe, expect, it } from "vitest";
-import "@umbraco-cms/backoffice/external/uui";
-import { html } from "@umbraco-cms/backoffice/external/lit";
+import "#platform/uui";
+import { html } from "#platform/lit";
 import { renderElement, settle, shadow } from "../../internal/test/dom.js";
 import "./table-sort-button.element.js";
 

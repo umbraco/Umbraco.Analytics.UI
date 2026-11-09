@@ -1,8 +1,12 @@
 {
   // API Extractor reads the emitted .d.ts files, so the shared Chart.js entry resolves to its emitted .d.ts here,
-  // not to the source .ts that tsconfig.json maps it to.
+  // not to the source .ts that tsconfig.json maps it to. The same goes for the #platform/* swap points
+  // (package.json `imports` points them at source).
   "extends": "./tsconfig.api.json",
   "compilerOptions": {
-    "paths": { "@umbraco/analytics-ui/external/chart.js": [ "./types/external/chart.js/index.d.ts" ] }
+    "paths": {
+      "@umbraco/analytics-ui/external/chart.js": [ "./types/external/chart.js/index.d.ts" ],
+      "#platform/*": [ "./types/platform/umbraco/*.d.ts" ]
+    }
   }
 }

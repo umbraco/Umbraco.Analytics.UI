@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/web-components-vite";
-import { html } from "@umbraco-cms/backoffice/external/lit";
+import { html } from "#platform/lit";
 import { notPublicApi } from "../story/internal.js";
 import "./compact-pager.element.js";
 import type { CompactPagerChangeDetail, UauiCompactPagerElement } from "./compact-pager.element.js";

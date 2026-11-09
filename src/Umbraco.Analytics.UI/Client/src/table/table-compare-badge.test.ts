@@ -1,8 +1,8 @@
 // An empty compare badge takes no room: a cell without a comparison ends at its value, in line with its header
 /// <reference types="vite/client" />
 import { describe, expect, it } from "vitest";
-import { html } from "@umbraco-cms/backoffice/external/lit";
-import "@umbraco-cms/backoffice/external/uui";
+import { html } from "#platform/lit";
+import "#platform/uui";
 import { axeRun } from "../internal/test/a11y.js";
 import { deepQuery, renderElement, settle, shadow } from "../internal/test/dom.js";
 import "./data-table.element.js";

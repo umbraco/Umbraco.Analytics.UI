@@ -1,5 +1,5 @@
-import { css, customElement, html, nothing, property, type CSSResultGroup, type TemplateResult } from "@umbraco-cms/backoffice/external/lit";
-import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
+import { css, customElement, html, nothing, property, type CSSResultGroup, type TemplateResult } from "#platform/lit";
+import { UauiLitElement } from "#platform/base-element";
 import { deltaChange } from "../internal/delta/delta-change.js";
 import { badgeFigures, UauiFigureFormatter, type UauiFigureText } from "../internal/format/figure.js";
 import type { UauiDeltaUnit } from "../delta-badge/delta-badge.element.js";
@@ -32,7 +32,7 @@ export type UauiStatLayout = "stacked" | "inline";
  * @element uaui-stat
  */
 @customElement("uaui-stat")
-export class UauiStatElement extends UmbLitElement {
+export class UauiStatElement extends UauiLitElement {
     /** What the figure is, e.g. "Total pageviews". */
     @property({ type: String })
     label = "";

@@ -1,4 +1,4 @@
-import { css } from "@umbraco-cms/backoffice/external/lit";
+import { css } from "#platform/lit";
 
 /**
  * Internal. A `.visually-hidden` class: text for screen readers only. Its positioned parent clips it.

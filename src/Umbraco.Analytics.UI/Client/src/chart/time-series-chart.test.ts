@@ -1,10 +1,10 @@
 // CHT-1 — Line and area chart
 // Canvas-only outcomes are checked with screenshot comparison (toMatchScreenshot). The first run
 // writes the baseline; review it against docs/design/phase-1/screenshots before committing it.
-import { Chart } from "@umbraco/analytics-ui/external/chart.js";
+import { Chart } from "#platform/chart";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { page, userEvent } from "vitest/browser";
-import { html } from "@umbraco-cms/backoffice/external/lit";
+import { html } from "#platform/lit";
 import { screenshotIt } from "../internal/test/screenshot.js";
 import { deepQuery, deepText, renderElement, settle, shadow, type UauiTestElement } from "../internal/test/dom.js";
 import "./time-series-chart.element.js";

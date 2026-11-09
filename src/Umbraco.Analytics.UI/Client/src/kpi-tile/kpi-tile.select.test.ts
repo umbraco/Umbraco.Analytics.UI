@@ -1,7 +1,7 @@
 /// <reference types="vite/client" />
 // KPI-2 — KPI tiles switch the chart's metric
 import { beforeEach, describe, expect, it } from "vitest";
-import { html } from "@umbraco-cms/backoffice/external/lit";
+import { html } from "#platform/lit";
 import { userEvent } from "vitest/browser";
 import { render } from "vitest-browser-lit";
 import darkCss from "@umbraco-ui/uui/themes/dark.css?inline";

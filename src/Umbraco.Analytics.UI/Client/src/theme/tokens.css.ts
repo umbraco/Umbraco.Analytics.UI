@@ -1,4 +1,4 @@
-import { css, type CSSResult } from "@umbraco-cms/backoffice/external/lit";
+import { css, type CSSResult } from "#platform/lit";
 
 /*
  * Series, comparison and tint tokens. Every element adds this to its `styles`, and so can a product's

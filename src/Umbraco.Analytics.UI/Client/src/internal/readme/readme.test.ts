@@ -9,8 +9,9 @@ const sources = import.meta.glob<string>(
     { query: "?raw", import: "default", eager: true },
 );
 
-// Registered by the package manifest and opened by `uaui-date-range`. Not exported, so not documented.
-const NOT_PUBLIC = new Set(["uaui-date-range-modal"]);
+// The modal is registered by the package manifest and opened by `uaui-date-range`, which shows the dialog inside it.
+// The test modal host only serves tests and Storybook. None of them is exported, so none is documented.
+const NOT_PUBLIC = new Set(["uaui-date-range-modal", "uaui-date-range-dialog", "uaui-test-modal-host"]);
 
 const stories = import.meta.glob<string>("/src/**/*.story.ts", { query: "?raw", import: "default", eager: true });
 const guides = import.meta.glob<string>("/src/**/*.mdx", { query: "?raw", import: "default", eager: true });

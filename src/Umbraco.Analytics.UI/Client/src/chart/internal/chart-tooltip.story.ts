@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/web-components-vite";
-import { html } from "@umbraco-cms/backoffice/external/lit";
+import { html } from "#platform/lit";
 import { notPublicApi } from "../../internal/story/internal.js";
 import "./chart-tooltip.element.js";
 import type { UauiChartTooltipElement } from "./chart-tooltip.element.js";

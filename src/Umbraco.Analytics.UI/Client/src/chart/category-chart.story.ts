@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/web-components-vite";
-import { html } from "@umbraco-cms/backoffice/external/lit";
+import { html } from "#platform/lit";
 import type { UauiCategoryChartElement } from "./category-chart.element.js";
 import "./category-chart.element.js";
 import type { UauiCategory, UauiCategorySeries } from "./types.js";

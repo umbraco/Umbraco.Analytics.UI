@@ -1,6 +1,5 @@
-import { property } from "@umbraco-cms/backoffice/external/lit";
-import type { HTMLElementConstructor } from "@umbraco-cms/backoffice/extension-api";
-import type { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
+import { property } from "#platform/lit";
+import type { HTMLElementConstructor, UauiLitElement } from "#platform/base-element";
 import { UauiLoadStateMixin, type UauiLoadStateMixinInterface } from "../load-state/load-state.mixin.js";
 import type { UauiChartScale } from "./types.js";
 
@@ -65,7 +64,7 @@ export interface UauiChartMixinInterface<TSeries = unknown> extends UauiLoadStat
  * @param superClass - The class to extend, `UmbLitElement` or a subclass of it.
  * @returns The class with the shared chart settings.
  */
-export const UauiChartMixin = <T extends HTMLElementConstructor<UmbLitElement>>(superClass: T): HTMLElementConstructor<UauiChartMixinInterface> & T => {
+export const UauiChartMixin = <T extends HTMLElementConstructor<UauiLitElement>>(superClass: T): HTMLElementConstructor<UauiChartMixinInterface> & T => {
     class UauiChartMixinClass extends UauiLoadStateMixin(superClass) {
         /**
          * How the y-axis spaces its values. `"log"` spaces it by powers of ten, for values that span widely. It still starts

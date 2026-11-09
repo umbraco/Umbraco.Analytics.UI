@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/web-components-vite";
-import { html } from "@umbraco-cms/backoffice/external/lit";
+import { html } from "#platform/lit";
 import { UAUI_TABLE_CELL } from "./cells/cell-names.js";
 import type { UauiDataTableElement } from "./data-table.element.js";
 import "./data-table.element.js";

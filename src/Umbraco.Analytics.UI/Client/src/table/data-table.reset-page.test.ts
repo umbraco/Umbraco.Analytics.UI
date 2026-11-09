@@ -1,7 +1,7 @@
 // TBL-3 — Page through rows: go back to page 1 when the rows are replaced (`reset-page-on-rows`)
 import { describe, expect, it } from "vitest";
-import { html } from "@umbraco-cms/backoffice/external/lit";
-import "@umbraco-cms/backoffice/external/uui";
+import { html } from "#platform/lit";
+import "#platform/uui";
 import { axeRun } from "../internal/test/a11y.js";
 import { deepText, recordEvents, renderElement, settle, shadow, type UauiTestElement } from "../internal/test/dom.js";
 import "./data-table.element.js";

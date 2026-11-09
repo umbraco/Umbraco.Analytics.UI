@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/web-components-vite";
-import { html } from "@umbraco-cms/backoffice/external/lit";
+import { html } from "#platform/lit";
 import { notPublicApi } from "../../internal/story/internal.js";
 import type { UauiCompareGroupChangeDetail, UauiCompareGroupElement } from "./compare-group.element.js";
 import "./compare-group.element.js";

@@ -5,12 +5,12 @@ import darkCss from "@umbraco-ui/uui/themes/dark.css?inline";
 import highContrastCss from "@umbraco-ui/uui/themes/high-contrast.css?inline";
 import "@umbraco-ui/uui/styles/uui-font.css";
 import "@umbraco-ui/uui/styles/uui-text.css";
-import { html } from "@umbraco-cms/backoffice/external/lit";
+import { html } from "#platform/lit";
 // Registers every uui-* element, as the backoffice does
-import "@umbraco-cms/backoffice/external/uui";
+import "#platform/uui";
 import { UmbIconRegistry } from "@umbraco-cms/backoffice/icon";
-import { registerUauiLocalization } from "../src/internal/localization/register.js";
-import backofficeEn from "../src/internal/test/backoffice-en.js";
+import { registerUauiLocalization } from "../src/platform/umbraco/localization-register.js";
+import backofficeEn from "../src/platform/umbraco/backoffice-en.js";
 import customElements from "../custom-elements.json";
 
 // Same theme switcher as Umbraco UI's Storybook, so components are checked against every backoffice theme
@@ -74,7 +74,7 @@ const preview: Preview = {
             storySort: {
                 order: [
                     "Guides",
-                    ["Getting started", "Theming and palette", "Events, loading and errors", "Translations", "Versioning"],
+                    ["Getting started", "Theming and palette", "Events, loading and errors", "Translations", "Using outside Umbraco", "Versioning"],
                     "Components",
                     "Foundation",
                     "Examples",

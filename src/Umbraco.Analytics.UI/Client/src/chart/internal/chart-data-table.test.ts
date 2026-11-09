@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { page } from "vitest/browser";
-import { html } from "@umbraco-cms/backoffice/external/lit";
+import { html } from "#platform/lit";
 import { axeRun } from "../../internal/test/a11y.js";
 import { renderElement, shadow, type UauiTestElement } from "../../internal/test/dom.js";
 import "./chart-data-table.element.js";

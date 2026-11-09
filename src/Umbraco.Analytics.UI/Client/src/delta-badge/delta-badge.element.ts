@@ -1,5 +1,5 @@
-import { css, customElement, html, nothing, property, type CSSResultGroup, type TemplateResult } from "@umbraco-cms/backoffice/external/lit";
-import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
+import { css, customElement, html, nothing, property, type CSSResultGroup, type TemplateResult } from "#platform/lit";
+import { UauiLitElement } from "#platform/base-element";
 import { UauiVisuallyHiddenStyles } from "../internal/a11y/visually-hidden.css.js";
 import { UauiPaletteStyles } from "../theme/index.js";
 import { deltaChange } from "../internal/delta/delta-change.js";
@@ -33,7 +33,7 @@ export type UauiDeltaBadgeSize = "md" | "sm";
  * @cssprop --uaui-text-neutral - Text colour of a change that rounds to zero. Defaults to `--uui-color-text-alt`.
  */
 @customElement("uaui-delta-badge")
-export class UauiDeltaBadgeElement extends UmbLitElement {
+export class UauiDeltaBadgeElement extends UauiLitElement {
     /**
      * The change. 12.4 means +12.4% (or +12.4 percentage points when `unit` is "points"). 0 is "no change".
      * Unset means unknown: nothing is drawn.

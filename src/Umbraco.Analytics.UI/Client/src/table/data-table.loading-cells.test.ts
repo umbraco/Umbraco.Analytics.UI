@@ -1,8 +1,8 @@
 // TBL-1 — Loading rows draw each column's own cell
 import { describe, expect, it } from "vitest";
-import { customElement, html, property } from "@umbraco-cms/backoffice/external/lit";
-import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
-import "@umbraco-cms/backoffice/external/uui";
+import { customElement, html, property } from "#platform/lit";
+import { UauiLitElement } from "#platform/base-element";
+import "#platform/uui";
 import { deepQueryAll, renderElement, settle, shadow } from "../internal/test/dom.js";
 import "./data-table.element.js";
 import "./cells/index.js";
@@ -10,7 +10,7 @@ import type { UauiTableCellElement, UauiTableColumn } from "./types.js";
 
 /** A product's own cell that draws its own placeholder while `loading`. */
 @customElement("uaui-test-loading-cell")
-class TestLoadingCellElement extends UmbLitElement implements UauiTableCellElement {
+class TestLoadingCellElement extends UauiLitElement implements UauiTableCellElement {
     @property({ attribute: false }) column: UauiTableColumn = { key: "", label: "" };
     @property({ attribute: false }) item: Record<string, unknown> = {};
     @property({ attribute: false }) value: unknown;
@@ -23,7 +23,7 @@ class TestLoadingCellElement extends UmbLitElement implements UauiTableCellEleme
 
 /** A product's own cell that knows nothing about `loading`. */
 @customElement("uaui-test-plain-cell")
-class TestPlainCellElement extends UmbLitElement implements UauiTableCellElement {
+class TestPlainCellElement extends UauiLitElement implements UauiTableCellElement {
     @property({ attribute: false }) column: UauiTableColumn = { key: "", label: "" };
     @property({ attribute: false }) item: Record<string, unknown> = {};
     @property({ attribute: false }) value: unknown;

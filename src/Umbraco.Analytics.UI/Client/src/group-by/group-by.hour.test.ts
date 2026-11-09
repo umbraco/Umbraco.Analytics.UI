@@ -1,6 +1,6 @@
 // HRS-7: group by hour.
 import { describe, expect, it } from "vitest";
-import { html } from "@umbraco-cms/backoffice/external/lit";
+import { html } from "#platform/lit";
 import { uauiGroupByOptions } from "../date-helpers/index.js";
 import { axeRun } from "../internal/test/a11y.js";
 import { deepQueryAll, nextEvent, renderElement } from "../internal/test/dom.js";
