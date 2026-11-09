@@ -5,7 +5,7 @@
   "scripts": {
     "ci:install-client": "cd ./src/Umbraco.Analytics.UI/Client && npm ci --no-fund --no-audit --prefer-offline",
     "ci:build-client": "cd ./src/Umbraco.Analytics.UI/Client && npm run build:app && npm run check:size",
-    "ci:pack-client": "cd ./src/Umbraco.Analytics.UI/Client && npm run build-and-pack:api",
+    "ci:pack-client": "cd ./src/Umbraco.Analytics.UI/Client && npm run build-and-pack:api && npm run pack:core && node ./devops/publish/copy-package-to-output-dir.js",
     "ci:lint-client": "cd ./src/Umbraco.Analytics.UI/Client && npm run lint",
     "ci:check-api-client": "cd ./src/Umbraco.Analytics.UI/Client && npm run check:api",
     "ci:test-client": "cd ./src/Umbraco.Analytics.UI/Client && npm run test:ci",
