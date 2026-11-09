@@ -1,5 +1,7 @@
 # KPI tile second line
 
+> **Status:** Shipped 06-11-2026, #43 into `v19/dev`. Left: the line's hover title is unchecked with NVDA and VoiceOver.
+
 | File | In one line | Needs you |
 |---|---|---|
 | ✅ [Brief](./BRIEF.md) | A small, formatted part of the total under a tile's value | |

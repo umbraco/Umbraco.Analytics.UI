@@ -35,7 +35,7 @@ Shared backoffice analytics components (Lit + UUI) consumed by Engage, Commerce 
   - RCs get no section of their own: an RC's release notes are its final version's section as it stands, so every RC lists everything in the coming release.
   - Every `release-*` tag gets a GitHub release with these notes once it's on NuGet.org (RCs marked pre-release). A tag with no section for its version, or an empty one, fails the build before anything is published.
 - Before finishing: `npm run lint`, `npm test`, `npm run build` (commit any `api/*.api.md` change deliberately).
-- Plan folders: `docs/plans/<feature-slug>/` (devkit feature-* skills). Design references: `docs/design/<name>/`.
+- Plan folders: `docs/plans/<feature-slug>/` (devkit feature-* skills). Closed plans move to `docs/archive/plans/<feature-slug>/` (feature-close); nothing outside the plans and archive folders links into a plan. Design references: `docs/design/<name>/`.
 - Packages: NuGet `Umbraco.Analytics.UI`, npm `@umbraco/analytics-ui` (also the import map key) and npm `@umbraco/analytics-ui-core` (template in `Client/core/`). API reports: `api/analytics-ui.api.md` and `api/analytics-ui-core.api.md`.
 - CI: Azure DevOps project "Umbraco Extensions", pipeline "Umbraco.Analytics.UI" (id 820). Service connection names in `azure-pipelines.yml` must exist in that project (NuGet: `MyGet - Nightly`, `MyGet - Pre-releases`, `NuGet`; npm: `npm - Nightly`, `npm - Pre-releases`). Don't copy names from other products' pipelines.
 - CI restores with `--locked-mode`. After any package change, refresh and commit `packages.lock.json`. Keep `Umbraco.Cms.*` mapped to nuget.org only in `NuGet.config` (MyGet copies of CMS prereleases differ and fail NU1403).
