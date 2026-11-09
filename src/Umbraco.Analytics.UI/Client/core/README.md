@@ -18,4 +18,8 @@ npm install @umbraco/analytics-ui-core lit @umbraco-ui/uui
 import "@umbraco/analytics-ui-core";
 ```
 
-Importing the module registers the `uaui-*` elements. Register translations for the user's culture with `registerUauiTranslations`.
+Importing the module registers the `uaui-*` elements. Register translations for the user's culture with `registerUauiTranslations(culture, dictionary)`.
+
+## More
+
+Setup for translations, icons, the date range dialog and custom table cells is in [Using outside Umbraco](https://umbraco.github.io/Umbraco.Analytics.UI/?path=/docs/guides-using-outside-umbraco--docs). Every element has its own page in [Storybook](https://umbraco.github.io/Umbraco.Analytics.UI/).

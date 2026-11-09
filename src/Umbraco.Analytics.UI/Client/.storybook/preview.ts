@@ -74,7 +74,7 @@ const preview: Preview = {
             storySort: {
                 order: [
                     "Guides",
-                    ["Getting started", "Theming and palette", "Events, loading and errors", "Translations", "Versioning"],
+                    ["Getting started", "Theming and palette", "Events, loading and errors", "Translations", "Using outside Umbraco", "Versioning"],
                     "Components",
                     "Foundation",
                     "Examples",

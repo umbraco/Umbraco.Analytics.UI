@@ -1,6 +1,6 @@
 # Changelog
 
-What changed in each release of `Umbraco.Analytics.UI` (NuGet) and `@umbraco/analytics-ui` (npm). Both packages share one version. Usage for every element is in [Storybook](https://umbraco.github.io/Umbraco.Analytics.UI/).
+What changed in each release of `Umbraco.Analytics.UI` (NuGet), `@umbraco/analytics-ui` and `@umbraco/analytics-ui-core` (npm). All packages share one version. Usage for every element is in [Storybook](https://umbraco.github.io/Umbraco.Analytics.UI/).
 
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the version numbers follow [Semantic Versioning](https://semver.org/). The package major matches the Umbraco CMS major.
 
@@ -10,6 +10,7 @@ The first release, for Umbraco CMS 19.
 
 ### Added
 
+- `@umbraco/analytics-ui-core`: the same `uaui-*` components for pages outside the Umbraco backoffice, with peers `lit` and `@umbraco-ui/uui`, and the same version as `@umbraco/analytics-ui`. Nothing to do for Umbraco products.
 - KPI tiles and figures: `uaui-kpi-tile`, `uaui-stat` and `uaui-delta-badge`.
 - `uaui-kpi-tile`: `detail`, `detail-value` and `detail-format` show a short line under the value, such as "114,300 cached". `{0}` in `detail` is replaced with `detail-value`, formatted like the value.
 - Charts: `uaui-time-series-chart`, `uaui-category-chart` and `uaui-funnel`.
