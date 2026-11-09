@@ -78,7 +78,7 @@ Pending specs (52, all `it.skip`, no imports yet): `src/platform/umbraco/*.test.
   Acceptance: SAC-13 AC2 green. `npm pack` of the core, installed into an empty folder with Vite, renders a `uaui-kpi-tile`.
   depends-on: T14, T15
 
-- [ ] **T17** - **wire: the core into the pipeline.** story: SAC-13 (AC1, AC2). `azure-pipelines.yml` builds, tests and publishes the core package (run `build:app` before packing, and `pack:core` before `postpack:api`'s copy to the output folder, or copy again after it; DECISION-LOG T16) to the same npm feeds as `@umbraco/analytics-ui` (`npm - Nightly`, `npm - Pre-releases`, npm.org for releases).
+- [x] **T17** - **wire: the core into the pipeline.** story: SAC-13 (AC1, AC2). `azure-pipelines.yml` builds, tests and publishes the core package (run `build:app` before packing, and `pack:core` before `postpack:api`'s copy to the output folder, or copy again after it; DECISION-LOG T16) to the same npm feeds as `@umbraco/analytics-ui` (`npm - Nightly`, `npm - Pre-releases`, npm.org for releases).
   Acceptance: a pipeline run on the topic branch has both npm `.tgz` files as artifacts with the same version.
   depends-on: T16
 
