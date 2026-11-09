@@ -1,5 +1,5 @@
-// Shared set-up for the hourly chart specs (docs/plans/hourly-buckets). The specs run with the browser's time zone
-// pinned to Europe/Copenhagen (PLAN.md T1): CET (+01:00) in November, CEST (+02:00) until 25 Oct 2026.
+// Shared set-up for the hourly chart specs. The specs run with the browser's time zone pinned to Europe/Copenhagen
+// (vite.config.ts), so clock-change specs run the same everywhere: CET (+01:00) in November, CEST (+02:00) until 25 Oct 2026.
 import { Chart } from "#platform/chart";
 import { html } from "#platform/lit";
 import { deepQuery, renderElement, shadow } from "../../internal/test/dom.js";

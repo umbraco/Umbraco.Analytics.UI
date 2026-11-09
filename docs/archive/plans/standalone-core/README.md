@@ -1,5 +1,7 @@
 # Standalone core package
 
+> **Status:** Shipped 09-11-2026, #48 into `v19/dev`. Left: a legal check of the Lucide licence notice before the first core release.
+
 | File | In one line | Needs you |
 |---|---|---|
 | ✅ [Brief](./BRIEF.md) | Our components on the Cloud portal, outside Umbraco | 4 guesses, 4 open questions |

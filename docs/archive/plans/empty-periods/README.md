@@ -1,5 +1,7 @@
 # Empty periods in the time series chart
 
+> **Status:** Shipped 06-11-2026, #44 into `v19/dev`. Left: the category chart's tooltip still leaves out a series with no value; a `chart.update()` while an empty slot is hovered keeps the old tooltip height.
+
 | File | In one line | Needs you |
 |---|---|---|
 | ✅ [Brief](./BRIEF.md) | Keep a slot on the x-axis for a period with no value | |

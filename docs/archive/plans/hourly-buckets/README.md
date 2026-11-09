@@ -1,5 +1,7 @@
 # Hourly buckets
 
+> **Status:** Shipped 06-11-2026, #40 into `v19/dev`. Left: the AI story's copyable imports header lists names the page no longer uses.
+
 | File | In one line | Needs you |
 |---|---|---|
 | ✅ [Brief](./BRIEF.md) | Hourly bars for "Today" and "Yesterday" | |
