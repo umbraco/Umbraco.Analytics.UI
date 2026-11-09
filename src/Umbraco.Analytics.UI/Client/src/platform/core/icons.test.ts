@@ -1,4 +1,4 @@
-// SAC-11 AC1–AC3 — standalone core package (docs/plans/standalone-core).
+// SAC-11 AC1–AC3 — standalone core package.
 import { beforeEach, describe, expect, it } from "vitest";
 import { html } from "#platform/lit";
 import "#platform/uui";

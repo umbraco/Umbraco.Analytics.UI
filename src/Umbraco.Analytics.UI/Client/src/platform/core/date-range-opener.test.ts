@@ -1,4 +1,4 @@
-// SAC-9 AC1–AC7 — standalone core package (docs/plans/standalone-core).
+// SAC-9 AC1–AC7 — standalone core package.
 // A real uaui-date-range opens its dialog through the core opener: button -> uui-modal-dialog -> dialog -> value.
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { userEvent } from "vitest/browser";

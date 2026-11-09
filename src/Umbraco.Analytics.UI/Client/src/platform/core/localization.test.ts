@@ -1,4 +1,4 @@
-// SAC-6 AC1–AC2 · SAC-7 AC1–AC5 · SAC-8 AC1–AC5 — standalone core package (docs/plans/standalone-core).
+// SAC-6 AC1–AC2 · SAC-7 AC1–AC5 · SAC-8 AC1–AC5 — standalone core package.
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { UauiLitElement } from "#platform/base-element";
 import { customElement, html } from "#platform/lit";
@@ -7,7 +7,7 @@ import { renderElement, shadow, type UauiTestElement } from "../../internal/test
 import "../../empty-state/empty-state.element.js";
 import "../../error-state/error-state.element.js";
 import "../../stat/stat.element.js";
-import { resetUauiTranslations } from "./localization.js";
+import { resetUauiTranslations } from "../../internal/test/localization.js";
 import { registerUauiTranslations } from "./public.js";
 
 @customElement("uaui-localize-probe")

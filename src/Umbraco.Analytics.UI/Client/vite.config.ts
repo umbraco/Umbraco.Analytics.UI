@@ -3,7 +3,7 @@ import { playwright } from "@vitest/browser-playwright";
 import { fileURLToPath } from "node:url";
 import { minifyTemplates } from "./devops/minify-templates.ts";
 import { lintText } from "./devops/lint-text-command.ts";
-import { buildBothLibraries, packBothPackages, buildCoreBundle, checkCoreSize, checkDoctoredCore, checkDoctoredCoreApi, readApiReports } from "./devops/build-commands.ts";
+import { buildBothLibraries, readUmbracoBuild, packBothPackages, buildCoreBundle, checkCoreSize, checkDoctoredCore, checkDoctoredCoreApi, readApiReports } from "./devops/build-commands.ts";
 
 /**
  * The shared Chart.js entry, as products import it. Our own code imports this bare specifier too, never a relative path:
@@ -29,10 +29,9 @@ const platformBuildAlias = [
 ];
 
 /** The core test project's swap points: #platform/* resolves to src/platform/core/ (the Umbraco project uses package.json `imports`). */
-export const coreTestAlias = ["lit", "uui", "chart", "base-element", "context", "date-range-opener"].map((name) => ({
-    find: new RegExp(`^#platform/${name}$`),
-    replacement: fileURLToPath(new URL(`./src/platform/core/${name}.ts`, import.meta.url)),
-}));
+export const coreTestAlias = [
+    { find: /^#platform\/(.*)$/, replacement: fileURLToPath(new URL("./src/platform/core/", import.meta.url)) + "$1.ts" },
+];
 
 /** The specs that run against the backoffice (the `umbraco` Vitest project); every other spec runs in `core`. */
 const umbracoSpecs = ["src/platform/umbraco/**/*.test.ts", "src/examples/**/*.test.ts"];
@@ -118,7 +117,7 @@ export default defineConfig(({ command }) => ({
             provider: playwright({ contextOptions: { timezoneId: "Europe/Copenhagen", locale: "en-US" } }),
             instances: browserInstances,
             headless: true,
-            commands: { lintText, buildCoreBundle, checkCoreSize, checkDoctoredCore, checkDoctoredCoreApi, readApiReports, buildBothLibraries, packBothPackages },
+            commands: { lintText, buildCoreBundle, checkCoreSize, checkDoctoredCore, checkDoctoredCoreApi, readApiReports, buildBothLibraries, readUmbracoBuild, packBothPackages },
         },
         onConsoleLog: (log: string) => {
             if (log.includes("Lit is in dev mode")) return false;

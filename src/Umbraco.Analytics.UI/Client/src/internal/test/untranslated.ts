@@ -2,7 +2,7 @@
 // translation key: render with every key mapped to a marker, then list the words left over.
 import en from "../../lang/en.js";
 import { registerUauiTranslations } from "../../platform/core/public.js";
-import { resetUauiTranslations } from "../../platform/core/localization.js";
+import { resetUauiTranslations } from "./localization.js";
 import { usedUmbracoKeys } from "./shipped-source.js";
 
 const MARKER = /⟦[^⟧]*⟧/g;

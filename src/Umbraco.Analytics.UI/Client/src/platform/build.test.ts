@@ -1,6 +1,4 @@
-// SAC-13 AC1–AC4 — standalone core package (docs/plans/standalone-core).
-// Pending: #platform/* doesn't exist yet, so nothing is imported. The builder adds the imports, arranges each
-// scenario in beforeEach and writes the one assertion the Then names, then removes .skip.
+// SAC-13 AC1–AC4 — standalone core package.
 import { beforeEach, describe, expect, it } from "vitest";
 import { commands } from "vitest/browser";
 

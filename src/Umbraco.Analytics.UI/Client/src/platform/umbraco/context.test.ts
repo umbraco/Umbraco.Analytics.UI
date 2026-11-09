@@ -1,4 +1,4 @@
-// SAC-4 AC1–AC3 — standalone core package (docs/plans/standalone-core).
+// SAC-4 AC1–AC3 — standalone core package.
 import { beforeEach, describe, expect, it } from "vitest";
 import { customElement, html, property, state } from "#platform/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";

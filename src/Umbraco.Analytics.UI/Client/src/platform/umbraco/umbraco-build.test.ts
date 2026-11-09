@@ -1,31 +1,40 @@
-// SAC-1 AC1–AC5 — standalone core package (docs/plans/standalone-core).
-// AC4 runs here; AC1–AC3 and AC5 are pending until the build tasks that own them.
-import { describe, expect, it } from "vitest";
+// SAC-1 AC2–AC5 — standalone core package. AC1 (the API report doesn't move) is `npm run check:api`.
+// AC2, AC3 and AC5 read a real Umbraco build: the readUmbracoBuild command (devops/build-commands.ts) builds it once per
+// run into a scratch folder, never wwwroot, so a spec never sees a stale or missing file.
+import { beforeAll, describe, expect, it } from "vitest";
+import { commands } from "vitest/browser";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { html } from "#platform/lit";
 import { renderElement } from "../../internal/test/dom.js";
 import "../../kpi-tile/kpi-tile.element.js";
 
+declare module "vitest/browser" {
+    interface BrowserCommands {
+        readUmbracoBuild: () => Promise<{ files: string[]; importMap: Record<string, string>; mainBundle: string }>;
+    }
+}
+
+let build: Awaited<ReturnType<typeof commands.readUmbracoBuild>>;
+beforeAll(async () => {
+    build = await commands.readUmbracoBuild();
+}, 120_000);
+
+/** The module specifiers a built file imports: `import ... from "x"` and `import "x"`. */
+const importedSpecifiers = (code: string) => [...code.matchAll(/^(?:import|export)\b[^"'\n]*?\bfrom\s*["']([^"']+)["']|^import\s*["']([^"']+)["']/gm)].map((m) => m[1] ?? m[2]);
+
 describe("Feature: Products see no change", () => {
-    describe("Scenario: The public API report doesn't move", () => {
-        // Given the split is built
-        // When  npm run check:api runs
-        it.skip("api/analytics-ui.api.md has no changes", () => {
-            // AC1: one assertion.
-        });
-    });
     describe("Scenario: The Umbraco output has the same files", () => {
         // Given the split is built
         // When  the wwwroot folder is listed
-        it.skip("it holds umbraco-analytics-ui.js, lang/en.js, external/chart.js/index.js and umbraco-package.json, as before", () => {
-            // AC2: one assertion.
+        it("it holds umbraco-analytics-ui.js, lang/en.js, external/chart.js/index.js and umbraco-package.json, as before", () => {
+            expect(build.files).toEqual(expect.arrayContaining(["umbraco-analytics-ui.js", "lang/en.js", "external/chart.js/index.js", "umbraco-package.json"]));
         });
     });
     describe("Scenario: The import map is the same", () => {
         // Given the split is built
         // When  umbraco-package.json is read
-        it.skip("its import map has exactly @umbraco/analytics-ui and @umbraco/analytics-ui/external/chart.js", () => {
-            // AC3: one assertion.
+        it("its import map has exactly @umbraco/analytics-ui and @umbraco/analytics-ui/external/chart.js", () => {
+            expect(Object.keys(build.importMap).sort()).toEqual(["@umbraco/analytics-ui", "@umbraco/analytics-ui/external/chart.js"]);
         });
     });
     describe("Scenario: Elements are still Umbraco elements", () => {
@@ -39,8 +48,10 @@ describe("Feature: Products see no change", () => {
     describe("Scenario: The Umbraco bundle loads Lit and UUI from the backoffice", () => {
         // Given the Umbraco build's main bundle
         // When  its imports are read
-        it.skip("Lit and UUI come only from @umbraco-cms/backoffice/external/*", () => {
-            // AC5: one assertion.
+        it("Lit and UUI come only from @umbraco-cms/backoffice/external/*", () => {
+            // Anything that is not a backoffice specifier, such as bare `lit`, `lit/decorators.js` or `@umbraco-ui/uui`, would load a second copy.
+            const own = importedSpecifiers(build.mainBundle).filter((specifier) => /^(lit|@umbraco-ui\/uui)(\/|$)/.test(specifier));
+            expect(own).toEqual([]);
         });
     });
 });

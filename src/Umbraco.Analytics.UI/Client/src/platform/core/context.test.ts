@@ -1,4 +1,4 @@
-// SAC-10 AC1–AC3 — standalone core package (docs/plans/standalone-core).
+// SAC-10 AC1–AC3 — standalone core package.
 import { beforeEach, describe, expect, it } from "vitest";
 import { render } from "vitest-browser-lit";
 import { customElement, html, LitElement } from "#platform/lit";

@@ -1,4 +1,4 @@
-// SAC-12 AC1–AC2 — standalone core package (docs/plans/standalone-core).
+// SAC-12 AC1–AC2 — standalone core package.
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import lightCss from "@umbraco-ui/uui/themes/light.css?inline";
 import darkCss from "@umbraco-ui/uui/themes/dark.css?inline";

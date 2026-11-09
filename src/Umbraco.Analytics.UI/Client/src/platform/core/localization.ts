@@ -1,29 +1,10 @@
-import type { ReactiveController, ReactiveControllerHost } from "./lit.js";
-import en from "../../lang/en.js";
+import type { ReactiveController } from "./lit.js";
 import type { UauiLocalize } from "../localize.js";
-import { fallbackEnglish } from "./fallback-en.js";
+import { DEFAULT_CULTURE, store, updateHosts } from "./localization-store.js";
+import type { Host } from "./localization-store.js";
 
 /** One culture's translations: whole keys to a string or a function of the arguments. */
 export type UauiTranslations = Record<string, string | ((...args: unknown[]) => string)>;
-type Dictionary = UauiTranslations;
-type Host = ReactiveControllerHost & HTMLElement;
-
-const DEFAULT_CULTURE = "en";
-
-const flatten = (nested: Record<string, Record<string, string>>): Dictionary =>
-    Object.fromEntries(Object.entries(nested).flatMap(([section, terms]) => Object.entries(terms).map(([key, text]) => [`${section}_${key}`, text])));
-
-const seedDictionaries = () => new Map<string, Dictionary>([[DEFAULT_CULTURE, { ...flatten(en), ...fallbackEnglish }]]);
-
-interface Store {
-    dictionaries: Map<string, Dictionary>;
-    hosts: Set<Host>;
-    observer?: MutationObserver;
-}
-
-const store: Store = { dictionaries: seedDictionaries(), hosts: new Set<Host>() };
-
-const updateHosts = () => store.hosts.forEach((host) => host.requestUpdate());
 
 /**
  * Adds or overrides translations for a culture. Keys are written whole, `uauiAnalytics_emptyHeadline`; a value is a
@@ -32,12 +13,6 @@ const updateHosts = () => store.hosts.forEach((host) => host.requestUpdate());
 export function registerUauiTranslations(culture: string, dictionary: UauiTranslations): void {
     const code = culture.toLowerCase();
     store.dictionaries.set(code, { ...store.dictionaries.get(code), ...dictionary });
-    updateHosts();
-}
-
-/** Back to the built-in English only, for specs: they share one page-wide store. */
-export function resetUauiTranslations(): void {
-    store.dictionaries = seedDictionaries();
     updateHosts();
 }
 

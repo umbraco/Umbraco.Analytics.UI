@@ -201,24 +201,22 @@ class Observation<T> implements ReactiveController {
     }
 }
 
-const observations = new WeakMap<UauiContextHost, Map<string | symbol, Observation<never>>>();
+const observations = new WeakMap<UauiContextHost, Map<string, Observation<never>>>();
 
 /**
- * Calls `callback` with each value `source` emits, while `host` is connected (it listens again if the host reconnects). `alias` replaces an earlier
+ * Calls `callback` with each value `source` emits, while `host` is connected (it listens again if the host reconnects). `alias` (required, as both platforms key on it) replaces an earlier
  * observer of the same alias. When `source` is undefined, `callback` is called with undefined (every implementation keeps this).
  */
-export function observe<T>(host: UauiContextHost, source: Observable<T> | undefined, callback: (value: T | undefined) => void, alias?: string): void {
+export function observe<T>(host: UauiContextHost, source: Observable<T> | undefined, callback: (value: T | undefined) => void, alias: string): void {
     let byAlias = observations.get(host);
     if (!byAlias) observations.set(host, (byAlias = new Map()));
-    // Without an alias every call is its own observer.
-    const key = alias ?? Symbol();
-    byAlias.get(key)?.end();
+    byAlias.get(alias)?.end();
     if (!source) {
         callback(undefined);
         return;
     }
     const observation = new Observation(host, source, callback, () => {
-        if ((byAlias.get(key) as unknown) === observation) byAlias.delete(key);
+        if ((byAlias.get(alias) as unknown) === observation) byAlias.delete(alias);
     });
-    byAlias.set(key, observation as unknown as Observation<never>);
+    byAlias.set(alias, observation as unknown as Observation<never>);
 }

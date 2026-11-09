@@ -1,7 +1,7 @@
 import { execFile } from "node:child_process";
-import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { join, sep } from "node:path";
 import { promisify } from "node:util";
 
 const run = promisify(execFile);
@@ -75,32 +75,45 @@ export async function checkDoctoredCore(_context: unknown, doctoring: CoreDoctor
     }
 }
 
+let umbracoBuild: Promise<string> | undefined;
+
+/** Builds the Umbraco library once per test run, into a scratch folder (never wwwroot), and returns that folder. */
+function builtUmbracoDir(): Promise<string> {
+    umbracoBuild ??= (async () => {
+        const dir = mkdtempSync(join(tmpdir(), "uaui-umbraco-"));
+        process.once("exit", () => rmSync(dir, { recursive: true, force: true }));
+        const built = await node([viteBin, "build", "--outDir", dir, "--emptyOutDir"]);
+        if (built.code !== 0) throw new Error(`The Umbraco build failed (exit ${built.code}):\n${built.output}`);
+        return dir;
+    })();
+    return umbracoBuild;
+}
+
 /**
- * Vitest browser command: runs both library builds, each into a scratch folder (so tests never touch wwwroot or
- * dist/core), and says whether each one's main file was produced.
+ * Vitest browser command: runs both library builds (the shared scratch builds, so each runs once per test run) and
+ * says whether each one's main file was produced.
  */
 export async function buildBothLibraries(): Promise<{ umbraco: boolean; core: boolean }> {
-    const scratch = mkdtempSync(join(tmpdir(), "uaui-build-"));
-    try {
-        const umbracoDir = join(scratch, "umbraco");
-        const coreDir = join(scratch, "core");
-        const [umbracoBuild, coreBuildResult] = await Promise.all([
-            node([viteBin, "build", "--outDir", umbracoDir, "--emptyOutDir"]),
-            node([viteBin, "build", "-c", "vite.config.core.ts", "--outDir", coreDir, "--emptyOutDir"]),
-        ]);
-        const failed = [
-            ["Umbraco build", umbracoBuild],
-            ["core build", coreBuildResult],
-        ] as const;
-        const messages = failed.filter(([, result]) => result.code !== 0).map(([name, result]) => `The ${name} failed (exit ${result.code}):\n${result.output}`);
-        if (messages.length > 0) throw new Error(messages.join("\n"));
-        return {
-            umbraco: existsSync(join(umbracoDir, "umbraco-analytics-ui.js")),
-            core: existsSync(join(coreDir, "analytics-ui-core.js")),
-        };
-    } finally {
-        rmSync(scratch, { recursive: true, force: true });
-    }
+    const [umbracoDir, corePath] = await Promise.all([builtUmbracoDir(), builtCorePath()]);
+    return { umbraco: existsSync(join(umbracoDir, "umbraco-analytics-ui.js")), core: existsSync(corePath) };
+}
+
+/** What the Umbraco build produced: every file path (relative, without source maps), its manifest's import map and its main bundle. */
+export interface UmbracoBuildOutput {
+    files: string[];
+    importMap: Record<string, string>;
+    mainBundle: string;
+}
+
+/** Vitest browser command: reads the shared scratch Umbraco build, so a spec sees the real output, never a stale wwwroot. */
+export async function readUmbracoBuild(): Promise<UmbracoBuildOutput> {
+    const dir = await builtUmbracoDir();
+    const files = (readdirSync(dir, { recursive: true, encoding: "utf8" }) as string[])
+        .filter((file) => statSync(join(dir, file)).isFile() && !file.endsWith(".map"))
+        .map((file) => file.split(sep).join("/"))
+        .sort();
+    const manifest = JSON.parse(readFileSync(join(dir, "umbraco-package.json"), "utf8")) as { importmap?: { imports?: Record<string, string> } };
+    return { files, importMap: manifest.importmap?.imports ?? {}, mainBundle: readFileSync(join(dir, "umbraco-analytics-ui.js"), "utf8") };
 }
 
 /** Vitest browser command: the text of both committed API reports (the Umbraco package's and the core's). */
@@ -132,7 +145,6 @@ function doctoredApiSetup(): Promise<{ config: string }> {
         // api-extractor names the report after the package.json nearest the config, so the core's sits beside it.
         copyFileSync(join(project, "core/package.json"), join(dir, "package.json"));
         // The real extractor tsconfig maps the swap points into temp/core-types, so this one maps them into the scratch types.
-        const swapPoints = ["lit", "uui", "chart", "base-element", "context", "date-range-opener"];
         const tsconfig = join(dir, "tsconfig.json");
         writeFileSync(
             tsconfig,
@@ -141,7 +153,7 @@ function doctoredApiSetup(): Promise<{ config: string }> {
                 compilerOptions: {
                     paths: {
                         "@umbraco/analytics-ui/external/chart.js": [join(types, "external/chart.js/index.d.ts")],
-                        ...Object.fromEntries(swapPoints.map((name) => [`#platform/${name}`, [join(types, `platform/core/${name}.d.ts`)]])),
+                        "#platform/*": [join(types, "platform/core/*.d.ts")],
                     },
                 },
             }),

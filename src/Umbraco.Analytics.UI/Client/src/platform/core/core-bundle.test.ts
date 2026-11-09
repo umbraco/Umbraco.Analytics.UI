@@ -1,4 +1,4 @@
-// SAC-5 AC1–AC5 — standalone core package (docs/plans/standalone-core).
+// SAC-5 AC1–AC5 — standalone core package.
 // AC3 and AC5 read a real core build: the commands in devops/build-commands.ts build it once per run into a scratch
 // folder (never dist/core), so a spec never sees a stale or missing file and parallel engines don't clash. AC1, AC2 and the icon and uui-input checks import that built file onto the test page (see loadBuiltCore).
 import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";

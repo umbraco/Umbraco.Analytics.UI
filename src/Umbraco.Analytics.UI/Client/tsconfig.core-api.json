@@ -10,12 +10,7 @@
     "paths": {
       "@umbraco-cms/*": [ "./vitest.backoffice-blocked.ts" ],
       "@umbraco/analytics-ui/external/chart.js": [ "./src/external/chart.js/index.ts" ],
-      "#platform/lit": [ "./src/platform/core/lit.ts" ],
-      "#platform/uui": [ "./src/platform/core/uui.ts" ],
-      "#platform/chart": [ "./src/platform/core/chart.ts" ],
-      "#platform/base-element": [ "./src/platform/core/base-element.ts" ],
-      "#platform/context": [ "./src/platform/core/context.ts" ],
-      "#platform/date-range-opener": [ "./src/platform/core/date-range-opener.ts" ]
+      "#platform/*": [ "./src/platform/core/*.ts" ]
     },
     "types": []
   },

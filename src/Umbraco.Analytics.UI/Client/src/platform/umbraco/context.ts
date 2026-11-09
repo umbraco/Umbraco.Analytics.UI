@@ -18,7 +18,7 @@ export interface UauiContextHost {
     consumeContext<T extends UmbContextMinimal>(token: UmbContextToken<T, T>, callback: (value: T | undefined) => void): unknown;
     // `any` here because the backoffice types the callback value from its source; the helper below keeps callers typed.
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    observe(source: Observable<any> | undefined, callback: (value: any) => void, alias?: string): unknown;
+    observe(source: Observable<any> | undefined, callback: (value: any) => void, alias: string): unknown;
 }
 
 /** Calls `callback` with the context `token` names, from the nearest provider above `host`, and again if it changes. */
@@ -27,9 +27,9 @@ export function consumeContext<T extends UmbContextMinimal>(host: UauiContextHos
 }
 
 /**
- * Calls `callback` with each value `source` emits, for as long as `host` is connected. `alias` replaces an earlier
+ * Calls `callback` with each value `source` emits, for as long as `host` is connected. `alias` (required, as both platforms key on it) replaces an earlier
  * observer of the same alias. When `source` is undefined, `callback` is called with undefined (every implementation keeps this).
  */
-export function observe<T>(host: UauiContextHost, source: Observable<T> | undefined, callback: (value: T | undefined) => void, alias?: string): void {
+export function observe<T>(host: UauiContextHost, source: Observable<T> | undefined, callback: (value: T | undefined) => void, alias: string): void {
     host.observe(source, callback, alias);
 }

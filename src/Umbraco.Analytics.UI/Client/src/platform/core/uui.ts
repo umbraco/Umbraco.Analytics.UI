@@ -5,5 +5,3 @@ import "@umbraco-ui/uui";
 
 export { UUITextStyles } from "@umbraco-ui/uui";
 export type { UUIInputElement, UUIInputEvent } from "@umbraco-ui/uui";
-// Not used by the library's own code, only by tests, which read the defined element's class from here.
-export { UUIButtonElement } from "@umbraco-ui/uui";

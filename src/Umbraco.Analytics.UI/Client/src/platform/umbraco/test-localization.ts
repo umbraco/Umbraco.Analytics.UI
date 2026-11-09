@@ -24,7 +24,7 @@ export function waitForKey(key: string, expected?: string): Promise<void> {
  * Registers the package's English translations (the same dictionary lang/en.js ships) plus the
  * backoffice's own, and resolves once they are loaded, so elements render text instead of keys.
  */
-export async function registerUauiTranslations(): Promise<void> {
+export async function loadUmbracoTestTranslations(): Promise<void> {
     registerUauiLocalization(backofficeEn);
     await Promise.all([waitForKey("uauiAnalytics_emptyHeadline"), waitForKey("buttons_save")]);
 }

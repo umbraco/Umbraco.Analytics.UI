@@ -1,4 +1,4 @@
-// SAC-3 AC1–AC4 — standalone core package (docs/plans/standalone-core).
+// SAC-3 AC1–AC4 — standalone core package.
 // A real uaui-date-range opens its dialog through a real modal manager (uaui-test-modal-host provides one and the
 // backoffice's modal container), so the whole path button -> opener -> modal -> dialog -> value is exercised.
 import { afterEach, beforeEach, describe, expect, it } from "vitest";

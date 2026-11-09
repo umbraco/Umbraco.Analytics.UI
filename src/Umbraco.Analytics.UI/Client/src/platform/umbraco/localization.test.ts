@@ -1,4 +1,4 @@
-// SAC-2 AC1–AC3 — standalone core package (docs/plans/standalone-core).
+// SAC-2 AC1–AC3 — standalone core package.
 // The Umbraco build keeps its localization extensions: the package's English at weight 200, a product's own at the
 // default 100 on top, and the backoffice user's culture choosing the dictionary.
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
