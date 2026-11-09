@@ -9,6 +9,7 @@ declare module "vitest/browser" {
         checkDoctoredCoreApi: () => Promise<{ code: number; output: string }>;
         buildBothLibraries: () => Promise<{ umbraco: boolean; core: boolean }>;
         packBothPackages: (version: string) => Promise<{ umbraco: string; core: string }>;
+        packLikeCi: (version: string) => Promise<{ files: string[]; versions: Record<string, string> }>;
     }
 }
 
@@ -37,6 +38,22 @@ describe("Feature: One build, one release", () => {
         });
         it("both package.json files say 19.1.0", () => {
             expect(versions).toEqual({ umbraco: "19.1.0", core: "19.1.0" });
+        });
+    });
+    describe("Scenario: The pipeline's pack step packs both packages", () => {
+        // Given the Azure pipeline's environment (BUILD_BUILDID set), where packing the main package strips the scripts
+        //       from the Client package.json
+        // When  the root ci:pack-client script runs
+        // The command runs it in a scratch copy of the repo (devops/build-commands.ts), so the worktree is left alone.
+        let packed: { files: string[]; versions: Record<string, string> };
+        beforeEach(async () => {
+            packed = await commands.packLikeCi("19.0.0-alpha.1.1");
+        });
+        it("both tarballs land in the output folder with the pipeline's version", () => {
+            expect(packed.versions).toEqual({
+                "umbraco-analytics-ui-19.0.0-alpha.1.1.tgz": "19.0.0-alpha.1.1",
+                "umbraco-analytics-ui-core-19.0.0-alpha.1.1.tgz": "19.0.0-alpha.1.1",
+            });
         });
     });
     describe("Scenario: check:api checks both reports", () => {

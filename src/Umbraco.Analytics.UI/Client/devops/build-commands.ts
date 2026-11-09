@@ -1,5 +1,5 @@
 import { execFile } from "node:child_process";
-import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { copyFileSync, cpSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, sep } from "node:path";
 import { promisify } from "node:util";
@@ -216,6 +216,46 @@ export async function packBothPackages(_context: unknown, version: string): Prom
             umbraco: await versionIn(`umbraco-analytics-ui-${version}.tgz`),
             core: await versionIn(`umbraco-analytics-ui-core-${version}.tgz`),
         };
+    } finally {
+        rmSync(scratch, { recursive: true, force: true });
+    }
+}
+
+/**
+ * Vitest browser command: runs the root `ci:pack-client` script the way the Azure pipeline does (BUILD_BUILDID set, so
+ * `prepack:api` rewrites the Client package.json and drops its scripts) in a scratch copy of the repo, and returns the
+ * tarballs that land in NPM_OUTPUT_DIR with the version in each one. Only the type build is swapped for a no-op, and the
+ * scratch project reuses the worktree's node_modules, so nothing in the worktree is touched.
+ */
+export async function packLikeCi(_context: unknown, version: string): Promise<{ files: string[]; versions: Record<string, string> }> {
+    const scratch = mkdtempSync(join(tmpdir(), "uaui-ci-pack-"));
+    try {
+        const project = process.cwd();
+        const repoRoot = join(project, "../../..");
+        const client = join(scratch, "src/Umbraco.Analytics.UI/Client");
+        mkdirSync(join(client, "dist/core"), { recursive: true });
+        mkdirSync(join(client, "types/core"), { recursive: true });
+        copyFileSync(join(repoRoot, "package.json"), join(scratch, "package.json"));
+        writeFileSync(join(scratch, "LICENSE.md"), "licence");
+        writeFileSync(join(client, "dist/core/analytics-ui-core.js"), "export {};\n");
+        writeFileSync(join(client, "types/core/analytics-ui-core.d.ts"), "export {};\n");
+        const packageJson = JSON.parse(readFileSync(join(project, "package.json"), "utf8")) as { scripts: Record<string, string> };
+        packageJson.scripts["build:api"] = `"${process.execPath}" -e 0`;
+        writeFileSync(join(client, "package.json"), JSON.stringify(packageJson));
+        writeFileSync(join(client, "README.md"), "readme");
+        cpSync(join(project, "devops/publish"), join(client, "devops/publish"), { recursive: true });
+        cpSync(join(project, "core"), join(client, "core"), { recursive: true });
+        symlinkSync(join(project, "node_modules"), join(client, "node_modules"), "dir");
+        const output = join(scratch, "output");
+        const env = { ...process.env, BUILD_BUILDID: "1", NPM_PACKAGE_VERSION: version, NPM_OUTPUT_DIR: output };
+        await run("npm", ["run", "ci:pack-client"], { cwd: scratch, env });
+        const files = readdirSync(output).sort();
+        const versions: Record<string, string> = {};
+        for (const file of files) {
+            const { stdout } = await run("tar", ["-xzOf", join(output, file), "package/package.json"]);
+            versions[file] = (JSON.parse(stdout) as { version: string }).version;
+        }
+        return { files, versions };
     } finally {
         rmSync(scratch, { recursive: true, force: true });
     }
