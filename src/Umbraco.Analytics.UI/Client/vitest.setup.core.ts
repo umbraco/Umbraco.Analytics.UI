@@ -3,6 +3,10 @@ import "@umbraco-ui/uui/themes/light.css";
 import { afterEach, beforeEach } from "vitest";
 import "./vitest.axe.js";
 
+// The backoffice serves a bare `en` as en-GB, so specs written under it (day-first dates, and the chart screenshot
+// baselines) expect en-GB. The core follows `<html lang>`, and a page with none formats as en-US, so say en-GB here.
+document.documentElement.lang = "en-GB";
+
 // Each test file runs in an iframe of the test page; give it focus first (see vitest.setup.ts).
 beforeEach(() => {
     window.focus();
