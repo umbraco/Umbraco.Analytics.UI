@@ -1,6 +1,6 @@
 {
   "name": "@umbraco/analytics-ui",
-  "version": "19.0.0-alpha.1",
+  "version": "19.0.0-rc.1",
   "type": "module",
   "imports": {
     "#platform/lit": "./src/platform/umbraco/lit.ts",
