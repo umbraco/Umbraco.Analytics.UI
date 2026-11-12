@@ -39,11 +39,11 @@ parameters:
     type: boolean
     default: false # SBOM is still generated for release/hotfix branches and release-* tags
 
-# Runs in the "Umbraco Extensions" Azure DevOps project. NuGet uses the template's default connection names
-# (MyGet - Nightly, MyGet - Pre-releases, NuGet); the project's npm MyGet connections are named below.
-# TODO before the first public npm release: an npmjs.org connection, then set npm_service_connection below to
-# its name. Until then it is blank, so the Release stage leaves its NPM job out at compile time: Azure checks
-# every referenced connection at queue time, and the missing "NPM" made every PR build (release: auto) fail.
+# Runs in the "Umbraco Extensions" Azure DevOps project. MyGet uses the template's default connection names
+# (MyGet - Nightly, MyGet - Pre-releases); the project's npm MyGet connections are named below. NuGet.org goes
+# through "NuGet (DXP)", the DXP team's shared NuGet connection shared into this project under that name
+# (the project's own "NuGet" belongs to other pipelines). See tools/service-connections in Umbraco.Build.
+# npmjs.org goes through "NPM", the DXP team's shared npm connection, whose token covers the @umbraco scope.
 # TODO before the first public release: a release approval environment (release_environment) and the
 # Dependency-Track variable group for SBOM uploads (sbom_dt_variable_group); the project has neither yet.
 # The package is @umbraco/analytics-ui, in Umbraco's shared @umbraco npm scope.
@@ -132,6 +132,7 @@ extends:
     # The client is bundled into the NuGet package (Chart.js included), so its dependencies ship too
     sbom_npm_paths:
       - src/Umbraco.Analytics.UI/Client
+    nuget_service_connection: NuGet (DXP)
     npm_nightly_service_connection: npm - Nightly
     npm_prereleases_service_connection: npm - Pre-releases
-    npm_service_connection: ''
+    npm_service_connection: NPM
