@@ -23,14 +23,17 @@ beforeAll(async () => {
 
 
 // Renders one tile in a column of the given width, with a currency value as long as the Commerce example's.
-async function tileIn(width: number, attrs: { text?: number; loading?: boolean; selectable?: boolean; href?: string; dir?: string } = {}) {
+async function tileIn(
+    width: number,
+    attrs: { text?: number; format?: Intl.NumberFormatOptions; loading?: boolean; selectable?: boolean; href?: string; dir?: string } = {},
+) {
     const { container } = render(
         html`<div style="width: ${width}px; font-family: Lato, sans-serif" dir=${attrs.dir ?? "ltr"}>
             <uaui-kpi-tile
                 label="Revenue"
                 icon="icon-coins"
                 .value=${attrs.loading ? undefined : (attrs.text ?? 27337.11)}
-                .valueFormat=${EUR}
+                .valueFormat=${attrs.format ?? EUR}
                 .delta=${attrs.loading ? undefined : 18.7}
                 .loading=${attrs.loading ?? false}
                 .selectable=${attrs.selectable ?? false}
@@ -123,6 +126,45 @@ describe("Feature: KPI tiles don't overflow when narrow", () => {
             const el = await tileIn(180);
             expect(parseFloat(getComputedStyle(value(el)).fontSize)).toBeGreaterThanOrEqual(18);
             expect(parseFloat(getComputedStyle(value(el)).fontSize)).toBeLessThan(24);
+        });
+    });
+
+    describe("Scenario: a value too wide to sit beside the icon", () => {
+        const DKK: Intl.NumberFormatOptions = { style: "currency", currency: "DKK" };
+
+        it("stacks the icon above a currency-code value at 240px", async () => {
+            const el = await tileIn(240, { text: 36125.5, format: DKK });
+            expect(stacked(el)).toBe(true);
+            expect(icon(el).getBoundingClientRect().bottom).toBeLessThanOrEqual(value(el).getBoundingClientRect().top);
+        });
+
+        for (const text of [36125.5, 361250.5]) {
+            it(`keeps "DKK ${text}" inside the tile at 240px`, async () => {
+                const el = await tileIn(240, { text, format: DKK });
+                expect(textRect(el).right).toBeLessThanOrEqual(innerRight(el) + 0.5);
+                expect(textRect(el).width).toBeLessThanOrEqual(value(el).getBoundingClientRect().width + 1);
+            });
+        }
+
+        it("keeps it inside the tile in right-to-left", async () => {
+            const el = await tileIn(240, { text: 361250.5, format: DKK, dir: "rtl" });
+            expect(textRect(el).left).toBeGreaterThanOrEqual(innerLeft(el) - 0.5);
+            expect(textRect(el).right).toBeLessThanOrEqual(innerRight(el) + 0.5);
+        });
+
+        it("puts the icon back beside the value when the tile is wide enough", async () => {
+            const el = await tileIn(320, { text: 36125.5, format: DKK });
+            expect(stacked(el)).toBe(false);
+        });
+
+        it("cuts a value too wide even stacked rather than spill out of the tile", async () => {
+            const el = await tileIn(180, { text: 123456789012.34, format: { ...DKK, notation: "standard" } });
+            expect(value(el).getBoundingClientRect().right).toBeLessThanOrEqual(innerRight(el) + 0.5);
+            expect(getComputedStyle(value(el)).textOverflow).toBe("ellipsis");
+        });
+
+        it("has no violations when stacked by its value", async () => {
+            expect(await axeRun(await tileIn(240, { text: 36125.5, format: DKK }))).toHaveNoViolations();
         });
     });
 

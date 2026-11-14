@@ -78,9 +78,16 @@ export const PercentPoints: Story = {
 };
 
 /** The product picks the currency, e.g. the order's currency: here Danish kroner. */
+/** A currency code ("DKK") is wider than a symbol: a value too wide to sit beside the icon stacks the icon above it. */
 export const CurrencyDkk: Story = {
     name: "Currency (DKK)",
     args: { value: 36125.5, valueFormat: { style: "currency", currency: "DKK" } },
+};
+
+/** A value too wide for the tile even stacked is cut with an ellipsis rather than spill out. Screen readers read it whole. */
+export const ValueTooWide: Story = {
+    name: "Value too wide",
+    args: { value: 123456789012.34, valueFormat: { style: "currency", currency: "DKK", notation: "standard" }, delta: undefined },
 };
 
 /** A number of 1,000,000 or more is shown compact ("€1.23M") unless `valueFormat` sets `notation`. The exact amount is the hover title and what screen readers read. */
