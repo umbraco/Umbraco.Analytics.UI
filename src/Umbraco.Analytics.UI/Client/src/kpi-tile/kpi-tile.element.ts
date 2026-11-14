@@ -212,6 +212,16 @@ export class UauiKpiTileElement extends UauiLitElement {
         return { row, first: value, second: badge, settle: [value.querySelector<LitElement>("uaui-figure-value"), badge as LitElement] };
     });
 
+    // Whether the value is too wide to sit beside the icon, so the tile stacks the icon above it as a narrow tile does.
+    // Measured on the value's text, which is as wide in both layouts (its size follows the tile's width, not the layout).
+    #stack = new UauiWrapController(this, () => {
+        const tile = this.renderRoot?.querySelector<HTMLElement>(".tile");
+        const icon = tile?.querySelector<HTMLElement>(".icon");
+        const text = tile?.querySelector<HTMLElement>(".value uaui-figure-value");
+        if (!tile || !icon || !text) return null;
+        return { row: tile, first: icon, second: text, settle: [text as LitElement] };
+    });
+
     #formatter = new UauiFigureFormatter();
     // A separate instance for the line: the formatter keeps one set of formats, and the line's options differ.
     #detailFormatter = new UauiFigureFormatter();
@@ -301,7 +311,7 @@ export class UauiKpiTileElement extends UauiLitElement {
 
     #tile(content: TemplateResult): TemplateResult {
         // Marks a tile asked for a line, so its skeleton can reserve the room for it in CSS.
-        const hasDetail = this.detail ? " reserve-detail" : "";
+        const hasDetail = (this.detail ? " reserve-detail" : "") + (this.#stack.wrapped ? " stacked" : "");
         // A native button gives Enter and Space for free, and both arrive as one click.
         if (this.selectable) {
             return html`<button
@@ -578,12 +588,16 @@ export class UauiKpiTileElement extends UauiLitElement {
                 font-weight: 700;
                 line-height: 1.1;
                 white-space: nowrap;
+                /* A backup for a value too wide even stacked: cut with an ellipsis rather than spill out of the tile. */
+                max-width: 100%;
+                overflow: hidden;
+                text-overflow: ellipsis;
                 color: var(--uui-color-text);
             }
 
             /* Narrow tile: the icon moves above the label and value. 240px is where "€127,337.11" (about 138px at 24px, Lato
-               bold) just stops fitting beside the 48px icon: 240 less the 34px of border and padding and the 62px icon and gap
-               leaves 144px. It is also the recommended grid minimum, so a row built on it never stacks. All tiles in a row share a width, so they switch together. The text block is at least 76px (the
+               bold) still fits beside the 48px icon: 240 less the 42px of border and padding and the 62px icon and gap
+               leaves 136px. A wider value (a currency code such as "DKK") stacks by measurement instead, see .tile.stacked. It is also the recommended grid minimum, so a row built on it never stacks. All tiles in a row share a width, so they switch together. The text block is at least 76px (the
                content's min-height, the skeleton's height too), the height of one whose badge has wrapped below the value.
                A stacked tile reserves that block loaded or not, so it doesn't jump on load; one with no badge has 28px spare.
                align-items: flex-start follows the writing direction. */
@@ -593,7 +607,7 @@ export class UauiKpiTileElement extends UauiLitElement {
                     flex-direction: column;
                     align-items: flex-start;
                     justify-content: flex-start;
-                    gap: 12px;
+                    row-gap: 12px;
                 }
 
                 .content {
@@ -604,8 +618,28 @@ export class UauiKpiTileElement extends UauiLitElement {
                 }
             }
 
+            /* The same stacked layout for a wider tile whose value doesn't fit beside the icon (the tile measures it, see
+               "stacked"): a currency code ("DKK 36,125.50") is much wider than a symbol. */
+            .tile.stacked {
+                --_uaui-skeleton-height: 76px;
+                flex-direction: column;
+                align-items: flex-start;
+                justify-content: flex-start;
+                row-gap: 12px;
+            }
+
+            .tile.stacked .content {
+                flex: 0 0 auto;
+                align-self: stretch;
+                justify-content: flex-start;
+            }
+
             .tile.reserve-detail {
                 --_uaui-skeleton-height: calc(12px * 1.3 + 5px + max(24px, 1.1 * var(--_uaui-kpi-value-size)) + 5px + 13px * 1.3);
+            }
+
+            .tile.reserve-detail.stacked {
+                --_uaui-skeleton-height: calc(12px * 1.3 + 5px + 1.1 * var(--_uaui-kpi-value-size) + 5px + 13px * 1.3 + 5px + 3px + 24px);
             }
 
             @container (width < 240px) {

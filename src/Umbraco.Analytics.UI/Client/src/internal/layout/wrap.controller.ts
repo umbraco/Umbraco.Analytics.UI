@@ -12,8 +12,9 @@ export interface UauiWrapTargets {
 /**
  * Tells a host whether two items in a row no longer fit side by side, so it can pick a layout for the wrapped case. The
  * browser can't tell a grid to wrap, so this measures: the widths of both items and the row's column gap against the
- * row's width. Watches the three with a `ResizeObserver` and asks the host to update when the answer changes. Internal:
- * the KPI tile uses it to move its badge below the value and line.
+ * row's content width. Watches the three with a `ResizeObserver` and asks the host to update when the answer changes.
+ * Internal: the KPI tile uses it to move its badge below the value and line, and to stack its icon above a value too
+ * wide to sit beside it.
  */
 export class UauiWrapController implements ReactiveController {
     readonly #host: ReactiveControllerHost;
@@ -83,8 +84,12 @@ export class UauiWrapController implements ReactiveController {
     #measure() {
         const [row, first, second] = this.#observed;
         if (!row?.isConnected) return;
-        const gap = parseFloat(getComputedStyle(row).columnGap) || 0;
-        this.#set(first.getBoundingClientRect().width + gap + second.getBoundingClientRect().width > row.getBoundingClientRect().width);
+        const style = getComputedStyle(row);
+        const gap = parseFloat(style.columnGap) || 0;
+        // The row's content box: a row with padding or a border (the tile itself) has less room than its outer width.
+        const edges = ["paddingLeft", "paddingRight", "borderLeftWidth", "borderRightWidth"] as const;
+        const room = row.getBoundingClientRect().width - edges.reduce((sum, edge) => sum + (parseFloat(style[edge]) || 0), 0);
+        this.#set(first.getBoundingClientRect().width + gap + second.getBoundingClientRect().width > room);
     }
 
     #set(wrapped: boolean) {

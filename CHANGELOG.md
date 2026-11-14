@@ -6,6 +6,10 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+### Fixed
+
+- `uaui-kpi-tile`: a value too wide to sit beside the icon, such as "DKK 36,125.50" in a 240px tile, no longer spills out of the tile. The icon moves above the value instead, and a value too wide even then is cut with "…". Nothing to do.
+
 ## [19.0.0] - TBC
 
 The first release, for Umbraco CMS 19.
